@@ -7,7 +7,7 @@ export const NavBar = () => {
 
     return (
 
-        <header className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9] border-b border-[#e2bfb0] shadow-sm py-4 max-w-max-width p-3 " >
+        <header className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9] border-b border-[#e2bfb0] shadow-sm py-4 max-w-max-width p-3 "  >
 
             <div className ="flex items-center gap-4">
                 <img alt="FixGo Logo" className="h-10 w-auto" src={logo} />
