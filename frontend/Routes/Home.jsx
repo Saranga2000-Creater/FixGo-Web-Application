@@ -92,7 +92,7 @@ function Home() {
                                             />
 
                                         </div>
-                                        <button className="relative flex items-center justify-center gap-3 bg-[#ba1a1a] text-[#ffffff] font-mono px-4 py-4 rounded-xl shadow-md hover:brightness-110 box-shadow-[0 0 20px rgba(255, 107, 0, 0.4)] transition-all">
+                                        <button className="relative flex items-center justify-center gap-3 bg-[#ba1a1a] text-[#ffffff] font-mono px-4 py-4 rounded-xl shadow-md hover:brightness-110 transition-all">
                                             <FontAwesomeIcon
                                                 icon={faTriangleExclamation}
                                                 className="text-2xl mb-3 text-black absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
