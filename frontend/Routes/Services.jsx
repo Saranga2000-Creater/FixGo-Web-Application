@@ -1,18 +1,38 @@
+
 import { NavBar } from "../components/NavBar"
+import { useLocation } from "react-router-dom"
+import Customer from "../components/CustomerDashboard";
+import ShopOwner from "../components/ShopOwnerDashboard";
+import Admin from "../components/AdminControlDashboard"
+
 
 function Services() {
 
-    return (
-        <>
+    const location = useLocation();
+    const role = location.state?.role;
 
-            <NavBar />
+        return(
 
-            <div className="flex items-center justify-center h-screen">
-                <h1 className="text-4xl font-bold text-[#a04100]">Services Page - Coming Soon!</h1>
-            </div>
-        
-        </>
-    )
+            <>
+
+                <NavBar />
+
+                <div className="flex items-center justify-center h-auto">
+
+                    {
+                        role==="admin" && <Admin/>
+                    }
+                    {
+                        role==="customer" && <Customer />
+                    }
+                    {
+                        role==="owner" && <ShopOwner />
+                    }
+
+                </div>
+
+            </>
+        )
 }
 
 export default Services

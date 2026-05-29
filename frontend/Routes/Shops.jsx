@@ -7,7 +7,7 @@ function Shops() {
             <NavBar />
 
             <div className="flex items-center justify-center h-screen">
-                <h1 className="text-4xl font-bold text-[#a04100]">Shops Page - Coming Soon!</h1>
+                <h1 className="text-4xl font-bold text-[#14532d]">Shops Page - Coming Soon!</h1>
             </div>
 
         </>
