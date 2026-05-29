@@ -16,8 +16,8 @@ export const NavBar = () => {
 
             <nav className="hidden md:flex items-center gap-8" >
                 <NavLink to="/" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors " >Home</NavLink>
-                <NavLink to="/shops" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors "  >Services</NavLink>
-                <NavLink to="/services" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors" >Contact</NavLink>
+                <NavLink to="/shops" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors "  >Shops</NavLink>
+                <NavLink to="/services" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors" >Services</NavLink>
                 <NavLink to="/support" className="text-[#a04100] font-mono active:scale-110 py-1 transition-colors" >Support</NavLink>
             </nav>
 
