@@ -61,6 +61,7 @@ function Sign({ setShowSignIn }) {
                             required
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="you@example.com"
+                            name="email"
                         />
                     </div>
 
@@ -71,6 +72,7 @@ function Sign({ setShowSignIn }) {
                             required
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="Enter your password"
+                            name="password"
                         />
                     </div>
 
@@ -78,6 +80,7 @@ function Sign({ setShowSignIn }) {
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
                         onClick={handleUserLogin}
+                        name="signin"
                     >
 
                         Sign in
