@@ -12,7 +12,7 @@ function Sign({ setShowSignIn }) {
 
         navigate("/services", {
             state: {
-                role: "owner" //owner , customer , admin
+                role: "admin" //owner , customer , admin
             }
         })
 
