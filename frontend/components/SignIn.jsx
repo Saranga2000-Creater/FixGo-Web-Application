@@ -7,20 +7,19 @@ import { useState } from "react";
 function Sign({ setShowSignIn }) {
 
     const navigate = useNavigate();
-    const [accountType, setAccountType] = useState("customer");
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const handleUserLogin = (event) => {
         event.preventDefault();
         setShowSignIn(false)
-        sessionStorage.setItem("role", accountType)
         sessionStorage.setItem("email", email)
-        sessionStorage.setItem("accountType", accountType)
+        sessionStorage.setItem("role", "customer") // Default role
 
         navigate("/services", {
             state: {
-                role: accountType // owner , customer , admin
+                role: "customer"
             }
         })
 
@@ -59,18 +58,7 @@ function Sign({ setShowSignIn }) {
                     className="space-y-4"
                     onSubmit={handleUserLogin}
                 >
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Account Type</label>
-                        <select
-                            value={accountType}
-                            onChange={(event) => setAccountType(event.target.value)}
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                        >
-                            <option value="customer">Customer</option>
-                            <option value="owner">Shop Owner</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
+
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
