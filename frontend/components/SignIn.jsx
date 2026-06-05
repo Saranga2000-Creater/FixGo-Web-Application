@@ -1,18 +1,26 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 
 function Sign({ setShowSignIn }) {
 
     const navigate = useNavigate();
+    const [accountType, setAccountType] = useState("customer");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-    const handleUserLogin = () => {
+    const handleUserLogin = (event) => {
+        event.preventDefault();
+        setShowSignIn(false)
+        sessionStorage.setItem("role", accountType)
+        sessionStorage.setItem("email", email)
+        sessionStorage.setItem("accountType", accountType)
 
         navigate("/services", {
             state: {
-                role: "owner" //owner , customer , admin
+                role: accountType // owner , customer , admin
             }
         })
 
@@ -49,16 +57,28 @@ function Sign({ setShowSignIn }) {
 
                 <form
                     className="space-y-4"
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        setShowSignIn(false);
-                    }}
+                    onSubmit={handleUserLogin}
                 >
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Account Type</label>
+                        <select
+                            value={accountType}
+                            onChange={(event) => setAccountType(event.target.value)}
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                        >
+                            <option value="customer">Customer</option>
+                            <option value="owner">Shop Owner</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
                         <input
                             type="email"
                             required
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="you@example.com"
                         />
@@ -69,6 +89,8 @@ function Sign({ setShowSignIn }) {
                         <input
                             type="password"
                             required
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="Enter your password"
                         />
@@ -77,7 +99,6 @@ function Sign({ setShowSignIn }) {
                     <button
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
-                        onClick={handleUserLogin}
                     >
 
                         Sign in

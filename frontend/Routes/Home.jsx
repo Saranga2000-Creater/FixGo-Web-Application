@@ -1,7 +1,7 @@
 import { NavBar } from '../components/NavBar'
 import image from '../src/assets/image4.jpg'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench,faRocket } from "@fortawesome/free-solid-svg-icons";
+import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench, faRocket } from "@fortawesome/free-solid-svg-icons";
 import Sign from "../components/SignIn"
 import { useState } from 'react';
 import car from "../src/assets/car.avif"
