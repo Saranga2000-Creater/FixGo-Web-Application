@@ -17,7 +17,7 @@ export const NavBar = ({setShowSignIn}) => {
             <nav className="hidden md:flex items-center gap-8" >
                 <NavLink to="/" className="text-[#14532d] font-mono active:scale-110 py-1 transition-colors " >Home</NavLink>
                 <NavLink to="/shops" className="text-[#14532d] font-mono active:scale-110 py-1 transition-colors "  >Shops</NavLink>
-                <NavLink to="/services" className="text-[#14532d] font-mono active:scale-110 py-1 transition-colors" >Services</NavLink>
+                <NavLink to="/services" className="text-[#14532d] font-mono active:scale-110 py-1 transition-colors" >Dashboard</NavLink>
                 <NavLink to="/support" className="text-[#14532d] font-mono active:scale-110 py-1 transition-colors" >Support</NavLink>
             </nav>
 
