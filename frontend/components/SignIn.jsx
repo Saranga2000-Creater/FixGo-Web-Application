@@ -1,18 +1,25 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 
 function Sign({ setShowSignIn }) {
 
     const navigate = useNavigate();
 
-    const handleUserLogin = () => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleUserLogin = (event) => {
+        event.preventDefault();
+        setShowSignIn(false)
+        sessionStorage.setItem("email", email)
+        sessionStorage.setItem("role", "customer") // Default role
 
         navigate("/services", {
             state: {
-                role: "admin" //owner , customer , admin
+                role: "customer"
             }
         })
 
@@ -49,16 +56,17 @@ function Sign({ setShowSignIn }) {
 
                 <form
                     className="space-y-4"
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        setShowSignIn(false);
-                    }}
+                    onSubmit={handleUserLogin}
                 >
+
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
                         <input
                             type="email"
                             required
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="you@example.com"
                             name="email"
@@ -70,6 +78,8 @@ function Sign({ setShowSignIn }) {
                         <input
                             type="password"
                             required
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="Enter your password"
                             name="password"

@@ -1,6 +1,6 @@
 
-import { NavBar } from "../components/NavBar"
 import { useLocation } from "react-router-dom"
+import { NavBar } from "../components/NavBar"
 import Customer from "../components/CustomerDashboard";
 import ShopOwner from "../components/ShopOwnerDashboard";
 import Admin from "../components/AdminControlDashboard"
@@ -9,30 +9,29 @@ import Admin from "../components/AdminControlDashboard"
 function Services() {
 
     const location = useLocation();
-    const role = location.state?.role;
+    const role = location.state?.role || sessionStorage.getItem("role");
 
-        return(
+    return (
 
-            <>
+        <>
+            <NavBar />
 
-                <NavBar />
+            <div className="h-auto w-full">
 
-                <div className="flex items-center justify-center h-auto">
+                {
+                    role === "admin" && <Admin />
+                }
+                {
+                    role === "customer" && <Customer />
+                }
+                {
+                    role === "owner" && <ShopOwner />
+                }
 
-                    {
-                        role==="admin" && <Admin/>
-                    }
-                    {
-                        role==="customer" && <Customer />
-                    }
-                    {
-                        role==="owner" && <ShopOwner />
-                    }
+            </div>
 
-                </div>
-
-            </>
-        )
+        </>
+    )
 }
 
 export default Services
