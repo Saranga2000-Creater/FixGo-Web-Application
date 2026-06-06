@@ -65,8 +65,6 @@ function Sign({ setShowSignIn }) {
                         <input
                             type="email"
                             required
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="you@example.com"
                             name="email"
@@ -78,8 +76,6 @@ function Sign({ setShowSignIn }) {
                         <input
                             type="password"
                             required
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="Enter your password"
                             name="password"
@@ -90,7 +86,10 @@ function Sign({ setShowSignIn }) {
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
                         onClick={handleUserLogin}
+<<<<<<< HEAD
                         name="signin"
+=======
+>>>>>>> 723b19f61a56b773de02f6e3d6f45f68a00032e2
                     >
 
                         Sign in

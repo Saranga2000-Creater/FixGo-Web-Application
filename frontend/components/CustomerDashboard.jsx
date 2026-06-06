@@ -977,8 +977,8 @@ function NotificationsView() {
 							key={tab.key}
 							onClick={() => setActiveTab(tab.key)}
 							className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${activeTab === tab.key
-									? "border-[#ff6b1a] bg-[#fff4ee] text-[#ff6b1a]"
-									: "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+								? "border-[#ff6b1a] bg-[#fff4ee] text-[#ff6b1a]"
+								: "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
 								}`}
 						>
 							{tab.label} ({tab.count})
