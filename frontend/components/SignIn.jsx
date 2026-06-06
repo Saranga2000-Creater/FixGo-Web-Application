@@ -86,10 +86,7 @@ function Sign({ setShowSignIn }) {
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
                         onClick={handleUserLogin}
-<<<<<<< HEAD
                         name="signin"
-=======
->>>>>>> 723b19f61a56b773de02f6e3d6f45f68a00032e2
                     >
 
                         Sign in
