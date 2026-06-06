@@ -1,0 +1,78 @@
+<?php
+class SearchController {
+    private $shopModel;
+
+    public function __construct($db) {
+        $this->shopModel = new Shop($db);
+        date_default_timezone_set('Asia/Colombo');
+    }
+
+    public function handleSearchRequest($requestData) {
+        $lat = isset($requestData['lat']) ? (float) $requestData['lat'] : null;
+        $lng = isset($requestData['lng']) ? (float) $requestData['lng'] : null;
+        $radius = isset($requestData['radius']) ? (float) $requestData['radius'] : 15;
+        
+        $vehicleCategory = isset($requestData['vehicle_category']) ? (int) $requestData['vehicle_category'] : null;
+        $shopCategory = isset($requestData['shop_category']) ? (int) $requestData['shop_category'] : null;
+        $sort = isset($requestData['sort']) ? $requestData['sort'] : 'distance';
+
+        if ($lat === null || $lng === null) {
+            http_response_code(400);
+            return json_encode(["message" => "Latitude and longitude parameters are required."]);
+        }
+
+        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort);
+        $num = $stmt->rowCount();
+
+        if ($num > 0) {
+            $results = array();
+            $results["data"] = array();
+            
+            $currentTime = date('H:i:s');
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                
+                $isOpen = false;
+                $openStatusText = "Temporarily Closed";
+
+                if ($row['isAvailable'] == 1) {
+                    if ($currentTime >= $row['openTime'] && $currentTime <= $row['closeTime']) {
+                        $isOpen = true;
+                        $openStatusText = "Open Now";
+                    } else {
+                        $openStatusText = "Opens " . date("g:i A", strtotime($row['openTime']));
+                    }
+                }
+
+                // CHANGED: Merge the shop tags and vehicle tags into one seamless array for the UI
+                $rawShopTags = $row['shop_tags'] ? explode(', ', $row['shop_tags']) : [];
+                $rawVehicleTags = $row['vehicle_tags'] ? explode(', ', $row['vehicle_tags']) : [];
+                
+                // Combine arrays and remove any duplicates or empty values
+                $combinedTags = array_unique(array_filter(array_merge($rawVehicleTags, $rawShopTags)));
+
+                $formattedShop = array(
+                    "id" => (int) $row['id'],
+                    "name" => $row['name'],
+                    "location_text" => $row['address'], 
+                    "distance_km" => round($row['distance'] / 1000, 2),
+                    "avg_rating" => (float) $row['avg_rating'],
+                    "review_count" => (int) $row['review_count'],
+                    "is_open_now" => $isOpen,
+                    "open_status_text" => $openStatusText,
+                    "thumbnail_url" => $row['thumbnail_url'] ? $row['thumbnail_url'] : 'https://via.placeholder.com/300x200?text=No+Image',
+                    "tags" => array_values($combinedTags) // Re-index the array for clean JSON output
+                );
+                
+                array_push($results["data"], $formattedShop);
+            }
+
+            http_response_code(200);
+            return json_encode($results);
+        } else {
+            http_response_code(404);
+            return json_encode(["message" => "No service locations found matching the criteria."]);
+        }
+    }
+}
+?>
