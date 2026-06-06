@@ -6,7 +6,7 @@ import Sign from "../components/SignIn"
 import { useState } from 'react';
 import car from "../src/assets/car.avif"
 import serviceCenter from "../src/assets/service.jpg"
-import {Footer} from "../components/footer"
+import { Footer } from "../components/footer"
 
 function Home() {
 
@@ -100,12 +100,8 @@ function Home() {
                                             />
 
                                         </div>
-                                        <button className="relative flex items-center justify-center gap-3 bg-[#ba1a1a] text-[#ffffff] font-mono px-4 py-4 rounded-xl shadow-md hover:brightness-110 transition-all">
-                                            <FontAwesomeIcon
-                                                icon={faTriangleExclamation}
-                                                className="text-2xl mb-3 text-black absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                            />
-                                            EMERGENCY HELP
+                                        <button className="w-full md:w-auto bg-[#16a34a] text-[#ffffff] font-mono px-12 py-4 rounded-xl hover:bg-[#16a34a]/80 transition-all">
+                                            SEARCH NOW
                                         </button>
                                     </div>
                                 </div>
@@ -118,9 +114,7 @@ function Home() {
                                     />
                                     <input className="w-full pl-12 pr-4 py-4 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] focus:ring-2 focus:ring-[#16a34a] outline-none font-body-md" placeholder="Search by City in Western Province (Colombo, Gampaha, Kalutara...)" type="text" />
                                 </div>
-                                <button className="w-full md:w-auto bg-[#16a34a] text-[#ffffff] font-mono px-12 py-4 rounded-xl hover:bg-[#16a34a]/80 transition-all">
-                                    SEARCH NOW
-                                </button>
+                                
                             </div>
                         </div>
                     </div>
@@ -186,7 +180,7 @@ function Home() {
                 </section>
             </main>
 
-          <Footer />
+            <Footer />
 
         </div>
     )

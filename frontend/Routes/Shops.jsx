@@ -114,26 +114,6 @@ function Shops() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="grid gap-4 rounded-2xl border border-[#d1e7d7] bg-white p-4 shadow-lg md:grid-cols-[1fr_auto_auto] md:items-center">
-                            <div className="relative">
-                                <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#274c3a]" />
-                                <input
-                                    className="w-full rounded-xl border border-[#d1e7d7] bg-[#f7fbf8] py-4 pl-12 pr-4 font-mono text-sm text-[#14532d] outline-none transition focus:border-[#16a34a] focus:ring-2 focus:ring-[#16a34a]/20"
-                                    placeholder="Search by shop name, city, or service"
-                                    type="text"
-                                />
-                            </div>
-                            <select className="rounded-xl border border-[#d1e7d7] bg-[#f7fbf8] px-4 py-4 font-mono text-sm text-[#14532d] outline-none transition focus:border-[#16a34a] focus:ring-2 focus:ring-[#16a34a]/20">
-                                <option>Western Province</option>
-                                <option>Colombo</option>
-                                <option>Gampaha</option>
-                                <option>Kalutara</option>
-                            </select>
-                            <button className="rounded-xl bg-[#16a34a] px-8 py-4 font-mono text-sm font-bold text-white shadow-md transition hover:brightness-110 active:scale-95">
-                                SEARCH
-                            </button>
-                        </div>
                     </div>
                 </section>
 
@@ -145,15 +125,9 @@ function Shops() {
                         </div>
 
                         <div className="border-t border-[#d1e7d7] py-5">
-                            <label className="mb-3 block font-mono text-sm font-bold uppercase tracking-widest text-black/70">
-                                Region
-                            </label>
-                            <select className="w-full rounded-xl border border-[#d1e7d7] bg-[#f7fbf8] p-3 font-mono text-sm text-black outline-none focus:border-[#16a34a]">
-                                <option value="">Select a region</option>
-                                <option value="colombo">Colombo</option>
-                                <option value="gampaha">Gampaha</option>
-                                <option value="kalutara">Kalutara</option>
-                            </select>
+                            <button className="rounded-xl w-full bg-[#16a34a] px-8 py-4 font-mono text-sm font-bold text-white shadow-md transition hover:brightness-110 active:scale-95">
+                                SEARCH
+                            </button>
                         </div>
 
                         <div className="border-t border-[#d1e7d7] py-5">
@@ -191,7 +165,7 @@ function Shops() {
                             <div>
                                 <p className="font-mono text-sm uppercase tracking-widest text-black/70 ">Shop directory</p>
                                 <h2 className="font-mono text-2xl font-bold text-black ">Top matches near you</h2>
-                            </div> 
+                            </div>
                             <select className="w-full rounded-xl border border-[#d1e7d7] bg-white px-4 py-3 font-mono text-sm text-black outline-none md:w-auto">
                                 <option>Sort by rating</option>
                                 <option>Nearest first</option>
