@@ -61,7 +61,11 @@ class SearchController {
                     "is_open_now" => $isOpen,
                     "open_status_text" => $openStatusText,
                     "thumbnail_url" => $row['thumbnail_url'] ? $row['thumbnail_url'] : 'https://via.placeholder.com/300x200?text=No+Image',
-                    "tags" => array_values($combinedTags) // Re-index the array for clean JSON output
+                    "tags" => array_values($combinedTags),
+                    
+                    // ADDED: Pass the coordinates from the SQL row into the JSON output
+                    "latitude" => (float) $row['latitude'],
+                    "longitude" => (float) $row['longitude']
                 );
                 
                 array_push($results["data"], $formattedShop);
