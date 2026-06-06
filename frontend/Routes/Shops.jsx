@@ -1,327 +1,345 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import serviceHero from "../src/assets/service center.jpg"
 
 import {
-    faBicycle,
-    faCar,
     faClock,
-    faPhone,
     faLocationDot,
-    faMagnifyingGlass,
-    faShieldHalved,
-    faSliders,
     faStar,
-    faTruck,
-    faWarehouse,
-    faWrench,
     faXmark,
+    faMapLocationDot,
 } from "@fortawesome/free-solid-svg-icons"
 
-const shops = [
-    {
-        name: "Greenline Auto Care",
-        type: "Service Center",
-        region: "Colombo",
-        address: "No. 18, Galle Road, Colombo 03",
-        mapQuery: "Greenline Auto Care, Galle Road, Colombo, Sri Lanka",
-        rating: "4.8",
-        hours: "Open until 8.00 PM",
-        contacts: ["011 245 7788", "077 884 2190"],
-        services: ["Full service", "Engine diagnostics", "AC repair", "Oil change", "Wheel alignment", "Hybrid vehicle inspection"],
-    },
-    {
-        name: "Metro Garage Works",
-        type: "Garage",
-        region: "Gampaha",
-        address: "212 Minuwangoda Road, Gampaha",
-        mapQuery: "Metro Garage Works, Gampaha, Sri Lanka",
-        rating: "4.6",
-        hours: "Open now",
-        contacts: ["033 224 6112", "071 552 9081"],
-        services: ["Engine repair", "Brake service", "Body work", "Suspension repair", "Battery testing", "Transmission service"],
-    },
-    {
-        name: "RoadMate Spares",
-        type: "Spare Parts",
-        region: "Kalutara",
-        address: "48 Main Street, Kalutara South",
-        mapQuery: "RoadMate Spares, Kalutara, Sri Lanka",
-        rating: "4.7",
-        hours: "Closes at 7.30 PM",
-        contacts: ["034 226 4098", "076 310 7744"],
-        services: ["Genuine parts", "Batteries", "Tyres", "Filters", "Brake pads", "Engine oil and fluids"],
-    },
-]
+// CHANGED: Imported the required Google Maps components
+import { useLoadScript, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
 
 const vehicleFilters = [
-    { id: "three-wheelers", label: "3-Wheelers and Bikes", icon: faBicycle },
-    { id: "four-wheelers", label: "4-Wheelers", icon: faCar },
-    { id: "commercial", label: "Commercial Vehicles", icon: faTruck },
+    { id: 1, label: "3-Wheelers and Bikes" },
+    { id: 2, label: "4-Wheelers" },
+    { id: 3, label: "Commercial Vehicles" },
 ]
 
 const serviceFilters = [
-    { id: "garage", label: "Garages" },
-    { id: "service", label: "Service Centers" },
-    { id: "spare", label: "Spare Parts" },
+    { id: 1, label: "Garages" },
+    { id: 2, label: "Service Centers" },
+    { id: 3, label: "Spare Parts" },
 ]
 
+// ADDED: Map styling container
+const mapContainerStyle = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '1rem',
+};
+
+// ADDED: The hardcoded user coordinates (Colombo 03)
+const userLocation = { lat: 6.9271, lng: 79.8612 };
+
 function Shops() {
+    // ADDED: Load the Google Maps API Script
+    // PASTE YOUR ACTUAL DEMO KEY HERE!
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: "AIzaSyAMz2oD7xU6l2jX6uYHzja4VONq-NN0lCk", 
+    });
+
     const [selectedShop, setSelectedShop] = useState(null)
+    const [activeMarker, setActiveMarker] = useState(null) // State for clicking pins on the map
+    
+    const [shopsList, setShopsList] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState(null)
+    
+    const [activeVehicle, setActiveVehicle] = useState("")
+    const [activeService, setActiveService] = useState("")
+    const [sortBy, setSortBy] = useState('distance')
+
+    useEffect(() => {
+        const fetchShops = async () => {
+            setIsLoading(true)
+            setError(null)
+            
+            try {
+                let url = `http://localhost:8000/api/search.php?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=15&sort=${sortBy}`
+                
+                if (activeVehicle) url += `&vehicle_category=${activeVehicle}`
+                if (activeService) url += `&shop_category=${activeService}`
+
+                const response = await fetch(url)
+                const jsonResponse = await response.json()
+
+                if (!response.ok) {
+                    throw new Error(jsonResponse.message || "Failed to fetch shops")
+                }
+
+                setShopsList(jsonResponse.data)
+                console.log("PHP DATA:", jsonResponse.data);
+            } catch (err) {
+                setError(err.message)
+                setShopsList([]) 
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchShops()
+    }, [activeVehicle, activeService, sortBy])
+
+    const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
 
     return (
         <>
             <NavBar />
 
             <main className="min-h-screen bg-[#f7fbf8]">
-                <section className="border-b border-[#d1e7d7] bg-white px-4 py-10 md:px-8">
+                {/* 1. HERO SECTION */}
+                <section className="bg-white px-4 py-8 md:px-8">
                     <div className="mx-auto max-w-7xl">
-                        <div className="relative mb-8 overflow-hidden rounded-2xl border border-[#d1e7d7] bg-[#102818] shadow-xl">
+                        <div className="relative overflow-hidden rounded-2xl border border-[#d1e7d7] bg-[#102818] shadow-xl">
                             <div
                                 className="absolute inset-0 bg-cover bg-center"
                                 style={{ backgroundImage: `url(${serviceHero})` }}
                             />
                             <div className="absolute inset-0 bg-linear-to-r from-[#07140d]/95 via-[#14532d]/75 to-[#07140d]/25" />
-                            <div className="relative grid min-h-105 items-end gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-12">
+                            <div className="relative p-8 lg:p-12">
                                 <div className="max-w-3xl">
-                                    <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 font-mono text-sm font-semibold text-white backdrop-blur">
-                                        <FontAwesomeIcon icon={faShieldHalved} />
-                                        Verified automotive partners
-                                    </span>
                                     <h1 className="font-mono text-3xl font-bold leading-tight text-white md:text-5xl">
                                         Find the right shop for your vehicle
                                     </h1>
-                                    <p className="mt-5 max-w-2xl font-mono text-base leading-7 text-white/85 md:text-lg">
-                                        Browse garages, service centers, and spare-part suppliers across Western Province with practical filters for vehicle type, service category, and location.
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-3 rounded-2xl border border-white/20 bg-white/15 p-4 font-mono text-white shadow-2xl backdrop-blur-md sm:grid-cols-3 lg:grid-cols-1">
-                                    <div className="rounded-xl bg-white/15 p-4">
-                                        <p className="text-2xl font-bold">24/7</p>
-                                        <p className="mt-1 text-sm text-white/75">Customer support visibility</p>
-                                    </div>
-                                    <div className="rounded-xl bg-white/15 p-4">
-                                        <p className="text-2xl font-bold">4.7+</p>
-                                        <p className="mt-1 text-sm text-white/75">Average partner rating</p>
-                                    </div>
-                                    <div className="rounded-xl bg-white/15 p-4">
-                                        <p className="text-2xl font-bold">3</p>
-                                        <p className="mt-1 text-sm text-white/75">Western Province regions</p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:px-8 lg:grid-cols-[280px_1fr]">
-                    <aside className="h-fit rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-sm lg:sticky lg:top-24">
-                        <div className="mb-6 flex items-center justify-between">
-                            <h2 className="font-mono text-xl font-bold text-[#14532d]">Filters</h2>
-                            <FontAwesomeIcon icon={faSliders} className="text-[#16a34a]" />
-                        </div>
-
-                        <div className="border-t border-[#d1e7d7] py-5">
-                            <button className="rounded-xl w-full bg-[#16a34a] px-8 py-4 font-mono text-sm font-bold text-white shadow-md transition hover:brightness-110 active:scale-95">
-                                SEARCH
-                            </button>
-                        </div>
-
-                        <div className="border-t border-[#d1e7d7] py-5">
-                            <h3 className="mb-3 font-mono text-sm font-bold uppercase tracking-widest text-black/70">
-                                Vehicle Category
-                            </h3>
-                            <div className="space-y-3">
-                                {vehicleFilters.map((filter) => (
-                                    <label key={filter.id} htmlFor={filter.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-transparent p-3 font-mono text-sm text-black transition hover:border-[#d1e7d7] hover:bg-[#16a34a]/5">
-                                        <input id={filter.id} name="vehicleType" type="checkbox" className="h-4 w-4 accent-[#16a34a]" />
-                                        <FontAwesomeIcon icon={filter.icon} className="w-5 text-[#16a34a]" />
-                                        <span>{filter.label}</span>
-                                    </label>
-                                ))}
+                {/* 2. THE FILTER SECTION */}
+                <section className="border-b border-[#d1e7d7] bg-[#f7fbf8] px-4 py-4 md:px-8 shadow-sm">
+                    <div className="mx-auto max-w-7xl">
+                        <div className="flex flex-col md:flex-row items-end justify-between gap-4 w-full rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-sm">
+                            
+                            <div className="flex w-full flex-1 flex-col">
+                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
+                                    Vehicle Category
+                                </label>
+                                <select 
+                                    value={activeVehicle}
+                                    onChange={(e) => setActiveVehicle(e.target.value)}
+                                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer
+                                        ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f7fbf8] text-black/80 hover:bg-white'}`}
+                                >
+                                    <option value="">🚗 All Vehicles</option>
+                                    {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                </select>
                             </div>
-                        </div>
 
-                        <div className="border-t border-[#d1e7d7] py-5">
-                            <h3 className="mb-3 font-mono text-sm font-bold uppercase tracking-widest text-black/70">
-                                Service Type
-                            </h3>
-                            <div className="space-y-3">
-                                {serviceFilters.map((filter) => (
-                                    <label key={filter.id} htmlFor={filter.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-transparent p-3 font-mono text-sm text-black transition hover:border-[#d1e7d7] hover:bg-[#16a34a]/5">
-                                        <input id={filter.id} name="serviceType" type="checkbox" className="h-4 w-4 accent-[#16a34a]" />
-                                        <span>{filter.label}</span>
-                                    </label>
-                                ))}
+                            <div className="flex w-full flex-1 flex-col">
+                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
+                                    Service Type
+                                </label>
+                                <select 
+                                    value={activeService}
+                                    onChange={(e) => setActiveService(e.target.value)}
+                                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer
+                                        ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f7fbf8] text-black/80 hover:bg-white'}`}
+                                >
+                                    <option value="">🔧 All Services</option>
+                                    {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                </select>
                             </div>
-                        </div>
-                    </aside>
 
-                    <div>
-                        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                            <div>
-                                <p className="font-mono text-sm uppercase tracking-widest text-black/70 ">Shop directory</p>
-                                <h2 className="font-mono text-2xl font-bold text-black ">Top matches near you</h2>
+                            <div className="flex w-full flex-1 flex-col">
+                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
+                                    Sort Results By
+                                </label>
+                                <select 
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="w-full rounded-xl border border-[#d1e7d7] bg-[#f7fbf8] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors"
+                                >
+                                    <option value="distance">📍 Nearest first</option>
+                                    <option value="rating">⭐ Top rated</option>
+                                </select>
                             </div>
-                            <select className="w-full rounded-xl border border-[#d1e7d7] bg-white px-4 py-3 font-mono text-sm text-black outline-none md:w-auto">
-                                <option>Sort by rating</option>
-                                <option>Nearest first</option>
-                                <option>Open now</option>
-                            </select>
-                        </div>
 
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                            {shops.map((shop) => (
-                                <article key={shop.name} className="overflow-hidden rounded-2xl border border-[#d1e7d7] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-                                    <div className="relative flex h-36 items-center justify-center overflow-hidden bg-[#14532d] text-white">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center opacity-30"
-                                            style={{ backgroundImage: `url(${serviceHero})` }}
-                                        />
-                                        <div className="absolute inset-0 bg-[#14532d]/70" />
-                                        <span className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-white/15 backdrop-blur">
-                                            <FontAwesomeIcon icon={shop.type === "Garage" ? faWrench : shop.type === "Spare Parts" ? faWarehouse : faCar} className="text-4xl text-white" />
-                                        </span>
-                                    </div>
-                                    <div className="p-5">
-                                        <div className="mb-3 flex items-start justify-between gap-4">
-                                            <div>
-                                                <p className="font-mono text-xs font-bold uppercase tracking-widest text-[#16a34a]">{shop.type}</p>
-                                                <h3 className="mt-1 font-mono text-xl font-bold text-black">{shop.name}</h3>
-                                            </div>
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#16a34a]/10 px-3 py-1 font-mono text-sm font-bold text-black">
-                                                <FontAwesomeIcon icon={faStar} className="text-yellow-400" />
-                                                {shop.rating}
+                            {hasActiveFilters && (
+                                <div className="flex shrink-0 items-center justify-center pb-[2px]">
+                                    <button 
+                                        onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }}
+                                        className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
+                                    >
+                                        ✕ Clear filters
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. MAIN CONTENT SECTION */}
+                <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+                    
+                    <div className="mb-6">
+                        <p className="font-mono text-sm uppercase tracking-widest text-black/70">Shop directory</p>
+                        <h2 className="font-mono text-2xl font-bold text-black">Top matches near you</h2>
+                    </div>
+
+                    <div className="grid gap-8 lg:grid-cols-2 items-start relative">
+                        
+                        {/* LEFT COLUMN: Shop List */}
+                        <div className="flex flex-col order-last lg:order-first">
+                            {isLoading && <div className="py-10 font-mono text-[#16a34a] font-bold">Loading nearby shops...</div>}
+                            {error && <div className="py-10 font-mono text-red-500">{error}</div>}
+
+                            <div className="flex flex-col gap-5">
+                                {!isLoading && !error && shopsList.map((shop) => (
+                                    <article key={shop.id} className="flex flex-col sm:flex-row overflow-hidden rounded-2xl border border-[#d1e7d7] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                                        
+                                        <div className="relative h-48 sm:h-auto sm:w-48 shrink-0 bg-[#14532d]">
+                                            <div
+                                                className="absolute inset-0 bg-cover bg-center opacity-70"
+                                                style={{ backgroundImage: `url(${shop.thumbnail_url})` }}
+                                            />
+                                            <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md
+                                                ${shop.is_open_now ? 'bg-[#16a34a]' : 'bg-gray-600'}`}>
+                                                {shop.open_status_text}
                                             </span>
                                         </div>
+                                        
+                                        <div className="flex flex-col justify-between p-5 w-full">
+                                            <div>
+                                                <div className="mb-2 flex items-start justify-between gap-4">
+                                                    <h3 className="font-mono text-lg font-bold text-black leading-tight">{shop.name}</h3>
+                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#16a34a]/10 px-2 py-1 font-mono text-sm font-bold text-black">
+                                                        <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
+                                                        {shop.avg_rating} 
+                                                    </span>
+                                                </div>
 
-                                        <div className="space-y-2 font-mono text-sm text-black/70">
-                                            <p className="flex items-center gap-2">
-                                                <FontAwesomeIcon icon={faLocationDot} className="w-4 text-[#16a34a]" />
-                                                {shop.region}
-                                            </p>
-                                            <p className="flex items-center gap-2">
-                                                <FontAwesomeIcon icon={faClock} className="w-4 text-[#16a34a]" />
-                                                {shop.hours}
-                                            </p>
+                                                <p className="flex items-center gap-2 font-mono text-sm text-black/70 mb-4">
+                                                    <FontAwesomeIcon icon={faLocationDot} className="w-4 text-[#16a34a]" />
+                                                    {shop.location_text} • {shop.distance_km} km
+                                                </p>
+
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    {shop.tags.map((tag) => (
+                                                        <span key={tag} className="rounded-full bg-[#f7fbf8] px-2 py-1 font-mono text-[10px] uppercase font-bold text-[#274c3a] border border-[#d1e7d7]">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                className="mt-auto w-full rounded-xl border border-[#16a34a] px-4 py-2 font-mono text-sm font-bold text-[#16a34a] transition hover:bg-[#16a34a] hover:text-white active:scale-95"
+                                                onClick={() => setSelectedShop(shop)}
+                                                type="button"
+                                            >
+                                                VIEW DETAILS
+                                            </button>
                                         </div>
-
-                                        <div className="mt-5 flex flex-wrap gap-2">
-                                            {shop.services.map((service) => (
-                                                <span key={service} className="rounded-full bg-[#f7fbf8] px-3 py-1 font-mono text-xs text-[#274c3a]">
-                                                    {service}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        <button
-                                            className="mt-6 w-full rounded-xl border border-[#16a34a] px-4 py-3 font-mono text-sm font-bold text-[#16a34a] transition hover:bg-[#16a34a] hover:text-white active:scale-95"
-                                            onClick={() => setSelectedShop(shop)}
-                                            type="button"
-                                        >
-                                            VIEW SHOP
-                                        </button>
-                                    </div>
-                                </article>
-                            ))}
+                                    </article>
+                                ))}
+                                {!isLoading && shopsList.length === 0 && (
+                                    <div className="py-10 font-mono text-black/50">No shops match your exact filters. Try clearing them.</div>
+                                )}
+                            </div>
                         </div>
+
+                        {/* RIGHT COLUMN: The Interactive Google Map */}
+                        {/* CHANGED: Replaced the gray placeholder with the actual GoogleMap component */}
+                        <div className="order-first lg:order-last w-full h-[400px] lg:h-[calc(100vh-4rem)] lg:sticky lg:top-8 rounded-2xl border border-[#d1e7d7] bg-[#e5e9ea] shadow-xl overflow-hidden relative">
+                            {loadError && <div className="p-8 font-mono text-red-500">Error loading maps API</div>}
+                            {!isLoaded && <div className="p-8 font-mono text-[#16a34a]">Loading Map Engine...</div>}
+                            
+                            {isLoaded && (
+                                <GoogleMap
+                                    mapContainerStyle={mapContainerStyle}
+                                    center={userLocation}
+                                    zoom={12}
+                                    options={{
+                                        disableDefaultUI: false,
+                                        zoomControl: true,
+                                        mapTypeControl: false,
+                                        streetViewControl: false,
+                                    }}
+                                >
+                                    {/* 1. The Blue User Marker */}
+                                    <Marker 
+                                        position={userLocation}
+                                        icon={{
+                                            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" // Standard blue dot
+                                        }}
+                                        title="Your Current Location"
+                                    />
+
+                                    {/* 2. The Dynamic Red Shop Markers (CLEAN & PROFESSIONAL) */}
+                                    {shopsList.map((shop) => {
+                                        const pinLat = parseFloat(shop.latitude || shop.lat);
+                                        const pinLng = parseFloat(shop.longitude || shop.lng);
+
+                                        if (isNaN(pinLat) || isNaN(pinLng)) return null;
+
+                                        return (
+                                            <Marker
+                                                key={shop.id}
+                                                position={{ lat: pinLat, lng: pinLng }}
+                                                
+                                                // CHANGED: Removed the bulky 'label' prop. 
+                                                // 'title' provides a clean hover tooltip!
+                                                title={shop.name} 
+                                                
+                                                // ADDED: Makes the pins drop from the sky on load (2 is the Google Maps constant for DROP)
+                                                animation={2} 
+                                                
+                                                onClick={() => setActiveMarker(shop)} 
+                                            />
+                                        );
+                                    })}
+
+                                    {/* 3. The Interactive Info Bubble (Popping up on Click) */}
+                                    {activeMarker && (
+                                        <InfoWindow
+                                            position={{ lat: parseFloat(activeMarker.latitude || activeMarker.lat), lng: parseFloat(activeMarker.longitude || activeMarker.lng) }}
+                                            onCloseClick={() => setActiveMarker(null)}
+                                        >
+                                            {/* CHANGED: Styled the popup bubble to look like a mini-card */}
+                                            <div className="p-2 font-mono max-w-[200px]">
+                                                <p className="text-[10px] font-bold text-[#16a34a] uppercase tracking-widest">{activeMarker.open_status_text}</p>
+                                                <p className="font-bold text-base text-black leading-tight mt-1 mb-2">{activeMarker.name}</p>
+                                                <p className="text-xs text-black/70 flex items-start gap-1">
+                                                    <FontAwesomeIcon icon={faLocationDot} className="mt-[2px] text-[#16a34a]" />
+                                                    {activeMarker.location_text}
+                                                </p>
+                                            </div>
+                                        </InfoWindow>
+                                    )}
+                                </GoogleMap>
+                            )}
+                        </div>
+
                     </div>
                 </section>
             </main>
 
+            {/* Modal Overlay Component */}
             {selectedShop && (
-                <div
-                    className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm"
-                    onClick={() => setSelectedShop(null)}
-                >
-                    <div
-                        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-                        onClick={(event) => event.stopPropagation()}
-                    >
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm" onClick={() => setSelectedShop(null)}>
+                    <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="relative overflow-hidden rounded-t-2xl bg-[#14532d] p-6 text-white md:p-8">
-                            <div
-                                className="absolute inset-0 bg-cover bg-center opacity-20"
-                                style={{ backgroundImage: `url(${serviceHero})` }}
-                            />
+                            <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: `url(${selectedShop.thumbnail_url})` }}/>
                             <div className="absolute inset-0 bg-[#14532d]/80" />
-                            <button
-                                aria-label="Close shop details"
-                                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 active:scale-95"
-                                onClick={() => setSelectedShop(null)}
-                                type="button"
-                            >
+                            <button className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25" onClick={() => setSelectedShop(null)}>
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                             <div className="relative pr-12">
-                                <p className="font-mono text-sm font-bold uppercase tracking-widest text-[#86efac]">{selectedShop.type}</p>
-                                <h2 className="mt-2 font-mono text-3xl font-bold md:text-4xl">{selectedShop.name}</h2>
-                                <div className="mt-4 flex flex-wrap gap-3 font-mono text-sm text-white/85">
-                                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2">
-                                        <FontAwesomeIcon icon={faStar} className="text-yellow-300" />
-                                        {selectedShop.rating} rating
-                                    </span>
-                                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2">
-                                        <FontAwesomeIcon icon={faClock} />
-                                        {selectedShop.hours}
-                                    </span>
-                                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2">
-                                        <FontAwesomeIcon icon={faLocationDot} />
-                                        {selectedShop.region}
-                                    </span>
-                                </div>
+                                <h2 className="mt-2 font-mono text-3xl font-bold">{selectedShop.name}</h2>
                             </div>
                         </div>
-
-                        <div className="grid gap-6 p-6 md:grid-cols-[1.1fr_0.9fr] md:p-8">
-                            <div className="overflow-hidden rounded-2xl border border-[#d1e7d7] bg-[#f7fbf8]">
-                                <iframe
-                                    className="h-80 w-full border-0"
-                                    loading="lazy"
-                                    referrerPolicy="no-referrer-when-downgrade"
-                                    src={`https://www.google.com/maps?q=${encodeURIComponent(selectedShop.mapQuery)}&output=embed`}
-                                    title={`${selectedShop.name} map location`}
-                                />
-                                <div className="border-t border-[#d1e7d7] p-4 font-mono">
-                                    <p className="text-sm font-bold uppercase tracking-widest text-[#16a34a]">Location</p>
-                                    <p className="mt-2 text-sm text-black/75">{selectedShop.address}</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-5">
-                                <div className="rounded-2xl border border-[#d1e7d7] bg-white p-5">
-                                    <h3 className="font-mono text-lg font-bold text-black">Contact numbers</h3>
-                                    <div className="mt-4 space-y-3">
-                                        {selectedShop.contacts.map((contact) => (
-                                            <a
-                                                className="flex items-center gap-3 rounded-xl bg-[#f7fbf8] px-4 py-3 font-mono text-sm font-bold text-[#14532d] transition hover:bg-[#16a34a]/10"
-                                                href={`tel:${contact.replaceAll(" ", "")}`}
-                                                key={contact}
-                                            >
-                                                <FontAwesomeIcon icon={faPhone} className="text-[#16a34a]" />
-                                                {contact}
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl border border-[#d1e7d7] bg-white p-5">
-                                    <h3 className="font-mono text-lg font-bold text-black">Available services</h3>
-                                    <div className="mt-4 flex flex-wrap gap-2">
-                                        {selectedShop.services.map((service) => (
-                                            <span key={service} className="rounded-full bg-[#16a34a]/10 px-3 py-2 font-mono text-xs font-semibold text-[#14532d]">
-                                                {service}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button className="w-full rounded-xl bg-[#16a34a] px-5 py-4 font-mono text-sm font-bold text-white shadow-md transition hover:brightness-110 active:scale-95">
-                                    BOOK THIS SHOP
-                                </button>
-                            </div>
+                        <div className="p-6 md:p-8">
+                            <p className="text-black text-center font-mono py-10 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+                                Detailed Booking UI goes here.
+                            </p>
                         </div>
                     </div>
                 </div>
