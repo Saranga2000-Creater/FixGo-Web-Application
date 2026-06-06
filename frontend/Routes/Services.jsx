@@ -2,7 +2,7 @@
 import { useLocation } from "react-router-dom"
 import { NavBar } from "../components/NavBar"
 import Customer from "../components/CustomerDashboard";
-import ShopOwner from "../components/ShopOwnerDashboard";
+import ShopOwner from "../components/ShopOwner/ShopOwnerDashboard";
 import Admin from "../components/AdminControlDashboard"
 
 

@@ -19,7 +19,7 @@ function Sign({ setShowSignIn }) {
 
         navigate("/services", {
             state: {
-                role: "customer"
+                role: "owner"
             }
         })
 
