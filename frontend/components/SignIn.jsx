@@ -11,17 +11,35 @@ function Sign({ setShowSignIn }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleUserLogin = (event) => {
+    const handleUserLogin = async (event) => {
         event.preventDefault();
-        setShowSignIn(false)
-        sessionStorage.setItem("email", email)
-        sessionStorage.setItem("role", "customer") // Default role
 
-        navigate("/services", {
-            state: {
-                role: "owner"
+        try {
+            const response = await fetch('http://localhost:8000/api/login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setShowSignIn(false);
+                sessionStorage.setItem("token", data.token);
+                sessionStorage.setItem("email", email);
+                sessionStorage.setItem("role", data.role);
+
+                navigate("/services");
+            } else {
+                alert(data.message || "Login failed. Please try again.");
             }
-        })
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("An error occurred. Please try again.");
+        }
 
     }
 
@@ -58,8 +76,6 @@ function Sign({ setShowSignIn }) {
                     className="space-y-4"
                     onSubmit={handleUserLogin}
                 >
-
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
                         <input
@@ -68,6 +84,8 @@ function Sign({ setShowSignIn }) {
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="you@example.com"
                             name="email"
+                            value={email}
+                            onChange={(e)=>setEmail(e.target.value)}
                         />
                     </div>
 
@@ -79,13 +97,15 @@ function Sign({ setShowSignIn }) {
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                             placeholder="Enter your password"
                             name="password"
+                            value={password}
+                            onChange={(e)=>setPassword(e.target.value)}
                         />
                     </div>
 
                     <button
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
-                        onClick={handleUserLogin}
+                        
                         name="signin"
                     >
 
