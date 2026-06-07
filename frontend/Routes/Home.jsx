@@ -1,12 +1,48 @@
+import { useNavigate } from 'react-router-dom';
 import { NavBar } from '../components/NavBar'
 import image from '../src/assets/image4.jpg'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench, faRocket } from "@fortawesome/free-solid-svg-icons";
+import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench, faRocket, faLocationCrosshairs } from "@fortawesome/free-solid-svg-icons";
+import Sign from "../components/SignIn"
+import { useState } from 'react';
 import car from "../src/assets/car.avif"
 import serviceCenter from "../src/assets/service.jpg"
 import { Footer } from "../components/footer"
 
 function Home() {
+
+    const navigate = useNavigate();
+    const [showSignIn, setShowSignIn] = useState(false)
+
+    // ADDED: States to track what the user clicks in the Quick Search Hub
+    const [homeVehicle, setHomeVehicle] = useState("");
+    const [homeService, setHomeService] = useState("");
+    const [homeCity, setHomeCity] = useState("Current Location");
+
+    // ADDED: The routing and auth logic
+    const handleSearchClick = () => {
+        // TEMPORARY MOCK AUTH CHECK (Set to false to test the login popup)
+        const isUserLoggedIn = true; 
+        
+        if (!isUserLoggedIn) {
+            // Because you already built a SignIn component, let's open it!
+            setShowSignIn(true); 
+            return; 
+        }
+
+        // Build the URL parameters using the standardized IDs from your Shops page
+        const params = new URLSearchParams();
+        if (homeVehicle) params.append('vehicle', homeVehicle);
+        if (homeService) params.append('service', homeService);
+
+        // CHANGED: Only send the city to the URL if it is an actual typed city
+        if (homeCity && homeCity !== "Current Location") {
+            params.append('city', homeCity.trim());
+        }
+        
+        // Send the user to the shops page with the data attached!
+        navigate(`/shops?${params.toString()}`);
+    }
 
     return (
 
@@ -37,81 +73,116 @@ function Home() {
                     </div>
                 </section>
 
-                <section className="relative -mt-24 z-20 px-4 md:px-8 max-w-max-width mx-auto mb-20">
-                    <div className="bg-[#ffffff] border border-[#d1e7d7] rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-8 md:p-12">
-                            <h2 className="font-mono text-2xl mb-8 flex items-center gap-3">
-                                <FontAwesomeIcon
-                                    icon={faSearch}
-                                    className="text-2xl mb-3 text-[#14532d] group-hover:text-[#16a34a]"
-                                />
-
-                                Quick Search Hub
+                {/* ----------------------------------------------------
+                  UPGRADED: QUICK SEARCH HUB - SLEEK FILTER BAR UI
+                  ----------------------------------------------------
+                */}
+                <section className="relative -mt-16 z-20 px-4 md:px-8 max-w-5xl mx-auto mb-20">
+                    <div className="bg-white border border-[#d1e7d7] rounded-2xl shadow-[0_8px_30px_rgb(22,163,74,0.08)] overflow-hidden transition-shadow hover:shadow-[0_12px_40px_rgb(22,163,74,0.12)]">
+                        <div className="p-5 md:p-7">
+                            
+                            {/* COMPACT HEADER */}
+                            <h2 className="font-mono text-xl mb-5 flex items-center gap-3 text-[#14532d] font-bold">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#16a34a]/10 border border-[#16a34a]/20">
+                                    <FontAwesomeIcon icon={faSearch} className="text-[#16a34a] text-sm" />
+                                </span>
+                                Quick Search
                             </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-                                <div>
-                                    <p className="font-mono text-[#274c3a] uppercase tracking-widest mb-6">Select Vehicle Category</p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <button className="group flex flex-col items-center justify-center p-6 border-2 border-[#d1e7d7] rounded-xl hover:border-[#16a34a] hover:bg-[#16a34a]/5 transition-all">
-                                            <FontAwesomeIcon
-                                                icon={faBicycle}
-                                                className="text-2xl mb-3 text-[#274c3a] group-hover:text-[#16a34a]"
-                                            />
-                                            <span className="font-mono text-center">3-Wheelers &amp; Bikes</span>
-                                        </button>
-                                        <button className="group flex flex-col items-center justify-center p-6 border-2 border-[#d1e7d7] bg-[#16a34a]/5 rounded-xl transition-all">
-                                            <FontAwesomeIcon
-                                                icon={faCar}
-                                                className="text-2xl mb-3 text-[#274c3a] group-hover:text-[#16a34a]"
-                                            />
-                                            <span className="font-mono text-center">4-Wheelers</span>
-                                        </button>
-                                        <button className="group flex flex-col items-center justify-center p-6 border-2 border-[#d1e7d7] rounded-xl hover:border-[#16a34a] hover:bg-[#16a34a]/5 transition-all">
-                                            <FontAwesomeIcon
-                                                icon={faTruck}
-                                                className="text-2xl mb-3 text-[#274c3a] group-hover:text-[#16a34a]"
-                                            />
-                                            <span className="font-mono text-center">Commercial</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="font-mono text-[#274c3a] uppercase tracking-widest mb-6">Select Service Type</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="relative">
-                                            <select className="w-full h-full pl-12 pr-10 py-4 rounded-xl border-2 border-[#d1e7d7] bg-[#f8f4f0] font-mono appearance-none focus:ring-[#16a34a] focus:border-[#16a34a]">
-                                                <option>Garages</option>
-                                                <option>Service Centers</option>
-                                                <option>Spare Parts</option>
-                                            </select>
-
-                                            <FontAwesomeIcon
-                                                icon={faWarehouse}
-                                                className="text-2xl mb-3 text-[#274c3a] group-hover:text-[#16a34a] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                            />
-
-                                        </div>
-                                        <button className="w-full md:w-auto bg-[#16a34a] text-[#ffffff] font-mono px-12 py-4 rounded-xl hover:bg-[#16a34a]/80 transition-all">
-                                            SEARCH NOW
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mt-12 flex flex-col md:flex-row gap-6 items-center">
-                                <div className="relative grow w-full">
-                                    <FontAwesomeIcon
-                                        icon={faLocationDot}
-                                        className="text-2xl mb-3 text-black absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                    />
-                                    <input className="w-full pl-12 pr-4 py-4 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] focus:ring-2 focus:ring-[#16a34a] outline-none font-body-md" placeholder="Search by City in Western Province (Colombo, Gampaha, Kalutara...)" type="text" />
-                                </div>
+                            {/* ROW 1: THE CATEGORY CHOICES */}
+                            <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-x-6 gap-y-4 mb-5 pb-5 border-b border-[#d1e7d7]/60">
                                 
+                                {/* 1. Vehicle Category (Now Sleek Horizontal Pills) */}
+                                <div>
+                                    <p className="font-mono text-[11px] text-[#274c3a] uppercase font-bold tracking-widest mb-2">Vehicle Category</p>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <button 
+                                            onClick={() => setHomeVehicle("1")}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all
+                                                ${homeVehicle === "1" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}
+                                        >
+                                            <FontAwesomeIcon icon={faBicycle} className="text-lg" />
+                                            <span className="font-mono text-sm font-bold whitespace-nowrap">3-Wheelers &amp; Bikes</span>
+                                        </button>
+
+                                        <button 
+                                            onClick={() => setHomeVehicle("2")}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all
+                                                ${homeVehicle === "2" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}
+                                        >
+                                            <FontAwesomeIcon icon={faCar} className="text-lg" />
+                                            <span className="font-mono text-sm font-bold whitespace-nowrap">4-Wheelers</span>
+                                        </button>
+
+                                        <button 
+                                            onClick={() => setHomeVehicle("3")}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all
+                                                ${homeVehicle === "3" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}
+                                        >
+                                            <FontAwesomeIcon icon={faTruck} className="text-lg" />
+                                            <span className="font-mono text-sm font-bold whitespace-nowrap">Commercial</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 2. Service Type */}
+                                <div>
+                                    <p className="font-mono text-[11px] text-[#274c3a] uppercase font-bold tracking-widest mb-2">Service Type</p>
+                                    <div className="relative w-full">
+                                        <select 
+                                            value={homeService}
+                                            onChange={(e) => setHomeService(e.target.value)}
+                                            className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] font-mono text-sm cursor-pointer outline-none focus:border-[#16a34a] transition-colors"
+                                        >
+                                            <option value="">All Services</option>
+                                            <option value="1">Garages</option>
+                                            <option value="2">Service Centers</option>
+                                            <option value="3">Spare Parts</option>
+                                        </select>
+                                        <FontAwesomeIcon icon={faWarehouse} className="text-sm text-[#274c3a] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    </div>
+                                </div>
                             </div>
+
+                            {/* ROW 2: THE LOCATION & MASTER GO BUTTON */}
+                            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                                
+                                {/* 3. The Location Input */}
+                                <div className="relative grow w-full flex items-center">
+                                    <FontAwesomeIcon
+                                        icon={homeCity === "Current Location" ? faLocationCrosshairs : faLocationDot}
+                                        className={`absolute left-4 pointer-events-none transition-colors z-10 text-sm ${homeCity === "Current Location" ? 'text-[#16a34a]' : 'text-[#14532d]/50'}`}
+                                    />
+                                    
+                                    <input 
+                                        value={homeCity}
+                                        onChange={(e) => setHomeCity(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
+                                        onFocus={() => {
+                                            if (homeCity === "Current Location") setHomeCity("");
+                                        }}
+                                        onBlur={() => {
+                                            if (homeCity.trim() === "") setHomeCity("Current Location");
+                                        }}
+                                        className={`w-full h-full pl-10 pr-4 py-3 rounded-xl border outline-none font-body-md transition-all text-sm
+                                            ${homeCity === "Current Location" ? 'bg-[#16a34a]/5 border-[#16a34a]/30 text-[#16a34a] font-bold' : 'bg-[#f8f4f0] border-[#d1e7d7] text-black focus:border-[#16a34a]'}`}
+                                        placeholder="Enter a city in Western Province..." 
+                                        type="text" 
+                                    />
+                                </div>
+
+                                {/* 4. THE MASTER SEARCH BUTTON */}
+                                <button 
+                                    onClick={handleSearchClick}
+                                    className="w-full md:w-auto shrink-0 bg-[#16a34a] text-white font-mono text-sm font-bold px-8 py-3 rounded-xl hover:bg-[#16a34a]/80 transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <FontAwesomeIcon icon={faSearch} />
+                                    SEARCH NOW
+                                </button>
+                            </div>
+
                         </div>
                     </div>
-
                 </section>
 
                 <section className="py-20  px-4 md:px-8 bg-green-100 " id='register' >
