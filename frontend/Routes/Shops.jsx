@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from "react"
 import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
@@ -10,6 +11,8 @@ import {
     faStar,
     faXmark,
     faMapLocationDot,
+    faRoute,
+    faBolt,
 } from "@fortawesome/free-solid-svg-icons"
 
 // CHANGED: Imported the required Google Maps components
@@ -34,14 +37,18 @@ const mapContainerStyle = {
     borderRadius: '1rem',
 };
 
-// ADDED: The hardcoded user coordinates (Colombo 03)
-const userLocation = { lat: 6.9271, lng: 79.8612 };
-
 function Shops() {
+    // ADDED: Make user location dynamic, defaulting to Colombo
+    const [userLocation, setUserLocation] = useState({ lat: 6.9271, lng: 79.8612 })
+    
+    // ADDED: State to control the UI warning banner
+    const [locationAlert, setLocationAlert] = useState(null)
+
     // ADDED: Load the Google Maps API Script
-    // PASTE YOUR ACTUAL DEMO KEY HERE!
+
+    // ADDED: Load the Google Maps API Script securely via Vite Environment Variables
     const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: "AIzaSyAMz2oD7xU6l2jX6uYHzja4VONq-NN0lCk", 
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, 
     });
 
     const [selectedShop, setSelectedShop] = useState(null)
@@ -51,9 +58,36 @@ function Shops() {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
     
-    const [activeVehicle, setActiveVehicle] = useState("")
-    const [activeService, setActiveService] = useState("")
+    // ADDED: Initialize the router hook to read the URL
+    const [searchParams] = useSearchParams();
+
+    // CHANGED: These now check the URL first. If nothing is in the URL, they default to empty ("")
+    const [activeVehicle, setActiveVehicle] = useState(searchParams.get('vehicle') || "")
+    const [activeService, setActiveService] = useState(searchParams.get('service') || "")
     const [sortBy, setSortBy] = useState('distance')
+
+    // ADDED: The Geolocation Engine
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // USER CLICKED ALLOW: Save their exact coordinates
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                    setLocationAlert(null); // Clear any warnings
+                },
+                (error) => {
+                    // USER CLICKED BLOCK: Show the warning
+                    console.warn("Geolocation error:", error.message);
+                    setLocationAlert("Location access denied. Showing default results for Colombo. Enable GPS for accurate distances.");
+                }
+            );
+        } else {
+            setLocationAlert("Geolocation is not supported by your browser. Showing default results for Colombo.");
+        }
+    }, []); // Empty array ensures this only runs once when the page loads
 
     useEffect(() => {
         const fetchShops = async () => {
@@ -84,7 +118,7 @@ function Shops() {
         }
 
         fetchShops()
-    }, [activeVehicle, activeService, sortBy])
+    }, [activeVehicle, activeService, sortBy, userLocation])
 
     const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
 
@@ -183,6 +217,20 @@ function Shops() {
                         <p className="font-mono text-sm uppercase tracking-widest text-black/70">Shop directory</p>
                         <h2 className="font-mono text-2xl font-bold text-black">Top matches near you</h2>
                     </div>
+                    
+                    {/* MOVED: Location Warning Banner is now here! */}
+                    {/* CHANGED: Added rounded corners (rounded-xl), a full border, and bottom margin (mb-6) so it sits beautifully above the grid */}
+                    {locationAlert && (
+                        <div className="mb-6 rounded-xl bg-yellow-50 border border-yellow-200 px-5 py-4 text-yellow-800 font-mono text-sm flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <FontAwesomeIcon icon={faLocationDot} className="text-yellow-600 text-lg" />
+                                <p>{locationAlert}</p>
+                            </div>
+                            <button onClick={() => setLocationAlert(null)} className="text-yellow-600 hover:text-yellow-900 transition bg-yellow-100 hover:bg-yellow-200 rounded-full w-8 h-8 flex items-center justify-center">
+                                <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                        </div>
+                    )}
 
                     <div className="grid gap-8 lg:grid-cols-2 items-start relative">
                         
@@ -200,26 +248,56 @@ function Shops() {
                                                 className="absolute inset-0 bg-cover bg-center opacity-70"
                                                 style={{ backgroundImage: `url(${shop.thumbnail_url})` }}
                                             />
-                                            <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md
+                                            {/* Replace your existing badge span with this one */}
+                                            <span className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md
                                                 ${shop.is_open_now ? 'bg-[#16a34a]' : 'bg-gray-600'}`}>
+                                                <FontAwesomeIcon icon={faClock} className="w-3" />
                                                 {shop.open_status_text}
                                             </span>
                                         </div>
                                         
                                         <div className="flex flex-col justify-between p-5 w-full">
                                             <div>
-                                                <div className="mb-2 flex items-start justify-between gap-4">
+                                                {/* CHANGED: Dynamic Rating Block */}
+                                                <div className="mb-3 flex items-start justify-between gap-4">
                                                     <h3 className="font-mono text-lg font-bold text-black leading-tight">{shop.name}</h3>
-                                                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#16a34a]/10 px-2 py-1 font-mono text-sm font-bold text-black">
-                                                        <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
-                                                        {shop.avg_rating} 
-                                                    </span>
+                                                    
+                                                    <div className="shrink-0 flex flex-col items-end mt-1">
+                                                        {shop.review_count > 0 ? (
+                                                            // Renders if the shop has at least 1 review
+                                                            <>
+                                                                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-1 font-mono text-sm font-bold text-yellow-700 border border-yellow-200 shadow-sm">
+                                                                    <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
+                                                                    {Number(shop.avg_rating).toFixed(1)}
+                                                                </span>
+                                                                <span className="text-[10px] text-black/50 font-mono mt-1 font-bold uppercase tracking-widest">
+                                                                    {shop.review_count} {shop.review_count === 1 ? 'review' : 'reviews'}
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            // Renders if the shop is brand new (0 reviews)
+                                                            <span className="inline-flex items-center rounded-full bg-[#16a34a]/10 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#14532d] border border-[#16a34a]/20">
+                                                                <FontAwesomeIcon icon={faBolt} className="w-3 text-yellow-500" />
+                                                                New Shop
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                <p className="flex items-center gap-2 font-mono text-sm text-black/70 mb-4">
-                                                    <FontAwesomeIcon icon={faLocationDot} className="w-4 text-[#16a34a]" />
-                                                    {shop.location_text} • {shop.distance_km} km
-                                                </p>
+                                                {/* CHANGED: Completely redesigned Address and Distance block */}
+                                                <div className="flex flex-col gap-2 mb-4 font-mono text-sm">
+                                                    {/* Row 1: Address */}
+                                                    <div className="flex items-start gap-2 text-black/70">
+                                                        <FontAwesomeIcon icon={faLocationDot} className="mt-[2px] w-4 shrink-0 opacity-70" />
+                                                        <span className="leading-tight">{shop.location_text}</span>
+                                                    </div>
+                                                    
+                                                    {/* Row 2: Distance */}
+                                                    <div className="flex items-center gap-2 text-[#16a34a] font-bold">
+                                                        <FontAwesomeIcon icon={faRoute} className="w-4 shrink-0" />
+                                                        <span>{shop.distance_km} km away</span>
+                                                    </div>
+                                                </div>
 
                                                 <div className="flex flex-wrap gap-2 mb-4">
                                                     {shop.tags.map((tag) => (
@@ -268,9 +346,12 @@ function Shops() {
                                     <Marker 
                                         position={userLocation}
                                         icon={{
-                                            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" // Standard blue dot
+                                            // CHANGED: This URL points to the classic teardrop pin, but in blue!
+                                            url: "https://mt.google.com/vt/icon/name=icons/spotlight/spotlight-waypoint-blue.png" 
                                         }}
                                         title="Your Current Location"
+                                        // ADDED: Makes the blue pin drop from the sky on load just like the red ones
+                                        animation={2} 
                                     />
 
                                     {/* 2. The Dynamic Red Shop Markers (CLEAN & PROFESSIONAL) */}
