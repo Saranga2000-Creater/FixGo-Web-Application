@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠", badge: null },
   { id: "requests", label: "Service Requests", icon: "📋", badge: 12 },
@@ -21,6 +23,8 @@ function Badge({ count }) {
 }
 
 function Sidebar({ activeNav, setActiveNav, sidebarOpen, setSidebarOpen }) {
+  const navigate = useNavigate();
+
   const handleNav = (id) => {
     setActiveNav(id);
     setSidebarOpen(false);
@@ -113,11 +117,17 @@ function Sidebar({ activeNav, setActiveNav, sidebarOpen, setSidebarOpen }) {
 
         {/* Logout */}
         <div style={{ padding: "12px 8px", borderTop: "1px solid #F3F4F6" }}>
-          <button style={{
-            width: "100%", display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-            background: "transparent", color: "#6B7280", fontWeight: 500, fontSize: 14
-          }}>
+          <button 
+            onClick={() => {
+              sessionStorage.clear();
+              navigate("/");
+            }}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: "transparent", color: "#6B7280", fontWeight: 500, fontSize: 14
+            }}
+          >
             <span style={{ fontSize: 17 }}>🚪</span> Logout
           </button>
         </div>

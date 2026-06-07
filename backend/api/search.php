@@ -1,7 +1,10 @@
 <?php
+require_once __DIR__.'/../config/EnvLoader.php';
+EnvLoader::load(__DIR__.'/../.env');
 // Set required headers for a REST API
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+
 
 require_once '../config/Database.php';
 require_once '../models/Shop.php';

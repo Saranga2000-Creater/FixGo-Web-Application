@@ -12,7 +12,7 @@
 // ============================================================
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faArrowRight,
@@ -61,6 +61,7 @@ import {
 //         Endpoint suggestion: GET /api/customer/profile
 // ============================================================
 function Customer() {
+	const navigate = useNavigate();
 	// "currentPage" controls which view/page is currently visible
 	const [currentPage, setCurrentPage] = useState("dashboard");
 
@@ -118,7 +119,13 @@ function Customer() {
 					    👉 API: Call POST /api/auth/logout on click,
 					         then redirect to the login page */}
 					<div className="mt-auto px-4 pb-5">
-						<button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-700 transition hover:bg-slate-50">
+						<button 
+							onClick={() => {
+								sessionStorage.clear();
+								navigate("/");
+							}}
+							className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-700 transition hover:bg-slate-50"
+						>
 							<FontAwesomeIcon icon={faArrowRight} className="rotate-180 text-slate-500" />
 							<span>Logout</span>
 						</button>

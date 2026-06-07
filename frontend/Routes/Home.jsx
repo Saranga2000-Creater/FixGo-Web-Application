@@ -2,23 +2,16 @@ import { NavBar } from '../components/NavBar'
 import image from '../src/assets/image4.jpg'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench, faRocket } from "@fortawesome/free-solid-svg-icons";
-import Sign from "../components/SignIn"
-import { useState } from 'react';
 import car from "../src/assets/car.avif"
 import serviceCenter from "../src/assets/service.jpg"
 import { Footer } from "../components/footer"
 
 function Home() {
 
-    const [showSignIn, setShowSignIn] = useState(false)
-
     return (
 
         <div>
-            <NavBar setShowSignIn={setShowSignIn} />
-            {
-                showSignIn && <Sign setShowSignIn={setShowSignIn} />
-            }
+            <NavBar />
             <main>
                 <section className="relative min-h-[70vh] flex items-center justify-center py-20 px-4 md:px-8 overflow-hidden ">
                     <div className="absolute inset-0 z-0 w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${image})` }}
