@@ -7,7 +7,8 @@ class Shop {
         $this->conn = $db;
     }
 
-    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance') {
+    // CHANGED: Added $searchName = null to the end of the parameters
+    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null) {
         $radiusInMeters = $radiusInKm * 1000;
 
         $query = "SELECT 
@@ -47,6 +48,10 @@ class Shop {
         if ($shopCategoryId !== null) {
             $query .= " AND scm.shop_category_id = :shop_category ";
         }
+        // 3. ADDED: Dynamically inject the LIKE clause if a name was typed
+        if ($searchName !== null && $searchName !== '') {
+            $query .= " AND s.name LIKE :searchName ";
+        }
 
         $query .= " GROUP BY s.id ";
 
@@ -67,6 +72,12 @@ class Shop {
         }
         if ($shopCategoryId !== null) {
             $stmt->bindParam(':shop_category', $shopCategoryId, PDO::PARAM_INT);
+        }
+
+        // 4. ADDED: Safely bind the search string with SQL wildcards (%)
+        if ($searchName !== null && $searchName !== '') {
+            $searchTerm = '%' . $searchName . '%';
+            $stmt->bindParam(':searchName', $searchTerm, PDO::PARAM_STR);
         }
 
         $stmt->execute();
