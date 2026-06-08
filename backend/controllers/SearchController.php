@@ -16,14 +16,18 @@ class SearchController {
         $shopCategory = isset($requestData['shop_category']) ? (int) $requestData['shop_category'] : null;
         $sort = isset($requestData['sort']) ? $requestData['sort'] : 'distance';
 
+        // 1. ADDED: Extract the new 'name' parameter from the GET request
+        $searchName = isset($requestData['name']) ? trim($requestData['name']) : null;
+
         if ($lat === null || $lng === null) {
             http_response_code(400);
             return json_encode(["message" => "Latitude and longitude parameters are required."]);
         }
 
-        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort);
+        // 2. CHANGED: Pass $searchName as the 7th argument to the Model
+        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName);
         $num = $stmt->rowCount();
-
+        
         if ($num > 0) {
             $results = array();
             $results["data"] = array();

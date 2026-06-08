@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -13,6 +13,8 @@ import {
     faMapLocationDot,
     faRoute,
     faBolt,
+    faSearch,
+    faLocationCrosshairs,
 } from "@fortawesome/free-solid-svg-icons"
 
 // CHANGED: Imported the required Google Maps components
@@ -38,48 +40,140 @@ const mapContainerStyle = {
 };
 
 function Shops() {
-    // ADDED: Make user location dynamic, defaulting to Colombo
-    const [userLocation, setUserLocation] = useState({ lat: 6.9271, lng: 79.8612 })
+    // 1. WE MOVED THIS UP: Read the URL immediately when the page loads
+    const [searchParams] = useSearchParams();
+    const urlLat = searchParams.get('lat');
+    const urlLng = searchParams.get('lng');
+
+    // 2. CHANGED: Initial Location Logic
+    // If the URL has coordinates, use them immediately! Otherwise, default to Colombo.
+    const [userLocation, setUserLocation] = useState({ 
+        lat: urlLat ? parseFloat(urlLat) : 6.9271, 
+        lng: urlLng ? parseFloat(urlLng) : 79.8612 
+    });
     
-    // ADDED: State to control the UI warning banner
     const [locationAlert, setLocationAlert] = useState(null)
 
-    // ADDED: Load the Google Maps API Script
-
-    // ADDED: Load the Google Maps API Script securely via Vite Environment Variables
+    // Load the Google Maps API Script
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, 
     });
 
     const [selectedShop, setSelectedShop] = useState(null)
-    const [activeMarker, setActiveMarker] = useState(null) // State for clicking pins on the map
+    const [activeMarker, setActiveMarker] = useState(null) 
     
     const [shopsList, setShopsList] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
     
-    // ADDED: Initialize the router hook to read the URL
-    const [searchParams] = useSearchParams();
-
-    // CHANGED: These now check the URL first. If nothing is in the URL, they default to empty ("")
     const [activeVehicle, setActiveVehicle] = useState(searchParams.get('vehicle') || "")
     const [activeService, setActiveService] = useState(searchParams.get('service') || "")
     const [sortBy, setSortBy] = useState('distance')
 
-    // ADDED: The Geolocation Engine
+    const [searchName, setSearchName] = useState("");
+
+    // --- ADD THESE FOR THE CUSTOM LOCATION DROPDOWN ---
+    const [predictions, setPredictions] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [locationInputText, setLocationInputText] = useState("");
+    const dropdownRef = useRef(null);
+    const typingTimeoutRef = useRef(null); // <-- ADD THIS FOR DEBOUNCING
+
+    // Close dropdown automatically if the user clicks outside
     useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleLocationTyping = (text) => {
+        setLocationInputText(text); // Instantly update the UI so it feels fast
+
+        // 1. Clear the previous timer if the user is still typing!
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        // 2. If text is too short, close everything
+        if (text.length < 3 || text === "Current Location") {
+            setPredictions([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        // 3. Set a new timer to wait 500ms before calling Google
+        typingTimeoutRef.current = setTimeout(async () => {
+            try {
+                console.log("Fetching suggestions for:", text); 
+                
+                const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+                    },
+                    body: JSON.stringify({ input: text, includedRegionCodes: ["lk"] })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error("Google API Quota Error:", data.error.message);
+                } else if (data.suggestions) {
+                    setPredictions(data.suggestions);
+                    setShowDropdown(true);
+                } else {
+                    setPredictions([]);
+                }
+            } catch (error) {
+                console.error("Error fetching API predictions:", error);
+            }
+        }, 500); // <-- 500ms delay
+    };
+
+    const handleSelectPlace = async (placeId, description) => {
+        setLocationInputText(description);
+        setShowDropdown(false);
+        setPredictions([]);
+
+        try {
+            const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?fields=location`, {
+                headers: { 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY }
+            });
+            const data = await response.json();
+            
+            if (data.location) {
+                setUserLocation({ lat: data.location.latitude, lng: data.location.longitude });
+            }
+        } catch (error) {
+            console.error("Error fetching location coordinates:", error);
+        }
+    };
+
+    // 3. CHANGED: The Geolocation Engine (The Conditional Check)
+    useEffect(() => {
+        // SCENARIO A: The user searched from the homepage (URL has coordinates)
+        if (urlLat && urlLng) {
+            setLocationAlert("Showing results for your searched city.");
+            return; // STOP HERE! Do not ask the browser for GPS.
+        }
+
+        // SCENARIO B: The user navigated directly to /shops (No URL coordinates)
+        // Now we ask the browser for their GPS location
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    // USER CLICKED ALLOW: Save their exact coordinates
                     setUserLocation({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     });
-                    setLocationAlert(null); // Clear any warnings
+                    setLocationAlert(null); 
+                    setLocationInputText("Current Location");
                 },
                 (error) => {
-                    // USER CLICKED BLOCK: Show the warning
                     console.warn("Geolocation error:", error.message);
                     setLocationAlert("Location access denied. Showing default results for Colombo. Enable GPS for accurate distances.");
                 }
@@ -87,7 +181,7 @@ function Shops() {
         } else {
             setLocationAlert("Geolocation is not supported by your browser. Showing default results for Colombo.");
         }
-    }, []); // Empty array ensures this only runs once when the page loads
+    }, [urlLat, urlLng]); // If the URL coordinates change, re-run this logic
 
     useEffect(() => {
         const fetchShops = async () => {
@@ -99,6 +193,7 @@ function Shops() {
                 
                 if (activeVehicle) url += `&vehicle_category=${activeVehicle}`
                 if (activeService) url += `&shop_category=${activeService}`
+                if (searchName) url += `&name=${encodeURIComponent(searchName)}`
 
                 const response = await fetch(url)
                 const jsonResponse = await response.json()
@@ -118,7 +213,7 @@ function Shops() {
         }
 
         fetchShops()
-    }, [activeVehicle, activeService, sortBy, userLocation])
+    }, [activeVehicle, activeService, sortBy, userLocation, searchName])
 
     const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
 
@@ -147,65 +242,115 @@ function Shops() {
                     </div>
                 </section>
 
-                {/* 2. THE FILTER SECTION */}
-                <section className="border-b border-[#d1e7d7] bg-[#f7fbf8] px-4 py-4 md:px-8 shadow-sm">
+                {/* 2. THE UPGRADED PREMIUM FILTER SECTION */}
+                <section className="border-b border-[#d1e7d7] bg-[#f7fbf8] px-4 py-6 md:px-8 shadow-sm relative z-10">
                     <div className="mx-auto max-w-7xl">
-                        <div className="flex flex-col md:flex-row items-end justify-between gap-4 w-full rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 w-full rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-sm">
                             
-                            <div className="flex w-full flex-1 flex-col">
-                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
-                                    Vehicle Category
-                                </label>
-                                <select 
-                                    value={activeVehicle}
-                                    onChange={(e) => setActiveVehicle(e.target.value)}
-                                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer
-                                        ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f7fbf8] text-black/80 hover:bg-white'}`}
-                                >
-                                    <option value="">🚗 All Vehicles</option>
-                                    {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="flex w-full flex-1 flex-col">
-                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
-                                    Service Type
-                                </label>
-                                <select 
-                                    value={activeService}
-                                    onChange={(e) => setActiveService(e.target.value)}
-                                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer
-                                        ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f7fbf8] text-black/80 hover:bg-white'}`}
-                                >
-                                    <option value="">🔧 All Services</option>
-                                    {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="flex w-full flex-1 flex-col">
-                                <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">
-                                    Sort Results By
-                                </label>
-                                <select 
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
-                                    className="w-full rounded-xl border border-[#d1e7d7] bg-[#f7fbf8] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors"
-                                >
-                                    <option value="distance">📍 Nearest first</option>
-                                    <option value="rating">⭐ Top rated</option>
-                                </select>
-                            </div>
-
-                            {hasActiveFilters && (
-                                <div className="flex shrink-0 items-center justify-center pb-[2px]">
-                                    <button 
-                                        onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }}
-                                        className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
-                                    >
-                                        ✕ Clear filters
-                                    </button>
+                            {/* ROW 1: THE SEARCH BARS */}
+                            <div className="flex flex-col md:flex-row gap-4">
+                                {/* Shop Name Search */}
+                                <div className="relative flex-1">
+                                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
+                                    <input 
+                                        type="text" 
+                                        value={searchName}
+                                        onChange={(e) => setSearchName(e.target.value)}
+                                        placeholder="Search by shop name..." 
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] focus:bg-white font-mono text-sm outline-none focus:border-[#16a34a] transition-colors"
+                                    />
                                 </div>
-                            )}
+
+                                {/* Location Interface (Unified Homepage Style) */}
+                                <div className="relative flex-1" ref={dropdownRef}>
+                                    {/* Dynamic Icon: Target for GPS, Map Pin for Typed Cities */}
+                                    <FontAwesomeIcon 
+                                        icon={locationInputText === "Current Location" ? faLocationCrosshairs : faLocationDot} 
+                                        className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-20 text-sm transition-colors ${locationInputText === "Current Location" ? 'text-[#16a34a]' : 'text-black/40'}`} 
+                                    />
+                                    
+                                    <input 
+                                        type="text" 
+                                        value={locationInputText}
+                                        onChange={(e) => handleLocationTyping(e.target.value)}
+                                        onFocus={() => { 
+                                            // Clear the box automatically when they click it
+                                            if (locationInputText === "Current Location") setLocationInputText(""); 
+                                        }}
+                                        onBlur={() => { 
+                                            // If they leave it completely empty, revert to GPS
+                                            if (locationInputText.trim() === "") {
+                                                setLocationInputText("Current Location");
+                                                if ("geolocation" in navigator) {
+                                                    navigator.geolocation.getCurrentPosition((position) => {
+                                                        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+                                                    });
+                                                }
+                                            } 
+                                        }}
+                                        placeholder="City or Area..." 
+                                        className={`w-full pl-10 pr-4 py-3 rounded-xl border outline-none font-mono text-sm transition-all ${locationInputText === "Current Location" ? 'bg-[#16a34a]/5 border-[#16a34a]/30 text-[#16a34a] font-bold' : 'bg-[#f8f4f0] border-[#d1e7d7] text-black focus:border-[#16a34a] focus:bg-white'}`}
+                                    />
+                                    
+                                    {/* THE TAILWIND DROPDOWN MENU */}
+                                    {showDropdown && predictions.length > 0 && (
+                                        <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#d1e7d7] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto font-mono text-sm">
+                                            {predictions.map((pred) => (
+                                                <li 
+                                                    key={pred.placePrediction.placeId} 
+                                                    onClick={() => handleSelectPlace(pred.placePrediction.placeId, pred.placePrediction.text.text)}
+                                                    className="px-4 py-3 hover:bg-[#16a34a]/10 cursor-pointer border-b border-[#d1e7d7]/50 last:border-0 text-black/80 flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faLocationDot} className="text-[#16a34a]/50 w-3 shrink-0" />
+                                                    {pred.placePrediction.text.text}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* DIVIDER */}
+                            <div className="h-px w-full bg-[#d1e7d7]/60"></div>
+
+                            {/* ROW 2: THE EXISTING CATEGORY DROPDOWNS */}
+                            <div className="flex flex-col md:flex-row items-end justify-between gap-4">
+                                <div className="flex w-full flex-1 flex-col">
+                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Vehicle Category</label>
+                                    <select value={activeVehicle} onChange={(e) => setActiveVehicle(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
+                                        <option value="">🚗 All Vehicles</option>
+                                        {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                    </select>
+                                </div>
+
+                                <div className="flex w-full flex-1 flex-col">
+                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Service Type</label>
+                                    <select value={activeService} onChange={(e) => setActiveService(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
+                                        <option value="">🔧 All Services</option>
+                                        {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                    </select>
+                                </div>
+
+                                <div className="flex w-full flex-1 flex-col">
+                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Sort Results By</label>
+                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors">
+                                        <option value="distance">📍 Nearest first</option>
+                                        <option value="rating">⭐ Top rated</option>
+                                    </select>
+                                </div>
+
+                                {/* Clear Filters */}
+                                {hasActiveFilters && (
+                                    <div className="flex shrink-0 items-center justify-center pb-[2px]">
+                                        <button 
+                                            onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }}
+                                            className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
+                                        >
+                                            ✕ Clear filters
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </section>
