@@ -120,8 +120,9 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
             params.append('lng', selectedLocation.lng);
         }
 
-        if (homeCity && homeCity !== "Current Location") {
-            params.append('city', homeCity.trim());
+        // CHANGED: Always pass the human-readable location name (even if it's "Current Location")
+        if (homeCity) {
+            params.append('locName', homeCity.trim());
         }
         
         navigate(`/shops?${params.toString()}`);

@@ -4,6 +4,7 @@ import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import serviceHero from "../src/assets/service center.jpg"
+import { ShopFilterBar } from "../components/Shops/ShopFilterBar" // Add this with your imports
 
 import {
     faClock,
@@ -44,6 +45,7 @@ function Shops() {
     const [searchParams] = useSearchParams();
     const urlLat = searchParams.get('lat');
     const urlLng = searchParams.get('lng');
+    const urlLocName = searchParams.get('locName');
 
     // 2. CHANGED: Initial Location Logic
     // If the URL has coordinates, use them immediately! Otherwise, default to Colombo.
@@ -72,84 +74,13 @@ function Shops() {
 
     const [searchName, setSearchName] = useState("");
 
-    // --- ADD THESE FOR THE CUSTOM LOCATION DROPDOWN ---
-    const [predictions, setPredictions] = useState([]);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [locationInputText, setLocationInputText] = useState("");
-    const dropdownRef = useRef(null);
-    const typingTimeoutRef = useRef(null); // <-- ADD THIS FOR DEBOUNCING
-
-    // Close dropdown automatically if the user clicks outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleLocationTyping = (text) => {
-        setLocationInputText(text); // Instantly update the UI so it feels fast
-
-        // 1. Clear the previous timer if the user is still typing!
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
-        // 2. If text is too short, close everything
-        if (text.length < 3 || text === "Current Location") {
-            setPredictions([]);
-            setShowDropdown(false);
-            return;
-        }
-
-        // 3. Set a new timer to wait 500ms before calling Google
-        typingTimeoutRef.current = setTimeout(async () => {
-            try {
-                console.log("Fetching suggestions for:", text); 
-                
-                const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-                    },
-                    body: JSON.stringify({ input: text, includedRegionCodes: ["lk"] })
-                });
-                const data = await response.json();
-                
-                if (data.error) {
-                    console.error("Google API Quota Error:", data.error.message);
-                } else if (data.suggestions) {
-                    setPredictions(data.suggestions);
-                    setShowDropdown(true);
-                } else {
-                    setPredictions([]);
-                }
-            } catch (error) {
-                console.error("Error fetching API predictions:", error);
-            }
-        }, 500); // <-- 500ms delay
-    };
-
-    const handleSelectPlace = async (placeId, description) => {
-        setLocationInputText(description);
-        setShowDropdown(false);
-        setPredictions([]);
-
-        try {
-            const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?fields=location`, {
-                headers: { 'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY }
-            });
-            const data = await response.json();
-            
-            if (data.location) {
-                setUserLocation({ lat: data.location.latitude, lng: data.location.longitude });
-            }
-        } catch (error) {
-            console.error("Error fetching location coordinates:", error);
+    // --- ADDED: Catch coordinates coming from the ShopFilterBar component ---
+    const handleLocationUpdate = (lat, lng, textDesc) => {
+        setUserLocation({ lat, lng });
+        if (textDesc && textDesc !== "Current Location") {
+            setLocationAlert(`Showing results for ${textDesc}.`);
+        } else {
+            setLocationAlert(null);
         }
     };
 
@@ -222,137 +153,41 @@ function Shops() {
             <NavBar />
 
             <main className="min-h-screen bg-[#f7fbf8]">
-                {/* 1. HERO SECTION */}
-                <section className="bg-white px-4 py-8 md:px-8">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="relative overflow-hidden rounded-2xl border border-[#d1e7d7] bg-[#102818] shadow-xl">
-                            <div
-                                className="absolute inset-0 bg-cover bg-center"
-                                style={{ backgroundImage: `url(${serviceHero})` }}
-                            />
-                            <div className="absolute inset-0 bg-linear-to-r from-[#07140d]/95 via-[#14532d]/75 to-[#07140d]/25" />
-                            <div className="relative p-8 lg:p-12">
-                                <div className="max-w-3xl">
-                                    <h1 className="font-mono text-3xl font-bold leading-tight text-white md:text-5xl">
-                                        Find the right shop for your vehicle
-                                    </h1>
-                                </div>
-                            </div>
-                        </div>
+                {/* 1. HERO SECTION (Full Bleed & Centered) */}
+                {/* CHANGED: Removed margins, made it edge-to-edge, and added padding top/bottom to give the text room to breathe */}
+                <section className="relative w-full bg-[#102818] pt-16 pb-28 md:pt-20 md:pb-32">
+                    <div
+                        className="absolute inset-0 bg-cover bg-center opacity-40"
+                        style={{ backgroundImage: `url(${serviceHero})` }}
+                    />
+                    {/* A smoother, darker gradient so the white text pops perfectly */}
+                    <div className="absolute inset-0 bg-linear-to-b from-[#07140d]/80 via-[#07140d]/60 to-[#07140d]/90" />
+                    
+                    <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
+                        <h1 className="font-sans tracking-tight text-3xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                            Find the right shop for your vehicle
+                        </h1>
+                        <p className="mt-4 font-mono text-xs font-bold tracking-widest text-[#16a34a] uppercase md:text-sm">
+                            Trusted Garages &bull; Service Centers &bull; Spare Parts
+                        </p>
                     </div>
                 </section>
 
                 {/* 2. THE UPGRADED PREMIUM FILTER SECTION */}
-                <section className="border-b border-[#d1e7d7] bg-[#f7fbf8] px-4 py-6 md:px-8 shadow-sm relative z-10">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="flex flex-col gap-4 w-full rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-sm">
-                            
-                            {/* ROW 1: THE SEARCH BARS */}
-                            <div className="flex flex-col md:flex-row gap-4">
-                                {/* Shop Name Search */}
-                                <div className="relative flex-1">
-                                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
-                                    <input 
-                                        type="text" 
-                                        value={searchName}
-                                        onChange={(e) => setSearchName(e.target.value)}
-                                        placeholder="Search by shop name..." 
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] focus:bg-white font-mono text-sm outline-none focus:border-[#16a34a] transition-colors"
-                                    />
-                                </div>
-
-                                {/* Location Interface (Unified Homepage Style) */}
-                                <div className="relative flex-1" ref={dropdownRef}>
-                                    {/* Dynamic Icon: Target for GPS, Map Pin for Typed Cities */}
-                                    <FontAwesomeIcon 
-                                        icon={locationInputText === "Current Location" ? faLocationCrosshairs : faLocationDot} 
-                                        className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-20 text-sm transition-colors ${locationInputText === "Current Location" ? 'text-[#16a34a]' : 'text-black/40'}`} 
-                                    />
-                                    
-                                    <input 
-                                        type="text" 
-                                        value={locationInputText}
-                                        onChange={(e) => handleLocationTyping(e.target.value)}
-                                        onFocus={() => { 
-                                            // Clear the box automatically when they click it
-                                            if (locationInputText === "Current Location") setLocationInputText(""); 
-                                        }}
-                                        onBlur={() => { 
-                                            // If they leave it completely empty, revert to GPS
-                                            if (locationInputText.trim() === "") {
-                                                setLocationInputText("Current Location");
-                                                if ("geolocation" in navigator) {
-                                                    navigator.geolocation.getCurrentPosition((position) => {
-                                                        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-                                                    });
-                                                }
-                                            } 
-                                        }}
-                                        placeholder="City or Area..." 
-                                        className={`w-full pl-10 pr-4 py-3 rounded-xl border outline-none font-mono text-sm transition-all ${locationInputText === "Current Location" ? 'bg-[#16a34a]/5 border-[#16a34a]/30 text-[#16a34a] font-bold' : 'bg-[#f8f4f0] border-[#d1e7d7] text-black focus:border-[#16a34a] focus:bg-white'}`}
-                                    />
-                                    
-                                    {/* THE TAILWIND DROPDOWN MENU */}
-                                    {showDropdown && predictions.length > 0 && (
-                                        <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#d1e7d7] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto font-mono text-sm">
-                                            {predictions.map((pred) => (
-                                                <li 
-                                                    key={pred.placePrediction.placeId} 
-                                                    onClick={() => handleSelectPlace(pred.placePrediction.placeId, pred.placePrediction.text.text)}
-                                                    className="px-4 py-3 hover:bg-[#16a34a]/10 cursor-pointer border-b border-[#d1e7d7]/50 last:border-0 text-black/80 flex items-center gap-2"
-                                                >
-                                                    <FontAwesomeIcon icon={faLocationDot} className="text-[#16a34a]/50 w-3 shrink-0" />
-                                                    {pred.placePrediction.text.text}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* DIVIDER */}
-                            <div className="h-px w-full bg-[#d1e7d7]/60"></div>
-
-                            {/* ROW 2: THE EXISTING CATEGORY DROPDOWNS */}
-                            <div className="flex flex-col md:flex-row items-end justify-between gap-4">
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Vehicle Category</label>
-                                    <select value={activeVehicle} onChange={(e) => setActiveVehicle(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
-                                        <option value="">🚗 All Vehicles</option>
-                                        {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Service Type</label>
-                                    <select value={activeService} onChange={(e) => setActiveService(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
-                                        <option value="">🔧 All Services</option>
-                                        {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Sort Results By</label>
-                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors">
-                                        <option value="distance">📍 Nearest first</option>
-                                        <option value="rating">⭐ Top rated</option>
-                                    </select>
-                                </div>
-
-                                {/* Clear Filters */}
-                                {hasActiveFilters && (
-                                    <div className="flex shrink-0 items-center justify-center pb-[2px]">
-                                        <button 
-                                            onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }}
-                                            className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
-                                        >
-                                            ✕ Clear filters
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                {/* CHANGED: Added '-mt-16' (negative margin) to pull this container UP so it overlaps the hero image */}
+                <section className="relative z-20 mx-auto max-w-7xl px-4 md:px-8 -mt-16 mb-8">
+                    <ShopFilterBar 
+                        initialLocationText={urlLocName || ""}
+                        onLocationChange={handleLocationUpdate}
+                        searchName={searchName}
+                        setSearchName={setSearchName}
+                        activeVehicle={activeVehicle}
+                        setActiveVehicle={setActiveVehicle}
+                        activeService={activeService}
+                        setActiveService={setActiveService}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                    />
                 </section>
 
                 {/* 3. MAIN CONTENT SECTION */}
@@ -360,7 +195,7 @@ function Shops() {
                     
                     <div className="mb-6">
                         <p className="font-mono text-sm uppercase tracking-widest text-black/70">Shop directory</p>
-                        <h2 className="font-mono text-2xl font-bold text-black">Top matches near you</h2>
+                        <h2 className="font-sans tracking-tight text-2xl font-bold text-black">Top matches near you</h2>
                     </div>
                     
                     {/* MOVED: Location Warning Banner is now here! */}
@@ -405,7 +240,7 @@ function Shops() {
                                             <div>
                                                 {/* CHANGED: Dynamic Rating Block */}
                                                 <div className="mb-3 flex items-start justify-between gap-4">
-                                                    <h3 className="font-mono text-lg font-bold text-black leading-tight">{shop.name}</h3>
+                                                    <h3 className="font-sans text-lg font-bold text-black leading-tight">{shop.name}</h3>
                                                     
                                                     <div className="shrink-0 flex flex-col items-end mt-1">
                                                         {shop.review_count > 0 ? (
@@ -485,6 +320,14 @@ function Shops() {
                                         zoomControl: true,
                                         mapTypeControl: false,
                                         streetViewControl: false,
+                                        // ADDED: The 'styles' array below. This applies a custom "Silver" theme to Google Maps.
+                                        // It turns off distracting POIs (parks, bus stops) and desaturates the background 
+                                        // so your red shop markers become the absolute center of attention.
+                                        styles: [
+                                            { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                                            { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
+                                            
+                                        ]
                                     }}
                                 >
                                     {/* 1. The Blue User Marker */}
