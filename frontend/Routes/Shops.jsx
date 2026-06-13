@@ -73,6 +73,7 @@ function Shops() {
     const [sortBy, setSortBy] = useState('distance')
 
     const [searchName, setSearchName] = useState("");
+    const [needsTow, setNeedsTow] = useState(searchParams.get('needs_tow') === 'true');
 
     // --- ADDED: Catch coordinates coming from the ShopFilterBar component ---
     const handleLocationUpdate = (lat, lng, textDesc) => {
@@ -125,6 +126,8 @@ function Shops() {
                 if (activeVehicle) url += `&vehicle_category=${activeVehicle}`
                 if (activeService) url += `&shop_category=${activeService}`
                 if (searchName) url += `&name=${encodeURIComponent(searchName)}`
+                // ADDED: Pass the tow truck status to the PHP backend
+                if (needsTow) url += `&needs_tow=true`
 
                 const response = await fetch(url)
                 const jsonResponse = await response.json()
@@ -144,7 +147,7 @@ function Shops() {
         }
 
         fetchShops()
-    }, [activeVehicle, activeService, sortBy, userLocation, searchName])
+    }, [activeVehicle, activeService, sortBy, userLocation, searchName, needsTow]) // Added needsTow as a dependency
 
     const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
 
@@ -187,6 +190,8 @@ function Shops() {
                         setActiveService={setActiveService}
                         sortBy={sortBy}
                         setSortBy={setSortBy}
+                        needsTow={needsTow}
+                        setNeedsTow={setNeedsTow}
                     />
                 </section>
 

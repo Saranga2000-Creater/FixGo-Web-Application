@@ -29,7 +29,9 @@ export const ShopFilterBar = ({
     activeService,
     setActiveService,
     sortBy,
-    setSortBy
+    setSortBy,
+    needsTow,
+    setNeedsTow
 }) => {
     // UI State
     const [activeTab, setActiveTab] = useState('explore');
@@ -112,7 +114,16 @@ export const ShopFilterBar = ({
         }
     };
 
-    const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
+    const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance' || needsTow;
+
+    // Add this dedicated function to handle resetting everything
+    const handleClearFilters = (e) => {
+        e.preventDefault(); // Prevents any weird page jumps
+        setActiveVehicle("");
+        setActiveService("");
+        setSortBy('distance');
+        setNeedsTow(false); // <-- This is the magic line that fixes the bug!
+    };
 
     return (
         
@@ -175,11 +186,35 @@ export const ShopFilterBar = ({
                                 </div>
                                 <div className="flex w-full flex-1 flex-col">
                                     <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Service Type</label>
-                                    <select value={activeService} onChange={(e) => setActiveService(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
+                                    <select 
+                                        value={activeService} 
+                                        onChange={(e) => {
+                                            setActiveService(e.target.value);
+                                            // ADDED: Automatically uncheck tow truck if they switch away from Garages
+                                            if (e.target.value !== "1") {
+                                                setNeedsTow(false);
+                                            }
+                                        }} 
+                                        className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
                                         <option value="">🔧 All Services</option>
                                         {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
                                     </select>
                                 </div>
+
+                                {/* ADDED: The Conditional Tow Truck Checkbox */}
+                            {activeService === "1" && (
+                                <div className="flex w-full flex-1 flex-col justify-end pb-[2px] animate-in fade-in duration-200">
+                                    <label className={`flex items-center space-x-2 cursor-pointer px-4 py-3 rounded-xl border transition-colors ${needsTow ? 'border-[#16a34a] bg-[#16a34a]/10' : 'border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white'}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={needsTow}
+                                            onChange={(e) => setNeedsTow(e.target.checked)}
+                                            className="h-4 w-4 accent-[#16a34a] cursor-pointer"
+                                        />
+                                        <span className={`font-mono text-sm font-bold ${needsTow ? 'text-[#14532d]' : 'text-black/80'}`}>🛻 Has Tow Truck</span>
+                                    </label>
+                                </div>
+                            )}
                                 <div className="flex w-full flex-1 flex-col">
                                     <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Sort Results By</label>
                                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors">
@@ -189,7 +224,12 @@ export const ShopFilterBar = ({
                                 </div>
                                 {hasActiveFilters && (
                                     <div className="flex shrink-0 items-center justify-center pb-[2px]">
-                                        <button onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }} className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200">
+                                        {/* CHANGED: Replaced the long inline onClick with handleClearFilters */}
+                                        <button 
+                                            onClick={handleClearFilters} 
+                                            type="button"
+                                            className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
+                                        >
                                             ✕ Clear filters
                                         </button>
                                     </div>
