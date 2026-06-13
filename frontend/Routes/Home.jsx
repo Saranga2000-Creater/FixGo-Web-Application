@@ -9,7 +9,8 @@ import { useState } from 'react';
 import car from "../src/assets/car.avif"
 import serviceCenter from "../src/assets/service.jpg"
 import { Footer } from "../components/footer"
-
+import Customer from "../components/Registration/Customer";
+import ShopOwner from "../components/Registration/ShopOwner"
 
 function Home() {
 
@@ -51,58 +52,9 @@ function Home() {
                 <section className="py-20  px-4 md:px-8 bg-green-100 " id='register' >
                     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                        <div className="relative group overflow-hidden rounded-3xl bg-white border border-gray-800 p-10 flex flex-col justify-between min-h-100 shadow-sm hover:shadow-xl transition-all">
-                            <div className="absolute -right-10 -bottom-10 opacity-20 group-hover:scale-110 transition-transform duration-700">
+                        <Customer />
 
-                                <img src={car} />
-                            </div>
-                            <div>
-                                <span className="inline-block p-3 rounded-2xl bg-gray-300 text-black mb-6">
-                                    <FontAwesomeIcon
-                                        icon={faUserTie}
-                                        className="text-2xl mb-3 text-black group-hover:text-black/90"
-                                    />
-                                </span>
-                                <h3 className="font-mono text-2xl mb-4">Are you a vehicle owner?</h3>
-                                <p className="font-mono text-black max-w-sm">Manage your vehicle health, track repair history, and get roadside help anywhere in Western Province.</p>
-                            </div>
-                            <button className="w-fit mt-8 bg-black text-white font-bold px-8 py-4 rounded-xl flex items-center gap-3 group-hover:bg-black/90 transition-all">
-                                Register as a Customer
-                                <span className="flex justify-center items-center">
-                                    <FontAwesomeIcon
-                                        icon={faArrowRight}
-                                        className="text-2xl mb-3 text-white group-hover:text-white/50"
-                                    />
-                                </span>
-                            </button>
-                        </div>
-
-                        <div className="relative group overflow-hidden rounded-3xl bg-black/90 text-white p-10 flex flex-col justify-between min-h-100 shadow-sm hover:shadow-2xl transition-all">
-                            <div className="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-110 transition-transform duration-700 ">
-                                <img src={serviceCenter} />
-                            </div>
-                            <div>
-                                <span className="inline-block p-3 rounded-2xl bg-green-500 text-on-primary-container mb-6">
-                                    <span className="text-4xl">
-                                        <FontAwesomeIcon
-                                            icon={faWrench}
-                                            className="text-2xl mb-3 text-black group-hover:text-black/90"
-                                        />
-                                    </span>
-                                </span>
-                                <h3 className="font-mono text-2xl mb-4 text-white">Own a workshop?</h3>
-                                <p className="font-mono text-white/70 max-w-sm">Reach more customers, manage appointments, and digitize your automotive business today.</p>
-                            </div>
-                            <button className="w-fit mt-8 bg-green-500 text-black font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:brightness-110 transition-all">
-                                Register Your Shop
-                                <span className="text-4xl">
-                                    <FontAwesomeIcon
-                                        icon={faRocket}
-                                        className="text-2xl mb-3 text-black group-hover:text-black/90"
-                                    />
-                                </span>
-                            </button>
-                        </div>
+                        <ShopOwner />
                     </div>
                 </section>
             </main>
