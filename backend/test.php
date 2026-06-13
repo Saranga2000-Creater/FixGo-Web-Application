@@ -1,5 +1,10 @@
 <?php
-require "config/database.php";
+
+require "config/EnvLoader.php";
+EnvLoader::load(__DIR__ . '/.env');
+
+require "config/Database.php";
+
 try {
     $db = new Database();
     $conn = $db->connect();

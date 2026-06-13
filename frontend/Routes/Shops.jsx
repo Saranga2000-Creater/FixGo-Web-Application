@@ -5,6 +5,7 @@ import { Footer } from "../components/footer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import serviceHero from "../src/assets/service center.jpg"
 import { ShopFilterBar } from "../components/Shops/ShopFilterBar" // Add this with your imports
+import { useNavigate } from "react-router-dom";
 
 import {
     faClock,
@@ -83,7 +84,7 @@ function Shops() {
             setLocationAlert(null);
         }
     };
-
+     const navigate = useNavigate();
     // 3. CHANGED: The Geolocation Engine (The Conditional Check)
     useEffect(() => {
         // SCENARIO A: The user searched from the homepage (URL has coordinates)
@@ -288,13 +289,17 @@ function Shops() {
                                                 </div>
                                             </div>
 
-                                            <button
-                                                className="mt-auto w-full rounded-xl border border-[#16a34a] px-4 py-2 font-mono text-sm font-bold text-[#16a34a] transition hover:bg-[#16a34a] hover:text-white active:scale-95"
-                                                onClick={() => setSelectedShop(shop)}
-                                                type="button"
-                                            >
-                                                VIEW DETAILS
-                                            </button>
+                                           
+
+
+
+<button
+    className="self-start bg-[#16a34a] text-white font-bold px-5 py-2 rounded-lg hover:bg-[#14532d] transition"
+    onClick={() => navigate(`/shop/${shop.id}`)}
+    type="button"
+>
+    VIEW DETAILS
+</button>
                                         </div>
                                     </article>
                                 ))}
@@ -392,7 +397,7 @@ function Shops() {
             </main>
 
             {/* Modal Overlay Component */}
-            {selectedShop && (
+           {false && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm" onClick={() => setSelectedShop(null)}>
                     <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="relative overflow-hidden rounded-t-2xl bg-[#14532d] p-6 text-white md:p-8">
