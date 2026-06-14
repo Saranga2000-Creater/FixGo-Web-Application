@@ -8,7 +8,7 @@ class Shop {
     }
 
     // CHANGED: Added $searchName = null to the end of the parameters
-    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null) {
+    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false') {
         $radiusInMeters = $radiusInKm * 1000;
 
         $query = "SELECT 
@@ -41,6 +41,10 @@ class Shop {
         }
 
         $query .= " WHERE ST_Distance_Sphere(s.location, POINT(:lng, :lat)) <= :radius ";
+
+        if ($needs_tow === 'true') {
+            $query .= " AND s.has_tow_service = 1 ";
+        }
 
         if ($vehicleCategoryId !== null) {
             $query .= " AND svc_filter.vehicle_category_id = :vehicle_category ";

@@ -10,6 +10,7 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
     const [homeVehicle, setHomeVehicle] = useState("");
     const [homeService, setHomeService] = useState("");
     const [homeCity, setHomeCity] = useState("Current Location");
+    const [needsTow, setNeedsTow] = useState(false);
 
     // 2. Custom Autocomplete State (Replacing the React Library)
     const [predictions, setPredictions] = useState([]);
@@ -113,6 +114,7 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
         const params = new URLSearchParams();
         if (homeVehicle) params.append('vehicle', homeVehicle);
         if (homeService) params.append('service', homeService);
+        if (needsTow) params.append('needs_tow', 'true');
 
         // Attach exact coordinates if our API successfully fetched them
         if (selectedLocation) {
@@ -165,14 +167,34 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
                         <div>
                             <p className="font-mono text-[11px] text-[#274c3a] uppercase font-bold tracking-widest mb-2">Service Type</p>
                             <div className="relative w-full">
-                                <select value={homeService} onChange={(e) => setHomeService(e.target.value)} className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] font-mono text-sm cursor-pointer outline-none focus:border-[#16a34a] transition-colors">
-                                    <option value="">All Services</option>
-                                    <option value="1">Garages</option>
-                                    <option value="2">Service Centers</option>
-                                    <option value="3">Spare Parts</option>
+                                <select 
+                                    value={homeService} 
+                                    onChange={(e) => {
+                                        setHomeService(e.target.value);
+                                        if (e.target.value !== "1") setNeedsTow(false);
+                                    }}
+                                    className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] font-mono text-sm cursor-pointer outline-none focus:border-[#16a34a] transition-colors"
+                                    >
+                                        <option value="">All Services</option>
+                                        <option value="1">Garages</option>
+                                        <option value="2">Service Centers</option>
+                                        <option value="3">Spare Parts</option>
                                 </select>
                                 <FontAwesomeIcon icon={faWarehouse} className="text-sm text-[#274c3a] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
+                            {homeService === "1" && (
+                                <div className="mt-3 animate-in fade-in duration-200">
+                                    <label className={`flex items-center space-x-2 cursor-pointer px-4 py-2.5 rounded-xl border transition-colors ${needsTow ? 'border-[#16a34a] bg-[#16a34a]/10' : 'border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white'}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={needsTow}
+                                            onChange={(e) => setNeedsTow(e.target.checked)}
+                                            className="h-4 w-4 accent-[#16a34a] cursor-pointer"
+                                        />
+                                        <span className={`font-mono text-sm font-bold ${needsTow ? 'text-[#14532d]' : 'text-black/80'}`}>🛻 Has Tow Truck</span>
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     </div>
 

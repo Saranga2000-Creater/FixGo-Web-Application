@@ -10,6 +10,7 @@ class SearchController {
     public function handleSearchRequest($requestData) {
         $lat = isset($requestData['lat']) ? (float) $requestData['lat'] : null;
         $lng = isset($requestData['lng']) ? (float) $requestData['lng'] : null;
+        $needs_tow = isset($requestData['needs_tow']) ? $requestData['needs_tow'] : 'false';
         $radius = isset($requestData['radius']) ? (float) $requestData['radius'] : 15;
         
         $vehicleCategory = isset($requestData['vehicle_category']) ? (int) $requestData['vehicle_category'] : null;
@@ -25,7 +26,7 @@ class SearchController {
         }
 
         // 2. CHANGED: Pass $searchName as the 7th argument to the Model
-        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName);
+        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName, $needs_tow);
         $num = $stmt->rowCount();
         
         if ($num > 0) {
