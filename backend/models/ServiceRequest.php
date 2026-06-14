@@ -22,6 +22,7 @@ class ServiceRequest {
     }
 
     public function create($data) {
+        // UPDATE 1: Added 'photo' to the columns and ':photo' to the VALUES
         $query = "INSERT INTO " . $this->table_name . " (
                     customer_id, 
                     shop_id, 
@@ -30,6 +31,7 @@ class ServiceRequest {
                     vehicle_color, 
                     description, 
                     requires_tow, 
+                    photo, 
                     location, 
                     status
                   ) VALUES (
@@ -40,6 +42,7 @@ class ServiceRequest {
                     :vehicle_color, 
                     :description, 
                     :requires_tow, 
+                    :photo, 
                     ST_GeomFromText(:location), 
                     'Pending'
                   )";
@@ -54,6 +57,9 @@ class ServiceRequest {
         $vehicle_color = htmlspecialchars(strip_tags($data['vehicle_color'] ?? 'Unknown'));
         $description = htmlspecialchars(strip_tags($data['description'] ?? ''));
         $requires_tow = !empty($data['requires_tow']) ? 1 : 0;
+        
+        // UPDATE 2: Safely extract the photo path (will be null if no image was uploaded)
+        $photo = isset($data['photo']) ? $data['photo'] : null;
 
         // Format Spatial Data
         $lat = isset($data['lat']) ? (float)$data['lat'] : 0;
@@ -68,6 +74,10 @@ class ServiceRequest {
         $stmt->bindParam(":vehicle_color", $vehicle_color);
         $stmt->bindParam(":description", $description);
         $stmt->bindParam(":requires_tow", $requires_tow);
+        
+        // UPDATE 3: Bind the photo parameter to the SQL statement
+        $stmt->bindParam(":photo", $photo);
+        
         $stmt->bindParam(":location", $pointString);
 
         if ($stmt->execute()) {

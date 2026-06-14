@@ -294,17 +294,13 @@ function Shops() {
                                                 </div>
                                             </div>
 
-                                           
-
-
-
-<button
-    className="self-start bg-[#16a34a] text-white font-bold px-5 py-2 rounded-lg hover:bg-[#14532d] transition"
-    onClick={() => navigate(`/shop/${shop.id}`)}
-    type="button"
->
-    VIEW DETAILS
-</button>
+                                                <button
+                                                    className="mt-auto w-full rounded-xl border border-[#16a34a] px-4 py-2 font-mono text-sm font-bold text-[#16a34a] transition hover:bg-[#16a34a] hover:text-white active:scale-95"
+                                                    onClick={() => navigate(`/shop/${shop.id}`)}
+                                                    type="button"
+                                                >
+                                                    VIEW DETAILS
+                                                </button>
                                         </div>
                                     </article>
                                 ))}

@@ -7,6 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useState } from "react";
 import { Pagination, Navigation } from "swiper/modules";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { ServiceRequestModal } from "../components/ShopDetails/ServiceRequestForm";
 
 import "swiper/css";
 import "swiper/css/pagination";
@@ -24,8 +25,15 @@ function ShopDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const shop = useMemo(
     () => ({
+      id: id,
+      category_id: 2,
+      has_tow_service: 1,
+      default_truck_brand: "Isuzu NPR",
+      tow_truck_plate: "WP-TOW-1234",
       name: "AutoCare Pro Service Center",
       category: "Vehicle Service Center",
       verified: true,
@@ -201,7 +209,9 @@ function ShopDetails() {
       </p>
     </div>
 
-  <button className="w-56 rounded-2xl bg-gradient-to-r from-green-600 to-green-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-green-200 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+  <button 
+  onClick={() => setIsModalOpen(true)}
+  className="w-56 rounded-2xl bg-gradient-to-r from-green-600 to-green-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-green-200 transition-all duration-300 hover:scale-105 hover:shadow-xl">
   Book Now →
 </button>
   </div>
@@ -325,7 +335,13 @@ function ShopDetails() {
           </div>
         </div>
       </main>
-
+            {/* Our New Booking Modal */}
+        <ServiceRequestModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          shop={shop}
+          initialNeedsTow={false}
+        />
       <Footer />
     </>
   );
