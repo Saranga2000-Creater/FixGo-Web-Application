@@ -94,20 +94,49 @@ export default function ShopForm() {
             return;
         }
 
+        if (!shopImage) {
+            setError("Please upload a workshop photo.");
+            return;
+        }
+
         setLoading(true);
 
+        const payload = new FormData();
+        payload.append("ownerName", formData.ownerName);
+        payload.append("shopName", formData.shopName);
+        payload.append("email", formData.email);
+        payload.append("phone", formData.phone);
+        payload.append("address", formData.address);
+        payload.append("licenseNumber", formData.licenseNumber);
+        payload.append("openTime", formData.openTime);
+        payload.append("closeTime", formData.closeTime);
+        payload.append("providesCarriage", formData.providesCarriage ? "1" : "0");
+        payload.append("category", formData.category);
+        payload.append("vehicleCategory", formData.vehicleCategory);
+        payload.append("description", formData.description);
+        payload.append("latitude", formData.latitude);
+        payload.append("longitude", formData.longitude);
+        payload.append("password", formData.password);
+        payload.append("shopImage", shopImage);
+
         try {
-            await new Promise(resolve => setTimeout(resolve, 1200));
-            console.log("Shop registration payload:", {
-                ...formData,
-                shopImage: shopImage ? shopImage.name : null
+            const response = await fetch("http://localhost:8000/api/registerShop.php", {
+                method: "POST",
+                body: payload,
             });
-            setSuccess(true);
-            setTimeout(() => {
-                navigate("/");
-            }, 2000);
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess(true);
+                setTimeout(() => {
+                    navigate("/");
+                }, 2000);
+            } else {
+                setError(data.message || "Something went wrong. Please try again.");
+            }
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            setError("Network error. Please try again later.");
         } finally {
             setLoading(false);
         }
