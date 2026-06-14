@@ -16,6 +16,7 @@ export default function ShopForm() {
         closeTime: "17:00",
         providesCarriage: false,
         category: "",
+        vehicleCategory: "",
         description: "",
         latitude: 6.9271,
         longitude: 79.8612,
@@ -70,6 +71,11 @@ export default function ShopForm() {
 
         if (!formData.category) {
             setError("Please select a workshop category.");
+            return;
+        }
+
+        if (!formData.vehicleCategory) {
+            setError("Please select a vehicle category.");
             return;
         }
 
@@ -179,7 +185,7 @@ export default function ShopForm() {
                         <span className="block text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP up to 5MB</span>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Workshop / Shop Name</label>
                         <input
@@ -217,6 +223,22 @@ export default function ShopForm() {
                             <option value="Garages">Garages</option>
                             <option value="Service centers">Service centers</option>
                             <option value="Spare parts">Spare parts</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase">Vehicle Category</label>
+                        <select
+                            name="vehicleCategory"
+                            required
+                            value={formData.vehicleCategory}
+                            onChange={handleChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
+                        >
+                            <option value="">Select Vehicle Category</option>
+                            <option value="All">All</option>
+                            <option value="3 wheelers and bikes">3 wheelers and bikes</option>
+                            <option value="4 wheelers">4 wheelers</option>
+                            <option value="commercial vehicles">commercial vehicles</option>
                         </select>
                     </div>
                 </div>
