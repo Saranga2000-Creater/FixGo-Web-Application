@@ -35,17 +35,17 @@ export const NavBar = () => {
 
                     <FontAwesomeIcon icon={faBell} className=" hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95" />
                     <FontAwesomeIcon icon={faCircleQuestion} className="hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95" />
-                    
+
                     {token ? (
-                        <button 
-                            onClick={handleSignOut} 
+                        <button
+                            onClick={handleSignOut}
                             className="bg-red-600 text-white font-extralight px-6 py-2 rounded-lg hover:brightness-110 active:scale-95 transition-all"
                         >
                             SIGN OUT
                         </button>
                     ) : (
-                        <button 
-                            onClick={() => setShowSignIn(true)} 
+                        <button
+                            onClick={() => setShowSignIn(true)}
                             className="bg-[#16a34a] text-white font-extralight px-6 py-2 rounded-lg hover:brightness-110 active:scale-95 transition-all"
                         >
                             SIGN IN
