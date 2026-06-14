@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { NavBar } from "../components/NavBar";
 import { Footer } from "../components/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useState } from "react";
 import { Pagination, Navigation } from "swiper/modules";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 import "swiper/css";
 import "swiper/css/pagination";
@@ -21,6 +22,7 @@ import {
 
 function ShopDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(0);
   const shop = useMemo(
     () => ({
@@ -93,8 +95,21 @@ function ShopDetails() {
     <>
       <NavBar />
 
-      <main className="min-h-screen bg-[#f7fbf8] py-10">
-        <div className="mx-auto w-full max-w-6xl px-4">
+      <main className="min-h-screen bg-[#f7fbf8] pt-3 pb-10">
+        <div className="mx-auto w-full max-w-screen-2xl px-6">
+
+    <button
+  onClick={() => navigate(-1)}
+  className="group mb-5 flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-x-1 hover:border-green-500 hover:text-green-600 hover:shadow-md"
+>
+  <FontAwesomeIcon
+    icon={faArrowLeft}
+    className="transition-transform duration-200 group-hover:-translate-x-1"
+  />
+  Back to Results
+</button>
+
+    <div className="overflow-hidden bg-white"></div>
           <div className="overflow-hidden bg-white">
             <div className="overflow-hidden">
 <div className="relative overflow-hidden">
