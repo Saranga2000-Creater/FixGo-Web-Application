@@ -105,17 +105,14 @@ function Sign({ setShowSignIn }) {
                     <button
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
-                        
                         name="signin"
                     >
-
                         Sign in
-
                     </button>
                 </form>
 
                 <div className="mt-4 text-center text-sm text-gray-600">
-                    <button className="text-green-600 hover:underline" onClick={handleRegister} >Create an account</button>
+                    <button className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
                     <span className="mx-2">·</span>
                     <button className="text-green-600 hover:underline">Forgot password?</button>
                 </div>
