@@ -31,7 +31,7 @@ export default function ShopForm() {
 
     // Load the Google Maps API Script
     const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
     });
 
 
@@ -264,10 +264,9 @@ export default function ShopForm() {
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         >
                             <option value="">Select Vehicle Category</option>
-                            <option value="All">All</option>
-                            <option value="3 wheelers and bikes">3 wheelers and bikes</option>
-                            <option value="4 wheelers">4 wheelers</option>
-                            <option value="commercial vehicles">commercial vehicles</option>
+                            <option value="3 wheelers and bikes">3 Wheelers and Bikes</option>
+                            <option value="4 wheelers">4 Wheelers</option>
+                            <option value="commercial vehicles">Commercial Vehicles</option>
                         </select>
                     </div>
                 </div>

@@ -7,6 +7,7 @@ export default function CustomerForm() {
         name: "",
         email: "",
         phone: "",
+        address: "",
         password: "",
         confirmPassword: "",
         vehicleType: "",
@@ -55,24 +56,44 @@ export default function CustomerForm() {
             return;
         }
 
+        if (!formData.address.trim()) {
+            setError("Please enter your address.");
+            return;
+        }
+
+        if (!profilePic) {
+            setError("Please upload a profile photo.");
+            return;
+        }
+
         setLoading(true);
 
-        try {
-            // Mock backend API call delay
-            await new Promise((resolve) => setTimeout(resolve, 1200));
+        const payload = new FormData();
+        payload.append("name", formData.name);
+        payload.append("email", formData.email);
+        payload.append("phone", formData.phone);
+        payload.append("address", formData.address);
+        payload.append("password", formData.password);
+        payload.append("profilePic", profilePic);
 
-            console.log("Customer registration payload:", {
-                ...formData,
-                profilePicture: profilePic ? profilePic.name : null
+        try {
+            const response = await fetch("http://localhost:8000/api/registerCustomer.php", {
+                method: "POST",
+                body: payload,
             });
-            setSuccess(true);
-            
-            // Redirect after showing success message
-            setTimeout(() => {
-                navigate("/");
-            }, 2000);
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess(true);
+                setTimeout(() => {
+                    navigate("/");
+                }, 2000);
+            } else {
+                setError(data.message || "Something went wrong. Please try again.");
+            }
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            setError("Network error. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -169,6 +190,19 @@ export default function CustomerForm() {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="john@example.com"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase">Personal Address</label>
+                    <input
+                        type="text"
+                        name="address"
+                        required
+                        value={formData.address}
+                        onChange={handleChange}
+                        placeholder="e.g. 123 Main Street, Colombo 03"
                         className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                     />
                 </div>

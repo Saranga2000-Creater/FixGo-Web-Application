@@ -132,9 +132,7 @@ if ($categoryId === null) {
 
 // Map Vehicle Category
 $vehicleIds = [];
-if (strcasecmp($vehicleCategory, 'All') === 0) {
-    $vehicleIds = [1, 2, 3];
-} elseif (strcasecmp($vehicleCategory, '3 wheelers and bikes') === 0 || strcasecmp($vehicleCategory, '3 Wheelers & Bikes') === 0) {
+if (strcasecmp($vehicleCategory, '3 wheelers and bikes') === 0 || strcasecmp($vehicleCategory, '3 Wheelers & Bikes') === 0) {
     $vehicleIds = [1];
 } elseif (strcasecmp($vehicleCategory, '4 wheelers') === 0 || strcasecmp($vehicleCategory, '4 Wheelers') === 0) {
     $vehicleIds = [2];
