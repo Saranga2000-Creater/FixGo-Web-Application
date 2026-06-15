@@ -1,7 +1,7 @@
 import React from "react";
 import { jwtDecode } from "jwt-decode";
 import { NavBar } from "../components/NavBar";
-import Customer from "../components/CustomerDashboard";
+import Customer from "../components/Customer/CustomerControllDashboard";
 import ShopOwner from "../components/ShopOwner/ShopOwnerDashboard";
 import Admin from "../components/AdminControlDashboard";
 
