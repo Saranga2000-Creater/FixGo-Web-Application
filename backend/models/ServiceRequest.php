@@ -33,7 +33,12 @@ class ServiceRequest {
                     requires_tow, 
                     photo, 
                     location, 
-                    status
+                    status,
+                    urgency_level,
+                    issue_category,
+                    pickup_landmark,
+                    preferred_date, 
+                    preferred_time
                   ) VALUES (
                     :customer_id, 
                     :shop_id, 
@@ -44,7 +49,12 @@ class ServiceRequest {
                     :requires_tow, 
                     :photo, 
                     ST_GeomFromText(:location), 
-                    'Pending'
+                    'Pending',
+                    :urgency_level,
+                    :issue_category,
+                    :pickup_landmark,
+                    :preferred_date,
+                    :preferred_time
                   )";
 
         $stmt = $this->conn->prepare($query);
@@ -60,6 +70,12 @@ class ServiceRequest {
         
         // UPDATE 2: Safely extract the photo path (will be null if no image was uploaded)
         $photo = isset($data['photo']) ? $data['photo'] : null;
+
+        $urgency_level = htmlspecialchars(strip_tags($data['urgency_level'] ?? 'Normal'));
+        $issue_category = isset($data['issue_category']) ? htmlspecialchars(strip_tags($data['issue_category'])) : null;
+        $pickup_landmark = isset($data['pickup_landmark']) ? htmlspecialchars(strip_tags($data['pickup_landmark'])) : null;
+        $preferred_date = isset($data['preferred_date']) ? htmlspecialchars(strip_tags($data['preferred_date'])) : null;
+        $preferred_time = isset($data['preferred_time']) ? htmlspecialchars(strip_tags($data['preferred_time'])) : null;
 
         // Format Spatial Data
         $lat = isset($data['lat']) ? (float)$data['lat'] : 0;
@@ -79,6 +95,12 @@ class ServiceRequest {
         $stmt->bindParam(":photo", $photo);
         
         $stmt->bindParam(":location", $pointString);
+
+        $stmt->bindParam(":urgency_level", $urgency_level);
+        $stmt->bindParam(":issue_category", $issue_category);
+        $stmt->bindParam(":pickup_landmark", $pickup_landmark);
+        $stmt->bindParam(":preferred_date", $preferred_date);
+        $stmt->bindParam(":preferred_time", $preferred_time);
 
         if ($stmt->execute()) {
             return $this->conn->lastInsertId();
