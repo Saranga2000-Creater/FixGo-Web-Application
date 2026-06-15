@@ -21,7 +21,7 @@ const HISTORY = [
     assigned: "Chamika Dias"
   },
   {
-    id: 4, initials: "MG", color: "#D97706", name: "Madushan G.",
+    id: 4, initials: "MG", color: "#16A34A", name: "Madushan G.",
     vehicle: "Tata Lorry", plate: "WP-LM-8945",
     service: "Clutch Repair",
     dateService: "May 12, 2026", dateComplete: "May 12, 2026",
@@ -92,19 +92,42 @@ function ServiceHistory() {
                   </td>
                   <td style={{ padding: "14px 16px" }}>
                     <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-                    <div style={{ fontSize: 12, color: "#EA580C", fontWeight: 600 }}>{r.plate}</div>
+                    <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
                   </td>
                   <td style={{ padding: "14px 16px", fontSize: 14, color: "#374151" }}>{r.service}</td>
                   <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateService}</td>
                   <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateComplete}</td>
                   <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{r.assigned}</td>
                   <td style={{ padding: "14px 16px" }}>
-                    <button style={{
-                      padding: "6px 14px", borderRadius: 8,
-                      border: "1.5px solid #E5E7EB", color: "#374151",
-                      background: "transparent", fontWeight: 600,
-                      fontSize: 12, cursor: "pointer"
-                    }}>View Details</button>
+                   {/* Action */}
+<button
+  style={{
+    padding: "10px 18px",
+    borderRadius: 10,
+    border: "1px solid #D1D5DB",
+    background: "#FFFFFF",
+    color: "#374151",
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: "pointer",
+    minWidth: "120px",
+    transition: "all 0.2s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.background = "#16A34A";
+    e.currentTarget.style.color = "#FFFFFF";
+    e.currentTarget.style.borderColor = "#16A34A";
+    e.currentTarget.style.transform = "translateY(-2px)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.background = "#FFFFFF";
+    e.currentTarget.style.color = "#374151";
+    e.currentTarget.style.borderColor = "#D1D5DB";
+    e.currentTarget.style.transform = "translateY(0)";
+  }}
+>
+  View Details
+</button>
                   </td>
                 </tr>
               ))}
@@ -115,7 +138,7 @@ function ServiceHistory() {
         <div style={{ padding: "14px 20px", textAlign: "center" }}>
           <button style={{
             padding: "10px 32px", borderRadius: 10,
-            border: "1.5px solid #EA580C", color: "#EA580C",
+            border: "1.5px solid #16A34A", color: "#16A34A",
             background: "transparent", fontWeight: 600, fontSize: 14, cursor: "pointer"
           }}>View all past services</button>
         </div>

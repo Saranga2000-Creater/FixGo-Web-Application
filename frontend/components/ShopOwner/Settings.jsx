@@ -23,7 +23,7 @@ function Toggle({ on, onToggle }) {
       onClick={onToggle}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: on ? "#EA580C" : "#D1D5DB",
+        background: on ? "#16A34A" : "#D1D5DB",
         cursor: "pointer", position: "relative",
         transition: "background 0.2s", flexShrink: 0
       }}
@@ -60,9 +60,9 @@ function Settings() {
         </div>
         <button style={{
           padding: "10px 24px", borderRadius: 10, border: "none",
-          background: "#EA580C", color: "#fff",
+          background: "#16A34A", color: "#fff",
           fontWeight: 700, fontSize: 14, cursor: "pointer"
-        }}>💾 Save Changes</button>
+        }}>Save Changes</button>
       </div>
 
       <div style={{
@@ -160,7 +160,7 @@ function Settings() {
             ))}
             <button style={{
               width: "100%", padding: "11px", borderRadius: 10,
-              border: "none", background: "#EA580C", color: "#fff",
+              border: "none", background: "#16A34A", color: "#fff",
               fontWeight: 700, fontSize: 14, cursor: "pointer"
             }}>Change Password</button>
           </div>

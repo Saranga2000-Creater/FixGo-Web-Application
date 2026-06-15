@@ -62,10 +62,50 @@ function ActiveRepairs() {
         </p>
       </div>
 
+      <div
+  style={{
+    display: "flex",
+    gap: 12,
+    marginBottom: 24,
+  }}
+>
+  <input
+    placeholder="Search customer, vehicle, or repair..."
+    style={{
+      flex: 1,
+      padding: "14px 20px",
+      borderRadius: 14,
+      border: "1px solid #E5E7EB",
+      background: "#FFFFFF",
+      fontSize: 15,
+      outline: "none",
+    }}
+  />
+
+  <button
+    style={{
+      background: "#16A34A",
+      color: "#FFFFFF",
+      border: "none",
+      borderRadius: 14,
+      padding: "0 24px",
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    Filter
+  </button>
+</div>
+
       <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
+  background: "#FFFFFF",
+  borderRadius: 18,
+  border: "1px solid #E7EFE8",
+  overflow: "hidden",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+
       }}>
+        
         {/* Header */}
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid #F3F4F6",
@@ -76,7 +116,9 @@ function ActiveRepairs() {
           {["Customer", "Vehicle", "Service", "Status", "Expected", "Action"].map(h => (
             <span key={h} style={{ fontSize: 12, fontWeight: 600, color: "#6B7280" }}>{h}</span>
           ))}
+          
         </div>
+        
 
         {/* Rows */}
         {ACTIVE_REPAIRS.map((r, i) => (
@@ -96,7 +138,7 @@ function ActiveRepairs() {
             {/* Vehicle */}
             <div>
               <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-              <div style={{ fontSize: 12, color: "#EA580C", fontWeight: 600 }}>{r.plate}</div>
+              <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
             </div>
 
             {/* Service */}
@@ -106,23 +148,64 @@ function ActiveRepairs() {
             </div>
 
             {/* Status Badge */}
-            <span style={{
-              background: r.statusBg, color: r.statusColor,
-              borderRadius: 20, padding: "4px 14px",
-              fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
-              display: "inline-block"
-            }}>{r.status}</span>
+            <span
+  style={{
+    background: r.statusBg,
+    color: r.statusColor,
+    borderRadius: 999,
+    padding: "6px 14px",
+    fontSize: 12,
+    fontWeight: 700,
+    display: "inline-flex",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+    gap: 6,
+    width: "130px",
+  }}
+>
+  <span
+    style={{
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      background: r.statusColor,
+    }}
+  />
+  {r.status}
+</span>
 
             {/* Expected */}
             <div style={{ fontSize: 12, color: "#6B7280" }}>{r.expected}</div>
-
-            {/* Action */}
-            <button style={{
-              padding: "7px 14px", borderRadius: 8,
-              border: "1.5px solid #E5E7EB", color: "#374151",
-              background: "transparent", fontWeight: 600,
-              fontSize: 12, cursor: "pointer", whiteSpace: "nowrap"
-            }}>View Details</button>
+{/* Action */}
+<button
+  style={{
+    padding: "10px 18px",
+    borderRadius: 10,
+    border: "1px solid #D1D5DB",
+    background: "#FFFFFF",
+    color: "#374151",
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: "pointer",
+    minWidth: "120px",
+    transition: "all 0.2s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.background = "#16A34A";
+    e.currentTarget.style.color = "#FFFFFF";
+    e.currentTarget.style.borderColor = "#16A34A";
+    e.currentTarget.style.transform = "translateY(-2px)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.background = "#FFFFFF";
+    e.currentTarget.style.color = "#374151";
+    e.currentTarget.style.borderColor = "#D1D5DB";
+    e.currentTarget.style.transform = "translateY(0)";
+  }}
+>
+  View Details
+</button>
           </div>
         ))}
 
@@ -130,7 +213,7 @@ function ActiveRepairs() {
         <div style={{ padding: "14px 20px", textAlign: "center" }}>
           <button style={{
             padding: "10px 32px", borderRadius: 10,
-            border: "1.5px solid #EA580C", color: "#EA580C",
+            border: "1.5px solid #16A34A", color: "#16A34A",
             background: "transparent", fontWeight: 600, fontSize: 14, cursor: "pointer"
           }}>View all active repairs</button>
         </div>
