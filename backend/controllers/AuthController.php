@@ -51,7 +51,8 @@ class AuthController{
                 echo json_encode([
                     "message" => "Login successful.",
                     "token" => $jwt,
-                    "role" => $user->userRole
+                    "role" => $user->userRole,
+                    "id" => $user->id
                 ]);
 
                 return;

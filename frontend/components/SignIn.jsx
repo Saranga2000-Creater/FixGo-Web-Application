@@ -30,6 +30,9 @@ function Sign({ setShowSignIn }) {
                 sessionStorage.setItem("token", data.token);
                 sessionStorage.setItem("email", email);
                 sessionStorage.setItem("role", data.role);
+                sessionStorage.setItem("shopId", data.id);
+
+
 
                 navigate("/services");
             } else {

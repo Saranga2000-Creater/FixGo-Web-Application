@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+
+
 const SERVICES = [
   "General Service & Maintenance",
   "Engine Repair",
@@ -9,15 +12,7 @@ const SERVICES = [
   "Diagnostics",
 ];
 
-const BUSINESS_INFO = [
-  ["Shop Name",     "Advanced Auto"],
-  ["Category",      "Service Center"],
-  ["Email",         "info@advancedauto.lk"],
-  ["Phone",         "+94 77 123 4567"],
-  ["Address",       "Colombo 07, Ward Place"],
-  ["Reg. No.",      "BRN-12345678"],
-  ["Hours",         "Mon-Sat 08:00AM – 06:00PM"],
-];
+
 
 function Stars({ count, max = 5 }) {
   return (
@@ -30,6 +25,40 @@ function Stars({ count, max = 5 }) {
 }
 
 function ShopProfile() {
+  const [shopData, setShopData] = useState(null);
+  useEffect(() => {
+
+    const shopId = sessionStorage.getItem("shopId");
+
+    if (!shopId) {
+        console.error("No shopId found");
+        return;
+    }
+
+    fetch(`http://localhost:8000/api/getShopProfile.php?shopId=${shopId}`)
+        .then(res => res.json())
+        .then(data => {
+            console.log("Shop Data:", data);
+            setShopData(data);
+        })
+        .catch(err => {
+            console.error("Error loading shop profile:", err);
+        });
+
+}, []);
+  if (!shopData) {
+    return <div>Loading shop profile...</div>;
+  }
+  const BUSINESS_INFO = [
+  ["Shop Name", shopData.name],
+  ["Owner", shopData.owner],
+  ["Category", shopData.category],
+  ["Email", shopData.email],
+  ["Phone", shopData.contactNumber],
+  ["Address", shopData.address],
+  ["Reg. No.", shopData.BRN || "Not Available"],
+  ["Hours", `${shopData.openTime} - ${shopData.closeTime}`]
+];
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
@@ -58,15 +87,31 @@ function ShopProfile() {
             <div style={{
               width: 80, height: 80, borderRadius: 12, background: "#1F2937",
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32
-            }}>🚗</div>
+            }}>
+              <img
+    src={
+      shopData?.profileImageURL
+        ? `http://localhost:8000/${shopData.profileImageURL}`
+        : "/default-shop.png"
+    }
+    alt="Shop"
+    style={{
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    }}
+  />
+            </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 18, color: "#111827" }}>Advanced Auto</div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: "#111827" }}>
+  {shopData.name}
+</div>
               <span style={{
                 background: "#DCFCE7", color: "#15803D", borderRadius: 20,
                 padding: "3px 12px", fontSize: 12, fontWeight: 600
               }}>✓ Verified Shop</span>
               <div style={{ fontSize: 13, color: "#6B7280", marginTop: 6 }}>
-                📍 Colombo 07, Ward Place, Colombo
+              📍 {shopData.address}
               </div>
               <div style={{ marginTop: 6 }}>
                 <Stars count={5} />
@@ -77,8 +122,7 @@ function ShopProfile() {
             </div>
           </div>
           <p style={{ fontSize: 14, color: "#374151", margin: 0 }}>
-            We provide high quality vehicle repair and maintenance services
-            with experienced technicians and modern equipment.
+           {shopData.description} 
           </p>
         </div>
 
