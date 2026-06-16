@@ -73,7 +73,7 @@ function Notification() {
     const unreadCount = notifications.filter((n) => n.isUnread).length;
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-gray-50 min-h-screen">
+        <div className="w-full">
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Notifications</h1>
@@ -84,7 +84,7 @@ function Notification() {
             {unreadCount > 0 && (
                 <button
                     onClick={markAllAsRead}
-                    className="mb-6 px-4 py-2 text-sm font-semibold text-[#16a34a] hover:bg-green-50 rounded-lg transition-colors"
+                    className="mb-6 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 >
                     Mark all as read ({unreadCount})
                 </button>
@@ -102,10 +102,10 @@ function Notification() {
                             key={notification.id}
                             onClick={() => markAsRead(notification.id)}
                             className={`p-4 rounded-lg flex items-start gap-4 cursor-pointer transition-all ${
-                                notification.isUnread
-                                    ? 'bg-orange-50 hover:bg-orange-100'
-                                    : 'bg-white hover:bg-gray-50'
-                            } border border-gray-200 hover:border-gray-300`}
+    notification.isUnread
+        ? 'bg-green-50 hover:bg-green-100'
+        : 'bg-white hover:bg-gray-50'
+} border border-gray-200 hover:border-gray-300`}
                         >
                             {/* Icon */}
                             <div
@@ -133,7 +133,7 @@ function Notification() {
                                     {notification.timestamp}
                                 </span>
                                 {notification.isUnread && (
-                                    <div className="w-2.5 h-2.5 bg-orange-500 rounded-full flex-shrink-0"></div>
+                                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full flex-shrink-0"></div>
                                 )}
                             </div>
 

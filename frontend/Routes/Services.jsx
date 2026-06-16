@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { NavBar } from "../components/NavBar";
 import Customer from "../components/Customer/CustomerControllDashboard";
 import ShopOwner from "../components/ShopOwner/ShopOwnerDashboard";
-import Admin from "../components/AdminControlDashboard";
+import Admin from "../components/Admin/AdminControlDashboard";
 
 function Services() {
     const token = sessionStorage.getItem("token");

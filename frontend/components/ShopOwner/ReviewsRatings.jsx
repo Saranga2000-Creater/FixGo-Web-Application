@@ -107,10 +107,10 @@ function ReviewsRatings() {
             <button key={tab} style={{
               padding: "6px 14px", borderRadius: 20, border: "none",
               background: i === 0 ? "#FFF7ED" : "transparent",
-              color: i === 0 ? "#EA580C" : "#6B7280",
+              color: i === 0 ? "#16A34A" : "#6B7280",
               fontWeight: i === 0 ? 700 : 400,
               fontSize: 13, cursor: "pointer",
-              borderBottom: i === 0 ? "2px solid #EA580C" : "none"
+              borderBottom: i === 0 ? "2px solid #16A34A" : "none"
             }}>{tab}</button>
           ))}
         </div>

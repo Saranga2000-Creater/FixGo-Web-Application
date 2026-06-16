@@ -122,8 +122,8 @@ function ShopProfile() {
           </div>
           <button style={{
             marginTop: 16, width: "100%", padding: "10px",
-            borderRadius: 10, border: "1.5px solid #EA580C",
-            color: "#EA580C", background: "transparent",
+            borderRadius: 10, border: "1.5px solid #16A34A",
+            color: "#16A34A", background: "transparent",
             fontWeight: 600, fontSize: 14, cursor: "pointer"
           }}>+ Add / Remove Services</button>
         </div>

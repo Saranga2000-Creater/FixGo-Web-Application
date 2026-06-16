@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
+import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut } from "react-icons/fi";
+import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "🏠", badge: null },
-  { id: "requests", label: "Service Requests", icon: "📋", badge: 12 },
-  { id: "repairs", label: "Active Repairs", icon: "🔧", badge: 8 },
-  { id: "history", label: "Service History", icon: "🕐", badge: null },
-  { id: "reviews", label: "Reviews & Ratings", icon: "⭐", badge: null },
-  { id: "profile", label: "Shop Profile", icon: "🏪", badge: null },
-  { id: "notifications", label: "Notifications", icon: "🔔", badge: 5 },
-  { id: "settings", label: "Settings", icon: "⚙️", badge: null },
+  { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
+  { id: "requests", label: "Service Requests", icon: <FiClipboard />, badge: 12 },
+  { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver />, badge: 8 },
+  { id: "history", label: "Service History", icon: <FiClock /> },
+  { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
+  { id: "profile", label: "Shop Profile", icon: <FiHome /> },
+  { id: "notifications", label: "Notifications", icon: <FiBell />, badge: 5 },
+  { id: "settings", label: "Settings", icon: <FiSettings /> },
 ];
 
 function Badge({ count }) {
@@ -16,7 +18,7 @@ function Badge({ count }) {
   return (
     <span
       style={{
-        background: "#EA580C",
+        background: "#16A34A",
         color: "#fff",
         borderRadius: 99,
         fontSize: 11,
@@ -53,12 +55,12 @@ function Sidebar({ activeNav, setActiveNav }) {
       {/* Shop Header */}
       <div
         style={{
-          padding: "20px 16px 16px",
-          borderBottom: "1px solid #F3F4F6",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
+    padding: "20px 16px 16px",
+    borderBottom: "1px solid #F3F4F6",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  }}
       >
         <div
           style={{
@@ -111,19 +113,25 @@ function Sidebar({ activeNav, setActiveNav }) {
               border: "none",
               cursor: "pointer",
               background:
-                activeNav === item.id ? "#FFF7ED" : "transparent",
+                activeNav === item.id ? "#F0FDF4" : "transparent",
               color:
-                activeNav === item.id ? "#EA580C" : "#374151",
+                activeNav === item.id ? "#16A34A" : "#374151",
               fontWeight: activeNav === item.id ? 700 : 500,
               fontSize: 14,
               textAlign: "left",
-              borderLeft:
-                activeNav === item.id
-                  ? "3px solid #EA580C"
-                  : "3px solid transparent",
+              
             }}
           >
-            <span style={{ fontSize: 17 }}>{item.icon}</span>
+            <span
+  style={{
+    fontSize: 18,
+    display: "flex",
+    alignItems: "center",
+    color: activeNav === item.id ? "#16A34A" : "#6B7280",
+  }}
+>
+  {item.icon}
+</span>
             <span style={{ flex: 1 }}>{item.label}</span>
             <Badge count={item.badge} />
           </button>
@@ -153,7 +161,8 @@ function Sidebar({ activeNav, setActiveNav }) {
             fontSize: 14,
           }}
         >
-          <span style={{ fontSize: 17 }}>🚪</span> Logout
+          
+          <FiLogOut size={18} />Log Out
         </button>
       </div>
     </div>

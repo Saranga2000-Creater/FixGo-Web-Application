@@ -15,7 +15,7 @@ const RECENT_REQUESTS = [
     service: "Oil Change", date: "Yesterday", time: "04:45 PM"
   },
   {
-    id: 4, initials: "MG", color: "#D97706", name: "Madushan G.",
+    id: 4, initials: "MG", color: "#16A34A", name: "Madushan G.",
     vehicle: "Tata Lorry", plate: "WP-LM-8945",
     service: "Clutch Repair", date: "Yesterday", time: "02:20 PM"
   },
@@ -37,7 +37,7 @@ function Avatar({ initials, color, size = 36 }) {
 
 function ServiceRequests() {
   return (
-    <div>
+    <div style={{ width: "100%" }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>
           Service Requests
@@ -46,10 +46,48 @@ function ServiceRequests() {
           Review and respond to incoming service requests.
         </p>
       </div>
+      <div
+  style={{
+    display: "flex",
+    gap: 12,
+    marginBottom: 20,
+  }}
+>
+  <input
+    placeholder="Search customer, vehicle, or service..."
+    style={{
+      flex: 1,
+      padding: "12px 16px",
+      borderRadius: 12,
+      border: "1px solid #E5E7EB",
+      background: "#FFFFFF",
+      fontSize: 14,
+      outline: "none",
+    }}
+  />
+
+  <button
+    style={{
+      background: "#16A34A",
+      color: "#FFFFFF",
+      border: "none",
+      borderRadius: 12,
+      padding: "0 20px",
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    Filter
+  </button>
+</div>
 
       <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
+  background: "#FFFFFF",
+  borderRadius: 18,
+  border: "1px solid #E7EFE8",
+  overflow: "hidden",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+
       }}>
         {/* Table Header */}
         <div style={{
@@ -81,7 +119,7 @@ function ServiceRequests() {
             {/* Vehicle */}
             <div>
               <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-              <div style={{ fontSize: 12, color: "#EA580C", fontWeight: 600 }}>{r.plate}</div>
+              <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
             </div>
 
             {/* Service */}
@@ -95,16 +133,34 @@ function ServiceRequests() {
 
             {/* Actions */}
             <div style={{ display: "flex", gap: 8 }}>
-              <button style={{
-                padding: "7px 16px", borderRadius: 8,
-                border: "1.5px solid #EA580C", color: "#EA580C",
-                background: "transparent", fontWeight: 600, fontSize: 13, cursor: "pointer"
-              }}>Accept</button>
-              <button style={{
-                padding: "7px 16px", borderRadius: 8,
-                border: "1.5px solid #EF4444", color: "#EF4444",
-                background: "transparent", fontWeight: 600, fontSize: 13, cursor: "pointer"
-              }}>Decline</button>
+              <button
+  style={{
+    padding: "8px 16px",
+    borderRadius: 10,
+    border: "none",
+    background: "#16A34A",
+    color: "#FFFFFF",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  }}
+>
+  Accept
+</button>
+<button
+  style={{
+    padding: "8px 16px",
+    borderRadius: 10,
+    border: "1px solid #EF4444",
+    color: "#EF4444",
+    background: "#FFFFFF",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  }}
+>
+  Decline
+</button>
             </div>
           </div>
         ))}
@@ -113,7 +169,7 @@ function ServiceRequests() {
         <div style={{ padding: "14px 20px", textAlign: "center" }}>
           <button style={{
             padding: "10px 32px", borderRadius: 10,
-            border: "1.5px solid #EA580C", color: "#EA580C",
+            border: "1.5px solid #16A34A", color: "#16A34A",
             background: "transparent", fontWeight: 600, fontSize: 14, cursor: "pointer"
           }}>View all requests</button>
         </div>
