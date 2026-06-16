@@ -34,7 +34,7 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav }) {
+function Sidebar({ activeNav, setActiveNav,shopData }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
@@ -75,7 +75,19 @@ function Sidebar({ activeNav, setActiveNav }) {
             flexShrink: 0,
           }}
         >
-          🚗
+          <img
+    src={
+      shopData?.profileImageURL
+        ? `http://localhost:8000/${shopData.profileImageURL}`
+        : "/default-shop.png"
+    }
+    alt="Shop"
+    style={{
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    }}
+  />
         </div>
 
         <div style={{ minWidth: 0 }}>
@@ -89,10 +101,10 @@ function Sidebar({ activeNav, setActiveNav }) {
               textOverflow: "ellipsis",
             }}
           >
-            Advanced Auto
+           {shopData?.name || "Shop"} 
           </div>
           <div style={{ fontSize: 12, color: "#6B7280" }}>
-            Service Center
+            {shopData?.category || "Service Center"}
           </div>
         </div>
       </div>

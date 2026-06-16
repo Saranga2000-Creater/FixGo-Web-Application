@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
@@ -21,7 +21,7 @@ const NAV_ITEMS = [
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView() {
+function DashboardView({ shopData }) {
   const stats = [
     { label: "New Requests", value: 12, sub: "+4 today", subColor: "#16A34A", icon: "📋" },
     { label: "Active Jobs", value: 8, sub: "View all", subColor: "#059669", icon: "🔧" },
@@ -75,7 +75,7 @@ function DashboardView() {
         margin: 0,
       }}
     >
-      Hello, Advanced Auto! 👋
+     Hello, {shopData?.name || "Shop"}! 👋
     </h1>
 
     <span
@@ -205,9 +205,10 @@ onMouseLeave={(e) => {
 
 
 
-function renderPage(activeNav) {
+function renderPage(activeNav,shopData) {
   switch (activeNav) {
-    case "dashboard":     return <DashboardView />;
+   
+    case "dashboard":     return <DashboardView shopData={shopData} />;
     case "requests":      return <ServiceRequests />;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
@@ -222,10 +223,25 @@ function renderPage(activeNav) {
 // ── Main Layout (Guaranteed Spanning Layout) ──────────────────────────────────
 function ShopOwnerDashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [shopData, setShopData] = useState(null);
 
-  const currentLabel =
+  
+    useEffect(() => {
+  const shopId = sessionStorage.getItem("shopId");
+
+  if (!shopId) return;
+
+  fetch(`http://localhost:8000/api/getShopProfile.php?shopId=${shopId}`)
+    .then(res => res.json())
+    .then(data => {
+      setShopData(data);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}, []);
+ const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
-
   return (
     <div
       style={{
@@ -237,9 +253,10 @@ function ShopOwnerDashboard() {
     >
       {/* Sidebar */}
       <Sidebar
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-      />
+  activeNav={activeNav}
+  setActiveNav={setActiveNav}
+  shopData={shopData}
+/>
 
       {/* Main Area */}
       <div
@@ -262,7 +279,7 @@ function ShopOwnerDashboard() {
             background: "#F4F8F5",
           }}
         >
-          {renderPage(activeNav)}
+          {renderPage(activeNav,shopData)}
         
         </div>
 
