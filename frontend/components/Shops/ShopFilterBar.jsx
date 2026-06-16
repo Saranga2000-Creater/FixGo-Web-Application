@@ -7,18 +7,6 @@ import {
     faMapLocationDot
 } from "@fortawesome/free-solid-svg-icons";
 
-const vehicleFilters = [
-    { id: 1, label: "3-Wheelers and Bikes" },
-    { id: 2, label: "4-Wheelers" },
-    { id: 3, label: "Commercial Vehicles" },
-];
-
-const serviceFilters = [
-    { id: 1, label: "Garages" },
-    { id: 2, label: "Service Centers" },
-    { id: 3, label: "Spare Parts" },
-];
-
 export const ShopFilterBar = ({
     initialLocationText,
     onLocationChange, // Function to pass coordinates back to Shops.jsx
@@ -31,7 +19,9 @@ export const ShopFilterBar = ({
     sortBy,
     setSortBy,
     needsTow,
-    setNeedsTow
+    setNeedsTow,
+    vehicleOptions = [],
+    serviceOptions = []
 }) => {
     // UI State
     const [activeTab, setActiveTab] = useState('explore');
@@ -181,7 +171,7 @@ export const ShopFilterBar = ({
                                     <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Vehicle Category</label>
                                     <select value={activeVehicle} onChange={(e) => setActiveVehicle(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
                                         <option value="">🚗 All Vehicles</option>
-                                        {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                        {vehicleOptions.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
                                     </select>
                                 </div>
                                 <div className="flex w-full flex-1 flex-col">
@@ -197,7 +187,7 @@ export const ShopFilterBar = ({
                                         }} 
                                         className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
                                         <option value="">🔧 All Services</option>
-                                        {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                        {serviceOptions.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
                                     </select>
                                 </div>
 

@@ -7,7 +7,7 @@ import ReviewsRatings from "./ReviewsRatings";
 import ShopProfile from "./ShopProfile";
 import Notification from "./Notification";
 import Settings from "./Settings";
-import { Footer } from "../Footer";
+import { Footer } from "../footer";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠" },

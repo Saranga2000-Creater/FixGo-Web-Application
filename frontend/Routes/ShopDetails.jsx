@@ -305,7 +305,9 @@ function ShopDetails() {
         Book a Service
       </h3>
 
-      <button className="w-full rounded-xl bg-green-600 py-3 text-white font-semibold">
+      <button 
+      onClick={() => setIsModalOpen(true)}
+      className="w-full rounded-xl bg-green-600 py-3 text-white font-semibold">
         Book Now
       </button>
     </div>

@@ -188,41 +188,42 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                 </div>
             )}
 
-                <div className="border border-gray-100 rounded-xl p-4 flex gap-4 bg-white shadow-sm">
-                    {/* Shop Logo Placeholder */}
-                    <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0">
-                        <FontAwesomeIcon icon={faCar} className="text-xl text-gray-800 mb-0.5" />
-                        <span className="text-[7px] font-black uppercase tracking-tighter text-gray-800 leading-none">AutoCare</span>
-                        <span className="text-[7px] font-black uppercase tracking-tighter text-gray-800 leading-none">Pro</span>
+            {/* DYNAMIC SHOP INFO CARD */}
+            <div className="border border-gray-100 rounded-xl p-4 flex gap-4 bg-white shadow-sm">
+                
+                {/* Generic Shop Avatar */}
+                <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0 border border-gray-200">
+                    <FontAwesomeIcon icon={faCar} className="text-2xl text-gray-400 mb-0.5" />
+                </div>
+
+                {/* Shop Details */}
+                <div className="flex flex-col justify-center gap-1">
+                    <h3 className="text-sm font-bold text-[#1f2937]">{shop?.name || 'Service Center'}</h3>
+
+                    <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                        <div className="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
+                            <span className="font-bold text-gray-700">{shop?.rating || 'New'}</span>
+                            {shop?.reviewCount > 0 && <span>({shop.reviewCount} Reviews)</span>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
+                            <span>{shop?.distance || 'Distance unknown'}</span>
+                        </div>
+                        
+                        {/* Dynamic Open/Closed Badge */}
+                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded border font-bold ${shop?.status === 'Open Now' ? 'border-[#16a34a]/20 bg-[#ecfdf5] text-[#059669]' : 'border-red-500/20 bg-red-50 text-red-600'}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${shop?.status === 'Open Now' ? 'bg-[#059669]' : 'bg-red-600'}`}></div>
+                            {shop?.status || 'Closed'}
+                        </div>
                     </div>
 
-                    {/* Shop Details */}
-                    <div className="flex flex-col justify-center gap-1">
-                        <h3 className="text-sm font-bold text-[#1f2937]">{shop.name || 'AutoCare Pro Service Center'}</h3>
-
-                        <div className="flex items-center gap-3 text-[11px] text-gray-500">
-                            <div className="flex items-center gap-1">
-                                <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
-                                <span className="font-bold text-gray-700">4.8</span>
-                                <span>(245 Reviews)</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
-                                <span>1.2 km away</span>
-                            </div>
-                            {/* Open Now Badge */}
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-[#16a34a]/20 bg-[#ecfdf5] text-[#059669] font-bold">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#059669]"></div>
-                                Open Now
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
-                            <FontAwesomeIcon icon={faBolt} className="text-gray-400" />
-                            <span>Average response time: ~8 minutes</span>
-                        </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+                        <FontAwesomeIcon icon={faBolt} className="text-gray-400" />
+                        <span>Average response time: ~{shop?.responseTime || 15} minutes</span>
                     </div>
                 </div>
+            </div>
         </div>
     );
 
@@ -727,16 +728,22 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
 
             {/* --- ALL CONTAINERS BELOW SCALED TO max-w-md FOR PERFECT ALIGNMENT --- */}
 
-            {/* Shop Info Card Mini */}
+            {/* DYNAMIC Shop Info Card Mini */}
             <div className="border border-gray-100 rounded-xl p-3.5 flex items-center gap-4 bg-white shadow-sm w-full max-w-md mb-5">
-                <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0">
-                   <FontAwesomeIcon icon={faCar} className="text-sm text-gray-800 mb-0.5" />
+                <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0 border border-gray-200">
+                   <FontAwesomeIcon icon={faCar} className="text-lg text-gray-400" />
                 </div>
                 <div className="flex flex-col justify-center">
-                    <h3 className="text-[14px] font-bold text-[#1f2937]">{shop.name || 'AutoCare Pro Service Center'}</h3>
+                    <h3 className="text-[14px] font-bold text-[#1f2937]">{shop?.name || 'Service Center'}</h3>
                     <div className="flex items-center gap-3 text-[12px] text-gray-500 mt-0.5">
-                        <div className="flex items-center gap-1"><FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" /><span className="font-bold text-gray-700">4.8</span></div>
-                        <div className="flex items-center gap-1"><FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" /><span>1.2 km away</span></div>
+                        <div className="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
+                            <span className="font-bold text-gray-700">{shop?.rating || 'New'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
+                            <span>{shop?.distance || 'Distance unknown'}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -755,14 +762,14 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                 </button>
             </div>
 
-            {/* Estimated Response Time Box */}
+            {/* DYNAMIC Estimated Response Time Box */}
             <div className="w-full max-w-md bg-[#f0fdf4] border border-[#dcfce7] rounded-xl p-4 flex items-center justify-center gap-3 mb-6 shadow-sm">
                 <div className="w-9 h-9 rounded-full bg-[#dcfce7] flex items-center justify-center">
                     <FontAwesomeIcon icon={faBolt} className="text-[#16a34a] text-sm" />
                 </div>
                 <div className="flex flex-col">
                     <span className="text-[12px] text-[#14532d] font-bold">Estimated Response Time</span>
-                    <span className="text-[15px] font-bold text-[#16a34a]">~ 8 Minutes</span>
+                    <span className="text-[15px] font-bold text-[#16a34a]">~ {shop?.responseTime || 15} Minutes</span>
                 </div>
             </div>
 

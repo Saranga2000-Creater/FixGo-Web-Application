@@ -12,6 +12,40 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
     const [homeCity, setHomeCity] = useState("Current Location");
     const [needsTow, setNeedsTow] = useState(false);
 
+    // --- ADDED: Dynamic Category Fetching ---
+    const [vehicleOptions, setVehicleOptions] = useState([]);
+    const [serviceOptions, setServiceOptions] = useState([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/api/getCategories.php');
+                const json = await response.json();
+                
+                if (response.ok) {
+                    setVehicleOptions(json.vehicles);
+                    setServiceOptions(json.services);
+                } else {
+                    throw new Error("Failed to fetch");
+                }
+            } catch (error) {
+                console.warn("Backend categories not ready. Using fallbacks.", error);
+                setVehicleOptions([
+                    { id: "1", label: "3-Wheelers & Bikes", icon: faBicycle },
+                    { id: "2", label: "4-Wheelers", icon: faCar },
+                    { id: "3", label: "Commercial", icon: faTruck },
+                ]);
+                setServiceOptions([
+                    { id: "1", label: "Garages" },
+                    { id: "2", label: "Service Centers" },
+                    { id: "3", label: "Spare Parts" },
+                ]);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
     // 2. Custom Autocomplete State (Replacing the React Library)
     const [predictions, setPredictions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -104,6 +138,14 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
 
     // 4. The Routing Logic
     const handleSearchClick = () => {
+
+        // Clear old memory before navigating to the fresh search!
+        sessionStorage.removeItem('fixgo_activeVehicle');
+        sessionStorage.removeItem('fixgo_activeService');
+        sessionStorage.removeItem('fixgo_sortBy');
+        sessionStorage.removeItem('fixgo_searchName');
+        sessionStorage.removeItem('fixgo_needsTow')
+
         const isUserLoggedIn = true; // Temporary mock auth
         
         if (!isUserLoggedIn) {
@@ -148,18 +190,17 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
                         <div>
                             <p className="font-mono text-[11px] text-[#274c3a] uppercase font-bold tracking-widest mb-2">Vehicle Category</p>
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <button onClick={() => setHomeVehicle("1")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all ${homeVehicle === "1" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}>
-                                    <FontAwesomeIcon icon={faBicycle} className="text-lg" />
-                                    <span className="font-mono text-sm font-bold whitespace-nowrap">3-Wheelers &amp; Bikes</span>
-                                </button>
-                                <button onClick={() => setHomeVehicle("2")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all ${homeVehicle === "2" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}>
-                                    <FontAwesomeIcon icon={faCar} className="text-lg" />
-                                    <span className="font-mono text-sm font-bold whitespace-nowrap">4-Wheelers</span>
-                                </button>
-                                <button onClick={() => setHomeVehicle("3")} className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all ${homeVehicle === "3" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}>
-                                    <FontAwesomeIcon icon={faTruck} className="text-lg" />
-                                    <span className="font-mono text-sm font-bold whitespace-nowrap">Commercial</span>
-                                </button>
+                                {/* PASTE THE NEW MAP HERE: */}
+                                {vehicleOptions.map((vehicle) => (
+                                    <button 
+                                        key={vehicle.id}
+                                        onClick={() => setHomeVehicle(vehicle.id.toString())} 
+                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 border rounded-xl transition-all ${homeVehicle === vehicle.id.toString() ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]' : 'border-[#d1e7d7] hover:border-[#16a34a] hover:bg-[#16a34a]/5 text-[#274c3a]'}`}
+                                    >
+                                        <FontAwesomeIcon icon={vehicle.icon || faCar} className="text-lg" />
+                                        <span className="font-mono text-sm font-bold whitespace-nowrap">{vehicle.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -167,6 +208,7 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
                         <div>
                             <p className="font-mono text-[11px] text-[#274c3a] uppercase font-bold tracking-widest mb-2">Service Type</p>
                             <div className="relative w-full">
+                                {/* PASTE THE NEW SELECT DROPDOWN HERE: */}
                                 <select 
                                     value={homeService} 
                                     onChange={(e) => {
@@ -174,14 +216,18 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
                                         if (e.target.value !== "1") setNeedsTow(false);
                                     }}
                                     className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] font-mono text-sm cursor-pointer outline-none focus:border-[#16a34a] transition-colors"
-                                    >
-                                        <option value="">All Services</option>
-                                        <option value="1">Garages</option>
-                                        <option value="2">Service Centers</option>
-                                        <option value="3">Spare Parts</option>
+                                >
+                                    <option value="">All Services</option>
+                                    {serviceOptions.map((service) => (
+                                        <option key={service.id} value={service.id}>
+                                            {service.label}
+                                        </option>
+                                    ))}
                                 </select>
                                 <FontAwesomeIcon icon={faWarehouse} className="text-sm text-[#274c3a] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
+                            
+                            {/* Keep your existing Tow Truck Checkbox right below this */}
                             {homeService === "1" && (
                                 <div className="mt-3 animate-in fade-in duration-200">
                                     <label className={`flex items-center space-x-2 cursor-pointer px-4 py-2.5 rounded-xl border transition-colors ${needsTow ? 'border-[#16a34a] bg-[#16a34a]/10' : 'border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white'}`}>

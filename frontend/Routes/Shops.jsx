@@ -22,18 +22,6 @@ import {
 // CHANGED: Imported the required Google Maps components
 import { useLoadScript, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
 
-const vehicleFilters = [
-    { id: 1, label: "3-Wheelers and Bikes" },
-    { id: 2, label: "4-Wheelers" },
-    { id: 3, label: "Commercial Vehicles" },
-]
-
-const serviceFilters = [
-    { id: 1, label: "Garages" },
-    { id: 2, label: "Service Centers" },
-    { id: 3, label: "Spare Parts" },
-]
-
 // ADDED: Map styling container
 const mapContainerStyle = {
     width: '100%',
@@ -69,12 +57,24 @@ function Shops() {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
     
-    const [activeVehicle, setActiveVehicle] = useState(searchParams.get('vehicle') || "")
-    const [activeService, setActiveService] = useState(searchParams.get('service') || "")
-    const [sortBy, setSortBy] = useState('distance')
+    // Helper function to safely pull from sessionStorage or fallback to URL/Defaults
+    const getInitialState = (key, defaultValue) => {
+        const saved = sessionStorage.getItem(key);
+        if (saved !== null) {
+            // Handle boolean strings correctly for needsTow
+            if (saved === 'true') return true;
+            if (saved === 'false') return false;
+            return saved;
+        }
+        return defaultValue;
+    };
 
-    const [searchName, setSearchName] = useState("");
-    const [needsTow, setNeedsTow] = useState(searchParams.get('needs_tow') === 'true');
+    // Initialize state using the helper function
+    const [activeVehicle, setActiveVehicle] = useState(getInitialState('fixgo_activeVehicle', searchParams.get('vehicle') || ""));
+    const [activeService, setActiveService] = useState(getInitialState('fixgo_activeService', searchParams.get('service') || ""));
+    const [sortBy, setSortBy] = useState(getInitialState('fixgo_sortBy', 'distance'));
+    const [searchName, setSearchName] = useState(getInitialState('fixgo_searchName', ""));
+    const [needsTow, setNeedsTow] = useState(getInitialState('fixgo_needsTow', searchParams.get('needs_tow') === 'true'));
 
     // --- ADDED: Catch coordinates coming from the ShopFilterBar component ---
     const handleLocationUpdate = (lat, lng, textDesc) => {
@@ -85,7 +85,51 @@ function Shops() {
             setLocationAlert(null);
         }
     };
-     const navigate = useNavigate();
+    const navigate = useNavigate();
+    const [vehicleFilters, setVehicleFilters] = useState([]);
+    const [serviceFilters, setServiceFilters] = useState([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/api/getCategories.php');
+                const json = await response.json();
+                
+                if (response.ok) {
+                    setVehicleFilters(json.vehicles);
+                    setServiceFilters(json.services);
+                } else {
+                    throw new Error("Failed to fetch");
+                }
+            } catch (error) {
+                console.warn("Backend categories not ready. Using fallbacks.", error);
+                // Smart Fallback: Keeps your UI working perfectly until you write the PHP
+                setVehicleFilters([
+                    { id: 1, label: "3-Wheelers and Bikes" },
+                    { id: 2, label: "4-Wheelers" },
+                    { id: 3, label: "Commercial Vehicles" },
+                ]);
+                setServiceFilters([
+                    { id: 1, label: "Garages" },
+                    { id: 2, label: "Service Centers" },
+                    { id: 3, label: "Spare Parts" },
+                ]);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+     // --- ADDED: Session Storage Save Hook ---
+    // Watch these variables, and anytime they change, save them to the browser's session storage.
+    useEffect(() => {
+        sessionStorage.setItem('fixgo_activeVehicle', activeVehicle);
+        sessionStorage.setItem('fixgo_activeService', activeService);
+        sessionStorage.setItem('fixgo_sortBy', sortBy);
+        sessionStorage.setItem('fixgo_searchName', searchName);
+        sessionStorage.setItem('fixgo_needsTow', needsTow.toString());
+    }, [activeVehicle, activeService, sortBy, searchName, needsTow]);
+
     // 3. CHANGED: The Geolocation Engine (The Conditional Check)
     useEffect(() => {
         // SCENARIO A: The user searched from the homepage (URL has coordinates)
@@ -104,7 +148,6 @@ function Shops() {
                         lng: position.coords.longitude
                     });
                     setLocationAlert(null); 
-                    setLocationInputText("Current Location");
                 },
                 (error) => {
                     console.warn("Geolocation error:", error.message);
@@ -181,6 +224,8 @@ function Shops() {
                 {/* CHANGED: Added '-mt-16' (negative margin) to pull this container UP so it overlaps the hero image */}
                 <section className="relative z-20 mx-auto max-w-7xl px-4 md:px-8 -mt-16 mb-8">
                     <ShopFilterBar 
+                        vehicleOptions={vehicleFilters}
+                        serviceOptions={serviceFilters}
                         initialLocationText={urlLocName || ""}
                         onLocationChange={handleLocationUpdate}
                         searchName={searchName}
