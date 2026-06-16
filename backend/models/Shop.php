@@ -8,7 +8,7 @@ class Shop {
     }
 
     // CHANGED: Added $searchName = null to the end of the parameters
-    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false') {
+    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false', $quickFilter = 'all', $currentTime = null) {
         $radiusInMeters = $radiusInKm * 1000;
 
         $query = "SELECT 
@@ -24,6 +24,13 @@ class Shop {
                     (SELECT url FROM shopImage WHERE shop_id = s.id LIMIT 1) as thumbnail_url,
                     COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                     COUNT(r.id) as review_count,
+                    -- 2. ADDED: Dynamically count all completed requests for this shop!
+                    (SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed,
+                    -- Calculate actual average response time in minutes
+                    -- If they have no accepted requests yet, it defaults to 15
+                    (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
+                     FROM serviceRequest sr 
+                     WHERE sr.shop_id = s.id AND sr.accepted_at IS NOT NULL) as response_time_minutes,
                     GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') as shop_tags,
                     -- CHANGED: Added extraction of vehicle category names for the UI tags
                     GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') as vehicle_tags
@@ -57,9 +64,24 @@ class Shop {
             $query .= " AND s.name LIKE :searchName ";
         }
 
+        // 3. ADDED: Quick Filter Logic (Open Now & Roadside)
+        if ($quickFilter === 'open') {
+            $query .= " AND s.isAvailable = 1 AND :currentTime BETWEEN s.openTime AND s.closeTime ";
+        } elseif ($quickFilter === 'roadside') {
+            $query .= " AND s.has_tow_service = 1 ";
+        }
+
         $query .= " GROUP BY s.id ";
 
-        if ($sortBy === 'rating') {
+        // 4. ADDED: Quick Filter Logic (Top Rated - Needs HAVING since it's an aggregate)
+        if ($quickFilter === 'top_rated') {
+            $query .= " HAVING avg_rating >= 4.0 ";
+        }
+
+        // 5. ADDED: Quick Filter Logic (Nearest Sorting override)
+        if ($quickFilter === 'nearest') {
+            $query .= " ORDER BY distance ASC"; 
+        } else if ($sortBy === 'rating') {
             $query .= " ORDER BY avg_rating DESC, distance ASC";
         } else {
             $query .= " ORDER BY distance ASC";
@@ -82,6 +104,11 @@ class Shop {
         if ($searchName !== null && $searchName !== '') {
             $searchTerm = '%' . $searchName . '%';
             $stmt->bindParam(':searchName', $searchTerm, PDO::PARAM_STR);
+        }
+
+        // 6. ADDED: Bind the current time for the 'Open Now' filter
+        if ($quickFilter === 'open') {
+            $stmt->bindParam(':currentTime', $currentTime, PDO::PARAM_STR);
         }
 
         $stmt->execute();
