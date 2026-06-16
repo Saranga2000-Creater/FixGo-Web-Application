@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faArrowRight,
@@ -33,6 +34,32 @@ function SidebarLink({ active = false, icon, label, badge, onClick }) {
 
 // ── CustomerSidebar ───────────────────────────────────────────
 function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
+    const [customer, setCustomer] = useState(null);
+
+    useEffect(() => {
+        const token = sessionStorage.getItem('token');
+
+        fetch('http://localhost:8000/api/getCustomerProfile.php', {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setCustomer(data);
+                }
+            })
+            .catch(() => {
+                // silently fail — sidebar will show placeholder
+            });
+    }, []);
+
+    // Avatar: use profilePhoto from DB, or generate one from name
+    const avatarSrc = customer?.profilePhoto
+        ? customer.profilePhoto
+        : `https://ui-avatars.com/api/?background=16a34a&color=fff&name=${encodeURIComponent(customer?.name || 'Customer')}`;
+
     return (
         <aside className="hidden w-[260px] shrink-0 border-r border-[#d1e7d7] bg-white lg:flex lg:flex-col overflow-y-auto">
             <div className="px-4 py-5">
@@ -40,22 +67,18 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
                 {/* User profile card */}
                 <div className="rounded-[28px] border border-[#d1e7d7] bg-white px-4 py-5 shadow-[0_4px_12px_rgb(22,163,74,0.08)]">
                     <div className="flex items-center gap-3">
-                        {/* 👉 API: Replace src with customer.avatarUrl */}
+                        {/* Real profile photo or generated avatar */}
                         <img
-                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"
-                            alt="Irushi An."
+                            src={avatarSrc}
+                            alt={customer?.name || 'Customer'}
                             className="h-12 w-12 rounded-full object-cover ring-2 ring-[#16a34a]/20"
                         />
                         <div>
-                            {/* 👉 API: Replace with customer.name */}
-                            <p className="text-sm font-semibold text-[#14532d]">Irushi An.</p>
+                            {/* Real customer name */}
+                            <p className="text-sm font-semibold text-[#14532d]">
+                                {customer?.name || '...'}
+                            </p>
                             <p className="text-xs text-[#274c3a]/60">Customer</p>
-                            <div className="mt-1 flex items-center gap-1 text-xs text-[#274c3a]/60">
-                                {/* 👉 API: Replace with customer.averageRating and customer.reviewCount */}
-                                <span className="font-semibold text-[#16a34a]">4.8</span>
-                                <span className="text-amber-400">★</span>
-                                <span>(12 reviews)</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -67,8 +90,7 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
                     <SidebarLink active={currentPage === "repair"}        icon={faCar}     label="Repair Status"     onClick={() => setCurrentPage("repair")} />
                     <SidebarLink active={currentPage === "history"}       icon={faClock}   label="Service History"   onClick={() => setCurrentPage("history")} />
                     <SidebarLink active={currentPage === "reviews"}       icon={faStar}    label="Reviews & Ratings" onClick={() => setCurrentPage("reviews")} />
-                    {/* API: badge="3" → replace with real unread count from GET /api/customer/notifications/unread-count */}
-                    <SidebarLink active={currentPage === "notifications"} icon={faBell}    label="Notifications"     badge="3" onClick={() => setCurrentPage("notifications")} />
+                    <SidebarLink active={currentPage === "notifications"} icon={faBell}    label="Notifications"     onClick={() => setCurrentPage("notifications")} />
                     <SidebarLink active={currentPage === "settings"}      icon={faGear}    label="Settings"          onClick={() => setCurrentPage("settings")} />
                 </nav>
             </div>
