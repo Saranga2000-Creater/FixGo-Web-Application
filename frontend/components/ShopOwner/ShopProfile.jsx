@@ -26,20 +26,29 @@ function Stars({ count, max = 5 }) {
 
 function ShopProfile() {
   const [shopData, setShopData] = useState(null);
-  useEffect(() => {
+useEffect(() => {
+    const token = sessionStorage.getItem("token");
 
-    const shopId = sessionStorage.getItem("shopId");
-
-    if (!shopId) {
-        console.error("No shopId found");
+    if (!token) {
+        console.error("Token not found");
         return;
     }
 
-    fetch(`http://localhost:8000/api/getShopProfile.php?shopId=${shopId}`)
+    fetch("http://localhost:8000/api/getShopProfile.php", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
         .then(res => res.json())
         .then(data => {
             console.log("Shop Data:", data);
-            setShopData(data);
+
+            if (data.success) {
+                setShopData(data.data);
+            } else {
+                console.error(data.message);
+            }
         })
         .catch(err => {
             console.error("Error loading shop profile:", err);
@@ -52,7 +61,7 @@ function ShopProfile() {
   const BUSINESS_INFO = [
   ["Shop Name", shopData.name],
   ["Owner", shopData.owner],
-  ["Category", shopData.category],
+  ["Category", shopData.categories || "Not Assigned"],
   ["Email", shopData.email],
   ["Phone", shopData.contactNumber],
   ["Address", shopData.address],

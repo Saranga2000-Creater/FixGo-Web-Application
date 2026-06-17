@@ -10,38 +10,50 @@ class Shop {
     // ==========================================
     // Dashboard Profile Retrieval
     // ==========================================
-    public function getById($shopId) {
-        // Includes carriageService, BRN, and the main profile image logic
-        $query = "
-            SELECT
-                u.id,
-                u.email,
-                s.name,
-                s.owner,
-                s.address,
-                s.contactNumber,
-                s.description,
-                s.openTime,
-                s.closeTime,
-                s.isAvailable,
-                s.carriageService, 
-                s.BRN,
-                si.url AS profileImageURL,
-                GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories
-            FROM users u
-            INNER JOIN shop s ON u.id = s.id
-            LEFT JOIN shopImage si ON si.shop_id = s.id AND si.is_main = 1
-            LEFT JOIN shopCategoryMapping scm ON scm.shop_id = s.id
-            LEFT JOIN shopCategory sc ON sc.id = scm.shop_category_id
-            WHERE u.id = :id
-            GROUP BY s.id
-        ";
+  public function getById($shopId) {
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id' => $shopId]);
-        
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+    $query = "
+        SELECT
+            u.id,
+            u.email,
+            s.name,
+            s.owner,
+            s.address,
+            s.contactNumber,
+            s.description,
+            s.openTime,
+            s.closeTime,
+            s.isAvailable,
+            s.carriageService,
+            s.BRN,
+            s.profileImageURL,
+            GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories
+        FROM users u
+        INNER JOIN shop s ON u.id = s.id
+        LEFT JOIN shopCategoryMapping scm ON scm.shop_id = s.id
+        LEFT JOIN shopCategory sc ON sc.id = scm.shop_category_id
+        WHERE u.id = :id
+        GROUP BY
+            u.id,
+            u.email,
+            s.name,
+            s.owner,
+            s.address,
+            s.contactNumber,
+            s.description,
+            s.openTime,
+            s.closeTime,
+            s.isAvailable,
+            s.carriageService,
+            s.BRN,
+            s.profileImageURL
+    ";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([':id' => $shopId]);
+
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
     // ==========================================
     // Find Nearby Shops (Search UI)
