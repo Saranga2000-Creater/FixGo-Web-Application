@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Check inputs in $_POST
 $requiredFields = [
     'ownerName', 'shopName', 'email', 'phone', 'address',
-    'licenseNumber', 'openTime', 'closeTime', 'providesCarriage',
+    'openTime', 'closeTime', 'providesCarriage',
     'category', 'vehicleCategory', 'description', 'latitude', 'longitude', 'password'
 ];
 
@@ -50,7 +50,7 @@ $shopName = trim($_POST['shopName']);
 $email = trim($_POST['email']);
 $phone = trim($_POST['phone']);
 $address = trim($_POST['address']);
-$licenseNumber = trim($_POST['licenseNumber']);
+$licenseNumber = isset($_POST['licenseNumber']) ? trim($_POST['licenseNumber']) : '';
 $openTime = trim($_POST['openTime']);
 $closeTime = trim($_POST['closeTime']);
 $providesCarriage = (int)$_POST['providesCarriage'];

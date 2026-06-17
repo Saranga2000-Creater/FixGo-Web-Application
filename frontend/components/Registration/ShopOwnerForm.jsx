@@ -276,7 +276,6 @@ export default function ShopForm() {
                         <input
                             type="text"
                             name="licenseNumber"
-                            required
                             value={formData.licenseNumber}
                             onChange={handleChange}
                             placeholder="e.g. BR-12345-X"
