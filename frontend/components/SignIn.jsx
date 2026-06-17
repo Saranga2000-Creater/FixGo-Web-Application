@@ -8,6 +8,14 @@ function Sign({ setShowSignIn }) {
 
     const navigate = useNavigate();
 
+    const handleClose = () => {
+        if (typeof setShowSignIn === 'function') {
+            setShowSignIn(false); // Used when it's a popup
+        } else {
+            navigate('/');        // Used when it's a standalone page
+        }
+    };
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
@@ -27,10 +35,10 @@ function Sign({ setShowSignIn }) {
 
             if (response.ok) {
                 setShowSignIn(false);
-                sessionStorage.setItem("token", data.token);
-                sessionStorage.setItem("email", email);
-                sessionStorage.setItem("role", data.role);
-                sessionStorage.setItem("shopId", data.id);
+                localStorage.setItem("jwt_token", data.token);
+                localStorage.setItem("email", email);
+                localStorage.setItem("role", data.role);
+                localStorage.setItem("shopId", data.id);
 
 
 
@@ -47,7 +55,7 @@ function Sign({ setShowSignIn }) {
     }
 
     const handleRegister = () => {
-        setShowSignIn(false)
+        handleClose(); // CHANGED: Replaced setShowSignIn(false)
         document.getElementById("register")?.scrollIntoView({
             behavior: "smooth"
         });
@@ -55,9 +63,10 @@ function Sign({ setShowSignIn }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* 1st Update: The Background Overlay */}
             <div
                 className="absolute inset-0 bg-black/50"
-                onClick={() => setShowSignIn(false)}
+                onClick={handleClose} 
                 aria-hidden="true"
             />
 
@@ -66,10 +75,11 @@ function Sign({ setShowSignIn }) {
                 aria-modal="true"
                 className="relative bg-white w-full max-w-md mx-4 rounded-lg shadow-xl p-6 z-10"
             >
+                {/* 2nd Update: The X Icon */}
                 <FontAwesomeIcon
                     icon={faXmark}
-                    className="absolute top-4 right-4 cursor-pointer text-xl text-gray-600"
-                    onClick={() => setShowSignIn(false)}
+                    className="absolute top-4 right-4 cursor-pointer text-xl text-gray-600 hover:text-gray-900 transition-colors"
+                    onClick={handleClose} 
                 />
 
                 <h2 className="text-2xl font-semibold mb-2">Sign in to FixGo</h2>

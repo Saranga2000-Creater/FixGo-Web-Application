@@ -8,10 +8,10 @@ import Sign from "./SignIn";
 export const NavBar = () => {
     const navigate = useNavigate();
     const [showSignIn, setShowSignIn] = useState(false);
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("jwt_token");
 
     const handleSignOut = () => {
-        sessionStorage.clear();
+        localStorage.clear();
         navigate("/");
     };
 
