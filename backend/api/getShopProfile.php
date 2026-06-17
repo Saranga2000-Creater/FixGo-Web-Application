@@ -1,65 +1,61 @@
 <?php
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-header("Access-Control-Allow-Origin: *");
+// 1. CORS & Headers
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (preg_match('/^http:\/\/localhost:\d+$/', $origin)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header("Access-Control-Allow-Origin: http://localhost:5173");
+}
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Content-Type: application/json");
 
-require_once __DIR__ . '/../config/EnvLoader.php';
-EnvLoader::load(__DIR__ . '/../.env');
-
-require_once __DIR__ . '/../config/Database.php';
-
-if (!isset($_GET['shopId'])) {
-    echo json_encode([
-        "message" => "shopId required"
-    ]);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
-$shopId = $_GET['shopId'];
+// 2. Load Dependencies
+require_once __DIR__ . '/../config/EnvLoader.php';
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/JwtHandler.php';
+require_once __DIR__ . '/../controllers/ShopController.php';
 
-$db = (new Database())->connect();
+EnvLoader::load(__DIR__ . '/../.env');
 
-$query = "
-SELECT
-    u.id,
-    u.email,
+// 3. The Security Gateway (JWT Validation)
+$headers = getallheaders();
+$authHeader = $headers['Authorization'] ?? '';
 
-    s.name,
-    s.owner,
-    s.address,
-    s.contactNumber,
-    s.description,
-    s.openTime,
-    s.closeTime,
-    s.carriageService,
-    s.BRN,
-    s.profileImageURL,
+if (empty($authHeader) || !str_starts_with($authHeader, 'Bearer ')) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized. No token provided.']);
+    exit();
+}
 
-    sc.name AS category
+$token = substr($authHeader, 7);
+$jwtHandler = new JwtHandler();
+$decoded = $jwtHandler->decode($token);
 
-FROM users u
+if (!$decoded) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized. Invalid or expired token.']);
+    exit();
+}
 
-INNER JOIN shop s
-ON u.id = s.id
+// 4. Securely extract ID from token (NEVER from $_GET)
+$shopId = is_array($decoded) ? ($decoded['user_id'] ?? $decoded['id'] ?? null) : ($decoded->user_id ?? $decoded->id ?? null);
 
-LEFT JOIN shopcategorymapping scm
-ON scm.shop_id = s.id
+if (!$shopId) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid token payload.']);
+    exit();
+}
 
-LEFT JOIN shopcategory sc
-ON sc.id = scm.shop_category_id
+// 5. Connect and Route to Controller
+$database = new Database();
+$db = $database->connect();
 
-WHERE u.id = :id
-";
-
-$stmt = $db->prepare($query);
-
-$stmt->execute([
-    ':id' => $shopId
-]);
-
-echo json_encode(
-    $stmt->fetch(PDO::FETCH_ASSOC)
-);
+$controller = new ShopController($db);
+$controller->getProfile($shopId);
