@@ -31,9 +31,9 @@ function Sign({ setShowSignIn }) {
                 sessionStorage.setItem("email", email);
                 sessionStorage.setItem("role", data.role);
                 sessionStorage.setItem("shopId", data.id);
-
-
-
+                if (data.profileImage) {
+                    sessionStorage.setItem("profileImage", data.profileImage);
+                }
                 navigate("/services");
             } else {
                 alert(data.message || "Login failed. Please try again.");

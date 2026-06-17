@@ -46,13 +46,30 @@ class AuthController{
 
                 $jwt = $jwtHandler->generate($tokenPayload);
 
+                // Fetch profile image URL
+                $profileImage = null;
+                if ($user->userRole === 'shop_owner') {
+                    $stmt = $this->db->prepare("SELECT profileImageURL FROM shop WHERE id = :id LIMIT 1");
+                    $stmt->execute([':id' => $user->id]);
+                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $profileImage = $row['profileImageURL'];
+                    }
+                } else if ($user->userRole === 'customer') {
+                    $stmt = $this->db->prepare("SELECT profilePhoto FROM customer WHERE id = :id LIMIT 1");
+                    $stmt->execute([':id' => $user->id]);
+                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $profileImage = $row['profilePhoto'];
+                    }
+                }
+
                 http_response_code(200);
 
                 echo json_encode([
                     "message" => "Login successful.",
                     "token" => $jwt,
                     "role" => $user->userRole,
-                    "id" => $user->id
+                    "id" => $user->id,
+                    "profileImage" => $profileImage
                 ]);
 
                 return;
