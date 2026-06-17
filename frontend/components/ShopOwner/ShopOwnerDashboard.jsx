@@ -226,19 +226,31 @@ function ShopOwnerDashboard() {
   const [shopData, setShopData] = useState(null);
 
   
-    useEffect(() => {
-  const shopId = sessionStorage.getItem("shopId");
+useEffect(() => {
+  const token = sessionStorage.getItem("token");
 
-  if (!shopId) return;
+  if (!token) {
+    console.error("Token not found");
+    return;
+  }
 
-  fetch(`http://localhost:8000/api/getShopProfile.php?shopId=${shopId}`)
-    .then(res => res.json())
-    .then(data => {
-      setShopData(data);
+  fetch("http://localhost:8000/api/getShopProfile.php", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+
+    
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setShopData(data.data);
+      } else {
+        console.error(data.message);
+      }
     })
-    .catch(err => {
-      console.error(err);
-    });
+    .catch((err) => console.error(err));
 }, []);
  const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
