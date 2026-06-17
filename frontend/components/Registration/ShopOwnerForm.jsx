@@ -21,7 +21,12 @@ export default function ShopForm() {
         latitude: 6.9271,
         longitude: 79.8612,
         password: "",
-        confirmPassword: ""
+        confirmPassword: "",
+        defaultDriverName: "",
+        defaultDriverPhone: "",
+        defaultTruckBrand: "",
+        defaultTruckColor: "",
+        towTruckPlate: ""
     });
     const [shopImage, setShopImage] = useState(null);
     const [shopImagePreview, setShopImagePreview] = useState("");
@@ -37,10 +42,21 @@ export default function ShopForm() {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        setFormData(prev => {
+            const updated = {
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            };
+            if ((name === 'category' && value !== 'Garages') || (name === 'providesCarriage' && !checked)) {
+                updated.providesCarriage = false;
+                updated.defaultDriverName = "";
+                updated.defaultDriverPhone = "";
+                updated.defaultTruckBrand = "";
+                updated.defaultTruckColor = "";
+                updated.towTruckPlate = "";
+            }
+            return updated;
+        });
     };
 
     const handleShopImageChange = (e) => {
@@ -94,6 +110,29 @@ export default function ShopForm() {
             return;
         }
 
+        if (formData.providesCarriage) {
+            if (!formData.defaultDriverName.trim()) {
+                setError("Please provide the truck driver's name.");
+                return;
+            }
+            if (!formData.defaultDriverPhone.trim()) {
+                setError("Please provide the driver's phone number.");
+                return;
+            }
+            if (!formData.defaultTruckBrand.trim()) {
+                setError("Please provide the truck brand name.");
+                return;
+            }
+            if (!formData.defaultTruckColor.trim()) {
+                setError("Please provide the truck color.");
+                return;
+            }
+            if (!formData.towTruckPlate.trim()) {
+                setError("Please provide the truck vehicle plate number.");
+                return;
+            }
+        }
+
         if (!shopImage) {
             setError("Please upload a workshop photo.");
             return;
@@ -118,6 +157,11 @@ export default function ShopForm() {
         payload.append("longitude", formData.longitude);
         payload.append("password", formData.password);
         payload.append("shopImage", shopImage);
+        payload.append("defaultDriverName", formData.defaultDriverName);
+        payload.append("defaultDriverPhone", formData.defaultDriverPhone);
+        payload.append("defaultTruckBrand", formData.defaultTruckBrand);
+        payload.append("defaultTruckColor", formData.defaultTruckColor);
+        payload.append("towTruckPlate", formData.towTruckPlate);
 
         try {
             const response = await fetch("http://localhost:8000/api/registerShop.php", {
@@ -375,24 +419,94 @@ export default function ShopForm() {
             </div>
 
             {/* Vehicle Carriage Services */}
-            <div className="space-y-4 pt-2">
-                <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">
-                    Vehicle Carriage Services
-                </h3>
-                <label className="flex items-start gap-3 p-4 rounded-2xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all bg-white">
-                    <input
-                        type="checkbox"
-                        name="providesCarriage"
-                        checked={formData.providesCarriage}
-                        onChange={handleChange}
-                        className="mt-1 rounded text-green-600 focus:ring-green-500 w-5 h-5 shrink-0"
-                    />
-                    <div>
-                        <span className="block text-sm font-semibold text-gray-950">Do you offer vehicle carriage / towing services?</span>
-                        <span className="block text-xs text-gray-500">Check this if your shop provides roadside assistance, towing, or flatbed transport.</span>
-                    </div>
-                </label>
-            </div>
+            {formData.category === "Garages" && (
+                <div className="space-y-4 pt-2">
+                    <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">
+                        Vehicle Carriage Services
+                    </h3>
+                    <label className="flex items-start gap-3 p-4 rounded-2xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all bg-white mb-2">
+                        <input
+                            type="checkbox"
+                            name="providesCarriage"
+                            checked={formData.providesCarriage}
+                            onChange={handleChange}
+                            className="mt-1 rounded text-green-600 focus:ring-green-500 w-5 h-5 shrink-0"
+                        />
+                        <div>
+                            <span className="block text-sm font-semibold text-gray-950">Do you offer vehicle carriage / towing services?</span>
+                            <span className="block text-xs text-gray-500">Check this if your shop provides roadside assistance, towing, or flatbed transport.</span>
+                        </div>
+                    </label>
+
+                    {formData.providesCarriage && (
+                        <div className="p-4 bg-slate-50 border border-gray-200 rounded-2xl space-y-4 animate-fade-in">
+                            <h4 className="text-sm font-bold text-gray-800">Towing Truck & Driver Details</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase">Truck Driver Name</label>
+                                    <input
+                                        type="text"
+                                        name="defaultDriverName"
+                                        required={formData.providesCarriage}
+                                        value={formData.defaultDriverName}
+                                        onChange={handleChange}
+                                        placeholder="e.g. John Doe"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase">Driver Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        name="defaultDriverPhone"
+                                        required={formData.providesCarriage}
+                                        value={formData.defaultDriverPhone}
+                                        onChange={handleChange}
+                                        placeholder="e.g. +94 77 123 4567"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase">Truck Brand Name</label>
+                                    <input
+                                        type="text"
+                                        name="defaultTruckBrand"
+                                        required={formData.providesCarriage}
+                                        value={formData.defaultTruckBrand}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Isuzu, Toyota"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase">Truck Color</label>
+                                    <input
+                                        type="text"
+                                        name="defaultTruckColor"
+                                        required={formData.providesCarriage}
+                                        value={formData.defaultTruckColor}
+                                        onChange={handleChange}
+                                        placeholder="e.g. White, Blue"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase">Truck Vehicle Plate Number</label>
+                                <input
+                                    type="text"
+                                    name="towTruckPlate"
+                                    required={formData.providesCarriage}
+                                    value={formData.towTruckPlate}
+                                    onChange={handleChange}
+                                    placeholder="e.g. WP GA-1234"
+                                    className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Shop Description */}
             <div className="space-y-4 pt-2">
