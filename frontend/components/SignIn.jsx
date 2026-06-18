@@ -40,8 +40,9 @@ function Sign({ setShowSignIn }) {
                 localStorage.setItem("role", data.role);
                 localStorage.setItem("shopId", data.id);
 
-
-
+                if (data.profileImage) {
+                    localStorage.setItem("profileImage", data.profileImage);
+                }
                 navigate("/services");
             } else {
                 alert(data.message || "Login failed. Please try again.");

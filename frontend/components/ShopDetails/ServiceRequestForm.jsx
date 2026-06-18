@@ -283,7 +283,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
             </div>
 
             {/* CONDITIONAL GARAGE BLOCK: 1a. Tow Truck Options */}
-            {shop.category_id === 1 && shop.has_tow_service === 1 && (
+            {shop.category_id === 1 && shop.carriageService === 1 && (
                 <div className="animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-3">
                         <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[10px] font-bold">1a</div>

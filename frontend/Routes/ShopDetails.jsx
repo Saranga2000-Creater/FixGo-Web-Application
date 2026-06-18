@@ -9,17 +9,34 @@ import { Pagination, Navigation } from "swiper/modules";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { ServiceRequestModal } from "../components/ShopDetails/ServiceRequestForm";
 
+
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import {
-  faChevronRight,
-  faCheckCircle,
-  faClock,
-  faMapMarkerAlt,
-  faPhone,
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
+
+import {
+  FaOilCan,
+  FaCarBattery,
+  FaSnowflake,
+  FaCog,
+  FaCarSide,
+  FaClock,
+} from "react-icons/fa";
+
+import {
+  FaWrench,
+  FaStar,
+  FaShieldAlt,
+  FaSmile,
+} from "react-icons/fa";
+
+import {
+  MdCarRepair,
+  MdOutlineCarCrash,
+} from "react-icons/md";
 
 function ShopDetails() {
   const { id } = useParams();
@@ -31,7 +48,7 @@ function ShopDetails() {
     () => ({
       id: id,
       category_id: 2,
-      has_tow_service: 1,
+      carriageService: 1,
       default_truck_brand: "Isuzu NPR",
       tow_truck_plate: "WP-TOW-1234",
       name: "AutoCare Pro Service Center",
@@ -52,23 +69,57 @@ function ShopDetails() {
   "https://plus.unsplash.com/premium_photo-1661373022510-dfd61512e080?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8YXV0b21vdGl2ZSUyMHNlcnZpY2V8ZW58MHx8MHx8fDA%3D",
   "https://images.unsplash.com/photo-1632823469850-2f77dd9c7f93?auto=format&fit=crop&w=1200&q=80",
 ],
-      services: [
-        { name: "Engine Oil Change", price: "$25" },
-        { name: "Full Vehicle Inspection", price: "$35" },
-        { name: "AC Service & Regas", price: "$55" },
-        { name: "Transmission Service", price: "$120" },
-        { name: "Radiator Flush & Fill", price: "$45" },
-        { name: "Wheel Alignment & Balancing", price: "$40" },
-        { name: "Brake Pad Replacement", price: "$60" },
-        { name: "Battery Replacement", price: "$80" },
-        { name: "Tyre Replacement (per tyre)", price: "$70" },
-        { name: "Windshield Repair", price: "$30" },
-      ],
-      hours: [
-        { day: "Mon - Sat", time: "8:00 AM - 7:00 PM" },
-        { day: "Sun", time: "9:00 AM - 4:00 PM" },
-      ],
-      reviewBreakdown: [
+ services:[
+  {
+    name: "Engine Oil Change",
+    price: "$25",
+    duration: "30 mins",
+    icon: FaOilCan,
+  },
+  {
+    name: "Full Vehicle Inspection",
+    price: "$35",
+    duration: "45 mins",
+    icon: MdCarRepair,
+  },
+  {
+    name: "AC Service & Regas",
+    price: "$55",
+    duration: "1 hour",
+    icon: FaSnowflake,
+  },
+  {
+    name: "Brake Pad Replacement",
+    price: "$60",
+    duration: "1 - 1.5 hours",
+    icon: MdOutlineCarCrash,
+  },
+  {
+    name: "Transmission Service",
+    price: "$120",
+    duration: "2 - 3 hours",
+    icon: FaCog,
+  },
+  {
+    name: "Battery Replacement",
+    price: "$80",
+    duration: "30 mins",
+    icon: FaCarBattery,
+  },
+  {
+    name: "Tyre Replacement",
+    price: "$70",
+    duration: "30 mins/tyre",
+    icon: FaCarSide,
+  },
+  {
+    name: "Wheel Alignment",
+    price: "$40",
+    duration: "45 mins",
+    icon:FaCarSide,
+  },
+],
+  reviewBreakdown: [
         { stars: 5, count: 2 },
         { stars: 4, count: 1 },
         { stars: 3, count: 1 },
@@ -265,32 +316,64 @@ function ShopDetails() {
 </div>
 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 
-  <div className="rounded-2xl bg-white p-6 text-center shadow-sm border border-slate-100">
-    <h3 className="text-3xl font-bold text-green-600">500+</h3>
-    <p className="mt-2 text-sm text-slate-500">
-      Jobs Completed
-    </p>
+  <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
+        <FaWrench className="text-green-600 text-xl" />
+      </div>
+
+      <div>
+        <h3 className="text-3xl font-bold text-slate-900">500+</h3>
+        <p className="text-sm text-slate-500">
+          Jobs Completed
+        </p>
+      </div>
+    </div>
   </div>
 
-  <div className="rounded-2xl bg-white p-6 text-center shadow-sm border border-slate-100">
-    <h3 className="text-3xl font-bold text-green-600">4.8</h3>
-    <p className="mt-2 text-sm text-slate-500">
-      Customer Rating
-    </p>
+  <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
+        <FaStar className="text-green-600 text-xl" />
+      </div>
+
+      <div>
+        <h3 className="text-3xl font-bold text-slate-900">4.8</h3>
+        <p className="text-sm text-slate-500">
+          Customer Rating
+        </p>
+      </div>
+    </div>
   </div>
 
-  <div className="rounded-2xl bg-white p-6 text-center shadow-sm border border-slate-100">
-    <h3 className="text-3xl font-bold text-green-600">5+</h3>
-    <p className="mt-2 text-sm text-slate-500">
-      Years Experience
-    </p>
+  <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
+        <FaShieldAlt className="text-green-600 text-xl" />
+      </div>
+
+      <div>
+        <h3 className="text-3xl font-bold text-slate-900">5+</h3>
+        <p className="text-sm text-slate-500">
+          Years Experience
+        </p>
+      </div>
+    </div>
   </div>
 
-  <div className="rounded-2xl bg-white p-6 text-center shadow-sm border border-slate-100">
-    <h3 className="text-3xl font-bold text-green-600">98%</h3>
-    <p className="mt-2 text-sm text-slate-500">
-      Completion Rate
-    </p>
+  <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="flex items-center gap-3">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
+        <FaSmile className="text-green-600 text-xl" />
+      </div>
+
+      <div>
+        <h3 className="text-3xl font-bold text-slate-900">98%</h3>
+        <p className="text-sm text-slate-500">
+          Completion Rate
+        </p>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -339,27 +422,81 @@ function ShopDetails() {
               <div className="grid gap-8 xl:grid-cols-[1.4fr,0.9fr]">
                 <div className="space-y-8">
                   <div className="grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-                    <div className="rounded-xl border border-[#d1e7d7] bg-white p-3 shadow-sm">
+  
+<div className="rounded-xl border border-[#d1e7d7] bg-white p-5 shadow-sm">
+
   <h2 className="text-2xl font-bold text-[#0f172a]">
     Our Services
   </h2>
+  <div className="mt-4 flex flex-wrap gap-2">
+  {[
+    "All",
+    "Maintenance",
+    "Engine",
+    "Electrical",
+    "AC",
+    "Tyres",
+    "Diagnostics",
+    "Others",
+  ].map((category, index) => (
+    <button
+      key={category}
+      className={`rounded-full px-4 py-2 text-sm font-medium ${
+        index === 0
+          ? "bg-green-600 text-white"
+          : "bg-slate-100 text-slate-700"
+      }`}
+    >
+      {category}
+    </button>
+  ))}
+</div>
 
-  <div className="mt-2 divide-y divide-slate-200">
-    {shop.services.map((service) => (
-      <div
+  {/* Service Cards */}
+  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {shop.services.map((service) => {
+      const Icon = service.icon;
+
+      return (
+        <div
   key={service.name}
-  className="flex items-center justify-between py-2"
+  className="rounded-xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-1 hover:shadow-md"
 >
-        <span className=" text-sm text-[#334155]">
-          {service.name}
-        </span>
+  <div className="flex items-start gap-3">
 
-        <span className=" text-sm font-semibold text-green-600">
-          from {service.price}
-        </span>
-      </div>
-    ))}
+  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 shrink-0">
+    <Icon className="text-lg text-green-600" />
   </div>
+
+  <div>
+    <h3 className="text-sm font-semibold text-slate-800 leading-5">
+      {service.name}
+    </h3>
+
+    <p className="mt-1 text-sm font-semibold text-green-600">
+      from {service.price}
+    </p>
+  </div>
+
+</div>
+
+  <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+    <FaClock />
+    <span>{service.duration}</span>
+  </div>
+</div>
+      );
+    })}
+  </div>
+  {/* View All Services Button */}
+  <div className="mt-6 text-center">
+    <button className="rounded-xl border border-green-200 px-5 py-2 font-medium text-green-600 hover:bg-green-50">
+      View All Services
+    </button>
+  </div>
+
+
+
 </div>
 <div className="rounded-2xl border border-[#d1e7d7] bg-white p-8 shadow-sm self-start">
 
@@ -398,80 +535,119 @@ function ShopDetails() {
 </div>
                   </div>
 
-                   <div className="rounded-2xl border border-[#d1e7d7] bg-[#f8faf7] p-4 shadow-sm">
-                    <h2 className="text-xl font-bold text-[#0f172a]">Customer Reviews</h2>
-                    <div className="mt-3 grid gap-4 rounded-2xl bg-white p-4 shadow-sm">
-                      <div className="grid gap-4 lg:grid-cols-[1fr,0.9fr]">
-                        <div>
-                          <p className="text-3xl font-bold text-[#0f172a]">{shop.rating.toFixed(1)}</p>
-                          <div className="mt-2 flex items-center gap-2 text-sm text-[#475569]">
-                            {Array.from({ length: 5 }).map((_, index) => (
-                              <FontAwesomeIcon
-                                key={index}
-                                icon={faStar}
-                                className={`text-sm ${index < Math.round(shop.rating) ? "text-[#f59e0b]" : "text-slate-300"}`}
-                              />
-                            ))}
-                            <span>{shop.reviewCount} reviews</span>
-                          </div>
-                        </div>
-                        <div className="space-y-3 text-sm text-[#475569]">
-                          {shop.reviewBreakdown.map((row) => (
-                            <div key={row.stars} className="flex items-center gap-4">
-                              <span className="w-10 font-semibold text-[#0f172a]">{row.stars} ★</span>
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#e5e7eb]">
-                                <div className="h-full rounded-full bg-[#16a34a]" style={{ width: `${row.count * 20}%` }} />
-                              </div>
-                              <span className="w-6 text-right font-semibold text-[#14532d]">{row.count}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+<div className="flex flex-col gap-4 rounded-2xl border border-[#d1e7d7] bg-white p-6 shadow-sm">
 
-                  <div className="space-y-4 rounded-2xl border border-[#d1e7d7] bg-white p-4 shadow-sm">
-                    {shop.reviews.map((review) => (
-                      <div key={review.name} className="rounded-xl border border-[#e5e7eb] bg-[#f8faf7] p-3">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-10 items-center justify-center rounded-full bg-[#16a34a] text-sm font-semibold text-white">
-                              {review.name
-                                .split(" ")
-                                .slice(0, 2)
-                                .map((n) => n[0])
-                                .join("")}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-[#0f172a]">{review.name}</p>
-                              <div className="mt-2 flex items-center gap-1 text-sm text-[#f59e0b]">
-                                {Array.from({ length: review.rating }).map((_, index) => (
-                                  <FontAwesomeIcon key={index} icon={faStar} />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-sm text-[#94a3b8]">{review.date}</span>
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-[#475569]">
-  {review.summary}
-</p>
+  {/* Header */}
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex items-center gap-4">
+      <h2 className="text-2xl font-bold text-slate-900">
+        Customer Reviews
+      </h2>
 
-{review.images && (
-  <div className="mt-3 flex gap-2 overflow-x-auto">
-    {review.images.map((img, index) => (
-      <img
-        key={index}
-        src={img}
-        alt={`Review ${index + 1}`}
-        className="h-24 w-24 rounded-xl border border-slate-200 object-cover"
-      />
+      <span className="text-slate-500">
+        {shop.reviewCount} Reviews
+      </span>
+    </div>
+
+    <select className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+      <option>Most Recent</option>
+      <option>Highest Rated</option>
+      <option>Lowest Rated</option>
+    </select>
+  </div>
+
+  {/* Filter Buttons */}
+  <div className="flex flex-wrap gap-3">
+    <button className="rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white">
+      All ({shop.reviewCount})
+    </button>
+
+    <button className="rounded-full border border-slate-200 px-4 py-2 text-sm">
+      5 Stars
+    </button>
+
+    <button className="rounded-full border border-slate-200 px-4 py-2 text-sm">
+      4 Stars
+    </button>
+
+    <button className="rounded-full border border-slate-200 px-4 py-2 text-sm">
+      3 Stars
+    </button>
+
+    <button className="rounded-full border border-slate-200 px-4 py-2 text-sm">
+      2 Stars
+    </button>
+
+    <button className="rounded-full border border-slate-200 px-4 py-2 text-sm">
+      1 Star
+    </button>
+  </div>
+
+  {/* Review Cards */}
+  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {shop.reviews.map((review) => (
+      <div
+        key={review.name}
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-600 text-sm font-semibold text-white">
+              {review.name
+                .split(" ")
+                .slice(0, 2)
+                .map((n) => n[0])
+                .join("")}
+            </div>
+
+            <div>
+              <p className="font-semibold text-slate-900">
+                {review.name}
+              </p>
+
+              <div className="mt-1 flex items-center gap-1 text-yellow-500">
+                {Array.from({ length: review.rating }).map((_, index) => (
+                  <FontAwesomeIcon
+                    key={index}
+                    icon={faStar}
+                  />
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          <span className="text-sm text-slate-400">
+            {review.date}
+          </span>
+
+        </div>
+
+        <p className="mt-4 text-sm leading-6 text-slate-600">
+          {review.summary}
+        </p>
+
+        {review.images && (
+          <div className="mt-4 flex gap-2 overflow-x-auto">
+            {review.images.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Review ${index + 1}`}
+                className="h-24 w-24 rounded-xl border border-slate-200 object-cover"
+              />
+            ))}
+          </div>
+        )}
+      </div>
     ))}
   </div>
-)}
-                      </div>
-                    ))}
-                  </div>
+
+</div>
+
+                 
                 </div>
 
                

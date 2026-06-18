@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Check inputs in $_POST
 $requiredFields = [
     'ownerName', 'shopName', 'email', 'phone', 'address',
-    'licenseNumber', 'openTime', 'closeTime', 'providesCarriage',
+    'openTime', 'closeTime', 'providesCarriage',
     'category', 'vehicleCategory', 'description', 'latitude', 'longitude', 'password'
 ];
 
@@ -50,7 +50,7 @@ $shopName = trim($_POST['shopName']);
 $email = trim($_POST['email']);
 $phone = trim($_POST['phone']);
 $address = trim($_POST['address']);
-$licenseNumber = trim($_POST['licenseNumber']);
+$licenseNumber = isset($_POST['licenseNumber']) ? trim($_POST['licenseNumber']) : '';
 $openTime = trim($_POST['openTime']);
 $closeTime = trim($_POST['closeTime']);
 $providesCarriage = (int)$_POST['providesCarriage'];
@@ -60,6 +60,28 @@ $description = trim($_POST['description']);
 $latitude = (float)$_POST['latitude'];
 $longitude = (float)$_POST['longitude'];
 $password = $_POST['password'];
+
+$defaultDriverName = '';
+$defaultDriverPhone = '';
+$defaultTruckBrand = '';
+$defaultTruckColor = '';
+$towTruckPlate = '';
+
+if ($providesCarriage === 1) {
+    $towFields = ['defaultDriverName', 'defaultDriverPhone', 'defaultTruckBrand', 'defaultTruckColor', 'towTruckPlate'];
+    foreach ($towFields as $tf) {
+        if (!isset($_POST[$tf]) || trim($_POST[$tf]) === '') {
+            http_response_code(400);
+            echo json_encode(["message" => "Missing required towing field: $tf"]);
+            exit();
+        }
+    }
+    $defaultDriverName = trim($_POST['defaultDriverName']);
+    $defaultDriverPhone = trim($_POST['defaultDriverPhone']);
+    $defaultTruckBrand = trim($_POST['defaultTruckBrand']);
+    $defaultTruckColor = trim($_POST['defaultTruckColor']);
+    $towTruckPlate = trim($_POST['towTruckPlate']);
+}
 
 // Validate profile photo
 if (!isset($_FILES['shopImage']) || $_FILES['shopImage']['error'] !== UPLOAD_ERR_OK) {
@@ -171,8 +193,8 @@ try {
     $userId = $db->lastInsertId();
 
     // 2. Insert into shop
-    $shopQuery = "INSERT INTO shop (id, name, address, contactNumber, owner, location, description, openTime, closeTime, isAvailable, carriageService, BRN, profileImageURL) 
-                  VALUES (:id, :name, :address, :contactNumber, :owner, ST_GeomFromText(:location_point), :description, :openTime, :closeTime, 1, :carriageService, :BRN, :profileImageURL)";
+    $shopQuery = "INSERT INTO shop (id, name, address, contactNumber, owner, location, description, openTime, closeTime, isAvailable, carriageService, BRN, profileImageURL, default_driver_name, default_driver_phone, default_truck_brand, default_truck_color, tow_truck_plate) 
+                  VALUES (:id, :name, :address, :contactNumber, :owner, ST_GeomFromText(:location_point), :description, :openTime, :closeTime, 1, :carriageService, :BRN, :profileImageURL, :driverName, :driverPhone, :truckBrand, :truckColor, :truckPlate)";
     
     $shopStmt = $db->prepare($shopQuery);
     $shopStmt->execute([
@@ -187,7 +209,12 @@ try {
         ':closeTime' => $closeTime,
         ':carriageService' => $providesCarriage,
         ':BRN' => $licenseNumber,
-        ':profileImageURL' => $dbImagePath
+        ':profileImageURL' => $dbImagePath,
+        ':driverName' => $defaultDriverName,
+        ':driverPhone' => $defaultDriverPhone,
+        ':truckBrand' => $defaultTruckBrand,
+        ':truckColor' => $defaultTruckColor,
+        ':truckPlate' => $towTruckPlate
     ]);
 
     // 3. Insert into shopcategorymapping

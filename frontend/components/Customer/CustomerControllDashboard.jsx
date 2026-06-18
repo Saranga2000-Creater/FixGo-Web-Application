@@ -19,7 +19,7 @@ function CustomerControllDashboard() {
                 <CustomerSidebar
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
-                    onLogout={() => { sessionStorage.clear(); navigate("/"); }}
+                    onLogout={() => { localStorage.clear(); navigate("/"); }}
                 />
                 <main className="flex-1 overflow-y-auto bg-[#f0f7f2]">
                     <div className="px-4 py-5 md:px-6 lg:px-8">
