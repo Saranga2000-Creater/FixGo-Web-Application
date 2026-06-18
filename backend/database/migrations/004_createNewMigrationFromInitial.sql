@@ -1,0 +1,1 @@
+ALTER TABLE customer ADD COLUMN loyalty_points INT DEFAULT 0;
