@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { QuickSearchHub } from '../components/Home/QuickSearchHub';
 import { NavBar } from '../components/NavBar'
-import image from '../src/assets/image4.jpg'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBicycle, faSearch, faCar, faTruck, faWarehouse, faTriangleExclamation, faLocationDot, faUserTie, faArrowRight, faWrench, faRocket, faLocationCrosshairs } from "@fortawesome/free-solid-svg-icons";
 import Sign from "../components/SignIn"
@@ -11,7 +10,8 @@ import serviceCenter from "../src/assets/service.jpg"
 import { Footer } from "../components/footer"
 import Customer from "../components/Registration/Customer";
 import ShopOwner from "../components/Registration/ShopOwner"
-import LandingImage from '../components/Home/LandingPage';
+import LandingImage from "../components/Home/LandingImage"
+import About from '../components/Home/About';
 
 function Home() {
 
@@ -22,21 +22,24 @@ function Home() {
         <div>
             <NavBar />
             <main>
-                
+
                 <LandingImage />
 
                 {/* THE NEW, CLEAN COMPONENT */}
                 <QuickSearchHub onRequireAuth={() => setShowSignIn(true)} />
 
+
+
                 {/* PROMO CARDS SECTION */}
-                <section className="py-20  px-4 md:px-8 bg-green-100 " id='register' >
-                    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <section className="mt-10 px-4 md:px-8" id='register' >
+                    <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
 
                         <Customer />
 
                         <ShopOwner />
                     </div>
                 </section>
+                <About />
             </main>
 
             <Footer />
