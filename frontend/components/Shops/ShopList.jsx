@@ -144,7 +144,7 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                             </div>
                             
                             <button 
-                                onClick={() => navigate(`/shop/${shop.id}`)} 
+                                onClick={() => navigate(`/shop/${shop.id}`, { state: { distance: shop.distance_km } })} 
                                 type="button" 
                                 className="shrink-0 rounded-lg bg-[#16a34a] px-4 py-1.5 text-xs font-bold text-white transition hover:bg-[#14532d] active:scale-95 flex items-center gap-2 ml-auto"
                             >
