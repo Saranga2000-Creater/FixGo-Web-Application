@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserTie, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import car from "../../src/assets/car.avif";
+import car from "../../src/assets/car.png";
 
 
 export default function Customer() {
