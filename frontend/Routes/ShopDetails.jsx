@@ -48,7 +48,7 @@ function ShopDetails() {
     () => ({
       id: id,
       category_id: 2,
-      has_tow_service: 1,
+      carriageService: 1,
       default_truck_brand: "Isuzu NPR",
       tow_truck_plate: "WP-TOW-1234",
       name: "AutoCare Pro Service Center",

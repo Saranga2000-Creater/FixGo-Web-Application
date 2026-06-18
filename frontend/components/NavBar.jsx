@@ -8,11 +8,11 @@ import Sign from "./SignIn";
 export const NavBar = () => {
     const navigate = useNavigate();
     const [showSignIn, setShowSignIn] = useState(false);
-    const token = sessionStorage.getItem("token");
-    const profileImage = sessionStorage.getItem("profileImage");
+    const token = localStorage.getItem("jwt_token");
+    const profileImage = localStorage.getItem("profileImage");
 
     const handleSignOut = () => {
-        sessionStorage.clear();
+        localStorage.clear();
         navigate("/");
     };
     const handleRegister = () => {

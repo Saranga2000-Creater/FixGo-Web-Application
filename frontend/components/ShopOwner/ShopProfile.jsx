@@ -27,7 +27,7 @@ function Stars({ count, max = 5 }) {
 function ShopProfile() {
   const [shopData, setShopData] = useState(null);
 useEffect(() => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("jwt_token");
 
     if (!token) {
         console.error("Token not found");

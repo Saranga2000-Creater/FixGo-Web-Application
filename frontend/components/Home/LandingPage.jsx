@@ -1,4 +1,4 @@
-
+const image = "../../src/assets/image4.jpg";
 const  LandingImage = () => {
     return (
         <>

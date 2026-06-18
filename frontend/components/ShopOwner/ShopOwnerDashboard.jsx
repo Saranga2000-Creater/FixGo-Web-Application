@@ -227,7 +227,7 @@ function ShopOwnerDashboard() {
 
   
 useEffect(() => {
-  const token = sessionStorage.getItem("token");
+  const token = localStorage.getItem("jwt_token");
 
   if (!token) {
     console.error("Token not found");
