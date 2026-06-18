@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import serviceCenter from "../../src/assets/service.jpg";
+import serviceCenter from "../../src/assets/garage.jpg";
 import { faWrench, faRocket } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
