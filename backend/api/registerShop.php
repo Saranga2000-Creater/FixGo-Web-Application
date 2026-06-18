@@ -218,7 +218,7 @@ try {
     ]);
 
     // 3. Insert into shopcategorymapping
-    $mappingQuery = "INSERT INTO shopcategorymapping (shop_id, shop_category_id) VALUES (:shop_id, :shop_category_id)";
+    $mappingQuery = "INSERT INTO shopCategoryMapping (shop_id, shop_category_id) VALUES (:shop_id, :shop_category_id)";
     $mappingStmt = $db->prepare($mappingQuery);
     $mappingStmt->execute([
         ':shop_id' => $userId,
@@ -226,7 +226,7 @@ try {
     ]);
 
     // 4. Insert into shopvehiclecategories
-    $vehicleQuery = "INSERT INTO shopvehiclecategories (shop_id, vehicle_category_id) VALUES (:shop_id, :vehicle_category_id)";
+    $vehicleQuery = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :vehicle_category_id)";
     $vehicleStmt = $db->prepare($vehicleQuery);
     foreach ($vehicleIds as $vId) {
         $vehicleStmt->execute([

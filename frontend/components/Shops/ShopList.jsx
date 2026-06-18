@@ -51,7 +51,7 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                     <div className="relative h-48 sm:h-full sm:w-[220px] shrink-0 bg-[#14532d]">
                         {shop.thumbnail_url && (
                             <img 
-                                src={shop.thumbnail_url} 
+                                src={`http://localhost:8000/${shop.thumbnail_url}`} 
                                 alt={shop.name} 
                                 className="absolute inset-0 w-full h-full object-cover text-transparent"
                                 onError={(e) => { e.target.style.display = 'none'; }} 
