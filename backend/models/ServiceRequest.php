@@ -107,5 +107,39 @@ class ServiceRequest {
         }
         return false;
     }
+
+    public function getRequestsByShop($shop_id)
+{
+    $query = "
+        SELECT
+            sr.id,
+            sr.description,
+            sr.status,
+            sr.preferred_date,
+            sr.preferred_time,
+            sr.vehicle_brand,
+            sr.vehicle_color,
+            sr.issue_category,
+
+            c.name AS customer_name
+
+        FROM servicerequest sr
+
+        LEFT JOIN customer c
+        ON sr.customer_id = c.id
+
+        WHERE sr.shop_id = :shop_id
+
+        ORDER BY sr.id DESC
+    ";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(":shop_id", $shop_id);
+
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>

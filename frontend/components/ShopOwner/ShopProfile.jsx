@@ -46,6 +46,7 @@ useEffect(() => {
 
             if (data.success) {
                 setShopData(data.data);
+                console.log(shopData);
             } else {
                 console.error(data.message);
             }
@@ -62,6 +63,8 @@ useEffect(() => {
   ["Shop Name", shopData.name],
   ["Owner", shopData.owner],
   ["Category", shopData.categories || "Not Assigned"],
+  ["Vehicle Categories", shopData.vehicleCategories || "Not Assigned"],
+   ["Carriage Service", shopData.carriageService ? "Available" : "Not Available"],
   ["Email", shopData.email],
   ["Phone", shopData.contactNumber],
   ["Address", shopData.address],

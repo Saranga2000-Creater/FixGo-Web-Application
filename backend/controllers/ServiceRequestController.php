@@ -96,5 +96,16 @@ class ServiceRequestController {
             return json_encode(["message" => "Unable to create service request."]);
         }
     }
+    public function getRequestsByShop($shop_id)
+{
+    $requests = $this->serviceRequestModel->getRequestsByShop($shop_id);
+
+    http_response_code(200);
+
+    return json_encode([
+        "success" => true,
+        "data" => $requests
+    ]);
+}
 }
 ?>

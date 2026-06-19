@@ -1,25 +1,5 @@
-const RECENT_REQUESTS = [
-  {
-    id: 1, initials: "SJ", color: "#7C3AED", name: "Sanduni J.",
-    vehicle: "Toyota Prius", plate: "ABC-1234",
-    service: "Engine Overheating", date: "Today", time: "10:30 AM"
-  },
-  {
-    id: 2, initials: "NC", color: "#059669", name: "Nimal C.",
-    vehicle: "Suzuki Alto", plate: "CAB-5678",
-    service: "Brake Pad Replacement", date: "Today", time: "09:15 AM"
-  },
-  {
-    id: 3, initials: "KP", color: "#2563EB", name: "Kavindu P.",
-    vehicle: "Honda Fit", plate: "KX-7788",
-    service: "Oil Change", date: "Yesterday", time: "04:45 PM"
-  },
-  {
-    id: 4, initials: "MG", color: "#16A34A", name: "Madushan G.",
-    vehicle: "Tata Lorry", plate: "WP-LM-8945",
-    service: "Clutch Repair", date: "Yesterday", time: "02:20 PM"
-  },
-];
+import { useEffect, useState } from "react";
+
 
 function Avatar({ initials, color, size = 36 }) {
   return (
@@ -36,6 +16,27 @@ function Avatar({ initials, color, size = 36 }) {
 }
 
 function ServiceRequests() {
+   const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=2"
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setRequests(data.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div style={{ width: "100%" }}>
       <div style={{ marginBottom: 24 }}>
@@ -102,36 +103,77 @@ function ServiceRequests() {
         </div>
 
         {/* Rows */}
-        {RECENT_REQUESTS.map((r, i) => (
-          <div key={r.id} style={{
-            padding: "16px 20px",
-            borderBottom: i < RECENT_REQUESTS.length - 1 ? "1px solid #F9FAFB" : "none",
-            display: "grid",
-            gridTemplateColumns: "2fr 2fr 2fr 1.5fr 1.5fr",
-            gap: 12, alignItems: "center"
-          }}>
-            {/* Customer */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Avatar initials={r.initials} color={r.color} />
-              <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.name}</span>
-            </div>
+{requests.length === 0 ? (
+  <div
+    style={{
+      padding: "30px",
+      textAlign: "center",
+      color: "#6B7280",
+    }}
+  >
+    No service requests found
+  </div>
+) : (
+  requests.map((r, i) => (
+    <div
+      key={r.id}
+      style={{
+        padding: "16px 20px",
+        borderBottom:
+          i < requests.length - 1
+            ? "1px solid #F9FAFB"
+            : "none",
+        display: "grid",
+        gridTemplateColumns: "2fr 2fr 2fr 1.5fr 1.5fr",
+        gap: 12,
+        alignItems: "center",
+      }}
+    >
+      {/* Customer */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Avatar
+          initials={r.customer_name?.substring(0, 2).toUpperCase()}
+          color="#16A34A"
+        />
+        <span
+          style={{
+            fontWeight: 600,
+            fontSize: 14,
+            color: "#111827",
+          }}
+        >
+          {r.customer_name}
+        </span>
+      </div>
 
-            {/* Vehicle */}
-            <div>
-              <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-              <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
-            </div>
+      {/* Vehicle */}
+      <div>
+        <div style={{ fontSize: 14, color: "#374151" }}>
+          {r.vehicle_brand}
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: "#16A34A",
+            fontWeight: 600,
+          }}
+        >
+          {r.vehicle_color}
+        </div>
+      </div>
 
-            {/* Service */}
-            <div style={{ fontSize: 14, color: "#374151" }}>{r.service}</div>
+      {/* Service */}
+      <div style={{ fontSize: 14, color: "#374151" }}>
+        {r.issue_category}
+      </div>
 
-            {/* Date */}
-            <div style={{ fontSize: 13, color: "#6B7280" }}>
-              <div>{r.date}</div>
-              <div>{r.time}</div>
-            </div>
+      {/* Date */}
+      <div style={{ fontSize: 13, color: "#6B7280" }}>
+        <div>{r.preferred_date}</div>
+        <div>{r.preferred_time}</div>
+      </div>
 
-            {/* Actions */}
+      {/* Actions */}
             <div style={{ display: "flex", gap: 8 }}>
               <button
   style={{
@@ -163,7 +205,8 @@ function ServiceRequests() {
 </button>
             </div>
           </div>
-        ))}
+  ))
+        )}
 
         {/* Footer */}
         <div style={{ padding: "14px 20px", textAlign: "center" }}>
