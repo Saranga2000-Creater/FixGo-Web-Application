@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import serviceCenter from "../../src/assets/service.jpg";
+import serviceCenter from "../../src/assets/garage.jpg";
 import { faWrench, faRocket } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
@@ -7,35 +7,38 @@ function ShopOwner() {
     const navigate = useNavigate();
 
     return (
-        <div className="relative group overflow-hidden rounded-3xl bg-black/90 text-white p-10 flex flex-col justify-between min-h-100 shadow-sm hover:shadow-2xl transition-all">
-            <div className="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-                <img src={serviceCenter} />
-            </div>
-            <div>
-                <span className="inline-block p-3 rounded-2xl bg-green-500 text-on-primary-container mb-6">
-                    <span className="text-4xl">
+
+        <div className="flex flex-col md:flex-row justify-between items-stretch relative group overflow-hidden rounded-3xl bg-green-100 text-black min-h-[380px] shadow-sm hover:shadow-2xl transition-all">
+            <div className="p-8 sm:p-10 flex flex-col justify-between w-full md:w-3/5 z-10">
+
+                <div>
+                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-green-500 text-white mb-6">
                         <FontAwesomeIcon
                             icon={faWrench}
-                            className="text-2xl mb-3 text-black group-hover:text-black/90"
+                            className="text-xl text-white group-hover:scale-110 transition-transform duration-300"
                         />
-                    </span>
-                </span>
-                <h3 className="font-mono text-2xl mb-4 text-white">Own a workshop?</h3>
-                <p className="font-mono text-white/70 max-w-sm">Reach more customers, manage appointments, and digitize your automotive business today.</p>
-            </div>
-            <button 
-                onClick={() => navigate("/form/shop-owner")}
-                className="w-fit mt-8 bg-green-500 text-black font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:brightness-110 transition-all"
-            >
-                Register Your Shop
-                <span className="text-4xl">
+                    </div>
+                    <h3 className="font-mono text-2xl mb-4 font-bold">Own a workshop?</h3>
+                    <p className="font-mono text-black/80 max-w-sm text-sm sm:text-base leading-relaxed">Reach more customers, manage appointments, and digitize your automotive business today.</p>
+                </div>
+                <button
+                    onClick={() => navigate("/form/shop-owner")}
+                    className="w-full md:w-fit mt-8 bg-green-500 text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-3 group-hover:bg-green-600 hover:bg-green-600 transition-all active:scale-95 cursor-pointer shadow-md"
+                >
+                    <span>Register Your Shop</span>
                     <FontAwesomeIcon
                         icon={faRocket}
-                        className="text-2xl mb-3 text-black group-hover:text-black/90"
+                        className="text-lg transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     />
-                </span>
-            </button>
+                </button>
+            </div>
+            <div className="w-full md:w-2/5 flex justify-center md:justify-end items-center p-6 md:p-8">
+                <img src={serviceCenter} alt="garage" className="w-full max-w-[240px] md:max-w-[280px] h-auto object-contain rounded-2xl shadow-sm transition-transform duration-500 group-hover:scale-105" />
+            </div>
+
         </div>
+
+
     );
 }
 

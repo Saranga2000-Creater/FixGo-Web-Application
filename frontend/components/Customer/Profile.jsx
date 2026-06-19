@@ -78,7 +78,7 @@ function Profile() {
     const [error, setError]       = useState(null);
 
     useEffect(() => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('jwt_token');
 
         fetch('http://localhost:8000/api/getCustomerProfile.php', {
             headers: {

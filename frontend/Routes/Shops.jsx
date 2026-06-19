@@ -1,5 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
-
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react"
 import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
@@ -24,6 +23,7 @@ import { useLoadScript } from "@react-google-maps/api"
 
 function Shops() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const urlLat = searchParams.get('lat');
     const urlLng = searchParams.get('lng');
     const urlLocName = searchParams.get('locName');
@@ -140,6 +140,14 @@ function Shops() {
 
     useEffect(() => {
         const fetchShops = async () => {
+            // 1. ADDED: Grab the token from storage
+            const token = localStorage.getItem("jwt_token"); // Adjust key if you saved it differently
+            // 1. Redirect if no token exists at all
+            if (!token) {
+                navigate('/login'); // <-- CHANGE THIS to your actual sign-in route (e.g., '/signin')
+                return;
+            }
+
             setIsLoading(true)
             setError(null)
             
@@ -151,9 +159,21 @@ function Shops() {
                 if (searchName) url += `&name=${encodeURIComponent(searchName)}`
                 if (needsTow) url += `&needs_tow=true`
 
-                // Note: We will wire up the 'quickFilter' to this URL in a future step!
+                // 2. CHANGED: Updated fetch to include the Authorization header
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
 
-                const response = await fetch(url)
+                if (response.status === 401) {
+                    localStorage.removeItem("jwt_token"); // clear the bad token
+                    navigate('/login'); // <-- CHANGE THIS to your actual sign-in route
+                    return;
+                }
+                
                 const jsonResponse = await response.json()
 
                 if (!response.ok) throw new Error(jsonResponse.message || "Failed to fetch shops")
