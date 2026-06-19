@@ -11,6 +11,7 @@ import Form from "../Routes/RegistrationForm.jsx"
 import CustomerForm from "../components/Registration/CustomerForm.jsx"
 import ShopForm from "../components/Registration/ShopOwnerForm.jsx"
 import SignIn from '../components/SignIn.jsx'
+import VerifyEmail from "../components/Registration/VerifyEmail.jsx"
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="shop-owner" element={<ShopForm />} />
         </Route>
         <Route path="/login" element={<SignIn />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
     </BrowserRouter>,
 

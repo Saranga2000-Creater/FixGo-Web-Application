@@ -22,6 +22,7 @@ require_once __DIR__ . '/../config/EnvLoader.php';
 EnvLoader::load(__DIR__ . '/../.env');
 
 require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/EmailSender.php';
 
 // Only handle POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -114,12 +115,17 @@ try {
     // Hash password
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
+    // Generate verification token
+    $verificationToken = bin2hex(random_bytes(32));
+
     // 1. Insert into users
-    $userQuery = "INSERT INTO users (email, userRole, password, isActive) VALUES (:email, 'customer', :password, 1)";
+    $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified) 
+                  VALUES (:email, 'customer', :password, 0, :token, 0)";
     $userStmt = $db->prepare($userQuery);
     $userStmt->execute([
         ':email' => $email,
-        ':password' => $passwordHash
+        ':password' => $passwordHash,
+        ':token' => $verificationToken
     ]);
     
     $userId = $db->lastInsertId();
@@ -138,9 +144,12 @@ try {
     ]);
 
     $db->commit();
+
+    // Send verification email
+    EmailSender::sendVerificationEmail($email, $verificationToken);
     
     http_response_code(201);
-    echo json_encode(["message" => "Customer registered successfully."]);
+    echo json_encode(["message" => "Customer registered successfully. Please check your email to verify your account."]);
 
 } catch (Exception $e) {
     $db->rollBack();
