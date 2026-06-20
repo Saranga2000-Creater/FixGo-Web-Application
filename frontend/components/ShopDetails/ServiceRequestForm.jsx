@@ -56,6 +56,16 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
         }
     }, [isOpen, initialNeedsTow]);
 
+    // NEW FIX: Force modal to scroll to top whenever it is opened or the step changes
+    useEffect(() => {
+        if (isOpen) {
+            const modalScrollContainer = document.getElementById("modal-scroll-container");
+            if (modalScrollContainer) {
+                modalScrollContainer.scrollTop = 0;
+            }
+        }
+    }, [isOpen, step]);
+
     if (!isOpen || !shop) return null;
 
     // Helper: Convert Image
@@ -199,11 +209,11 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                         <div className="flex items-center gap-1.5">
                             <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
                             <span className="font-bold text-slate-700">{shop?.stats?.averageRating || 'New'}</span>
-                            {shop?.stats?.reviewCount > 0 && <span>({shop.stats.reviewCount})</span>}
+                            {shop?.stats?.reviewCount > 0 && <span>({shop.stats.reviewCount} reviews)</span>}
                         </div>
                         <div className="flex items-center gap-1.5">
                             <FontAwesomeIcon icon={faMapMarkerAlt} className="text-slate-400" />
-                            <span>{distance || 'Distance unknown'}</span>
+                            <span>{distance + ' km away' || 'Distance unknown'}</span>
                         </div>
                         <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded border text-[12px] font-bold tracking-wide ${shop?.info?.isAvailable ? 'border-[#16a34a]/20 bg-[#ecfdf5] text-[#059669]' : 'border-red-500/20 bg-red-50 text-red-600'}`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${shop?.info?.isAvailable ? 'bg-[#059669]' : 'bg-red-600'}`}></div>
@@ -840,7 +850,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                 {step !== 3 && renderStickyTopBar()}
 
                 {/* THE FIX 2: Everything else goes INSIDE the scrolling container */}
-                <div className="flex-1 overflow-y-auto">
+                <div id="modal-scroll-container" className="flex-1 overflow-y-auto">
                     
                     {/* The Shop Card now scrolls out of the way gracefully */}
                     {step !== 3 && renderShopInfoCard()}

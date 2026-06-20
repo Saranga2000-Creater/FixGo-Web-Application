@@ -162,9 +162,9 @@ class Shop {
     public function getShopDetails($shopId, $customerId = null) {
         $details = [];
 
-        // 1. Get Core Info (Fixed SQL ambiguity: `address`, not `address as location`, and `shop.location`)
+        // 1. Get Core Info
         $query = "SELECT id, name, address, contactNumber as phone, description, 
-                         openTime, closeTime, isAvailable, carriageService,
+                         openTime, closeTime, isAvailable, carriageService, profileImageURL,
                          ST_Y(shop.location) as lat, ST_X(shop.location) as lng
                   FROM shop WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
@@ -177,7 +177,6 @@ class Shop {
         // 2. PRIVACY CHECK: Has the 3-Way Handshake been completed?
         $details['isHandshakeComplete'] = false; // Default to false
         if ($customerId) {
-            // Check if there is an ACCEPTED service request between this customer and this shop
             $checkHandshake = "SELECT id FROM serviceRequest 
                                WHERE customer_id = :cid AND shop_id = :sid AND status = 'Accepted' 
                                LIMIT 1";
@@ -190,9 +189,22 @@ class Shop {
             }
         }
 
-        // 3. SECURE DATA ROUTING & COORDINATE FUZZING
-        if ($details['isHandshakeComplete']) {
-            // UNLOCKED: Give them the exact address and exact map coordinates
+        // 3. GET SHOP CATEGORIES EARLY (Moved from bottom to here)
+        $catQuery = "SELECT sc.name 
+                     FROM shopCategoryMapping scm 
+                     JOIN shopCategory sc ON scm.shop_category_id = sc.id 
+                     WHERE scm.shop_id = :id";
+        $catStmt = $this->conn->prepare($catQuery);
+        $catStmt->bindParam(':id', $shopId);
+        $catStmt->execute();
+        $details['shopCategories'] = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // 4. SECURE DATA ROUTING & COORDINATE FUZZING
+        // A shop is fully unlocked if the handshake is complete OR if it's a retail Spare Parts shop
+        $isFullyUnlocked = $details['isHandshakeComplete'] || in_array('Spare Parts', $details['shopCategories']);
+
+        if ($isFullyUnlocked) {
+            // UNLOCKED: Give them the exact address, phone, and exact map coordinates
             $info['location'] = $info['address'];
             $info['mapQuery'] = ($info['lat'] && $info['lng']) ? $info['lat'] . ',' . $info['lng'] : $info['address'];
         } else {
@@ -209,15 +221,10 @@ class Shop {
             
             // THE MAGIC: COORDINATE FUZZING (Jitter)
             if ($info['lat'] && $info['lng']) {
-                // Generate a random offset between -0.005 and 0.005 degrees (roughly a 500m radius)
                 $offsetLat = (mt_rand(-50, 50) / 10000);
                 $offsetLng = (mt_rand(-50, 50) / 10000);
-                
-                // Add the fake offset to the real coordinates
                 $safeLat = $info['lat'] + $offsetLat;
                 $safeLng = $info['lng'] + $offsetLng;
-                
-                // Send the fuzzed coordinates to the frontend map!
                 $info['mapQuery'] = $safeLat . ',' . $safeLng;
             } else {
                 $info['mapQuery'] = $generalizedArea;
@@ -231,7 +238,7 @@ class Shop {
         
         $details['info'] = $info;
 
-        // 4. Get Services
+        // 5. Get Services
         $svcQuery = "SELECT service_name as name, starting_price as price, duration 
                      FROM shopServices WHERE shop_id = :id";
         $svcStmt = $this->conn->prepare($svcQuery);
@@ -239,7 +246,7 @@ class Shop {
         $svcStmt->execute();
         $details['services'] = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 5. Get Reviews (We need the raw rating to filter on the frontend later)
+        // 6. Get Reviews
         $revQuery = "SELECT r.rating, r.comment as summary, DATE_FORMAT(sr.created_at, '%b %d, %Y') as date, 
                             c.name as name 
                      FROM review r
@@ -256,13 +263,12 @@ class Shop {
         $totalReviews = count($details['reviews']);
         $totalStars = 0;
         $recommendCount = 0;
-        
         foreach($details['reviews'] as $rev) {
             $totalStars += $rev['rating'];
             if($rev['rating'] >= 4) $recommendCount++;
         }
 
-        // 6. Calculate True Completion Rate
+        // 7. Calculate True Completion Rate
         $srQuery = "SELECT 
                         COUNT(id) as total_requests,
                         SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed_requests
@@ -278,14 +284,13 @@ class Shop {
             $completionRate = round(($srData['completed_requests'] / $srData['total_requests']) * 100);
         }
 
-        // 7. Handle Real-World Experience Intelligently
-        $experience = "1+"; // Safe default for now
+        // 8. Handle Real-World Experience Intelligently
+        $experience = "1+"; // Safe default
         if (isset($details['info']['established_year']) && !empty($details['info']['established_year'])) {
             $years = date('Y') - intval($details['info']['established_year']);
             $experience = $years > 0 ? $years . "+" : "1st Year";
         }
 
-        // 8. Build the Statistics Object
         $details['stats'] = [
             'jobsCompleted' => $srData['completed_requests'] ?? 0, 
             'averageRating' => $totalReviews > 0 ? round($totalStars / $totalReviews, 1) : 0,
@@ -295,24 +300,25 @@ class Shop {
             'recommendPercentage' => $totalReviews > 0 ? round(($recommendCount / $totalReviews) * 100) : 0
         ];
 
-        // 9. Get Gallery Images
+        // 9. Get Gallery Images & Profile Image
         $imgQuery = "SELECT url FROM shopImage WHERE shop_id = :id";
         $imgStmt = $this->conn->prepare($imgQuery);
         $imgStmt->bindParam(':id', $shopId);
         $imgStmt->execute();
-        $details['gallery'] = $imgStmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $galleryImages = $imgStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        $details['gallery'] = [];
+        
+        $profileImg = $details['info']['profileImageURL'] ?? null;
+        if (!empty($profileImg)) {
+            $details['gallery'][] = $profileImg;
+        }
+        if (!empty($galleryImages)) {
+            $details['gallery'] = array_merge($details['gallery'], $galleryImages);
+        }
+        unset($details['info']['profileImageURL']);
 
-        // 10. Get Shop Categories (e.g., Garages, Service Centers)
-        $catQuery = "SELECT sc.name 
-                     FROM shopCategoryMapping scm 
-                     JOIN shopCategory sc ON scm.shop_category_id = sc.id 
-                     WHERE scm.shop_id = :id";
-        $catStmt = $this->conn->prepare($catQuery);
-        $catStmt->bindParam(':id', $shopId);
-        $catStmt->execute();
-        $details['shopCategories'] = $catStmt->fetchAll(PDO::FETCH_COLUMN);
-
-        // 11. Get Supported Vehicle Categories (e.g., 3-Wheelers, 4-Wheelers)
+        // 10. Get Supported Vehicle Categories
         $vehQuery = "SELECT vc.name 
                      FROM shopVehicleCategories svc 
                      JOIN vehicleCategory vc ON svc.vehicle_category_id = vc.id 
