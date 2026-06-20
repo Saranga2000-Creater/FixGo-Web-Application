@@ -466,7 +466,7 @@ function ShopDetails() {
         </div>
       </main>
 
-      <ServiceRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} shop={shop} initialNeedsTow={false} />
+      <ServiceRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} shop={shop} distance={passedDistance} initialNeedsTow={false} />
       <Footer />
     </>
   );
