@@ -26,4 +26,4 @@ if(!isset($_GET['shop_id']))
 
 $shop_id = $_GET['shop_id'];
 
-echo $controller->getRequestsByShop($shop_id);
+echo $controller->handleGetShopRequests($shop_id);
