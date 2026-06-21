@@ -18,9 +18,11 @@ function Sign({ setShowSignIn }) {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
     const handleUserLogin = async (event) => {
         event.preventDefault();
+        setError("");
 
         try {
             const response = await fetch('http://localhost:8000/api/login.php', {
@@ -34,7 +36,9 @@ function Sign({ setShowSignIn }) {
             const data = await response.json();
 
             if (response.ok) {
-                setShowSignIn(false);
+                if (typeof setShowSignIn === 'function') {
+                    setShowSignIn(false);
+                }
                 localStorage.setItem("jwt_token", data.token);
                 localStorage.setItem("email", email);
                 localStorage.setItem("role", data.role);
@@ -45,12 +49,12 @@ function Sign({ setShowSignIn }) {
                 }
                 navigate("/services");
             } else {
-                alert(data.message || "Login failed. Please try again.");
+                setError(data.message || "Login failed. Please try again.");
             }
 
         } catch (error) {
             console.error("Login error:", error);
-            alert("An error occurred. Please try again.");
+            setError("An error occurred. Please try again.");
         }
 
     }
@@ -86,6 +90,20 @@ function Sign({ setShowSignIn }) {
                 <h2 className="text-2xl font-semibold mb-2">Sign in to FixGo</h2>
                 <p className="text-sm text-gray-500 mb-6">Welcome back — please sign in to continue.</p>
 
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md flex items-center justify-between">
+                        <span>{error}</span>
+                        <button 
+                            type="button" 
+                            className="text-red-400 hover:text-red-600 transition-colors ml-2 font-bold text-lg leading-none"
+                            onClick={() => setError("")}
+                            aria-label="Dismiss error"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                )}
+
                 <form
                     className="space-y-4"
                     onSubmit={handleUserLogin}
@@ -99,7 +117,10 @@ function Sign({ setShowSignIn }) {
                             placeholder="you@example.com"
                             name="email"
                             value={email}
-                            onChange={(e)=>setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (error) setError("");
+                            }}
                         />
                     </div>
 
@@ -112,7 +133,10 @@ function Sign({ setShowSignIn }) {
                             placeholder="Enter your password"
                             name="password"
                             value={password}
-                            onChange={(e)=>setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (error) setError("");
+                            }}
                         />
                     </div>
 

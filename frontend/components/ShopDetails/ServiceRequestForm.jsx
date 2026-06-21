@@ -6,7 +6,7 @@ import { faTimes, faTruckPickup, faCar, faInfoCircle, faCamera,
     faCogs, faBatteryFull, faLifeRing, faWrench, faQuestionCircle, 
     faPaperPlane, faShieldAlt, faLock, faCheck} from "@fortawesome/free-solid-svg-icons";
 
-export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = false }) => {
+export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNeedsTow = false }) => {
     // NEW: Wizard Step State (1: Form, 2: Review, 3: Success)
     const [step, setStep] = useState(1);
 
@@ -56,6 +56,16 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
         }
     }, [isOpen, initialNeedsTow]);
 
+    // NEW FIX: Force modal to scroll to top whenever it is opened or the step changes
+    useEffect(() => {
+        if (isOpen) {
+            const modalScrollContainer = document.getElementById("modal-scroll-container");
+            if (modalScrollContainer) {
+                modalScrollContainer.scrollTop = 0;
+            }
+        }
+    }, [isOpen, step]);
+
     if (!isOpen || !shop) return null;
 
     // Helper: Convert Image
@@ -95,7 +105,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
 
             const requestData = {
                 customer_id: 4, 
-                shop_id: shop.id,
+                shop_id: shop.info.id,
                 vehicle_category_id: vehicleCategory, 
                 vehicle_brand: brand,
                 vehicle_color: color,
@@ -106,11 +116,9 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                 lng: 79.9696,
                 // NEW: Send the upgraded DB fields
                 // If it's a Garage, send urgency. If not, send null.
-                urgency_level: shop.category_id === 1 ? urgencyLevel : null,
-                
-                // If it's a Service Center, send date/time. If not, send null.
-                preferred_date: shop.category_id !== 1 ? preferredDate : null,
-                preferred_time: shop.category_id !== 1 ? preferredTime : null,
+                urgency_level: shop.shopCategories?.includes('Garages') ? urgencyLevel : null,
+                preferred_date: !shop.shopCategories?.includes('Garages') ? preferredDate : null,
+                preferred_time: !shop.shopCategories?.includes('Garages') ? preferredTime : null,
                 issue_category: issueCategory,
                 pickup_landmark: requiresTow ? pickupLandmark : null 
             };
@@ -143,83 +151,77 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
     };
 
     // --- SUB-COMPONENTS FOR CLEANER CODE ---
-    const renderHeader = () => (
-        <div className="p-5 border-b border-gray-100 bg-white">
-            {/* Top Navigation Row */}
-            <div className="flex items-center justify-between mb-5">
-                
-                {/* Left: Static Title */}
-                <h2 className="text-xl font-bold text-[#14532d]">Request Service</h2>
+    // 1. The Sticky Top Navigation (Does NOT scroll)
+    const renderStickyTopBar = () => (
+        <div className="px-5 py-4 border-b border-slate-100 bg-white flex items-center justify-between shrink-0 z-10">
+            {/* Left: Static Title */}
+            <h2 className="text-[19px] font-extrabold text-[#14532d]">Request Service</h2>
 
-                {/* Center: Progress Tracker */}
-                <div className="flex items-center gap-3">
-                    {/* Step 1 Indicator */}
-                    <div className="flex items-center gap-2">
-                        {step === 1 ? (
-                            <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[10px] font-bold">1</div>
-                        ) : (
-                            <div className="w-5 h-5 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center text-[10px]">
-                                <FontAwesomeIcon icon={faCheck} />
-                            </div>
-                        )}
-                        <span className="text-xs font-bold text-gray-500">Service Details</span>
-                    </div>
-                    
-                    <div className="w-8 h-[1px] bg-gray-200"></div>
-                    
-                    {/* Step 2 Indicator */}
-                    <div className="flex items-center gap-2">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step === 2 ? 'bg-[#16a34a] text-white' : 'bg-[#f3f4f6] text-gray-400'}`}>2</div>
-                        <span className={`text-xs ${step === 2 ? 'font-bold text-[#16a34a]' : 'font-medium text-gray-400'}`}>Review & Submit</span>
-                    </div>
+            {/* Center: Progress Tracker */}
+            <div className="flex items-center gap-3">
+                {/* Step 1 Indicator */}
+                <div className="flex items-center gap-2">
+                    {step === 1 ? (
+                        <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[10px] font-bold">1</div>
+                    ) : (
+                        <div className="w-5 h-5 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center text-[10px]">
+                            <FontAwesomeIcon icon={faCheck} />
+                        </div>
+                    )}
+                    <span className="text-xs font-bold text-slate-500">Service Details</span>
                 </div>
-
-                {/* Right: Close Button */}
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors">
-                    <FontAwesomeIcon icon={faTimes} className="text-lg" />
-                </button>
+                
+                <div className="w-8 h-[1px] bg-slate-200 hidden sm:block"></div>
+                
+                {/* Step 2 Indicator */}
+                <div className="flex items-center gap-2">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step === 2 ? 'bg-[#16a34a] text-white' : 'bg-[#f3f4f6] text-slate-400'}`}>2</div>
+                    <span className={`text-xs ${step === 2 ? 'font-bold text-[#16a34a]' : 'font-medium text-slate-400'}`}>Review & Submit</span>
+                </div>
             </div>
 
-            {/* DYNAMIC TITLE: Shows only on Step 2, right above the Shop Card */}
+            {/* Right: Close Button */}
+            <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+                <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            </button>
+        </div>
+    );
+
+    // 2. The Shop Info Card (DOES scroll)
+    const renderShopInfoCard = () => (
+        <div className="p-4 sm:p-6 pb-0">
+            {/* Shows only on Step 2 */}
             {step === 2 && (
                 <div className="mb-4">
                     <h3 className="text-lg font-bold text-[#1f2937]">Review your request</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Please review the details below before sending your request.</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Please review the details below before sending your request.</p>
                 </div>
             )}
 
-            {/* DYNAMIC SHOP INFO CARD */}
-            <div className="border border-gray-100 rounded-xl p-4 flex gap-4 bg-white shadow-sm">
-                
-                {/* Generic Shop Avatar */}
-                <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0 border border-gray-200">
-                    <FontAwesomeIcon icon={faCar} className="text-2xl text-gray-400 mb-0.5" />
+            {/* DYNAMIC SHOP INFO CARD - Refined Proportions */}
+            <div className="border border-slate-100 rounded-xl p-4 flex items-center gap-5 sm:gap-6 bg-white shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex flex-col items-center justify-center flex-shrink-0 border border-slate-200">
+                    <FontAwesomeIcon icon={faCar} className="text-2xl text-slate-400 mb-0.5" />
                 </div>
-
-                {/* Shop Details */}
-                <div className="flex flex-col justify-center gap-1">
-                    <h3 className="text-sm font-bold text-[#1f2937]">{shop?.name || 'Service Center'}</h3>
-
-                    <div className="flex items-center gap-3 text-[11px] text-gray-500">
-                        <div className="flex items-center gap-1">
+                <div className="flex flex-col justify-center gap-1.5">
+                    <h3 className="text-[17px] font-extrabold text-[#1f2937] leading-tight">{shop?.info?.name || 'Service Center'}</h3>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[13px] text-slate-500 mt-0.5">
+                        <div className="flex items-center gap-1.5">
                             <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
-                            <span className="font-bold text-gray-700">{shop?.rating || 'New'}</span>
-                            {shop?.reviewCount > 0 && <span>({shop.reviewCount} Reviews)</span>}
+                            <span className="font-bold text-slate-700">{shop?.stats?.averageRating || 'New'}</span>
+                            {shop?.stats?.reviewCount > 0 && <span>({shop.stats.reviewCount} reviews)</span>}
                         </div>
-                        <div className="flex items-center gap-1">
-                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
-                            <span>{shop?.distance || 'Distance unknown'}</span>
+                        <div className="flex items-center gap-1.5">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-slate-400" />
+                            <span>{distance + ' km away' || 'Distance unknown'}</span>
                         </div>
-                        
-                        {/* Dynamic Open/Closed Badge */}
-                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded border font-bold ${shop?.status === 'Open Now' ? 'border-[#16a34a]/20 bg-[#ecfdf5] text-[#059669]' : 'border-red-500/20 bg-red-50 text-red-600'}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${shop?.status === 'Open Now' ? 'bg-[#059669]' : 'bg-red-600'}`}></div>
-                            {shop?.status || 'Closed'}
+                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded border text-[12px] font-bold tracking-wide ${shop?.info?.isAvailable ? 'border-[#16a34a]/20 bg-[#ecfdf5] text-[#059669]' : 'border-red-500/20 bg-red-50 text-red-600'}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${shop?.info?.isAvailable ? 'bg-[#059669]' : 'bg-red-600'}`}></div>
+                            {shop?.info?.isAvailable ? 'Open Now' : 'Closed'}
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
-                        <FontAwesomeIcon icon={faBolt} className="text-gray-400" />
+                    <div className="flex items-center gap-1.5 text-[13px] text-slate-500 font-medium mt-1">
+                        <FontAwesomeIcon icon={faBolt} className="text-slate-400" />
                         <span>Average response time: ~{shop?.responseTime || 15} minutes</span>
                     </div>
                 </div>
@@ -283,7 +285,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
             </div>
 
             {/* CONDITIONAL GARAGE BLOCK: 1a. Tow Truck Options */}
-            {shop.category_id === 1 && shop.carriageService === 1 && (
+            {shop.shopCategories?.includes('Garages') && shop.info?.carriageService == 1 && (
                 <div className="animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-3">
                         <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[10px] font-bold">1a</div>
@@ -432,7 +434,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
             </div>
 
             {/* 5. Photo Upload */}
-            {(shop.category_id === 1 || shop.category_id === 2) && (
+            {(shop.shopCategories?.length > 0) && (
                 <div>
                     <div className="flex items-center gap-2 mb-3">
                         <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">5</div>
@@ -449,7 +451,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
 
             {/* 6. DYNAMIC FINAL STEP: Urgency (Garages) OR Appointment (Service Centers) */}
             <div>
-                {shop.category_id === 1 ? (
+                {shop.shopCategories?.includes('Garages') ? (
                     /* GARAGE UI: Urgency Level */
                     <div className="animate-in fade-in duration-300">
                         <div className="flex items-center gap-2 mb-3">
@@ -569,7 +571,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                             <div className="grid grid-cols-[110px_10px_1fr] gap-y-2.5 text-[13px]">
                                 <span className="text-gray-500">Category</span> <span>:</span> <span className="font-bold text-gray-800">{issueCategory || 'General Checkup'}</span>
                                 
-                                {shop.category_id === 1 ? (
+                                {shop.shopCategories?.includes('Garages') ? (
                                     <>
                                         <span className="text-gray-500">Urgency</span> <span>:</span> 
                                         <span className={`font-bold ${urgencyLevel === 'Urgent' ? 'text-red-600' : 'text-gray-800'}`}>{urgencyLevel}</span>
@@ -596,7 +598,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                     <div className="space-y-4 flex flex-col h-full">
                         
                         {/* Photos Card */}
-                        {(shop.category_id === 1 || shop.category_id === 2) && (
+                        {(shop.shopCategories?.length > 0) && (
                             <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm">
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-2 text-[#14532d] font-bold text-sm">
@@ -734,15 +736,15 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
                    <FontAwesomeIcon icon={faCar} className="text-lg text-gray-400" />
                 </div>
                 <div className="flex flex-col justify-center">
-                    <h3 className="text-[14px] font-bold text-[#1f2937]">{shop?.name || 'Service Center'}</h3>
+                    <h3 className="text-[14px] font-bold text-[#1f2937]">{shop?.info?.name || 'Service Center'}</h3>
                     <div className="flex items-center gap-3 text-[12px] text-gray-500 mt-0.5">
                         <div className="flex items-center gap-1">
                             <FontAwesomeIcon icon={faStar} className="text-[#f59e0b]" />
-                            <span className="font-bold text-gray-700">{shop?.rating || 'New'}</span>
+                            <span className="font-bold text-gray-700">{shop?.stats?.averageRating || 'New'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
-                            <span>{shop?.distance || 'Distance unknown'}</span>
+                            <span>{distance || 'Distance unknown'}</span>
                         </div>
                     </div>
                 </div>
@@ -842,25 +844,32 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, initialNeedsTow = f
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            {/* FIXED WIDTH: max-w-3xl keeps it perfectly consistent across all screens */}
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
                 
-                {/* Premium Header - Hides on the Success Screen */}
-                {step !== 3 && renderHeader()}
+                {/* THE FIX 1: Sticky Top Bar stays OUTSIDE the overflow container */}
+                {step !== 3 && renderStickyTopBar()}
 
-                {/* Modal Body */}
-                <div className="p-4 sm:p-6 overflow-y-auto">
-                    {error && (
-                        <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 text-red-700 text-sm font-mono">
-                            <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 text-red-500" />
-                            <p>{error}</p>
-                        </div>
-                    )}
+                {/* THE FIX 2: Everything else goes INSIDE the scrolling container */}
+                <div id="modal-scroll-container" className="flex-1 overflow-y-auto">
                     
-                    {step === 1 && renderStep1Form()}
-                    {step === 2 && renderStep2Review()}
-                    {step === 3 && renderStep3Success()}
+                    {/* The Shop Card now scrolls out of the way gracefully */}
+                    {step !== 3 && renderShopInfoCard()}
+
+                    {/* Modal Body / Form */}
+                    <div className="p-4 sm:p-6">
+                        {error && (
+                            <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 text-red-700 text-sm font-mono">
+                                <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 text-red-500" />
+                                <p>{error}</p>
+                            </div>
+                        )}
+                        
+                        {step === 1 && renderStep1Form()}
+                        {step === 2 && renderStep2Review()}
+                        {step === 3 && renderStep3Success()}
+                    </div>
                 </div>
+
             </div>
         </div>
     );

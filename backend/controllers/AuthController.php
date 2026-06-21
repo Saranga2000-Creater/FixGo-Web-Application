@@ -25,6 +25,12 @@ class AuthController{
         
         if($user->findByEmail($data->email)){
             
+            if(!$user->is_email_verified){
+                http_response_code(403);
+                echo json_encode(["message"=>"Please verify your email address before logging in."]);
+                return;
+            }
+            
             if(!$user->isActive){
 
                 http_response_code(403);

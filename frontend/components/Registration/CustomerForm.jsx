@@ -87,8 +87,8 @@ export default function CustomerForm() {
             if (response.ok) {
                 setSuccess(true);
                 setTimeout(() => {
-                    navigate("/");
-                }, 2000);
+                    navigate("/login");
+                }, 8000);
             } else {
                 setError(data.message || "Something went wrong. Please try again.");
             }
@@ -101,12 +101,24 @@ export default function CustomerForm() {
 
     if (success) {
         return (
-            <div className="text-center py-8 animate-fade-in">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    ✓
+            <div className="text-center py-8 animate-fade-in max-w-md mx-auto">
+                <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+                    </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
-                <p className="text-gray-500 text-sm">Welcome to FixGo! Redirecting you to the home page...</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Verification Email Sent!</h3>
+                <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                    Thank you for registering! We've sent a verification link to <strong className="text-gray-800">{formData.email}</strong>. 
+                    Please check your inbox and verify your email to activate your account.
+                </p>
+                <button
+                    type="button"
+                    onClick={() => navigate("/login")}
+                    className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200"
+                >
+                    Go to Login
+                </button>
             </div>
         );
     }
