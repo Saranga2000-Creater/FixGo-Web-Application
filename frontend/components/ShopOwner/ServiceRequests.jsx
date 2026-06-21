@@ -46,23 +46,30 @@ function ServiceRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const updateStatus = async (requestId, status) => {
   try {
-    const response = await fetch(
-      "http://localhost/project/FixGo-Web-Application/backend/api/updateServiceRequestInShopDashboard.php",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          request_id: requestId,
-          status: status,
-        }),
-      }
-    );
+    const token = localStorage.getItem("jwt_token");
 
-    const data = await response.json();
+const response = await fetch(
+  "http://localhost/project/FixGo-Web-Application/backend/api/updateStatus.php",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      request_id: requestId,
+      new_status: status,
+      actor_id: parseInt(localStorage.getItem("shopId")),
+      actor_role: "shop_owner"
+    }),
+  }
+);
 
-    alert(data.message);
+const data = await response.json();
+
+console.log(data);
+
+alert(data.message);
 
     fetchRequests();
 
@@ -351,45 +358,77 @@ const response = await fetch(
                 </button>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  style={{
-                    padding: "9px 18px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: COLORS.primary,
-                    color: "#FFFFFF",
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    transition: "background 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
-                   onClick={() => updateStatus(r.id, "Accepted")}
-                >
-                  Accept
-                </button>
-                <button
-                  style={{
-                    padding: "9px 18px",
-                    borderRadius: 10,
-                    border: `1px solid ${COLORS.dangerBorder}`,
-                    color: COLORS.danger,
-                    background: COLORS.surface,
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    transition: "background 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
-                    onClick={() => updateStatus(r.id, "Declined")}
-                >
-                  Decline
-                </button>
-              </div>
+        {/* Actions */}
+<div style={{ display: "flex", gap: 8 }}>
+  {r.status === "Pending" ? (
+    <>
+      <button
+        style={{
+          padding: "9px 18px",
+          borderRadius: 10,
+          border: "none",
+          background: COLORS.primary,
+          color: "#FFFFFF",
+          fontWeight: 600,
+          fontSize: 14,
+          cursor: "pointer",
+          transition: "background 0.15s ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+        onClick={() => updateStatus(r.id, "Accepted")}
+      >
+        Accept
+      </button>
+
+      <button
+        style={{
+          padding: "9px 18px",
+          borderRadius: 10,
+          border: `1px solid ${COLORS.dangerBorder}`,
+          color: COLORS.danger,
+          background: COLORS.surface,
+          fontWeight: 600,
+          fontSize: 14,
+          cursor: "pointer",
+          transition: "background 0.15s ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
+        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+        onClick={() => updateStatus(r.id, "Declined")}
+      >
+        Decline
+      </button>
+    </>
+  ) :r.status === "Accepted" ? (
+    <span
+      style={{
+        padding: "8px 14px",
+        borderRadius: "999px",
+        background: "#FEF3C7",
+        color: "#92400E",
+        fontWeight: 600,
+        fontSize: 13,
+      }}
+    >
+      Waiting for customer confirmation
+    </span>
+  ) : (
+    <span
+      style={{
+        padding: "8px 14px",
+        borderRadius: "999px",
+        background: "#FEE2E2",
+        color: "#DC2626",
+        fontWeight: 600,
+        fontSize: 13,
+      }}
+    >
+      {r.status}
+    </span>
+  )}
+</div> 
+  
             </div>
           ))
         )}

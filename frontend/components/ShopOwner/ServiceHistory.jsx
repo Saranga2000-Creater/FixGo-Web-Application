@@ -1,40 +1,4 @@
-const HISTORY = [
-  {
-    id: 1, initials: "SJ", color: "#7C3AED", name: "Sanduni J.",
-    vehicle: "Toyota Prius", plate: "ABC-1234",
-    service: "Engine Diagnostic",
-    dateService: "May 20, 2026", dateComplete: "May 21, 2026",
-    assigned: "Nuwan Perera"
-  },
-  {
-    id: 2, initials: "NC", color: "#059669", name: "Nimal C.",
-    vehicle: "Suzuki Alto", plate: "CAB-5678",
-    service: "Brake Pad Replacement",
-    dateService: "May 15, 2026", dateComplete: "May 15, 2026",
-    assigned: "Ruwan Silva"
-  },
-  {
-    id: 3, initials: "KP", color: "#2563EB", name: "Kavindu P.",
-    vehicle: "Honda Fit", plate: "KX-7788",
-    service: "Oil Change",
-    dateService: "May 12, 2026", dateComplete: "May 12, 2026",
-    assigned: "Chamika Dias"
-  },
-  {
-    id: 4, initials: "MG", color: "#16A34A", name: "Madushan G.",
-    vehicle: "Tata Lorry", plate: "WP-LM-8945",
-    service: "Clutch Repair",
-    dateService: "May 12, 2026", dateComplete: "May 12, 2026",
-    assigned: "Saman Abey."
-  },
-  {
-    id: 5, initials: "AS", color: "#EF4444", name: "Amila S.",
-    vehicle: "Nissan March", plate: "KU-3344",
-    service: "AC Not Cooling",
-    dateService: "May 10, 2026", dateComplete: "May 12, 2026",
-    assigned: "Nuwan Perera"
-  },
-];
+import { useEffect, useState } from "react";
 
 function Avatar({ initials, color, size = 32 }) {
   return (
@@ -50,7 +14,46 @@ function Avatar({ initials, color, size = 32 }) {
   );
 }
 
+const AVATAR_COLORS = ["#7C3AED", "#059669", "#2563EB", "#16A34A", "#EF4444", "#D97706"];
+
+function getInitials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
+
+function colorForId(id) {
+  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function ServiceHistory() {
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const shopId = localStorage.getItem("shopId");
+
+    fetch(
+      `http://localhost/project/FixGo-Web-Application/backend/api/getServiceHistory.php?shop_id=${shopId}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setHistory(data.data);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
@@ -70,7 +73,7 @@ function ServiceHistory() {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
             <thead>
               <tr style={{ background: "#F9FAFB" }}>
-                {["Customer", "Vehicle", "Service Provided", "Date of Service", "Completion Date", "Assigned To", "Action"].map(h => (
+                {["Customer", "Vehicle", "Service Provided", "Confirmed On", "Completed On", "Action"].map(h => (
                   <th key={h} style={{
                     padding: "12px 16px", textAlign: "left",
                     fontSize: 12, fontWeight: 600, color: "#6B7280",
@@ -80,54 +83,62 @@ function ServiceHistory() {
               </tr>
             </thead>
             <tbody>
-              {HISTORY.map((r, i) => (
+              {history.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding: "24px 16px", textAlign: "center", color: "#9CA3AF", fontSize: 14 }}>
+                    No completed services yet.
+                  </td>
+                </tr>
+              )}
+              {history.map((r, i) => (
                 <tr key={r.id} style={{
-                  borderBottom: i < HISTORY.length - 1 ? "1px solid #F9FAFB" : "none"
+                  borderBottom: i < history.length - 1 ? "1px solid #F9FAFB" : "none"
                 }}>
                   <td style={{ padding: "14px 16px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Avatar initials={r.initials} color={r.color} />
-                      <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.name}</span>
+                      <Avatar initials={getInitials(r.customer_name)} color={colorForId(r.id)} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.customer_name}</div>
+                        <div style={{ fontSize: 12, color: "#6B7280" }}>{r.customer_phone}</div>
+                      </div>
                     </div>
                   </td>
                   <td style={{ padding: "14px 16px" }}>
-                    <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-                    <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
+                    <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle_brand}</div>
+                    <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.vehicle_color}</div>
                   </td>
-                  <td style={{ padding: "14px 16px", fontSize: 14, color: "#374151" }}>{r.service}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateService}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateComplete}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{r.assigned}</td>
+                  <td style={{ padding: "14px 16px", fontSize: 14, color: "#374151" }}>{r.issue_category}</td>
+                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{formatDate(r.confirmed_at)}</td>
+                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{formatDate(r.completed_at)}</td>
                   <td style={{ padding: "14px 16px" }}>
-                   {/* Action */}
-<button
-  style={{
-    padding: "10px 18px",
-    borderRadius: 10,
-    border: "1px solid #D1D5DB",
-    background: "#FFFFFF",
-    color: "#374151",
-    fontWeight: 600,
-    fontSize: 13,
-    cursor: "pointer",
-    minWidth: "120px",
-    transition: "all 0.2s ease",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.background = "#16A34A";
-    e.currentTarget.style.color = "#FFFFFF";
-    e.currentTarget.style.borderColor = "#16A34A";
-    e.currentTarget.style.transform = "translateY(-2px)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.background = "#FFFFFF";
-    e.currentTarget.style.color = "#374151";
-    e.currentTarget.style.borderColor = "#D1D5DB";
-    e.currentTarget.style.transform = "translateY(0)";
-  }}
->
-  View Details
-</button>
+                    <button
+                      style={{
+                        padding: "10px 18px",
+                        borderRadius: 10,
+                        border: "1px solid #D1D5DB",
+                        background: "#FFFFFF",
+                        color: "#374151",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        minWidth: "120px",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#16A34A";
+                        e.currentTarget.style.color = "#FFFFFF";
+                        e.currentTarget.style.borderColor = "#16A34A";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#FFFFFF";
+                        e.currentTarget.style.color = "#374151";
+                        e.currentTarget.style.borderColor = "#D1D5DB";
+                        e.currentTarget.style.transform = "translateY(0)";
+                      }}
+                    >
+                      View Details
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -148,3 +159,4 @@ function ServiceHistory() {
 }
 
 export default ServiceHistory;
+

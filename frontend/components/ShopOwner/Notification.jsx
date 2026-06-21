@@ -1,57 +1,36 @@
 // Notification.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWrench, faStar, faClipboard, faComment } from '@fortawesome/free-solid-svg-icons';
 
 function Notification() {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            title: 'New service request from Sanduni J.',
-            subtitle: 'Toyota Prius · Engine Overheating',
-            timestamp: '10 min ago',
-            icon: faWrench,
-            iconBg: 'bg-orange-300',
-            isUnread: true,
-        },
-        {
-            id: 2,
-            title: 'Repair completed for Kavindu P.',
-            subtitle: 'Honda Fit · Oil Change',
-            timestamp: '1 hr ago',
-            icon: faWrench,
-            iconBg: 'bg-orange-300',
-            isUnread: true,
-        },
-        {
-            id: 3,
-            title: 'New 5-star review from Sanduni Jayawardhana',
-            subtitle: '"Excellent service!"',
-            timestamp: '2 hrs ago',
-            icon: faStar,
-            iconBg: 'bg-yellow-300',
-            isUnread: false,
-        },
-        {
-            id: 4,
-            title: 'New service request from Nimal C.',
-            subtitle: 'Suzuki Alto · Brake Pad Replacement',
-            timestamp: '3 hrs ago',
-            icon: faClipboard,
-            iconBg: 'bg-pink-200',
-            isUnread: false,
-        },
-        {
-            id: 5,
-            title: 'Message from Madushan G.',
-            subtitle: 'Query about clutch repair estimate.',
-            timestamp: '5 hrs ago',
-            icon: faComment,
-            iconBg: 'bg-purple-200',
-            isUnread: false,
-        },
-    ]);
+    const [notifications, setNotifications] = useState([]);
+    useEffect(() => {
+        const shopId = localStorage.getItem("shopId");
+     if (!shopId) return;   
+    fetch(
+        `http://localhost/project/FixGo-Web-Application/backend/api/getConfirmedRequeststoShop.php?shop_id=${shopId}`
+    )
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                const formattedNotifications = data.data.map((request) => ({
+                    id: request.id,
+                    title: `${request.customer_name} confirmed your service request`,
+                    subtitle: request.description,
+                    timestamp: "Just now",
+                    icon: faWrench,
+                    iconBg: "bg-green-500",
+                    isUnread: true,
+                }));
 
+                setNotifications(formattedNotifications);
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+}, []);
     const markAsRead = (id) => {
         setNotifications(
             notifications.map((notif) =>

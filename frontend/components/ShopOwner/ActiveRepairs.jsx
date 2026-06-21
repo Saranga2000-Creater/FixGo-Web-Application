@@ -1,40 +1,4 @@
-const ACTIVE_REPAIRS = [
-  {
-    id: 1, initials: "SJ", color: "#7C3AED", name: "Sanduni J.",
-    vehicle: "Toyota Prius", plate: "ABC-1234",
-    service: "Engine Overheating", status: "In Progress",
-    statusColor: "#F59E0B", statusBg: "#FEF3C7",
-    assigned: "Nuwan Perera", expected: "May 26, 02:00 PM"
-  },
-  {
-    id: 2, initials: "NC", color: "#059669", name: "Nimal C.",
-    vehicle: "Suzuki Alto", plate: "CAB-5678",
-    service: "Brake Pad Replacement", status: "In Progress",
-    statusColor: "#F59E0B", statusBg: "#FEF3C7",
-    assigned: "Ruwan Silva", expected: "May 25, 05:00 PM"
-  },
-  {
-    id: 3, initials: "KP", color: "#2563EB", name: "Kavindu P.",
-    vehicle: "Honda Fit", plate: "KX-7788",
-    service: "Oil Change", status: "Pending Parts",
-    statusColor: "#6366F1", statusBg: "#EEF2FF",
-    assigned: "Chamika Dias", expected: "May 26, 11:00 AM"
-  },
-  {
-    id: 4, initials: "MG", color: "#D97706", name: "Madushan G.",
-    vehicle: "Tata Lorry", plate: "WP-LM-8945",
-    service: "Clutch Repair", status: "In Progress",
-    statusColor: "#F59E0B", statusBg: "#FEF3C7",
-    assigned: "Saman Abey.", expected: "May 27, 03:00 PM"
-  },
-  {
-    id: 5, initials: "AS", color: "#EF4444", name: "Amila S.",
-    vehicle: "Nissan March", plate: "KU-3344",
-    service: "AC Not Cooling", status: "Diagnosis",
-    statusColor: "#8B5CF6", statusBg: "#F5F3FF",
-    assigned: "Nuwan Perera", expected: "May 25, 04:00 PM"
-  },
-];
+import { useEffect, useState } from "react";
 
 function Avatar({ initials, color, size = 36 }) {
   return (
@@ -50,7 +14,99 @@ function Avatar({ initials, color, size = 36 }) {
   );
 }
 
+// Maps each status to a badge color and to the next status in the lifecycle
+const STATUS_STYLES = {
+  "Confirmed":   { bg: "#DBEAFE", color: "#2563EB" },
+  "In Progress": { bg: "#FEF3C7", color: "#D97706" },
+  "Completed":   { bg: "#DCFCE7", color: "#16A34A" },
+};
+
+const NEXT_STATUS = {
+  "Confirmed": "In Progress",
+  "In Progress": "Completed",
+};
+
+const NEXT_STATUS_LABEL = {
+  "Confirmed": "Start Repair",
+  "In Progress": "Mark Completed",
+};
+
+function getInitials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
+
 function ActiveRepairs() {
+  const [activeRepairs, setActiveRepairs] = useState([]);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  useEffect(() => {
+    const shopId = localStorage.getItem("shopId");
+
+    fetch(
+      `http://localhost/project/FixGo-Web-Application/backend/api/getActiveRepairs.php?shop_id=${shopId}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setActiveRepairs(data.data);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const handleChangeStatus = async (requestId, currentStatus) => {
+    const nextStatus = NEXT_STATUS[currentStatus];
+    if (!nextStatus) return;
+
+    const shopId = localStorage.getItem("shopId");
+    setUpdatingId(requestId);
+
+    try {
+     const res = await fetch(
+  "http://localhost/project/FixGo-Web-Application/backend/api/updateStatus.php",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      request_id: requestId,
+      new_status: nextStatus,
+      actor_id: shopId,
+      actor_role: "shop_owner",
+    }),
+  }
+);
+
+      const data = await res.json();
+
+      if (res.ok) {
+        if (nextStatus === "Completed") {
+          // Completed jobs belong in Service History, not here — remove immediately
+          setActiveRepairs((prev) => prev.filter((r) => r.id !== requestId));
+        } else {
+          setActiveRepairs((prev) =>
+            prev.map((r) =>
+              r.id === requestId ? { ...r, status: nextStatus } : r
+            )
+          );
+        }
+      } else {
+        alert(data.message || "Failed to update status.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while updating the status.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div style={{ width: "100%" }}>
       <div style={{ marginBottom: 24 }}>
@@ -63,151 +119,168 @@ function ActiveRepairs() {
       </div>
 
       <div
-  style={{
-    display: "flex",
-    gap: 12,
-    marginBottom: 24,
-  }}
->
-  <input
-    placeholder="Search customer, vehicle, or repair..."
-    style={{
-      flex: 1,
-      padding: "14px 20px",
-      borderRadius: 14,
-      border: "1px solid #E5E7EB",
-      background: "#FFFFFF",
-      fontSize: 15,
-      outline: "none",
-    }}
-  />
+        style={{
+          display: "flex",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <input
+          placeholder="Search customer, vehicle, or repair..."
+          style={{
+            flex: 1,
+            padding: "14px 20px",
+            borderRadius: 14,
+            border: "1px solid #E5E7EB",
+            background: "#FFFFFF",
+            fontSize: 15,
+            outline: "none",
+          }}
+        />
 
-  <button
-    style={{
-      background: "#16A34A",
-      color: "#FFFFFF",
-      border: "none",
-      borderRadius: 14,
-      padding: "0 24px",
-      fontWeight: 600,
-      cursor: "pointer",
-    }}
-  >
-    Filter
-  </button>
-</div>
+        <button
+          style={{
+            background: "#16A34A",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: 14,
+            padding: "0 24px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Filter
+        </button>
+      </div>
 
       <div style={{
-  background: "#FFFFFF",
-  borderRadius: 18,
-  border: "1px solid #E7EFE8",
-  overflow: "hidden",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
-
+        background: "#FFFFFF",
+        borderRadius: 18,
+        border: "1px solid #E7EFE8",
+        overflow: "hidden",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
       }}>
-        
+
         {/* Header */}
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid #F3F4F6",
           display: "grid",
-          gridTemplateColumns: "2fr 2fr 2fr 1.5fr 1.5fr 1fr",
+          gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.3fr",
           gap: 12
         }}>
-          {["Customer", "Vehicle", "Service", "Status", "Expected", "Action"].map(h => (
+          {["Customer", "Vehicle", "Service", "Status", "Action"].map(h => (
             <span key={h} style={{ fontSize: 12, fontWeight: 600, color: "#6B7280" }}>{h}</span>
           ))}
-          
         </div>
-        
 
         {/* Rows */}
-        {ACTIVE_REPAIRS.map((r, i) => (
-          <div key={r.id} style={{
-            padding: "16px 20px",
-            borderBottom: i < ACTIVE_REPAIRS.length - 1 ? "1px solid #F9FAFB" : "none",
-            display: "grid",
-            gridTemplateColumns: "2fr 2fr 2fr 1.5fr 1.5fr 1fr",
-            gap: 12, alignItems: "center"
-          }}>
-            {/* Customer */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Avatar initials={r.initials} color={r.color} />
-              <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.name}</span>
+        {activeRepairs.map((r, i) => {
+          const statusStyle = STATUS_STYLES[r.status] || { bg: "#F3F4F6", color: "#6B7280" };
+          const nextLabel = NEXT_STATUS_LABEL[r.status];
+          const isUpdating = updatingId === r.id;
+
+          return (
+            <div key={r.id} style={{
+              padding: "16px 20px",
+              borderBottom: i < activeRepairs.length - 1 ? "1px solid #F9FAFB" : "none",
+              display: "grid",
+              gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.3fr",
+              gap: 12, alignItems: "center"
+            }}>
+              {/* Customer */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Avatar initials={getInitials(r.customer_name)} color="#16A34A" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>
+                    {r.customer_name}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                    {r.customer_phone}
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle */}
+              <div>
+                <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle_brand}</div>
+                <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.vehicle_color}</div>
+              </div>
+
+              {/* Service */}
+              <div>
+                <div style={{ fontSize: 14, color: "#374151" }}>{r.issue_category}</div>
+              </div>
+
+              {/* Status Badge */}
+              <span
+                style={{
+                  background: statusStyle.bg,
+                  color: statusStyle.color,
+                  borderRadius: 999,
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: 6,
+                  width: "130px",
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: statusStyle.color,
+                  }}
+                />
+                {r.status}
+              </span>
+
+              {/* Action */}
+              {nextLabel ? (
+                <button
+                  disabled={isUpdating}
+                  onClick={() => handleChangeStatus(r.id, r.status)}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    border: "1px solid #D1D5DB",
+                    background: isUpdating ? "#F3F4F6" : "#FFFFFF",
+                    color: "#374151",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: isUpdating ? "not-allowed" : "pointer",
+                    minWidth: "120px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (isUpdating) return;
+                    e.currentTarget.style.background = "#16A34A";
+                    e.currentTarget.style.color = "#FFFFFF";
+                    e.currentTarget.style.borderColor = "#16A34A";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isUpdating) return;
+                    e.currentTarget.style.background = "#FFFFFF";
+                    e.currentTarget.style.color = "#374151";
+                    e.currentTarget.style.borderColor = "#D1D5DB";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  {isUpdating ? "Updating..." : nextLabel}
+                </button>
+              ) : (
+                <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>
+                  Completed
+                </span>
+              )}
             </div>
-
-            {/* Vehicle */}
-            <div>
-              <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-              <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.plate}</div>
-            </div>
-
-            {/* Service */}
-            <div>
-              <div style={{ fontSize: 14, color: "#374151" }}>{r.service}</div>
-              <div style={{ fontSize: 12, color: "#9CA3AF" }}>→ {r.assigned}</div>
-            </div>
-
-            {/* Status Badge */}
-            <span
-  style={{
-    background: r.statusBg,
-    color: r.statusColor,
-    borderRadius: 999,
-    padding: "6px 14px",
-    fontSize: 12,
-    fontWeight: 700,
-    display: "inline-flex",
-    justifyContent: "center",
-    alignItems: "center",
-    textAlign: "center",
-    gap: 6,
-    width: "130px",
-  }}
->
-  <span
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: "50%",
-      background: r.statusColor,
-    }}
-  />
-  {r.status}
-</span>
-
-            {/* Expected */}
-            <div style={{ fontSize: 12, color: "#6B7280" }}>{r.expected}</div>
-{/* Action */}
-<button
-  style={{
-    padding: "10px 18px",
-    borderRadius: 10,
-    border: "1px solid #D1D5DB",
-    background: "#FFFFFF",
-    color: "#374151",
-    fontWeight: 600,
-    fontSize: 13,
-    cursor: "pointer",
-    minWidth: "120px",
-    transition: "all 0.2s ease",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.background = "#16A34A";
-    e.currentTarget.style.color = "#FFFFFF";
-    e.currentTarget.style.borderColor = "#16A34A";
-    e.currentTarget.style.transform = "translateY(-2px)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.background = "#FFFFFF";
-    e.currentTarget.style.color = "#374151";
-    e.currentTarget.style.borderColor = "#D1D5DB";
-    e.currentTarget.style.transform = "translateY(0)";
-  }}
->
-  View Details
-</button>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Footer */}
         <div style={{ padding: "14px 20px", textAlign: "center" }}>
@@ -223,3 +296,5 @@ function ActiveRepairs() {
 }
 
 export default ActiveRepairs;
+
+

@@ -303,5 +303,46 @@ class ServiceRequestController {
         http_response_code(200);
         return json_encode(["success" => true, "data" => $requests]);
     }
+        public function handleGetConfirmedRequests($shop_id)
+{
+    $requests = $this->serviceRequestModel
+        ->getConfirmedRequestsByShop($shop_id);
+
+    http_response_code(200);
+
+    return json_encode([
+        "success" => true,
+        "data" => $requests
+    ]);
 }
+
+
+public function handleGetActiveRepairs($shop_id)
+{
+    $repairs = $this->serviceRequestModel
+        ->getActiveRepairsByShop($shop_id);
+
+    http_response_code(200);
+
+    return json_encode([
+        "success" => true,
+        "data" => $repairs
+    ]);
+}
+
+public function handleGetServiceHistory($shop_id)
+{
+    $history = $this->serviceRequestModel
+        ->getServiceHistoryByShop($shop_id);
+
+    http_response_code(200);
+
+    return json_encode([
+        "success" => true,
+        "data" => $history
+    ]);
+}
+
+}
+
 ?>
