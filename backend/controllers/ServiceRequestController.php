@@ -2,8 +2,10 @@
 class ServiceRequestController {
     private $serviceRequestModel;
     private $jwtHandler;
+    private $db;
 
     public function __construct($db) {
+        $this->db = $db;
         require_once __DIR__ . '/../models/ServiceRequest.php';
         // 1. Include your existing JWT Handler
         require_once __DIR__ . '/../config/JwtHandler.php'; 
@@ -175,7 +177,7 @@ class ServiceRequestController {
                 if (in_array($current_status, ['Confirmed', 'In Progress', 'Diagnosis', 'Pending Parts'])) {
                     // Inject dependency model here to avoid cluttering constructor
                     require_once __DIR__ . '/../models/Customer.php';
-                    $customerModel = new Customer($this->serviceRequestModel->conn);
+                    $customerModel = new Customer($this->db);
                     $customerModel->incrementCancellationStrikes($actor_id);
                     $penaltyMsg = " Note: A cancellation strike has been applied to your account.";
                 } else {
