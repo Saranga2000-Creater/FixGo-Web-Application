@@ -16,6 +16,7 @@ const COLORS = {
   page: "#F8FAFC",
 };
 
+
 function Avatar({ initials, color, size = 40 }) {
   return (
     <div
@@ -43,6 +44,32 @@ function Avatar({ initials, color, size = 40 }) {
 function ServiceRequests() {
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const updateStatus = async (requestId, status) => {
+  try {
+    const response = await fetch(
+      "http://localhost/project/FixGo-Web-Application/backend/api/updateServiceRequestInShopDashboard.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          request_id: requestId,
+          status: status,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    alert(data.message);
+
+    fetchRequests();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
   const [hoveredRow, setHoveredRow] = useState(null);
 
   useEffect(() => {
@@ -51,9 +78,12 @@ function ServiceRequests() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(
-        "http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=13"
-      );
+   const shopId = localStorage.getItem("shopId");
+  console.log("Current Shop ID:", shopId);
+
+const response = await fetch(
+  `http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=${shopId}`
+);
 
       const data = await response.json();
 
@@ -337,6 +367,7 @@ function ServiceRequests() {
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                   onClick={() => updateStatus(r.id, "Accepted")}
                 >
                   Accept
                 </button>
@@ -354,6 +385,7 @@ function ServiceRequests() {
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
                   onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                    onClick={() => updateStatus(r.id, "Declined")}
                 >
                   Decline
                 </button>
@@ -433,18 +465,45 @@ function ServiceRequests() {
               </div>
 
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
-                  Issue
-                </div>
-                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
-                  {selectedRequest.issue_category}
-                </div>
-              </div>
+  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+    Issue
+  </div>
+  <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+    {selectedRequest.issue_category}
+  </div>
+</div>
 
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
-                  Description
-                </div>
+{/* Appointment Section */}
+<div>
+  <div
+    style={{
+      fontSize: 13,
+      fontWeight: 600,
+      color: COLORS.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.4
+    }}
+  >
+    Appointment
+  </div>
+
+  <div
+    style={{
+      fontSize: 16.5,
+      color: COLORS.text,
+      marginTop: 2
+    }}
+  >
+    {selectedRequest.preferred_date
+      ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
+      : "Not specified"}
+  </div>
+</div>
+
+<div>
+  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
+    Description
+  </div>
                 <div
                   style={{
                     background: COLORS.page,
