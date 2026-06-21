@@ -92,9 +92,9 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
             if (imageFile) {
                 base64Image = await convertToBase64(imageFile);
             }
-
+            
             const requestData = {
-                customer_id: 4, 
+                customer_id: parseInt(localStorage.getItem("shopId")),
                 shop_id: shop.info.id,
                 vehicle_category_id: vehicleCategory, 
                 vehicle_brand: brand,
