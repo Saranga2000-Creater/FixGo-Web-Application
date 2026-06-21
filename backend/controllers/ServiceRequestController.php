@@ -40,10 +40,17 @@ class ServiceRequestController {
         }
 
         // ADDED: 5. Prevent Duplicate/Spam Requests
-        if ($this->serviceRequestModel->hasPendingRequest($requestData['customer_id'])) {
-            http_response_code(429); // 429 means "Too Many Requests" (or 409 Conflict)
-            return json_encode(["message" => "You already have a pending tow truck request. Please wait for the shop to respond."]);
-        }
+       if (
+    $this->serviceRequestModel->hasPendingRequest(
+        $requestData['customer_id'],
+        $requestData['shop_id']
+    )
+) {
+    http_response_code(429);
+    return json_encode([
+        "message" => "You already have a pending request for this shop."
+    ]);
+}
 
         // 5.5 Handle the Optional Image Upload
         $photoPath = null;

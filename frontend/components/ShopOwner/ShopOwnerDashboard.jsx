@@ -21,9 +21,9 @@ const NAV_ITEMS = [
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView({ shopData }) {
+function DashboardView({ shopData, requestCount })  {
   const stats = [
-    { label: "New Requests", value: 12, sub: "+4 today", subColor: "#16A34A", icon: "📋" },
+    {label: "New Requests",value: requestCount,sub: "Pending requests",subColor: "#16A34A",icon: "📋"},
     { label: "Active Jobs", value: 8, sub: "View all", subColor: "#059669", icon: "🔧" },
     { label: "Completed Jobs", value: 54, sub: "+6 this week", subColor: "#059669", icon: "✅" },
     { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "#6B7280", icon: "⭐" },
@@ -75,7 +75,7 @@ function DashboardView({ shopData }) {
         margin: 0,
       }}
     >
-     Hello, {shopData?.name || "Shop"}! 👋
+     Hello, {shopData?.owner || "Shop"}! 👋
     </h1>
 
     <span
@@ -205,10 +205,10 @@ onMouseLeave={(e) => {
 
 
 
-function renderPage(activeNav,shopData) {
+function renderPage(activeNav, shopData, requestCount) {
   switch (activeNav) {
    
-    case "dashboard":     return <DashboardView shopData={shopData} />;
+    case "dashboard":     return (<DashboardView shopData={shopData}requestCount={requestCount}/>);
     case "requests":      return <ServiceRequests />;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
@@ -224,7 +224,20 @@ function renderPage(activeNav,shopData) {
 function ShopOwnerDashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [shopData, setShopData] = useState(null);
+  const [requestCount, setRequestCount] = useState(0);
 
+useEffect(() => {
+  fetch(
+    "http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=2"
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setRequestCount(data.data.length);
+      }
+    })
+    .catch((err) => console.error(err));
+}, []);
   
 useEffect(() => {
   const token = localStorage.getItem("jwt_token");
@@ -254,51 +267,47 @@ useEffect(() => {
 }, []);
  const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
-  return (
+return (
+  <div
+    style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      background: "#F4F8F5",
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+    }}
+  >
+    {/* Main Content Area */}
     <div
       style={{
         display: "flex",
-        minHeight: "100vh",
-        background:"#F4F8F5",
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        flex: 1,
       }}
     >
-      {/* Sidebar */}
       <Sidebar
   activeNav={activeNav}
   setActiveNav={setActiveNav}
   shopData={shopData}
+  requestCount={requestCount}
 />
 
-      {/* Main Area */}
       <div
         style={{
           flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
+          padding: "16px 24px",
+          overflowY: "auto",
+          boxSizing: "border-box",
+          background: "#F4F8F5",
         }}
       >
-       
-
-        {/* Content Area */}
-        <div
-          style={{
-            flex: 1,
-            padding: " 16px 24px",
-            overflowY: "auto",
-            boxSizing: "border-box",
-            background: "#F4F8F5",
-          }}
-        >
-          {renderPage(activeNav,shopData)}
-        
-        </div>
-
+      {renderPage(activeNav, shopData, requestCount)}
       </div>
     </div>
 
-  );
+    {/* Footer spans full width */}
+    <Footer />
+  </div>
+);
 }
 
 export default ShopOwnerDashboard;

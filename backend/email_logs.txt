@@ -244,3 +244,47 @@ Best regards,
 The FixGo Team
 ==================================================
 
+==================================================
+Timestamp: 2026-06-20 12:43:23
+To: sanduniayeshika08@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=ffcbe9045507bb88a79c7e59f133aadf91e4669a19ae50fe6f34f9baaca82ad0
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=ffcbe9045507bb88a79c7e59f133aadf91e4669a19ae50fe6f34f9baaca82ad0
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+
+==================================================
+Timestamp: 2026-06-20 13:21:56
+To: sanduni04@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=682d8d9dc306b7333ee54587a24a6926ec2910ade919811c408ad478b14b8579
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=682d8d9dc306b7333ee54587a24a6926ec2910ade919811c408ad478b14b8579
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+

@@ -4,7 +4,7 @@ import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
-  { id: "requests", label: "Service Requests", icon: <FiClipboard />, badge: 12 },
+  { id: "requests", label: "Service Requests", icon: <FiClipboard />},
   { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver />, badge: 8 },
   { id: "history", label: "Service History", icon: <FiClock /> },
   { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
@@ -34,7 +34,7 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav,shopData }) {
+function Sidebar({ activeNav, setActiveNav,shopData,requestCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
@@ -43,7 +43,7 @@ function Sidebar({ activeNav, setActiveNav,shopData }) {
     <div
       style={{
         width: "240px",
-        height: "100vh",
+        height: "calc(100vh - 50px)",
         background: "#fff",
         borderRight: "1px solid #F3F4F6",
         display: "flex",
@@ -104,7 +104,7 @@ function Sidebar({ activeNav, setActiveNav,shopData }) {
            {shopData?.name || "Shop"} 
           </div>
           <div style={{ fontSize: 12, color: "#6B7280" }}>
-            {shopData?.category || "Service Center"}
+             {shopData?.categories || "No Category"}
           </div>
         </div>
       </div>
@@ -145,7 +145,13 @@ function Sidebar({ activeNav, setActiveNav,shopData }) {
   {item.icon}
 </span>
             <span style={{ flex: 1 }}>{item.label}</span>
-            <Badge count={item.badge} />
+   <Badge
+  count={
+    item.id === "requests"
+      ? requestCount
+      : item.badge
+  }
+/>
           </button>
         ))}
       </nav>

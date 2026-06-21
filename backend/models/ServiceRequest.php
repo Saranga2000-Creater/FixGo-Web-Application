@@ -8,18 +8,26 @@ class ServiceRequest {
     }
 
     // Checks if the customer already has an active request waiting for a shop
-    public function hasPendingRequest($customer_id) {
-        $query = "SELECT id FROM " . $this->table_name . " 
-                  WHERE customer_id = :customer_id AND status = 'Pending' 
-                  LIMIT 1";
-        
-        $stmt = $this->conn->prepare($query);
-        $customer_id = htmlspecialchars(strip_tags($customer_id));
-        $stmt->bindParam(":customer_id", $customer_id);
-        $stmt->execute();
-        
-        return $stmt->rowCount() > 0;
-    }
+    public function hasPendingRequest($customerId, $shopId)
+{
+    $query = "
+        SELECT id
+        FROM servicerequest
+        WHERE customer_id = :customer_id
+        AND shop_id = :shop_id
+        AND status = 'Pending'
+        LIMIT 1
+    ";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(':customer_id', $customerId);
+    $stmt->bindParam(':shop_id', $shopId);
+
+    $stmt->execute();
+
+    return $stmt->rowCount() > 0;
+}
 
     public function create($data) {
         // UPDATE 1: Added 'photo' to the columns and ':photo' to the VALUES
