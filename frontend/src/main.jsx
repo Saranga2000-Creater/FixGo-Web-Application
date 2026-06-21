@@ -12,11 +12,13 @@ import CustomerForm from "../components/Registration/CustomerForm.jsx"
 import ShopForm from "../components/Registration/ShopOwnerForm.jsx"
 import SignIn from '../components/SignIn.jsx'
 import VerifyEmail from "../components/Registration/VerifyEmail.jsx"
+import { ScrollToTop } from "../components/ScrollToTop";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
 
     <BrowserRouter>
+      <ScrollToTop /> {/* This component ensures the page scrolls to top on every route change */}  
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/shops" element={<Shops />} />
@@ -30,7 +32,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<SignIn />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
-    </BrowserRouter>,
+    </BrowserRouter>
 
-  </StrictMode>,
+  </StrictMode>
 )

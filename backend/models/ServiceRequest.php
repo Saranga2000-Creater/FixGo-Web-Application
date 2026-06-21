@@ -116,44 +116,185 @@ class ServiceRequest {
         return false;
     }
 
-    public function getRequestsByShop($shop_id)
-{
-    $query = "
-        SELECT
-            sr.id,
-            sr.description,
-            sr.status,
-            sr.preferred_date,
-            sr.preferred_time,
-            sr.vehicle_brand,
-            sr.vehicle_color,
-            sr.issue_category,
-             sr.requires_tow,
-            sr.pickup_landmark,
-            sr.description,
-            sr.photo,
-            sr.urgency_level,
-            ST_X(sr.location) AS latitude,
+    // Fetch a single request by ID to check its current state
+    public function getById($request_id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $request_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
-            c.name AS customer_name
+    // ==========================================
+    // 1. LIMITERS & SPAM PREVENTION
+    // ==========================================
+    
+    // Checks if the customer already sent a request to THIS SPECIFIC shop
+    public function hasAPendingRequest($customer_id, $shop_id) {
+        $query = "SELECT id FROM " . $this->table_name . " 
+                  WHERE customer_id = :customer_id AND shop_id = :shop_id AND status IN ('Pending', 'Accepted')
+                  LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
+    }
 
-        FROM servicerequest sr
+    // Checks how many total active requests the customer has across ALL shops (Limit 5)
+    public function getActiveBroadcastCount($customer_id) {
+        $query = "SELECT COUNT(id) as total FROM " . $this->table_name . " 
+                  WHERE customer_id = :customer_id AND status IN ('Pending', 'Accepted')";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $row['total'];
+    }
 
-        LEFT JOIN customer c
-        ON sr.customer_id = c.id
+    // ==========================================
+    // 2. STATUS & HANDSHAKE UPDATERS
+    // ==========================================
 
-        WHERE sr.shop_id = :shop_id
+    // Master status updater with dynamic timestamp injection
+    public function updateStatus($request_id, $new_status) {
+        $timestampColumn = "";
+        
+        // Match the status to the correct tracking column
+        if ($new_status === 'Accepted') $timestampColumn = ", accepted_at = NOW()";
+        if ($new_status === 'Confirmed') $timestampColumn = ", confirmed_at = NOW()";
+        if ($new_status === 'Completed') $timestampColumn = ", completed_at = NOW()";
 
-        ORDER BY sr.id DESC
-    ";
+        $query = "UPDATE " . $this->table_name . " 
+                  SET status = :status {$timestampColumn} 
+                  WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":status", $new_status);
+        $stmt->bindParam(":id", $request_id, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
 
-    $stmt = $this->conn->prepare($query);
+    // Captures the tow truck dispatch details when a garage accepts
+    public function updateTowDetails($request_id, $eta, $truck_brand, $truck_color, $truck_plate, $driver_name, $driver_phone) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET promised_eta = :eta, 
+                      dispatched_truck_brand = :truck_brand,
+                      dispatched_truck_color = :truck_color,
+                      dispatched_truck_plate = :truck_plate,
+                      dispatched_driver_name = :driver_name,
+                      dispatched_driver_phone = :driver_phone
+                  WHERE id = :id";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":eta", $eta, PDO::PARAM_INT);
+        $stmt->bindParam(":truck_brand", $truck_brand);
+        $stmt->bindParam(":truck_color", $truck_color);
+        $stmt->bindParam(":truck_plate", $truck_plate);
+        $stmt->bindParam(":driver_name", $driver_name);
+        $stmt->bindParam(":driver_phone", $driver_phone);
+        $stmt->bindParam(":id", $request_id, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
 
-    $stmt->bindParam(":shop_id", $shop_id);
+    // ==========================================
+    // 3. CANCELLATION & ACCOUNTABILITY
+    // ==========================================
 
-    $stmt->execute();
+    // Standard cancellation (logs who cancelled and why)
+    public function cancelRequest($request_id, $cancelled_by, $reason) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET status = 'Cancelled', 
+                      cancelled_at = NOW(), 
+                      cancelled_by = :by, 
+                      cancellation_reason = :reason 
+                  WHERE id = :id";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":by", $cancelled_by);
+        $stmt->bindParam(":reason", $reason);
+        $stmt->bindParam(":id", $request_id, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    // The Auto-Kill switch: Cancels competing requests when the handshake is confirmed
+    public function cancelCompetingRequests($customer_id, $winning_request_id) {
+        $reason = "Customer confirmed a different shop for this incident.";
+        $by = "System";
+        
+        $query = "UPDATE " . $this->table_name . " 
+                  SET status = 'Cancelled', 
+                      cancelled_at = NOW(), 
+                      cancelled_by = :by, 
+                      cancellation_reason = :reason 
+                  WHERE customer_id = :customer_id 
+                  AND id != :winning_id 
+                  AND status = 'Pending'";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":by", $by);
+        $stmt->bindParam(":reason", $reason);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->bindParam(":winning_id", $winning_request_id, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
+
+    // ==========================================
+    // 4. DASHBOARD RETRIEVAL QUERIES
+    // ==========================================
+
+    public function getRequestsByCustomer($customer_id) {
+        $query = "SELECT sr.*, 
+                         s.name as shop_name, 
+                         s.contactNumber as shop_phone 
+                  FROM " . $this->table_name . " sr
+                  LEFT JOIN shop s ON sr.shop_id = s.id
+                  WHERE sr.customer_id = :customer_id
+                  ORDER BY sr.created_at DESC";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // FIX: Remove raw binary spatial data so json_encode doesn't crash
+        foreach ($results as &$row) {
+            unset($row['location']);
+        }
+        
+        return $results;
+    }
+
+    public function getRequestsByShop($shop_id) {
+        $query = "SELECT sr.*, 
+                         c.name as customer_name, 
+                         c.contactNumber as customer_phone 
+                  FROM " . $this->table_name . " sr
+                  LEFT JOIN customer c ON sr.customer_id = c.id
+                  WHERE sr.shop_id = :shop_id
+                  ORDER BY sr.created_at DESC";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // FIX: Remove raw binary spatial data so json_encode doesn't crash
+        foreach ($results as &$row) {
+            unset($row['location']);
+        }
+        
+        return $results;
+    }
 }
 ?>

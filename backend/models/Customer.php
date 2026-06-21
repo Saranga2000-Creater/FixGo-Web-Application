@@ -28,4 +28,12 @@ class Customer {
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    // Adds a penalty strike if a customer cancels a Confirmed handshake
+    public function incrementCancellationStrikes($customer_id) {
+        $query = "UPDATE customer SET cancellation_strikes = cancellation_strikes + 1 WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $customer_id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
 }
