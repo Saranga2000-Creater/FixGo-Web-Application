@@ -245,10 +245,17 @@ The FixGo Team
 ==================================================
 
 ==================================================
+<<<<<<< Updated upstream
 Timestamp: 2026-06-20 12:43:23
 To: sanduniayeshika08@gmail.com
 Subject: FixGo - Verify Your Email Address
 Link: http://localhost:5173/verify-email?token=ffcbe9045507bb88a79c7e59f133aadf91e4669a19ae50fe6f34f9baaca82ad0
+=======
+Timestamp: 2026-06-21 19:44:54
+To: irushipra@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=e2141179e971f6bda0baab061cb87ae74a82c4ca5b694e993a2cc81f2226e0d3
+>>>>>>> Stashed changes
 Headers:
 From: no-reply@fixgo.com
 Reply-To: no-reply@fixgo.com
@@ -258,7 +265,11 @@ Hello,
 
 Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
 
+<<<<<<< Updated upstream
 http://localhost:5173/verify-email?token=ffcbe9045507bb88a79c7e59f133aadf91e4669a19ae50fe6f34f9baaca82ad0
+=======
+http://localhost:5173/verify-email?token=e2141179e971f6bda0baab061cb87ae74a82c4ca5b694e993a2cc81f2226e0d3
+>>>>>>> Stashed changes
 
 If you did not create an account, no further action is required.
 
@@ -267,10 +278,17 @@ The FixGo Team
 ==================================================
 
 ==================================================
+<<<<<<< Updated upstream
 Timestamp: 2026-06-20 13:21:56
 To: sanduni04@gmail.com
 Subject: FixGo - Verify Your Email Address
 Link: http://localhost:5173/verify-email?token=682d8d9dc306b7333ee54587a24a6926ec2910ade919811c408ad478b14b8579
+=======
+Timestamp: 2026-06-21 21:13:56
+To: fix@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=a74a8048989bc49beee667f46759ecc87d1686416d9ce5345384245dc63f5686
+>>>>>>> Stashed changes
 Headers:
 From: no-reply@fixgo.com
 Reply-To: no-reply@fixgo.com
@@ -280,7 +298,11 @@ Hello,
 
 Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
 
+<<<<<<< Updated upstream
 http://localhost:5173/verify-email?token=682d8d9dc306b7333ee54587a24a6926ec2910ade919811c408ad478b14b8579
+=======
+http://localhost:5173/verify-email?token=a74a8048989bc49beee667f46759ecc87d1686416d9ce5345384245dc63f5686
+>>>>>>> Stashed changes
 
 If you did not create an account, no further action is required.
 

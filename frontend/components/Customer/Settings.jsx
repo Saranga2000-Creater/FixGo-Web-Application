@@ -8,20 +8,9 @@ import {
     faShield,
     faShieldHalved,
     faUser,
+    faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
-import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 
-// ── PageFooter ────────────────────────────────────────────────
-function PageFooter() {
-    return (
-        <footer className="flex flex-col gap-2 py-1 text-xs text-[#274c3a]/50 font-mono md:flex-row md:items-center md:justify-between">
-            <p>© 2026 FixGo. All rights reserved.</p>
-            <p>Version 1.0.0</p>
-        </footer>
-    );
-}
-
-// ── SettingsRow ───────────────────────────────────────────────
 function SettingsRow({ icon, label, meta }) {
     return (
         <button className="flex w-full items-center justify-between px-6 py-4 text-left transition hover:bg-[#16a34a]/5">
@@ -37,7 +26,6 @@ function SettingsRow({ icon, label, meta }) {
     );
 }
 
-// ── Settings (page) ───────────────────────────────────────────
 function Settings() {
     return (
         <div className="space-y-5">
@@ -46,7 +34,6 @@ function Settings() {
                 <p className="mt-2 text-sm font-mono text-[#274c3a]/60">Manage your account, preferences and app settings.</p>
             </section>
 
-            {/* ── Account Settings ── */}
             <section className="overflow-hidden rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
                 <div className="flex flex-col sm:flex-row">
                     <div className="flex items-center gap-5 border-b border-[#d1e7d7]/60 px-6 py-6 sm:w-[280px] sm:shrink-0 sm:border-b-0 sm:border-r sm:border-r-[#d1e7d7]">
@@ -66,7 +53,6 @@ function Settings() {
                 </div>
             </section>
 
-            {/* ── Security ── */}
             <section className="overflow-hidden rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
                 <div className="flex flex-col sm:flex-row">
                     <div className="flex items-center gap-5 border-b border-[#d1e7d7]/60 px-6 py-6 sm:w-[280px] sm:shrink-0 sm:border-b-0 sm:border-r sm:border-r-[#d1e7d7]">
@@ -84,7 +70,6 @@ function Settings() {
                 </div>
             </section>
 
-            {/* ── App Settings ── */}
             <section className="overflow-hidden rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
                 <div className="flex flex-col sm:flex-row">
                     <div className="flex items-center gap-5 border-b border-[#d1e7d7]/60 px-6 py-6 sm:w-[280px] sm:shrink-0 sm:border-b-0 sm:border-r sm:border-r-[#d1e7d7]">
@@ -103,8 +88,6 @@ function Settings() {
                     </div>
                 </div>
             </section>
-
-            <PageFooter />
         </div>
     );
 }

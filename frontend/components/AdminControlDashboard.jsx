@@ -1,11 +1,3 @@
-
-// ============================================================
-// FILE: Admin.jsx
-// PURPOSE: Admin dashboard for FixGo — matches Customer.jsx
-//          color/font theme (green #16a34a primary, slate tones,
-//          rounded-[28px] cards, FontAwesome icons).
-// ============================================================
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -39,43 +31,37 @@ import {
     faArrowTrendUp,
     faArrowTrendDown,
 } from "@fortawesome/free-solid-svg-icons";
+import { Footer } from "../components/Footer";
 
-// ── Nav items for the sidebar
 const NAV_ITEMS = [
-    { key: "dashboard",     icon: faChartLine,      label: "Dashboard" },
-    { key: "verification",  icon: faShieldHalved,   label: "Verification Queue" },
-    { key: "moderation",    icon: faFlag,            label: "Moderation" },
-    { key: "revenue",       icon: faMoneyBillWave,   label: "Revenue & Ledger" },
-    { key: "settings",      icon: faGear,            label: "Settings" },
+    { key: "dashboard",    icon: faChartLine,    label: "Dashboard" },
+    { key: "verification", icon: faShieldHalved, label: "Verification Queue" },
+    { key: "moderation",   icon: faFlag,         label: "Moderation" },
+    { key: "revenue",      icon: faMoneyBillWave,label: "Revenue & Ledger" },
+    { key: "settings",     icon: faGear,         label: "Settings" },
 ];
 
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
 function Admin() {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("dashboard");
 
     return (
-        <div
-            style={{
-                position: "fixed",
-                top: "64px",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: "flex",
-                background: "#f6f7fb",
-                color: "#0f172a",
-            }}
-        >
-            <div className="flex w-full h-full overflow-hidden">
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#f6f7fb", color: "#0f172a" }}>
+
+            {/* ── NO spacer div needed — navbar is sticky, not fixed ── */}
+
+            <div style={{ display: "flex", flex: 1 }}>
 
                 {/* ── SIDEBAR ── */}
-                <aside className="hidden w-[260px] shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col overflow-y-auto">
+                <aside style={{
+                    width: "260px",
+                    flexShrink: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRight: "1px solid #e2e8f0",
+                    backgroundColor: "#ffffff",
+                }}>
                     <div className="px-4 py-5">
-
-                        {/* Admin profile card */}
                         <div className="rounded-[28px] border border-slate-200 bg-white px-4 py-5 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full bg-[#16a34a] flex items-center justify-center text-white font-bold text-lg shrink-0">
@@ -91,8 +77,6 @@ function Admin() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Navigation */}
                         <nav className="mt-6 space-y-1 text-sm">
                             {NAV_ITEMS.map((item) => (
                                 <AdminSidebarLink
@@ -106,23 +90,9 @@ function Admin() {
                             ))}
                         </nav>
                     </div>
-
-                    {/* Emergency Request button */}
-                    <div className="mt-auto px-4 pb-4">
-                        <button className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#16a34a] text-white py-3 text-sm font-semibold hover:bg-[#15803d] transition">
-                            <FontAwesomeIcon icon={faCircleExclamation} />
-                            Emergency Request
-                        </button>
-                    </div>
-
-                    {/* Logout */}
-                    <div className="px-4 pb-5">
+                    <div className="px-4 pb-5 mt-auto">
                         <button
-                            onClick={() => {
-                                localStorage.clear();
-                                sessionStorage.clear();
-                                navigate("/");
-                            }}
+                            onClick={() => { localStorage.clear(); sessionStorage.clear(); navigate("/"); }}
                             className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-700 transition hover:bg-slate-50"
                         >
                             <FontAwesomeIcon icon={faArrowRight} className="rotate-180 text-slate-500" />
@@ -132,7 +102,7 @@ function Admin() {
                 </aside>
 
                 {/* ── MAIN CONTENT ── */}
-                <main className="flex-1 overflow-y-auto">
+                <main style={{ flex: 1, overflowY: "auto" }}>
                     <div className="px-4 py-5 md:px-6 lg:px-8">
                         <div className="mx-auto max-w-[1180px]">
                             {currentPage === "dashboard"    && <DashboardView />}
@@ -143,7 +113,12 @@ function Admin() {
                         </div>
                     </div>
                 </main>
+
             </div>
+
+            {/* ── FOOTER — outside flex row, spans full width ── */}
+            <Footer />
+
         </div>
     );
 }
@@ -154,8 +129,6 @@ function Admin() {
 function DashboardView() {
     return (
         <div className="space-y-5">
-
-            {/* Header */}
             <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                     <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Dashboard</h1>
@@ -167,46 +140,15 @@ function DashboardView() {
                 </div>
             </section>
 
-            {/* Summary Cards */}
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <AdminSummaryCard
-                    accent="green"
-                    icon={faStore}
-                    title="Active Shops"
-                    count="1,248"
-                    meta="+12% this week"
-                    metaPositive
-                />
-                <AdminSummaryCard
-                    accent="orange"
-                    icon={faShieldHalved}
-                    title="Verification Queue"
-                    count="42"
-                    meta="High Priority"
-                    metaPositive={false}
-                />
-                <AdminSummaryCard
-                    accent="blue"
-                    icon={faMoneyBillWave}
-                    title="Gross Revenue (MTD)"
-                    count="LKR 4.2M"
-                    meta="Live"
-                    metaPositive
-                />
-                <AdminSummaryCard
-                    accent="violet"
-                    icon={faCircleExclamation}
-                    title="Active Alerts"
-                    count="07"
-                    meta="System Normal"
-                    metaPositive
-                />
+                <AdminSummaryCard accent="green"  icon={faStore}            title="Active Shops"       count="1,248"    meta="+12% this week" metaPositive />
+                <AdminSummaryCard accent="orange" icon={faShieldHalved}     title="Veri
+                fication Queue" count="42"       meta="High Priority"  metaPositive={false} />
+                <AdminSummaryCard accent="blue"   icon={faMoneyBillWave}    title="Gross Revenue (MTD)"count="LKR 4.2M" meta="Live"           metaPositive />
+                <AdminSummaryCard accent="violet" icon={faCircleExclamation}title="Active Alerts"      count="07"       meta="System Normal"  metaPositive />
             </section>
 
-            {/* Main two-column section */}
             <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
-
-                {/* Verification Table */}
                 <div className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                         <div>
@@ -217,22 +159,14 @@ function DashboardView() {
                             View All Queue <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
                         </button>
                     </div>
-
-                    {/* Table header */}
                     <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        <span>Shop Name / ID</span>
-                        <span>Submitted Docs</span>
-                        <span>Flags</span>
-                        <span>Actions</span>
+                        <span>Shop Name / ID</span><span>Submitted Docs</span><span>Flags</span><span>Actions</span>
                     </div>
-
-                    {/* Rows */}
                     {VERIFICATION_QUEUE.map((shop, idx) => (
                         <VerificationRow key={shop.id} shop={shop} isLast={idx === VERIFICATION_QUEUE.length - 1} />
                     ))}
                 </div>
 
-                {/* Moderation Alerts */}
                 <div className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100">
                         <h2 className="text-base font-semibold text-slate-900">Moderation Alerts</h2>
@@ -246,7 +180,6 @@ function DashboardView() {
                 </div>
             </section>
 
-            {/* Revenue table */}
             <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <div>
@@ -255,31 +188,20 @@ function DashboardView() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition">
-                            <FontAwesomeIcon icon={faFilter} className="text-slate-400 text-xs" />
-                            Filter
+                            <FontAwesomeIcon icon={faFilter} className="text-slate-400 text-xs" />Filter
                         </button>
                         <button className="flex items-center gap-2 rounded-xl bg-[#0f172a] px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
-                            <FontAwesomeIcon icon={faDownload} className="text-xs" />
-                            Export CSV
+                            <FontAwesomeIcon icon={faDownload} className="text-xs" />Export CSV
                         </button>
                     </div>
                 </div>
-
-                {/* Revenue table header */}
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop</span>
-                    <span>Bookings</span>
-                    <span>Revenue</span>
-                    <span>Commission</span>
-                    <span>Status</span>
+                    <span>Shop</span><span>Bookings</span><span>Revenue</span><span>Commission</span><span>Status</span>
                 </div>
-
                 {REVENUE_ROWS.map((row, idx) => (
                     <RevenueRow key={row.id} row={row} isLast={idx === REVENUE_ROWS.length - 1} />
                 ))}
             </section>
-
-            <PageFooter />
         </div>
     );
 }
@@ -295,7 +217,6 @@ function VerificationView() {
                 <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Verification Queue</h1>
                 <p className="mt-2 text-sm text-slate-500">Review and approve shop credentials before they go live.</p>
             </section>
-
             <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm w-full sm:max-w-sm">
                     <FontAwesomeIcon icon={faMagnifyingGlass} className="text-slate-400" />
@@ -311,13 +232,9 @@ function VerificationView() {
                     <span className="rounded-full bg-[#edf9f0] px-3 py-1 text-xs font-medium text-[#16a34a]">8 Approved today</span>
                 </div>
             </section>
-
             <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop Name / ID</span>
-                    <span>Submitted Docs</span>
-                    <span>Flags</span>
-                    <span>Actions</span>
+                    <span>Shop Name / ID</span><span>Submitted Docs</span><span>Flags</span><span>Actions</span>
                 </div>
                 {[...VERIFICATION_QUEUE, ...VERIFICATION_QUEUE_EXTRA]
                     .filter((s) => s.name.toLowerCase().includes(search.toLowerCase()) || s.id.includes(search))
@@ -325,8 +242,6 @@ function VerificationView() {
                         <VerificationRow key={shop.id} shop={shop} isLast={idx === arr.length - 1} />
                     ))}
             </section>
-
-            <PageFooter />
         </div>
     );
 }
@@ -341,13 +256,11 @@ function ModerationView() {
                 <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Moderation</h1>
                 <p className="mt-2 text-sm text-slate-500">Reported content, fraud signals, and profile flags.</p>
             </section>
-
             <section className="grid gap-4 md:grid-cols-3">
-                <AdminSummaryCard accent="orange" icon={faFlag} title="Review Reports" count="3" meta="Needs action" metaPositive={false} />
-                <AdminSummaryCard accent="violet" icon={faUsers} title="Profile Flags" count="2" meta="Duplicate profiles" metaPositive={false} />
-                <AdminSummaryCard accent="green" icon={faShieldHalved} title="Fraud Signals" count="1" meta="Rating manipulation" metaPositive={false} />
+                <AdminSummaryCard accent="orange" icon={faFlag}         title="Review Reports" count="3" meta="Needs action"        metaPositive={false} />
+                <AdminSummaryCard accent="violet" icon={faUsers}        title="Profile Flags"  count="2" meta="Duplicate profiles"  metaPositive={false} />
+                <AdminSummaryCard accent="green"  icon={faShieldHalved} title="Fraud Signals"  count="1" meta="Rating manipulation" metaPositive={false} />
             </section>
-
             <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100">
                     <h2 className="text-base font-semibold text-slate-900">All Moderation Alerts</h2>
@@ -358,8 +271,6 @@ function ModerationView() {
                     ))}
                 </div>
             </section>
-
-            <PageFooter />
         </div>
     );
 }
@@ -387,34 +298,25 @@ function RevenueView() {
                     <FontAwesomeIcon icon={faChevronDown} className="pointer-events-none -ml-4 text-xs text-slate-400" />
                 </div>
             </section>
-
             <section className="grid gap-4 md:grid-cols-3">
-                <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"   count="LKR 4.2M" meta="+18% vs last month" metaPositive />
+                <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"    count="LKR 4.2M" meta="+18% vs last month" metaPositive />
                 <AdminSummaryCard accent="blue"   icon={faChartLine}     title="Total Commission" count="LKR 630K" meta="15% avg rate"       metaPositive />
                 <AdminSummaryCard accent="orange" icon={faStore}         title="Active Billing"   count="1,248"    meta="Shops billed"       metaPositive />
             </section>
-
             <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <h2 className="text-base font-semibold text-slate-900">Shop Revenue Breakdown</h2>
                     <button className="flex items-center gap-2 rounded-xl bg-[#0f172a] px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
-                        <FontAwesomeIcon icon={faDownload} className="text-xs" />
-                        Export CSV
+                        <FontAwesomeIcon icon={faDownload} className="text-xs" />Export CSV
                     </button>
                 </div>
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop</span>
-                    <span>Bookings</span>
-                    <span>Revenue</span>
-                    <span>Commission</span>
-                    <span>Status</span>
+                    <span>Shop</span><span>Bookings</span><span>Revenue</span><span>Commission</span><span>Status</span>
                 </div>
                 {[...REVENUE_ROWS, ...REVENUE_ROWS_EXTRA].map((row, idx, arr) => (
                     <RevenueRow key={row.id} row={row} isLast={idx === arr.length - 1} />
                 ))}
             </section>
-
-            <PageFooter />
         </div>
     );
 }
@@ -429,7 +331,6 @@ function AdminSettingsView() {
                 <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Settings</h1>
                 <p className="mt-2 text-sm text-slate-500">Manage system configuration and admin preferences.</p>
             </section>
-
             {[
                 {
                     icon: faUser,
@@ -437,9 +338,9 @@ function AdminSettingsView() {
                     title: "Admin Account",
                     subtitle: "Manage admin profile and access.",
                     rows: [
-                        { icon: faUser, label: "Edit Profile" },
+                        { icon: faUser,         label: "Edit Profile" },
                         { icon: faShieldHalved, label: "Change Password" },
-                        { icon: faFileLines, label: "Activity Log" },
+                        { icon: faFileLines,    label: "Activity Log" },
                     ],
                 },
                 {
@@ -448,9 +349,9 @@ function AdminSettingsView() {
                     title: "System Settings",
                     subtitle: "Platform-level configuration.",
                     rows: [
-                        { icon: faStore,   label: "Commission Rates" },
+                        { icon: faStore,         label: "Commission Rates" },
                         { icon: faClipboardList, label: "Verification Rules" },
-                        { icon: faRotate,  label: "API & Integrations" },
+                        { icon: faRotate,        label: "API & Integrations" },
                     ],
                 },
                 {
@@ -459,8 +360,8 @@ function AdminSettingsView() {
                     title: "Notifications",
                     subtitle: "Alert and notification preferences.",
                     rows: [
-                        { icon: faBell,  label: "Email Alerts" },
-                        { icon: faFlag,  label: "Moderation Alerts" },
+                        { icon: faBell, label: "Email Alerts" },
+                        { icon: faFlag, label: "Moderation Alerts" },
                     ],
                 },
             ].map((section) => (
@@ -476,7 +377,7 @@ function AdminSettingsView() {
                             </div>
                         </div>
                         <div className="flex-1 divide-y divide-slate-100">
-                            {section.rows.map((row, i) => (
+                            {section.rows.map((row) => (
                                 <button key={row.label} className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition">
                                     <div className="flex items-center gap-3">
                                         <FontAwesomeIcon icon={row.icon} className="w-4 text-slate-400" />
@@ -489,8 +390,6 @@ function AdminSettingsView() {
                     </div>
                 </section>
             ))}
-
-            <PageFooter />
         </div>
     );
 }
@@ -498,23 +397,18 @@ function AdminSettingsView() {
 // ============================================================
 // SHARED COMPONENTS
 // ============================================================
-
 function AdminSidebarLink({ active, icon, label, badge, onClick }) {
     return (
         <button
             onClick={onClick}
             className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
-                active
-                    ? "border-l-4 border-[#16a34a] bg-[#f0fdf4] font-medium text-[#16a34a]"
-                    : "text-slate-700 hover:bg-slate-50"
+                active ? "border-l-4 border-[#16a34a] bg-[#f0fdf4] font-medium text-[#16a34a]" : "text-slate-700 hover:bg-slate-50"
             }`}
         >
             <FontAwesomeIcon icon={icon} className={active ? "text-[#16a34a]" : "text-slate-500"} />
             <span>{label}</span>
             {badge && (
-                <span className="ml-auto rounded-full bg-[#16a34a] px-2 py-0.5 text-xs font-semibold text-white">
-                    {badge}
-                </span>
+                <span className="ml-auto rounded-full bg-[#16a34a] px-2 py-0.5 text-xs font-semibold text-white">{badge}</span>
             )}
         </button>
     );
@@ -522,10 +416,10 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
 
 function AdminSummaryCard({ accent, icon, title, count, meta, metaPositive }) {
     const s = {
-        green:  { iconWrap: "bg-[#edf9f0] text-[#16a34a]",  meta: "text-[#16a34a]" },
-        orange: { iconWrap: "bg-[#fff4ee] text-[#ff6b1a]",  meta: "text-[#ff6b1a]" },
-        blue:   { iconWrap: "bg-[#edf3ff] text-[#2563eb]",  meta: "text-[#2563eb]" },
-        violet: { iconWrap: "bg-[#f5edff] text-[#a855f7]",  meta: "text-[#a855f7]" },
+        green:  { iconWrap: "bg-[#edf9f0] text-[#16a34a]", meta: "text-[#16a34a]" },
+        orange: { iconWrap: "bg-[#fff4ee] text-[#ff6b1a]", meta: "text-[#ff6b1a]" },
+        blue:   { iconWrap: "bg-[#edf3ff] text-[#2563eb]", meta: "text-[#2563eb]" },
+        violet: { iconWrap: "bg-[#f5edff] text-[#a855f7]", meta: "text-[#a855f7]" },
     };
     return (
         <article className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
@@ -559,7 +453,6 @@ function DocBadge({ label }) {
 function VerificationRow({ shop, isLast }) {
     return (
         <div className={`grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 items-center px-6 py-4 ${!isLast ? "border-b border-slate-100" : ""}`}>
-            {/* Shop info */}
             <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600 shrink-0">
                     {shop.initials}
@@ -569,40 +462,19 @@ function VerificationRow({ shop, isLast }) {
                     <p className="text-xs text-slate-400">{shop.id}</p>
                 </div>
             </div>
-
-            {/* Docs */}
             <div className="flex flex-wrap gap-1">
                 {shop.docs.map((d) => <DocBadge key={d} label={d} />)}
             </div>
-
-            {/* Flag */}
             <div>
-                {shop.flag === "Verified" && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-[#16a34a]">
-                        <FontAwesomeIcon icon={faCircleCheck} /> Verified
-                    </span>
-                )}
-                {shop.flag === "IP Match" && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-[#ff6b1a]">
-                        <FontAwesomeIcon icon={faTriangleExclamation} /> IP Match
-                    </span>
-                )}
-                {shop.flag === "Pending Scan" && (
-                    <span className="text-xs text-slate-400 italic">Pending Scan</span>
-                )}
+                {shop.flag === "Verified"     && <span className="flex items-center gap-1 text-xs font-medium text-[#16a34a]"><FontAwesomeIcon icon={faCircleCheck} /> Verified</span>}
+                {shop.flag === "IP Match"     && <span className="flex items-center gap-1 text-xs font-medium text-[#ff6b1a]"><FontAwesomeIcon icon={faTriangleExclamation} /> IP Match</span>}
+                {shop.flag === "Pending Scan" && <span className="text-xs text-slate-400 italic">Pending Scan</span>}
             </div>
-
-            {/* Actions */}
             <div className="flex gap-2">
-                {shop.action === "approve" ? (
-                    <button className="rounded-xl bg-[#16a34a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#15803d] transition">
-                        Approve
-                    </button>
-                ) : (
-                    <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                        Review
-                    </button>
-                )}
+                {shop.action === "approve"
+                    ? <button className="rounded-xl bg-[#16a34a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#15803d] transition">Approve</button>
+                    : <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Review</button>
+                }
             </div>
         </div>
     );
@@ -610,9 +482,9 @@ function VerificationRow({ shop, isLast }) {
 
 function ModerationAlertCard({ alert, expanded }) {
     const typeStyle = {
-        "REVIEW REPORT":  "text-[#ff6b1a] bg-[#fff4ee]",
-        "PROFILE FLAG":   "text-[#2563eb] bg-[#edf3ff]",
-        "FRAUD SIGNAL":   "text-[#a855f7] bg-[#f5edff]",
+        "REVIEW REPORT": "text-[#ff6b1a] bg-[#fff4ee]",
+        "PROFILE FLAG":  "text-[#2563eb] bg-[#edf3ff]",
+        "FRAUD SIGNAL":  "text-[#a855f7] bg-[#f5edff]",
     };
     return (
         <div className={`px-6 py-4 ${alert.type === "REVIEW REPORT" ? "border-l-4 border-[#ff6b1a]" : ""}`}>
@@ -638,16 +510,10 @@ function ModerationAlertCard({ alert, expanded }) {
             </div>
             <div className="mt-3 flex gap-3">
                 {alert.actions.map((action) => (
-                    <button
-                        key={action}
-                        className={`text-xs font-medium ${
-                            action === "Dismiss Review" || action === "Investigate" || action === "Audit Logs"
-                                ? "text-[#16a34a] hover:underline"
-                                : "text-slate-500 hover:underline"
-                        }`}
-                    >
-                        {action}
-                    </button>
+                    <button key={action} className={`text-xs font-medium ${
+                        action === "Dismiss Review" || action === "Investigate" || action === "Audit Logs"
+                            ? "text-[#16a34a] hover:underline" : "text-slate-500 hover:underline"
+                    }`}>{action}</button>
                 ))}
             </div>
         </div>
@@ -674,89 +540,40 @@ function RevenueRow({ row, isLast }) {
             <p className="text-sm text-slate-700">{row.bookings}</p>
             <p className="text-sm font-semibold text-slate-900">{row.revenue}</p>
             <p className="text-sm text-slate-700">{row.commission}</p>
-            <span className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${statusStyle[row.status]}`}>
-                {row.status}
-            </span>
+            <span className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${statusStyle[row.status]}`}>{row.status}</span>
         </div>
-    );
-}
-
-function PageFooter() {
-    return (
-        <footer className="flex flex-col gap-2 py-1 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
-            <p>© 2026 FixGo. All rights reserved.</p>
-            <p>Version 1.0.0</p>
-        </footer>
     );
 }
 
 // ============================================================
 // STATIC DATA
 // ============================================================
-
 const VERIFICATION_QUEUE = [
-    { id: "#SHP-9021", initials: "KM", name: "Kandy Motors Ltd.",  docs: ["BR_CERT", "TAX_ID"],          flag: "Verified",     action: "approve" },
-    { id: "#SHP-8842", initials: "GR", name: "Galle Road Repairs", docs: ["BR_CERT"],                    flag: "IP Match",     action: "review"  },
-    { id: "#SHP-7710", initials: "SA", name: "Speedy Autos",       docs: ["BANK_ST", "OWN_ID"],          flag: "Pending Scan", action: "review"  },
+    { id: "#SHP-9021", initials: "KM", name: "Kandy Motors Ltd.",  docs: ["BR_CERT", "TAX_ID"],      flag: "Verified",     action: "approve" },
+    { id: "#SHP-8842", initials: "GR", name: "Galle Road Repairs", docs: ["BR_CERT"],                flag: "IP Match",     action: "review"  },
+    { id: "#SHP-7710", initials: "SA", name: "Speedy Autos",       docs: ["BANK_ST", "OWN_ID"],      flag: "Pending Scan", action: "review"  },
 ];
-
 const VERIFICATION_QUEUE_EXTRA = [
-    { id: "#SHP-7401", initials: "PG", name: "Perera Garage",         docs: ["BR_CERT", "OWN_ID", "TAX_ID"], flag: "Verified",     action: "approve" },
-    { id: "#SHP-7308", initials: "CS", name: "City Service Center",   docs: ["BR_CERT"],                     flag: "IP Match",     action: "review"  },
+    { id: "#SHP-7401", initials: "PG", name: "Perera Garage",       docs: ["BR_CERT", "OWN_ID", "TAX_ID"], flag: "Verified",  action: "approve" },
+    { id: "#SHP-7308", initials: "CS", name: "City Service Center", docs: ["BR_CERT"],                     flag: "IP Match",  action: "review"  },
 ];
-
 const MODERATION_ALERTS = [
-    {
-        id: 1,
-        type: "REVIEW REPORT",
-        time: "2 mins ago",
-        desc: '"The shop overcharged me and the mechanic was rude..."',
-        user: "Saman P.",
-        shop: "Elite Auto",
-        actions: ["Dismiss Review", "Ignore"],
-    },
-    {
-        id: 2,
-        type: "PROFILE FLAG",
-        time: "45 mins ago",
-        desc: 'Suspected duplicate profile for "Vantage Service Center".',
-        user: null,
-        shop: null,
-        actions: ["Investigate"],
-    },
-    {
-        id: 3,
-        type: "FRAUD SIGNAL",
-        time: "2 hours ago",
-        desc: "Unusual surge in 5-star ratings (50 reviews in 10 mins) for Shop ID #2214.",
-        user: null,
-        shop: null,
-        actions: ["Audit Logs"],
-    },
+    { id: 1, type: "REVIEW REPORT", time: "2 mins ago",   desc: '"The shop overcharged me and the mechanic was rude..."', user: "Saman P.", shop: "Elite Auto",   actions: ["Dismiss Review", "Ignore"] },
+    { id: 2, type: "PROFILE FLAG",  time: "45 mins ago",  desc: 'Suspected duplicate profile for "Vantage Service Center".', user: null, shop: null,            actions: ["Investigate"] },
+    { id: 3, type: "FRAUD SIGNAL",  time: "2 hours ago",  desc: "Unusual surge in 5-star ratings (50 reviews in 10 mins) for Shop ID #2214.", user: null, shop: null, actions: ["Audit Logs"] },
 ];
-
 const MODERATION_ALERTS_EXTRA = [
-    {
-        id: 4,
-        type: "REVIEW REPORT",
-        time: "3 hours ago",
-        desc: '"Parts were substandard. Will not return."',
-        user: "Nimal K.",
-        shop: "QuickFix Auto",
-        actions: ["Dismiss Review", "Ignore"],
-    },
+    { id: 4, type: "REVIEW REPORT", time: "3 hours ago",  desc: '"Parts were substandard. Will not return."', user: "Nimal K.", shop: "QuickFix Auto", actions: ["Dismiss Review", "Ignore"] },
 ];
-
 const REVENUE_ROWS = [
-    { id: "#SHP-9021", initials: "KM", shop: "Kandy Motors Ltd.",       bookings: 124, revenue: "LKR 248,000", commission: "LKR 37,200", status: "Paid"    },
-    { id: "#SHP-8842", initials: "GR", shop: "Galle Road Repairs",      bookings:  87, revenue: "LKR 174,000", commission: "LKR 26,100", status: "Pending" },
-    { id: "#SHP-7710", initials: "SA", shop: "Speedy Autos",            bookings:  63, revenue: "LKR 126,000", commission: "LKR 18,900", status: "Paid"    },
-    { id: "#SHP-7401", initials: "PG", shop: "Perera Garage",           bookings:  42, revenue: "LKR  84,000", commission: "LKR 12,600", status: "Overdue" },
+    { id: "#SHP-9021", initials: "KM", shop: "Kandy Motors Ltd.",  bookings: 124, revenue: "LKR 248,000", commission: "LKR 37,200", status: "Paid"    },
+    { id: "#SHP-8842", initials: "GR", shop: "Galle Road Repairs", bookings:  87, revenue: "LKR 174,000", commission: "LKR 26,100", status: "Pending" },
+    { id: "#SHP-7710", initials: "SA", shop: "Speedy Autos",       bookings:  63, revenue: "LKR 126,000", commission: "LKR 18,900", status: "Paid"    },
+    { id: "#SHP-7401", initials: "PG", shop: "Perera Garage",      bookings:  42, revenue: "LKR  84,000", commission: "LKR 12,600", status: "Overdue" },
 ];
-
 const REVENUE_ROWS_EXTRA = [
-    { id: "#SHP-7308", initials: "CS", shop: "City Service Center",     bookings:  31, revenue: "LKR  62,000", commission: "LKR  9,300", status: "Paid"    },
-    { id: "#SHP-7201", initials: "EA", shop: "Elite Auto Care",         bookings:  58, revenue: "LKR 116,000", commission: "LKR 17,400", status: "Pending" },
+    { id: "#SHP-7308", initials: "CS", shop: "City Service Center", bookings: 31, revenue: "LKR  62,000", commission: "LKR  9,300", status: "Paid"    },
+    { id: "#SHP-7201", initials: "EA", shop: "Elite Auto Care",     bookings: 58, revenue: "LKR 116,000", commission: "LKR 17,400", status: "Pending" },
 ];
 
 export default Admin;
