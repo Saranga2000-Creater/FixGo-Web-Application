@@ -8,18 +8,26 @@ class ServiceRequest {
     }
 
     // Checks if the customer already has an active request waiting for a shop
-    public function hasPendingRequest($customer_id) {
-        $query = "SELECT id FROM " . $this->table_name . " 
-                  WHERE customer_id = :customer_id AND status = 'Pending' 
-                  LIMIT 1";
-        
-        $stmt = $this->conn->prepare($query);
-        $customer_id = htmlspecialchars(strip_tags($customer_id));
-        $stmt->bindParam(":customer_id", $customer_id);
-        $stmt->execute();
-        
-        return $stmt->rowCount() > 0;
-    }
+    public function hasPendingRequest($customerId, $shopId)
+{
+    $query = "
+        SELECT id
+        FROM servicerequest
+        WHERE customer_id = :customer_id
+        AND shop_id = :shop_id
+        AND status = 'Pending'
+        LIMIT 1
+    ";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(':customer_id', $customerId);
+    $stmt->bindParam(':shop_id', $shopId);
+
+    $stmt->execute();
+
+    return $stmt->rowCount() > 0;
+}
 
     public function create($data) {
         // UPDATE 1: Added 'photo' to the columns and ':photo' to the VALUES
@@ -273,6 +281,7 @@ class ServiceRequest {
                   FROM " . $this->table_name . " sr
                   LEFT JOIN customer c ON sr.customer_id = c.id
                   WHERE sr.shop_id = :shop_id
+                  AND sr.status IN ('Pending', 'Accepted')
                   ORDER BY sr.created_at DESC";
                   
         $stmt = $this->conn->prepare($query);
@@ -288,5 +297,86 @@ class ServiceRequest {
         
         return $results;
     }
+  public function getConfirmedRequestsByShop($shop_id)
+{
+    $query = "
+        SELECT sr.id,
+               c.name AS customer_name,
+               sr.vehicle_brand
+        FROM servicerequest sr
+        JOIN customer c ON sr.customer_id = c.id
+        WHERE sr.shop_id = :shop_id
+        AND sr.status = 'Confirmed'
+        ORDER BY sr.confirmed_at DESC
+    ";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':shop_id', $shop_id);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+} 
+
+public function getActiveRepairsByShop($shop_id)
+{
+    $query = "
+        SELECT
+            sr.*,
+            c.name AS customer_name,
+            c.contactNumber AS customer_phone
+        FROM servicerequest sr
+        LEFT JOIN customer c
+            ON sr.customer_id = c.id
+        WHERE sr.shop_id = :shop_id
+        AND sr.status IN (
+            'Confirmed',
+            'In Progress'
+        )
+        ORDER BY sr.created_at DESC
+    ";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':shop_id', $shop_id);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+public function updateRepairStatus($request_id, $status)
+{
+    $query = "
+        UPDATE servicerequest
+        SET status = :status
+        WHERE id = :id
+    ";
+
+    $stmt = $this->conn->prepare($query);
+
+    return $stmt->execute([
+        ':status' => $status,
+        ':id' => $request_id
+    ]);
+}
+public function getServiceHistoryByShop($shop_id)
+{
+    $query = "
+        SELECT
+            sr.*,
+            c.name AS customer_name,
+            c.contactNumber AS customer_phone
+        FROM servicerequest sr
+        LEFT JOIN customer c
+            ON sr.customer_id = c.id
+        WHERE sr.shop_id = :shop_id
+        AND sr.status = 'Completed'
+        ORDER BY sr.completed_at DESC
+    ";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':shop_id', $shop_id);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 }
 ?>
