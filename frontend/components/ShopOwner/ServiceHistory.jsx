@@ -42,9 +42,10 @@ function ServiceHistory() {
   useEffect(() => {
     const shopId = localStorage.getItem("shopId");
 
+  
     fetch(
-      `http://localhost/project/FixGo-Web-Application/backend/api/getServiceHistory.php?shop_id=${shopId}`
-    )
+  `http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`
+)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {

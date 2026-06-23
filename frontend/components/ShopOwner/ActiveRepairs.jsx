@@ -47,9 +47,10 @@ function ActiveRepairs() {
   useEffect(() => {
     const shopId = localStorage.getItem("shopId");
 
-    fetch(
-      `http://localhost/project/FixGo-Web-Application/backend/api/getActiveRepairs.php?shop_id=${shopId}`
-    )
+      fetch(
+  `http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`
+)
+    
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -68,7 +69,7 @@ function ActiveRepairs() {
 
     try {
      const res = await fetch(
-  "http://localhost/project/FixGo-Web-Application/backend/api/updateStatus.php",
+  "http://localhost:8000/api/updateStatus.php",
   {
     method: "POST",
     headers: {

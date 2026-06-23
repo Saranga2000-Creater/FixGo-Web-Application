@@ -8,9 +8,10 @@ function Notification() {
     useEffect(() => {
         const shopId = localStorage.getItem("shopId");
      if (!shopId) return;   
-    fetch(
-        `http://localhost/project/FixGo-Web-Application/backend/api/getConfirmedRequeststoShop.php?shop_id=${shopId}`
-    )
+        fetch(
+  `http://localhost:8000/api/getConfirmedRequeststoShop.php?shop_id=${shopId}`
+)
+    
         .then((res) => res.json())
         .then((data) => {
             if (data.success) {

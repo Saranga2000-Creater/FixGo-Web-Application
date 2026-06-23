@@ -227,8 +227,10 @@ function ShopOwnerDashboard() {
   const [requestCount, setRequestCount] = useState(0);
 
 useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
+
   fetch(
-    "http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=2"
+    `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
   )
     .then((res) => res.json())
     .then((data) => {

@@ -49,7 +49,7 @@ function ServiceRequests() {
     const token = localStorage.getItem("jwt_token");
 
 const response = await fetch(
-  "http://localhost/project/FixGo-Web-Application/backend/api/updateStatus.php",
+  "http://localhost:8000/api/updateStatus.php",
   {
     method: "POST",
     headers: {
@@ -89,7 +89,7 @@ alert(data.message);
   console.log("Current Shop ID:", shopId);
 
 const response = await fetch(
-  `http://localhost/project/FixGo-Web-Application/backend/api/getServiceRequests.php?shop_id=${shopId}`
+  `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
 );
 
       const data = await response.json();
@@ -561,7 +561,7 @@ const response = await fetch(
 
             {selectedRequest.photo && (
               <img
-                src={`http://localhost/project/FixGo-Web-Application/backend/${selectedRequest.photo}`}
+                src={`http://localhost:8000/uploads/${selectedRequest.photo}`}
                 alt="Problem"
                 style={{
                   width: "100%",
