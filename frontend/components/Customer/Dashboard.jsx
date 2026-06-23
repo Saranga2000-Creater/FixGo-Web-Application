@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faArrowRight,
@@ -8,34 +7,66 @@ import {
     faCalendarDays,
     faCircleCheck,
     faCircleInfo,
-    faArrowTrendUp,
 } from "@fortawesome/free-solid-svg-icons";
 
-function SummaryCard({ accent, icon, title, count, linkText, linkTo }) {
-    const s = {
-        green:  { iconWrap: "bg-[#edf9f0] text-[#16a34a]", link: "text-[#16a34a]" },
-        orange: { iconWrap: "bg-[#fff4ee] text-[#ff6b1a]", link: "text-[#ff6b1a]" },
-        blue:   { iconWrap: "bg-[#edf3ff] text-[#2563eb]", link: "text-[#2563eb]" },
-        violet: { iconWrap: "bg-[#f5edff] text-[#a855f7]", link: "text-[#a855f7]" },
-    };
+// ── Accent palette (kept functional, styled to match shop owner greens) ──────
+const ACCENT = {
+    green:  { iconBg: "#EEF7F0", iconColor: "#16A34A", linkColor: "#16A34A" },
+    orange: { iconBg: "#FFF4EE", iconColor: "#FF6B1A", linkColor: "#FF6B1A" },
+    blue:   { iconBg: "#EDF3FF", iconColor: "#2563EB", linkColor: "#2563EB" },
+    violet: { iconBg: "#F5EDFF", iconColor: "#A855F7", linkColor: "#A855F7" },
+};
+
+function SummaryCard({ accent, icon, title, count, linkText, onClick }) {
+    const a = ACCENT[accent];
     return (
-        <article className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start gap-4">
-                <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${s[accent].iconWrap}`}>
-                    <FontAwesomeIcon icon={icon} className="text-2xl" />
+        <div
+            style={{
+                borderRadius: 18,
+                border: "1px solid #E7EFE8",
+                background: "#FFFFFF",
+                padding: "20px 24px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                transition: "all 0.25s ease",
+                cursor: "pointer",
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
+                e.currentTarget.style.boxShadow = "0 10px 24px rgba(0,0,0,0.08)";
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = "translateY(0) scale(1)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)";
+            }}
+        >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                <div style={{
+                    width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
+                    background: a.iconBg,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                    <FontAwesomeIcon icon={icon} style={{ fontSize: 22, color: a.iconColor }} />
                 </div>
-                <div className="min-w-0">
-                    <p className="text-sm text-slate-500">{title}</p>
-                    <p className="mt-1 text-3xl font-semibold text-slate-900">{count}</p>
-                    <Link
-                        to={linkTo ?? "/services"}
-                        className={`mt-2 inline-flex items-center gap-1.5 text-sm font-medium ${s[accent].link}`}
+                <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>{title}</p>
+                    <p style={{
+                        fontSize: 32, fontWeight: 700, color: "#111827",
+                        margin: "4px 0", lineHeight: 1,
+                    }}>{count}</p>
+                    <button
+                        onClick={onClick}
+                        style={{
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            fontSize: 13, fontWeight: 600, color: a.linkColor,
+                            background: "none", border: "none", cursor: "pointer",
+                            padding: 0, marginTop: 6,
+                        }}
                     >
-                        {linkText} <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
-                    </Link>
+                        {linkText} <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+                    </button>
                 </div>
             </div>
-        </article>
+        </div>
     );
 }
 
@@ -46,7 +77,7 @@ function getGreeting() {
     return "Good evening";
 }
 
-function Dashboard() {
+function Dashboard({ customerId }) {
     const [firstName, setFirstName] = useState("");
 
     useEffect(() => {
@@ -66,31 +97,93 @@ function Dashboard() {
     });
 
     return (
-        <div className="space-y-5">
+        <div style={{ width: "100%", display: "block" }}>
 
-            {/* ── Header ── */}
-            <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                    <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">
+            {/* ── Header banner ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                marginBottom: 24,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+            }}>
+                <div style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 4,
+                }}>
+                    <h1 style={{
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: "#111827",
+                        margin: 0,
+                    }}>
                         {getGreeting()}{firstName ? `, ${firstName}` : ""}! 👋
                     </h1>
-                    <p className="mt-2 text-sm text-slate-500">
-                        Here&apos;s what&apos;s happening with your vehicle services.
-                    </p>
+
+                    <span style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#374151",
+                        background: "#FFFFFF",
+                        padding: "10px 16px",
+                        borderRadius: 12,
+                        border: "1px solid #E5E7EB",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                    }}>
+                        {today}
+                        <FontAwesomeIcon icon={faCalendarDays} style={{ color: "#9CA3AF" }} />
+                    </span>
                 </div>
-                <div className="flex items-center gap-3 self-start rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
-                    <span>{today}</span>
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-slate-400" />
-                </div>
-            </section>
+                <p style={{
+                    color: "#6B7280",
+                    marginTop: 8,
+                    marginBottom: 0,
+                    fontSize: 15,
+                }}>
+                    Here&apos;s what&apos;s happening with your vehicle services.
+                </p>
+            </div>
 
             {/* ── Summary Cards ── */}
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <SummaryCard accent="green"  icon={faCircleInfo}    title="Active Repairs"        count="0" linkText="View details"  linkTo="/repair"        />
-                <SummaryCard accent="blue"   icon={faCircleCheck}   title="Completed Repairs"     count="0" linkText="View history"  linkTo="/history"       />
-                <SummaryCard accent="orange" icon={faCalendarCheck} title="Upcoming Appointments" count="0" linkText="View calendar" linkTo="/repair"        />
-                <SummaryCard accent="violet" icon={faBell}          title="Notifications"         count="0" linkText="View all"      linkTo="/notifications" />
-            </section>
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 20,
+                width: "100%",
+            }}>
+                <SummaryCard
+                    accent="green"
+                    icon={faCircleInfo}
+                    title="Active Repairs"
+                    count="0"
+                    linkText="View details"
+                />
+                <SummaryCard
+                    accent="blue"
+                    icon={faCircleCheck}
+                    title="Completed Repairs"
+                    count="0"
+                    linkText="View history"
+                />
+                <SummaryCard
+                    accent="orange"
+                    icon={faCalendarCheck}
+                    title="Upcoming Appointments"
+                    count="0"
+                    linkText="View calendar"
+                />
+                <SummaryCard
+                    accent="violet"
+                    icon={faBell}
+                    title="Notifications"
+                    count="0"
+                    linkText="View all"
+                />
+            </div>
 
         </div>
     );
