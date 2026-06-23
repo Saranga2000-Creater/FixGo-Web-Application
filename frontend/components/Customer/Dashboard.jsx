@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faArrowRight,
+    faArrowTrendUp,
     faBell,
     faCalendarCheck,
     faCalendarDays,
@@ -9,22 +10,44 @@ import {
     faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Accent palette (kept functional, styled to match shop owner greens) ──────
-const ACCENT = {
-    green:  { iconBg: "#EEF7F0", iconColor: "#16A34A", linkColor: "#16A34A" },
-    orange: { iconBg: "#FFF4EE", iconColor: "#FF6B1A", linkColor: "#FF6B1A" },
-    blue:   { iconBg: "#EDF3FF", iconColor: "#2563EB", linkColor: "#2563EB" },
-    violet: { iconBg: "#F5EDFF", iconColor: "#A855F7", linkColor: "#A855F7" },
+// ── Shared design tokens (mirrors Admin) ─────────────────────────────────────
+const T = {
+    green:     "#16A34A",
+    greenLight:"#F0FDF4",
+    greenBg:   "#EDF9F0",
+    orange:    "#FF6B1A",
+    orangeBg:  "#FFF4EE",
+    blue:      "#2563EB",
+    blueBg:    "#EDF3FF",
+    violet:    "#A855F7",
+    violetBg:  "#F5EDFF",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate200:  "#E5E7EB",
+    slate100:  "#F3F4F6",
+    slate50:   "#F9FAFB",
+    white:     "#FFFFFF",
+    pageBg:    "#F4F8F5",
+    font:      "'Segoe UI', system-ui, sans-serif",
 };
 
-function SummaryCard({ accent, icon, title, count, linkText, onClick }) {
+const ACCENT = {
+    green:  { iconBg: T.greenBg,  iconColor: T.green,  linkColor: T.green,  metaColor: T.green  },
+    orange: { iconBg: T.orangeBg, iconColor: T.orange, linkColor: T.orange, metaColor: T.orange },
+    blue:   { iconBg: T.blueBg,   iconColor: T.blue,   linkColor: T.blue,   metaColor: T.blue   },
+    violet: { iconBg: T.violetBg, iconColor: T.violet, linkColor: T.violet, metaColor: T.violet },
+};
+
+function SummaryCard({ accent, icon, title, count, linkText, meta, onClick }) {
     const a = ACCENT[accent];
     return (
         <div
             style={{
+                background: T.white,
                 borderRadius: 18,
-                border: "1px solid #E7EFE8",
-                background: "#FFFFFF",
+                border: `1px solid ${T.slate200}`,
                 padding: "20px 24px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                 transition: "all 0.25s ease",
@@ -41,29 +64,33 @@ function SummaryCard({ accent, icon, title, count, linkText, onClick }) {
         >
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                 <div style={{
-                    width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
+                    width: 52, height: 52,
+                    borderRadius: "50%",
                     background: a.iconBg,
                     display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
                 }}>
-                    <FontAwesomeIcon icon={icon} style={{ fontSize: 22, color: a.iconColor }} />
+                    <FontAwesomeIcon icon={icon} style={{ fontSize: 20, color: a.iconColor }} />
                 </div>
-                <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>{title}</p>
-                    <p style={{
-                        fontSize: 32, fontWeight: 700, color: "#111827",
-                        margin: "4px 0", lineHeight: 1,
-                    }}>{count}</p>
-                    <button
-                        onClick={onClick}
-                        style={{
+                <div>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{title}</p>
+                    <p style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: "4px 0" }}>{count}</p>
+                    {meta && (
+                        <p style={{ fontSize: 12, fontWeight: 600, color: a.metaColor, margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                            <FontAwesomeIcon icon={faArrowTrendUp} style={{ fontSize: 10 }} />
+                            {meta}
+                        </p>
+                    )}
+                    {linkText && (
+                        <button onClick={onClick} style={{
                             display: "inline-flex", alignItems: "center", gap: 6,
                             fontSize: 13, fontWeight: 600, color: a.linkColor,
                             background: "none", border: "none", cursor: "pointer",
-                            padding: 0, marginTop: 6,
-                        }}
-                    >
-                        {linkText} <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
-                    </button>
+                            padding: 0, marginTop: 6, fontFamily: T.font,
+                        }}>
+                            {linkText} <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -97,69 +124,56 @@ function Dashboard({ customerId }) {
     });
 
     return (
-        <div style={{ width: "100%", display: "block" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
             {/* ── Header banner ── */}
             <div style={{
                 background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
                 borderRadius: 18,
                 padding: "24px",
-                marginBottom: 24,
+                border: `1px solid ${T.slate200}`,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
             }}>
-                <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 4,
-                }}>
-                    <h1 style={{
-                        fontSize: 28,
-                        fontWeight: 700,
-                        color: "#111827",
-                        margin: 0,
-                    }}>
+                <div>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>
                         {getGreeting()}{firstName ? `, ${firstName}` : ""}! 👋
                     </h1>
-
-                    <span style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "#374151",
-                        background: "#FFFFFF",
-                        padding: "10px 16px",
-                        borderRadius: 12,
-                        border: "1px solid #E5E7EB",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                    }}>
-                        {today}
-                        <FontAwesomeIcon icon={faCalendarDays} style={{ color: "#9CA3AF" }} />
-                    </span>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        Here&apos;s what&apos;s happening with your vehicle services.
+                    </p>
                 </div>
-                <p style={{
-                    color: "#6B7280",
-                    marginTop: 8,
-                    marginBottom: 0,
-                    fontSize: 15,
+                <div style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: T.slate700,
+                    background: T.white,
+                    padding: "10px 16px",
+                    borderRadius: 12,
+                    border: `1px solid ${T.slate200}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                 }}>
-                    Here&apos;s what&apos;s happening with your vehicle services.
-                </p>
+                    {today}
+                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
+                </div>
             </div>
 
             {/* ── Summary Cards ── */}
             <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 20,
-                width: "100%",
+                gap: 16,
             }}>
                 <SummaryCard
                     accent="green"
                     icon={faCircleInfo}
                     title="Active Repairs"
                     count="0"
+                    meta="Up to date"
                     linkText="View details"
                 />
                 <SummaryCard

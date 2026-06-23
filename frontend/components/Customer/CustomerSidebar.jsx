@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faArrowRight,
     faBell,
     faCar,
     faCarSide,
@@ -10,6 +9,18 @@ import {
     faStar,
     faUser,
 } from "@fortawesome/free-solid-svg-icons";
+
+const T = {
+    green:     "#16A34A",
+    greenLight:"#F0FDF4",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate100:  "#F3F4F6",
+    white:     "#FFFFFF",
+    font:      "'Segoe UI', system-ui, sans-serif",
+};
 
 function SidebarLink({ active = false, icon, label, badge, onClick }) {
     return (
@@ -23,31 +34,28 @@ function SidebarLink({ active = false, icon, label, badge, onClick }) {
                 padding: "10px 12px",
                 borderRadius: 10,
                 border: "none",
+                borderLeft: active ? `4px solid ${T.green}` : "4px solid transparent",
                 cursor: "pointer",
-                background: active ? "#F0FDF4" : "transparent",
-                color: active ? "#16A34A" : "#374151",
+                background: active ? T.greenLight : "transparent",
+                color: active ? T.green : T.slate700,
                 fontWeight: active ? 700 : 500,
                 fontSize: 14,
                 textAlign: "left",
-                fontFamily: "'Segoe UI', system-ui, sans-serif",
-                transition: "background 0.2s",
+                fontFamily: T.font,
+                transition: "all 0.15s ease",
             }}
-            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#F4F8F5"; }}
+            onMouseEnter={e => { if (!active) e.currentTarget.style.background = T.slate100; }}
             onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
         >
-            <span style={{
-                fontSize: 16,
-                display: "flex",
-                alignItems: "center",
-                color: active ? "#16A34A" : "#6B7280",
-            }}>
-                <FontAwesomeIcon icon={icon} />
-            </span>
+            <FontAwesomeIcon
+                icon={icon}
+                style={{ fontSize: 16, color: active ? T.green : T.slate500 }}
+            />
             <span style={{ flex: 1 }}>{label}</span>
             {badge && (
                 <span style={{
-                    background: "#16A34A",
-                    color: "#fff",
+                    background: T.green,
+                    color: T.white,
                     borderRadius: 99,
                     fontSize: 11,
                     fontWeight: 700,
@@ -63,7 +71,7 @@ function SidebarLink({ active = false, icon, label, badge, onClick }) {
     );
 }
 
-function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
+function CustomerSidebar({ currentPage, setCurrentPage }) {
     const [customer, setCustomer] = useState(null);
 
     useEffect(() => {
@@ -83,19 +91,22 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
     return (
         <aside style={{
             width: 240,
-            height: "calc(100vh - 50px)",
-            background: "#FFFFFF",
-            borderRight: "1px solid #F3F4F6",
             display: "flex",
             flexDirection: "column",
-            flexShrink: 0,
-            boxShadow: "4px 0 24px rgba(0,0,0,0.10)",
+            background: T.white,
+            borderRight: `1px solid ${T.slate100}`,
+            boxShadow: "4px 0 24px rgba(0,0,0,0.08)",
+            height: "calc(100vh - 65px)",
+            position: "fixed",
+            top: 65,
+            left: 0,
+            zIndex: 50,
+            overflowY: "auto",
         }}>
-
             {/* Profile header */}
             <div style={{
                 padding: "20px 16px 16px",
-                borderBottom: "1px solid #F3F4F6",
+                borderBottom: `1px solid ${T.slate100}`,
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
@@ -104,12 +115,12 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
                     width: 44,
                     height: 44,
                     borderRadius: 12,
-                    background: "#1F2937",
+                    background: T.slate900,
+                    flexShrink: 0,
+                    overflow: "hidden",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    flexShrink: 0,
-                    overflow: "hidden",
                 }}>
                     <img
                         src={avatarSrc}
@@ -121,14 +132,18 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
                     <div style={{
                         fontWeight: 700,
                         fontSize: 14,
-                        color: "#111827",
+                        color: T.slate900,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                     }}>
                         {customer?.name || "Customer"}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>Customer</div>
+                    <div style={{ fontSize: 12, color: T.slate500, marginTop: 2 }}>Customer</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+                        <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>Active</span>
+                    </div>
                 </div>
             </div>
 
@@ -142,37 +157,6 @@ function CustomerSidebar({ currentPage, setCurrentPage, onLogout }) {
                 <SidebarLink active={currentPage === "notifications"} icon={faBell}    label="Notifications"     onClick={() => setCurrentPage("notifications")} />
                 <SidebarLink active={currentPage === "settings"}      icon={faGear}    label="Settings"          onClick={() => setCurrentPage("settings")} />
             </nav>
-
-            {/* Logout */}
-            <div style={{ padding: "12px 8px", borderTop: "1px solid #F3F4F6" }}>
-                <button
-                    onClick={onLogout}
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "10px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        cursor: "pointer",
-                        background: "transparent",
-                        color: "#6B7280",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        fontFamily: "'Segoe UI', system-ui, sans-serif",
-                        transition: "background 0.2s",
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#F4F8F5"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                    <FontAwesomeIcon
-                        icon={faArrowRight}
-                        style={{ transform: "rotate(180deg)", fontSize: 16 }}
-                    />
-                    <span>Log Out</span>
-                </button>
-            </div>
         </aside>
     );
 }

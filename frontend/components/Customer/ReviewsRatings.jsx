@@ -6,24 +6,53 @@ import {
     faClipboardList,
     faCommentDots,
     faOilCan,
-    faStar,
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-const ACCENT_STYLES = {
-    green:  { bg: "bg-[#16a34a]/10", text: "text-[#16a34a]"  },
-    teal:   { bg: "bg-[#0d9488]/10", text: "text-[#0d9488]"  },
-    blue:   { bg: "bg-[#2563eb]/10", text: "text-[#2563eb]"  },
-    violet: { bg: "bg-[#a855f7]/10", text: "text-[#a855f7]"  },
-    yellow: { bg: "bg-[#d97706]/10", text: "text-[#d97706]"  },
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const T = {
+    green:     "#16A34A",
+    greenBg:   "#EDF9F0",
+    teal:      "#0D9488",
+    tealBg:    "rgba(13,148,136,0.10)",
+    blue:      "#2563EB",
+    blueBg:    "#EDF3FF",
+    violet:    "#A855F7",
+    violetBg:  "#F5EDFF",
+    yellow:    "#D97706",
+    yellowBg:  "rgba(217,119,6,0.10)",
+    amber:     "#F59E0B",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate200:  "#E5E7EB",
+    slate100:  "#F3F4F6",
+    slate50:   "#F9FAFB",
+    white:     "#FFFFFF",
+    font:      "'Segoe UI', system-ui, sans-serif",
+    card: {
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
+
+const ACCENT = {
+    green:  { iconBg: T.greenBg,  iconColor: T.green  },
+    teal:   { iconBg: T.tealBg,   iconColor: T.teal   },
+    blue:   { iconBg: T.blueBg,   iconColor: T.blue   },
+    violet: { iconBg: T.violetBg, iconColor: T.violet },
+    yellow: { iconBg: T.yellowBg, iconColor: T.yellow },
 };
 
 const RATING_BREAKDOWN = [
-    { stars: 5, count: 8, pct: 67 },
-    { stars: 4, count: 3, pct: 25 },
-    { stars: 3, count: 1, pct: 8  },
-    { stars: 2, count: 0, pct: 0  },
-    { stars: 1, count: 0, pct: 0  },
+    { stars: 5, count: 8,  pct: 67 },
+    { stars: 4, count: 3,  pct: 25 },
+    { stars: 3, count: 1,  pct: 8  },
+    { stars: 2, count: 0,  pct: 0  },
+    { stars: 1, count: 0,  pct: 0  },
 ];
 
 const MY_REVIEWS = [
@@ -34,14 +63,14 @@ const MY_REVIEWS = [
 ];
 
 function StarDisplay({ rating, size = "sm" }) {
-    const sizeClass = size === "lg" ? "text-2xl" : "text-base";
+    const fontSize = size === "lg" ? 22 : 15;
     return (
-        <div className="flex items-center gap-0.5">
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
             {[1, 2, 3, 4, 5].map((s) => (
-                <span
-                    key={s}
-                    className={`${sizeClass} ${rating >= s || (rating >= s - 0.5 && rating < s) ? "text-amber-400" : "text-[#d1e7d7]"}`}
-                >★</span>
+                <span key={s} style={{
+                    fontSize,
+                    color: rating >= s || (rating >= s - 0.5 && rating < s) ? T.amber : T.slate200,
+                }}>★</span>
             ))}
         </div>
     );
@@ -51,91 +80,177 @@ function ReviewsRatings() {
     const [filter, setFilter] = useState("All Time");
 
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-[#14532d]">Reviews & Ratings</h1>
-                <p className="mt-2 text-sm font-mono text-[#274c3a]/60">See your reviews and ratings for past services.</p>
-            </section>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            <section className="rounded-[28px] border border-[#d1e7d7] bg-white p-6 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                <div className="flex flex-col gap-6 md:flex-row md:items-center">
-                    <div className="flex flex-col items-center justify-center md:w-48">
-                        <p className="text-6xl font-bold text-[#14532d]">4.8</p>
-                        <StarDisplay rating={4.8} size="lg" />
-                        <p className="mt-2 text-sm font-mono text-[#274c3a]/60">Based on 12 reviews</p>
+            {/* ── Page heading ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
+                <div>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Reviews & Ratings</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        See your reviews and ratings for past services.
+                    </p>
+                </div>
+            </div>
+
+            {/* ── Summary card ── */}
+            <div style={{ ...T.card, padding: 24 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 32 }}>
+
+                    {/* Average score */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 140 }}>
+                        <p style={{ fontSize: 56, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>4.8</p>
+                        <div style={{ marginTop: 8 }}><StarDisplay rating={4.8} size="lg" /></div>
+                        <p style={{ fontSize: 13, color: T.slate500, marginTop: 6, marginBottom: 0 }}>Based on 12 reviews</p>
                     </div>
 
-                    <div className="flex-1 space-y-2">
+                    {/* Rating breakdown bars */}
+                    <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
                         {RATING_BREAKDOWN.map((row) => (
-                            <div key={row.stars} className="flex items-center gap-3">
-                                <span className="w-12 shrink-0 text-sm font-mono text-[#274c3a]/70">{row.stars} {row.stars === 1 ? "Star" : "Stars"}</span>
-                                <div className="flex-1 overflow-hidden rounded-full bg-[#d1e7d7]/40 h-2.5">
-                                    <div className="h-full rounded-full bg-[#16a34a]" style={{ width: `${row.pct}%` }} />
+                            <div key={row.stars} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <span style={{ width: 52, flexShrink: 0, fontSize: 13, color: T.slate500 }}>
+                                    {row.stars} {row.stars === 1 ? "Star" : "Stars"}
+                                </span>
+                                <div style={{
+                                    flex: 1, height: 8, borderRadius: 99,
+                                    background: T.slate100, overflow: "hidden",
+                                }}>
+                                    <div style={{
+                                        height: "100%", borderRadius: 99,
+                                        background: T.green, width: `${row.pct}%`,
+                                    }} />
                                 </div>
-                                <span className="w-4 shrink-0 text-right text-sm font-mono text-[#14532d]">{row.count}</span>
-                                <span className="w-10 shrink-0 text-right text-sm font-mono text-[#274c3a]/40">({row.pct}%)</span>
+                                <span style={{ width: 16, textAlign: "right", fontSize: 13, fontWeight: 600, color: T.slate900 }}>{row.count}</span>
+                                <span style={{ width: 44, textAlign: "right", fontSize: 13, color: T.slate400 }}>({row.pct}%)</span>
                             </div>
                         ))}
                     </div>
 
-                    <div className="flex flex-col items-center justify-center gap-2 md:w-36">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#a855f7]/10">
-                            <FontAwesomeIcon icon={faCommentDots} className="text-2xl text-[#a855f7]" />
+                    {/* Total reviews */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 120 }}>
+                        <div style={{
+                            width: 60, height: 60, borderRadius: "50%",
+                            background: T.violetBg,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                            <FontAwesomeIcon icon={faCommentDots} style={{ fontSize: 22, color: T.violet }} />
                         </div>
-                        <p className="text-4xl font-bold text-[#14532d]">12</p>
-                        <p className="text-sm font-mono text-[#274c3a]/60">Total Reviews</p>
+                        <p style={{ fontSize: 36, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>12</p>
+                        <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Total Reviews</p>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <section className="rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                <div className="flex items-center justify-between border-b border-[#d1e7d7]/60 px-6 py-4">
-                    <h2 className="text-base font-semibold text-[#14532d]">My Reviews</h2>
-                    <div className="flex items-center gap-2 rounded-xl border border-[#d1e7d7] bg-[#f0f7f2] px-3 py-2 text-sm text-[#274c3a]">
-                        <FontAwesomeIcon icon={faCalendarDays} className="text-[#16a34a]/50" />
+            {/* ── My Reviews list ── */}
+            <div style={{ ...T.card, overflow: "hidden" }}>
+
+                {/* Card header with filter */}
+                <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "16px 24px",
+                    borderBottom: `1px solid ${T.slate100}`,
+                }}>
+                    <h2 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>My Reviews</h2>
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        background: T.slate50, border: `1px solid ${T.slate200}`,
+                        borderRadius: 10, padding: "8px 12px", fontSize: 13,
+                    }}>
+                        <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="appearance-none bg-transparent pr-4 text-sm font-mono text-[#274c3a] focus:outline-none"
+                            style={{
+                                border: "none", outline: "none",
+                                fontSize: 13, color: T.slate700,
+                                background: "transparent",
+                                fontFamily: T.font, cursor: "pointer",
+                            }}
                         >
                             <option>All Time</option>
                             <option>Last 3 Months</option>
                             <option>Last 6 Months</option>
                             <option>This Year</option>
                         </select>
-                        <FontAwesomeIcon icon={faChevronDown} className="pointer-events-none -ml-3 text-xs text-[#16a34a]/50" />
+                        <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 11, color: T.slate400 }} />
                     </div>
                 </div>
 
+                {/* Review rows */}
                 {MY_REVIEWS.map((review, idx) => {
-                    const a = ACCENT_STYLES[review.accent];
+                    const a      = ACCENT[review.accent];
                     const isLast = idx === MY_REVIEWS.length - 1;
+
                     return (
-                        <div key={review.id} className={`grid grid-cols-[auto_1fr_auto_1fr] items-start gap-0 ${!isLast ? "border-b border-[#d1e7d7]/60" : ""}`}>
-                            <div className="flex items-center px-6 py-5">
-                                <div className={`flex h-14 w-14 items-center justify-center rounded-full ${a.bg}`}>
-                                    <FontAwesomeIcon icon={review.icon} className={`text-xl ${a.text}`} />
+                        <div
+                            key={review.id}
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns: "auto 1fr auto 1fr",
+                                alignItems: "start",
+                                borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
+                            }}
+                        >
+                            {/* Icon */}
+                            <div style={{ padding: "20px 20px 20px 24px", display: "flex", alignItems: "center" }}>
+                                <div style={{
+                                    width: 52, height: 52, borderRadius: "50%",
+                                    background: a.iconBg,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <FontAwesomeIcon icon={review.icon} style={{ fontSize: 20, color: a.iconColor }} />
                                 </div>
                             </div>
-                            <div className="flex flex-col justify-center border-r border-[#d1e7d7]/60 py-5 pr-6">
-                                <p className="text-sm font-semibold text-[#14532d]">{review.title}</p>
-                                <p className="mt-0.5 text-xs font-mono text-[#274c3a]/60">{review.shop}</p>
-                                <div className="mt-1.5 flex items-center gap-1.5 text-xs font-mono text-[#274c3a]/60">
-                                    <FontAwesomeIcon icon={faCalendarDays} className="text-[#16a34a]/50" />
+
+                            {/* Title + shop + date */}
+                            <div style={{
+                                padding: "20px 20px 20px 0",
+                                borderRight: `1px solid ${T.slate100}`,
+                                display: "flex", flexDirection: "column", justifyContent: "center",
+                            }}>
+                                <p style={{ fontSize: 14, fontWeight: 600, color: T.slate900, margin: 0 }}>{review.title}</p>
+                                <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>{review.shop}</p>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: T.slate400 }}>
+                                    <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} />
                                     <span>{review.date}</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center justify-center px-8 py-5 border-r border-[#d1e7d7]/60">
-                                <p className="text-2xl font-bold text-[#14532d]">{review.rating.toFixed(1)}</p>
-                                <StarDisplay rating={review.rating} />
+
+                            {/* Star rating */}
+                            <div style={{
+                                padding: "20px 24px",
+                                borderRight: `1px solid ${T.slate100}`,
+                                display: "flex", flexDirection: "column",
+                                alignItems: "center", justifyContent: "center",
+                            }}>
+                                <p style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                    {review.rating.toFixed(1)}
+                                </p>
+                                <div style={{ marginTop: 4 }}><StarDisplay rating={review.rating} /></div>
                             </div>
-                            <div className="flex items-center py-5 pr-6 pl-6">
-                                <p className="text-sm font-mono leading-5 text-[#274c3a]/70 whitespace-pre-line">{review.comment}</p>
+
+                            {/* Comment */}
+                            <div style={{ padding: "20px 24px", display: "flex", alignItems: "center" }}>
+                                <p style={{
+                                    fontSize: 13, color: T.slate700,
+                                    lineHeight: 1.6, margin: 0,
+                                    whiteSpace: "pre-line",
+                                }}>
+                                    {review.comment}
+                                </p>
                             </div>
                         </div>
                     );
                 })}
-            </section>
+            </div>
         </div>
     );
 }

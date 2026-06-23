@@ -5,22 +5,50 @@ import {
     faClockRotateLeft, faMapPin, faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-const ACCENT_CYCLE = ["green", "teal", "blue", "violet", "yellow"];
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const T = {
+    green:     "#16A34A",
+    greenBg:   "#EDF9F0",
+    teal:      "#0D9488",
+    tealBg:    "rgba(13,148,136,0.10)",
+    blue:      "#2563EB",
+    blueBg:    "#EDF3FF",
+    violet:    "#A855F7",
+    violetBg:  "#F5EDFF",
+    yellow:    "#D97706",
+    yellowBg:  "rgba(217,119,6,0.10)",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate200:  "#E5E7EB",
+    slate100:  "#F3F4F6",
+    slate50:   "#F9FAFB",
+    white:     "#FFFFFF",
+    font:      "'Segoe UI', system-ui, sans-serif",
+    card: {
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
 
-const ACCENT_STYLES = {
-    green:  { bg: "bg-[#16a34a]/10", text: "text-[#16a34a]", btn: "border-[#16a34a] text-[#16a34a] hover:bg-[#16a34a]/5",  dot: "bg-[#16a34a]", badge: "bg-[#16a34a]/10 text-[#16a34a]",  line: "bg-[#d1e7d7]" },
-    teal:   { bg: "bg-[#0d9488]/10", text: "text-[#0d9488]", btn: "border-[#0d9488] text-[#0d9488] hover:bg-[#0d9488]/5",  dot: "bg-[#0d9488]", badge: "bg-[#0d9488]/10 text-[#0d9488]",  line: "bg-[#d1e7d7]" },
-    blue:   { bg: "bg-[#2563eb]/10", text: "text-[#2563eb]", btn: "border-[#2563eb] text-[#2563eb] hover:bg-[#2563eb]/5",  dot: "bg-[#2563eb]", badge: "bg-[#2563eb]/10 text-[#2563eb]",  line: "bg-[#d1e7d7]" },
-    violet: { bg: "bg-[#a855f7]/10", text: "text-[#a855f7]", btn: "border-[#a855f7] text-[#a855f7] hover:bg-[#a855f7]/5", dot: "bg-[#a855f7]", badge: "bg-[#a855f7]/10 text-[#a855f7]",  line: "bg-[#d1e7d7]" },
-    yellow: { bg: "bg-[#d97706]/10", text: "text-[#d97706]", btn: "border-[#d97706] text-[#d97706] hover:bg-[#d97706]/5", dot: "bg-[#d97706]", badge: "bg-[#d97706]/10 text-[#d97706]",  line: "bg-[#d1e7d7]" },
+const ACCENT_CYCLE = ["green", "teal", "blue", "violet", "yellow"];
+const ACCENT = {
+    green:  { iconBg: T.greenBg,  iconColor: T.green,  badgeBg: T.greenBg,  badgeColor: T.green,  dot: T.green  },
+    teal:   { iconBg: T.tealBg,   iconColor: T.teal,   badgeBg: T.tealBg,   badgeColor: T.teal,   dot: T.teal   },
+    blue:   { iconBg: T.blueBg,   iconColor: T.blue,   badgeBg: T.blueBg,   badgeColor: T.blue,   dot: T.blue   },
+    violet: { iconBg: T.violetBg, iconColor: T.violet, badgeBg: T.violetBg, badgeColor: T.violet, dot: T.violet },
+    yellow: { iconBg: T.yellowBg, iconColor: T.yellow, badgeBg: T.yellowBg, badgeColor: T.yellow, dot: T.yellow },
 };
 
 const FILTERS = ["All Time", "Last 3 Months", "Last 6 Months", "This Year"];
 
 const isWithinFilter = (dateStr, filter) => {
     if (filter === "All Time" || !dateStr) return true;
-    const date  = new Date(dateStr);
-    const now   = new Date();
+    const date   = new Date(dateStr);
+    const now    = new Date();
     const months = filter === "Last 3 Months" ? 3 : filter === "Last 6 Months" ? 6 : 12;
     const cutoff = new Date(now.getFullYear(), now.getMonth() - months, now.getDate());
     return date >= cutoff;
@@ -57,102 +85,168 @@ export default function ServiceHistory({ customerId }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex flex-col items-center gap-3 text-[#274c3a]/40">
-                    <FontAwesomeIcon icon={faClockRotateLeft} className="text-4xl animate-pulse text-[#16a34a]/30" />
-                    <p className="text-sm font-mono">Loading service history…</p>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 256 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                    <FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 36, color: T.green, opacity: 0.3 }} />
+                    <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading service history…</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-5">
-            {/* Header */}
-            <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+
+            {/* ── Page heading ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+            }}>
                 <div>
-                    <h1 className="text-[28px] font-semibold tracking-tight text-[#14532d]">Service History</h1>
-                    <p className="mt-2 text-sm font-mono text-[#274c3a]/60">View your past vehicle services and repair details.</p>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Service History</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        View your past vehicle services and repair details.
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 self-start rounded-2xl border border-[#d1e7d7] bg-white px-4 py-3 text-sm text-[#274c3a] shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-[#16a34a]/50" />
+
+                {/* Filter dropdown */}
+                <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: T.white, border: `1px solid ${T.slate200}`,
+                    borderRadius: 12, padding: "10px 16px",
+                    fontSize: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}>
+                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
                     <select
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="appearance-none bg-transparent pr-5 text-sm font-mono text-[#274c3a] focus:outline-none"
+                        style={{
+                            border: "none", outline: "none",
+                            fontSize: 14, color: T.slate700,
+                            background: "transparent",
+                            fontFamily: T.font, cursor: "pointer",
+                        }}
                     >
                         {FILTERS.map(f => <option key={f}>{f}</option>)}
                     </select>
-                    <FontAwesomeIcon icon={faChevronDown} className="pointer-events-none -ml-4 text-xs text-[#16a34a]/50" />
+                    <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 11, color: T.slate400 }} />
                 </div>
-            </section>
+            </div>
 
-            {/* List */}
+            {/* ── Empty state ── */}
             {filtered.length === 0 ? (
-                <section className="rounded-[28px] border border-[#d1e7d7] bg-white p-12 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <FontAwesomeIcon icon={faClockRotateLeft} className="text-5xl text-[#d1e7d7]" />
-                        <p className="text-base font-semibold text-[#14532d]">No service history yet</p>
-                        <p className="text-sm font-mono text-[#274c3a]/50">
-                            {filter !== "All Time" ? "Try a different time range." : "Your completed repairs will appear here."}
-                        </p>
-                    </div>
-                </section>
+                <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+                    <FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 48, color: T.slate200 }} />
+                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No service history yet</p>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>
+                        {filter !== "All Time" ? "Try a different time range." : "Your completed repairs will appear here."}
+                    </p>
+                </div>
             ) : (
-                <section className="rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
+                /* ── History list card ── */
+                <div style={{ ...T.card, overflow: "hidden" }}>
                     {filtered.map((record, idx) => {
-                        const a      = ACCENT_STYLES[ACCENT_CYCLE[idx % ACCENT_CYCLE.length]];
+                        const a      = ACCENT[ACCENT_CYCLE[idx % ACCENT_CYCLE.length]];
                         const isLast = idx === filtered.length - 1;
 
                         return (
-                            <div key={record.id} className={`flex items-center gap-4 px-6 py-5 ${!isLast ? "border-b border-[#d1e7d7]/60" : ""}`}>
+                            <div
+                                key={record.id}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 16,
+                                    padding: "20px 24px",
+                                    borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
+                                }}
+                            >
                                 {/* Timeline dot + line */}
-                                <div className="flex flex-col items-center self-stretch">
-                                    <div className={`mt-1 h-3 w-3 shrink-0 rounded-full ${a.dot}`} />
-                                    {!isLast && <div className={`mt-1 w-px flex-1 ${a.line}`} />}
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", alignSelf: "stretch" }}>
+                                    <div style={{
+                                        width: 10, height: 10, borderRadius: "50%",
+                                        background: a.dot, flexShrink: 0, marginTop: 4,
+                                    }} />
+                                    {!isLast && (
+                                        <div style={{ width: 1, flex: 1, background: T.slate200, marginTop: 4 }} />
+                                    )}
                                 </div>
 
                                 {/* Icon */}
-                                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${a.bg}`}>
-                                    <FontAwesomeIcon icon={faWrench} className={`text-xl ${a.text}`} />
+                                <div style={{
+                                    width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
+                                    background: a.iconBg,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <FontAwesomeIcon icon={faWrench} style={{ fontSize: 20, color: a.iconColor }} />
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <p className="text-sm font-semibold text-[#14532d]">
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                                        <p style={{ fontSize: 14, fontWeight: 600, color: T.slate900, margin: 0 }}>
                                             {record.issue_category || record.description || "Service Completed"}
                                         </p>
-                                        <span className={`rounded-full px-3 py-0.5 text-xs font-mono font-medium ${a.badge}`}>
+                                        <span style={{
+                                            borderRadius: 99, padding: "3px 10px",
+                                            fontSize: 11, fontWeight: 700,
+                                            background: a.badgeBg, color: a.badgeColor,
+                                        }}>
                                             Completed
                                         </span>
                                     </div>
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-[#274c3a]/60">
-                                        <span className="flex items-center gap-1.5">
-                                            <FontAwesomeIcon icon={faCalendarDays} className="text-[#16a34a]/40" />
+                                    <div style={{
+                                        marginTop: 6, display: "flex", flexWrap: "wrap",
+                                        alignItems: "center", gap: "4px 16px",
+                                        fontSize: 12, color: T.slate500,
+                                    }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400, fontSize: 11 }} />
                                             {formatDate(record.completed_at)}
-                                            {formatTime(record.completed_at) && ` • ${formatTime(record.completed_at)}`}
+                                            {formatTime(record.completed_at) && ` · ${formatTime(record.completed_at)}`}
                                         </span>
-                                        <span className="flex items-center gap-1.5">
-                                            <FontAwesomeIcon icon={faMapPin} className="text-[#16a34a]/40" />
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <FontAwesomeIcon icon={faMapPin} style={{ color: T.slate400, fontSize: 11 }} />
                                             {record.shop_name || "—"}
                                         </span>
                                     </div>
                                     {record.vehicle_brand && (
-                                        <p className="mt-1 text-xs font-mono text-[#274c3a]/40">
+                                        <p style={{ marginTop: 4, fontSize: 12, color: T.slate400, margin: "4px 0 0" }}>
                                             {record.vehicle_brand}{record.vehicle_color ? ` · ${record.vehicle_color}` : ""}
                                         </p>
                                     )}
                                 </div>
 
                                 {/* View Details button */}
-                                <button className={`shrink-0 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-mono font-medium transition ${a.btn}`}>
-                                    View Details <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
+                                <button
+                                    style={{
+                                        flexShrink: 0,
+                                        display: "flex", alignItems: "center", gap: 8,
+                                        borderRadius: 10,
+                                        border: `1px solid ${a.iconColor}`,
+                                        padding: "8px 14px",
+                                        fontSize: 13, fontWeight: 600,
+                                        color: a.iconColor,
+                                        background: "transparent",
+                                        cursor: "pointer", fontFamily: T.font,
+                                        transition: "background 0.15s ease",
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = a.iconBg}
+                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                >
+                                    View Details <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
                                 </button>
                             </div>
                         );
                     })}
-                </section>
+                </div>
             )}
         </div>
     );

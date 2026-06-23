@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faArrowRight,
@@ -18,20 +17,15 @@ import {
     faMagnifyingGlass,
     faDownload,
     faFilter,
-    faCheck,
-    faXmark,
-    faEye,
     faClipboardList,
     faMoneyBillWave,
     faRotate,
     faUser,
     faChevronDown,
     faCalendarDays,
-    faStar,
     faArrowTrendUp,
     faArrowTrendDown,
 } from "@fortawesome/free-solid-svg-icons";
-import { Footer } from "../components/Footer";
 
 const NAV_ITEMS = [
     { key: "dashboard",    icon: faChartLine,    label: "Dashboard" },
@@ -41,84 +35,120 @@ const NAV_ITEMS = [
     { key: "settings",     icon: faGear,         label: "Settings" },
 ];
 
+// ── Shared style tokens ──────────────────────────────────────────────────────
+const T = {
+    green:      "#16A34A",
+    greenLight: "#F0FDF4",
+    greenBg:    "#EDF9F0",
+    orange:     "#FF6B1A",
+    orangeBg:   "#FFF4EE",
+    blue:       "#2563EB",
+    blueBg:     "#EDF3FF",
+    violet:     "#A855F7",
+    violetBg:   "#F5EDFF",
+    red:        "#DC2626",
+    redBg:      "#FEE2E2",
+    slate900:   "#111827",
+    slate700:   "#374151",
+    slate500:   "#6B7280",
+    slate400:   "#9CA3AF",
+    slate200:   "#E5E7EB",
+    slate100:   "#F3F4F6",
+    slate50:    "#F9FAFB",
+    white:      "#FFFFFF",
+    pageBg:     "#F4F8F5",
+    font:       "'Segoe UI', system-ui, sans-serif",
+    card:       {
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
+
 function Admin() {
-    const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("dashboard");
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#f6f7fb", color: "#0f172a" }}>
-
-            {/* ── NO spacer div needed — navbar is sticky, not fixed ── */}
-
-            <div style={{ display: "flex", flex: 1 }}>
-
-                {/* ── SIDEBAR ── */}
+        <div style={{
+            minHeight: "100vh",
+            background: T.pageBg,
+            color: T.slate900,
+            fontFamily: T.font,
+        }}>
+                {/* ── SIDEBAR ── fixed, always visible ── */}
                 <aside style={{
-                    width: "260px",
-                    flexShrink: 0,
+                    width: 240,
                     display: "flex",
                     flexDirection: "column",
-                    borderRight: "1px solid #e2e8f0",
-                    backgroundColor: "#ffffff",
+                    background: T.white,
+                    borderRight: `1px solid ${T.slate100}`,
+                    boxShadow: "4px 0 24px rgba(0,0,0,0.08)",
+                    height: "calc(100vh - 65px)",
+                    position: "fixed",
+                    top: 65,
+                    left: 0,
+                    zIndex: 50,
+                    overflowY: "auto",
                 }}>
-                    <div className="px-4 py-5">
-                        <div className="rounded-[28px] border border-slate-200 bg-white px-4 py-5 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="h-12 w-12 rounded-full bg-[#16a34a] flex items-center justify-center text-white font-bold text-lg shrink-0">
-                                    FA
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">FixGo Admin</p>
-                                    <p className="text-xs text-slate-500">Automotive Management</p>
-                                    <div className="mt-1 flex items-center gap-1">
-                                        <span className="h-2 w-2 rounded-full bg-[#16a34a]" />
-                                        <span className="text-xs text-[#16a34a] font-medium">Active</span>
-                                    </div>
-                                </div>
+                    {/* Profile block */}
+                    <div style={{
+                        padding: "20px 16px 16px",
+                        borderBottom: `1px solid ${T.slate100}`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                    }}>
+                        <div style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 12,
+                            background: T.slate900,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: T.white,
+                            fontWeight: 700,
+                            fontSize: 14,
+                            flexShrink: 0,
+                        }}>FA</div>
+                        <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: T.slate900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                FixGo Admin
+                            </div>
+                            <div style={{ fontSize: 12, color: T.slate500 }}>Automotive Management</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
+                                <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green }} />
+                                <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>Active</span>
                             </div>
                         </div>
-                        <nav className="mt-6 space-y-1 text-sm">
-                            {NAV_ITEMS.map((item) => (
-                                <AdminSidebarLink
-                                    key={item.key}
-                                    active={currentPage === item.key}
-                                    icon={item.icon}
-                                    label={item.label}
-                                    badge={item.key === "verification" ? "42" : item.key === "moderation" ? "3" : undefined}
-                                    onClick={() => setCurrentPage(item.key)}
-                                />
-                            ))}
-                        </nav>
                     </div>
-                    <div className="px-4 pb-5 mt-auto">
-                        <button
-                            onClick={() => { localStorage.clear(); sessionStorage.clear(); navigate("/"); }}
-                            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-700 transition hover:bg-slate-50"
-                        >
-                            <FontAwesomeIcon icon={faArrowRight} className="rotate-180 text-slate-500" />
-                            <span>Logout</span>
-                        </button>
-                    </div>
+
+                    {/* Nav */}
+                    <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
+                        {NAV_ITEMS.map((item) => (
+                            <AdminSidebarLink
+                                key={item.key}
+                                active={currentPage === item.key}
+                                icon={item.icon}
+                                label={item.label}
+                                badge={item.key === "verification" ? "42" : item.key === "moderation" ? "3" : undefined}
+                                onClick={() => setCurrentPage(item.key)}
+                            />
+                        ))}
+                    </nav>
                 </aside>
 
-                {/* ── MAIN CONTENT ── */}
-                <main style={{ flex: 1, overflowY: "auto" }}>
-                    <div className="px-4 py-5 md:px-6 lg:px-8">
-                        <div className="mx-auto max-w-[1180px]">
-                            {currentPage === "dashboard"    && <DashboardView />}
-                            {currentPage === "verification" && <VerificationView />}
-                            {currentPage === "moderation"   && <ModerationView />}
-                            {currentPage === "revenue"      && <RevenueView />}
-                            {currentPage === "settings"     && <AdminSettingsView />}
-                        </div>
+                {/* ── MAIN CONTENT ── offset by sidebar width and navbar height ── */}
+                <main style={{ marginLeft: 240, minHeight: "calc(100vh - 65px)", padding: "24px", boxSizing: "border-box" }}>
+                    <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+                        {currentPage === "dashboard"    && <DashboardView />}
+                        {currentPage === "verification" && <VerificationView />}
+                        {currentPage === "moderation"   && <ModerationView />}
+                        {currentPage === "revenue"      && <RevenueView />}
+                        {currentPage === "settings"     && <AdminSettingsView />}
                     </div>
                 </main>
-
-            </div>
-
-            {/* ── FOOTER — outside flex row, spans full width ── */}
-            <Footer />
-
         </div>
     );
 }
@@ -128,80 +158,85 @@ function Admin() {
 // ============================================================
 function DashboardView() {
     return (
-        <div className="space-y-5">
-            <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Header */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
                 <div>
-                    <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Dashboard</h1>
-                    <p className="mt-2 text-sm text-slate-500">System overview and key metrics at a glance.</p>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Dashboard</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>System overview and key metrics at a glance.</p>
                 </div>
-                <div className="flex items-center gap-3 self-start rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
-                    <span>{new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-slate-400" />
+                <div style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: T.slate700,
+                    background: T.white,
+                    padding: "10px 16px",
+                    borderRadius: 12,
+                    border: `1px solid ${T.slate200}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                }}>
+                    {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
                 </div>
-            </section>
+            </div>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <AdminSummaryCard accent="green"  icon={faStore}            title="Active Shops"       count="1,248"    meta="+12% this week" metaPositive />
-                <AdminSummaryCard accent="orange" icon={faShieldHalved}     title="Veri
-                fication Queue" count="42"       meta="High Priority"  metaPositive={false} />
-                <AdminSummaryCard accent="blue"   icon={faMoneyBillWave}    title="Gross Revenue (MTD)"count="LKR 4.2M" meta="Live"           metaPositive />
-                <AdminSummaryCard accent="violet" icon={faCircleExclamation}title="Active Alerts"      count="07"       meta="System Normal"  metaPositive />
-            </section>
+            {/* Summary Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+                <AdminSummaryCard accent="green"  icon={faStore}             title="Active Shops"        count="1,248"    meta="+12% this week" metaPositive />
+                <AdminSummaryCard accent="orange" icon={faShieldHalved}      title="Verification Queue"  count="42"       meta="High Priority"  metaPositive={false} />
+                <AdminSummaryCard accent="blue"   icon={faMoneyBillWave}     title="Gross Revenue (MTD)" count="LKR 4.2M" meta="Live"           metaPositive />
+                <AdminSummaryCard accent="violet" icon={faCircleExclamation} title="Active Alerts"       count="07"       meta="System Normal"  metaPositive />
+            </div>
 
-            <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
-                <div className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                        <div>
-                            <h2 className="text-base font-semibold text-slate-900">New Shop Verification</h2>
-                            <p className="text-xs text-slate-500 mt-0.5">Credentials awaiting administrative approval</p>
-                        </div>
-                        <button className="text-sm font-medium text-[#16a34a] hover:underline flex items-center gap-1">
-                            View All Queue <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        <span>Shop Name / ID</span><span>Submitted Docs</span><span>Flags</span><span>Actions</span>
-                    </div>
+            {/* Verification + Moderation */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+                <PageCard
+                    title="New Shop Verification"
+                    subtitle="Credentials awaiting administrative approval"
+                    action={<button style={linkBtn()}>View All Queue <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} /></button>}
+                >
+                    <TableHeader cols={["Shop Name / ID", "Submitted Docs", "Flags", "Actions"]} />
                     {VERIFICATION_QUEUE.map((shop, idx) => (
                         <VerificationRow key={shop.id} shop={shop} isLast={idx === VERIFICATION_QUEUE.length - 1} />
                     ))}
-                </div>
+                </PageCard>
 
-                <div className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-slate-100">
-                        <h2 className="text-base font-semibold text-slate-900">Moderation Alerts</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Reported content needing action</p>
-                    </div>
-                    <div className="divide-y divide-slate-100">
+                <PageCard title="Moderation Alerts" subtitle="Reported content needing action">
+                    <div style={{ display: "flex", flexDirection: "column" }}>
                         {MODERATION_ALERTS.map((alert) => (
                             <ModerationAlertCard key={alert.id} alert={alert} />
                         ))}
                     </div>
-                </div>
-            </section>
+                </PageCard>
+            </div>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                    <div>
-                        <h2 className="text-base font-semibold text-slate-900">Automated Revenue & Ledger</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Monthly shop billing and performance metrics</p>
+            {/* Revenue */}
+            <PageCard
+                title="Automated Revenue & Ledger"
+                subtitle="Monthly shop billing and performance metrics"
+                action={
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <button style={outlineBtn()}><FontAwesomeIcon icon={faFilter} style={{ fontSize: 11 }} /> Filter</button>
+                        <button style={darkBtn()}><FontAwesomeIcon icon={faDownload} style={{ fontSize: 11 }} /> Export CSV</button>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition">
-                            <FontAwesomeIcon icon={faFilter} className="text-slate-400 text-xs" />Filter
-                        </button>
-                        <button className="flex items-center gap-2 rounded-xl bg-[#0f172a] px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
-                            <FontAwesomeIcon icon={faDownload} className="text-xs" />Export CSV
-                        </button>
-                    </div>
-                </div>
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop</span><span>Bookings</span><span>Revenue</span><span>Commission</span><span>Status</span>
-                </div>
+                }
+            >
+                <TableHeader cols={["Shop", "Bookings", "Revenue", "Commission", "Status"]} five />
                 {REVENUE_ROWS.map((row, idx) => (
                     <RevenueRow key={row.id} row={row} isLast={idx === REVENUE_ROWS.length - 1} />
                 ))}
-            </section>
+            </PageCard>
         </div>
     );
 }
@@ -212,36 +247,36 @@ function DashboardView() {
 function VerificationView() {
     const [search, setSearch] = useState("");
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Verification Queue</h1>
-                <p className="mt-2 text-sm text-slate-500">Review and approve shop credentials before they go live.</p>
-            </section>
-            <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm w-full sm:max-w-sm">
-                    <FontAwesomeIcon icon={faMagnifyingGlass} className="text-slate-400" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <PageHeading title="Verification Queue" sub="Review and approve shop credentials before they go live." />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: T.white, border: `1px solid ${T.slate200}`, borderRadius: 12,
+                    padding: "10px 16px", fontSize: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    width: "100%", maxWidth: 320,
+                }}>
+                    <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: T.slate400 }} />
                     <input
-                        className="flex-1 bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
+                        style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: T.slate700, background: "transparent", fontFamily: T.font }}
                         placeholder="Search by shop name or ID…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="rounded-full bg-[#fff4ee] px-3 py-1 text-xs font-medium text-[#ff6b1a]">42 Pending</span>
-                    <span className="rounded-full bg-[#edf9f0] px-3 py-1 text-xs font-medium text-[#16a34a]">8 Approved today</span>
+                <div style={{ display: "flex", gap: 8 }}>
+                    <Pill bg={T.orangeBg} color={T.orange}>42 Pending</Pill>
+                    <Pill bg={T.greenBg} color={T.green}>8 Approved today</Pill>
                 </div>
-            </section>
-            <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop Name / ID</span><span>Submitted Docs</span><span>Flags</span><span>Actions</span>
-                </div>
+            </div>
+            <PageCard>
+                <TableHeader cols={["Shop Name / ID", "Submitted Docs", "Flags", "Actions"]} />
                 {[...VERIFICATION_QUEUE, ...VERIFICATION_QUEUE_EXTRA]
                     .filter((s) => s.name.toLowerCase().includes(search.toLowerCase()) || s.id.includes(search))
                     .map((shop, idx, arr) => (
                         <VerificationRow key={shop.id} shop={shop} isLast={idx === arr.length - 1} />
                     ))}
-            </section>
+            </PageCard>
         </div>
     );
 }
@@ -251,26 +286,20 @@ function VerificationView() {
 // ============================================================
 function ModerationView() {
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Moderation</h1>
-                <p className="mt-2 text-sm text-slate-500">Reported content, fraud signals, and profile flags.</p>
-            </section>
-            <section className="grid gap-4 md:grid-cols-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <PageHeading title="Moderation" sub="Reported content, fraud signals, and profile flags." />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
                 <AdminSummaryCard accent="orange" icon={faFlag}         title="Review Reports" count="3" meta="Needs action"        metaPositive={false} />
                 <AdminSummaryCard accent="violet" icon={faUsers}        title="Profile Flags"  count="2" meta="Duplicate profiles"  metaPositive={false} />
                 <AdminSummaryCard accent="green"  icon={faShieldHalved} title="Fraud Signals"  count="1" meta="Rating manipulation" metaPositive={false} />
-            </section>
-            <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100">
-                    <h2 className="text-base font-semibold text-slate-900">All Moderation Alerts</h2>
-                </div>
-                <div className="divide-y divide-slate-100">
+            </div>
+            <PageCard title="All Moderation Alerts">
+                <div style={{ display: "flex", flexDirection: "column" }}>
                     {[...MODERATION_ALERTS, ...MODERATION_ALERTS_EXTRA].map((alert) => (
                         <ModerationAlertCard key={alert.id} alert={alert} expanded />
                     ))}
                 </div>
-            </section>
+            </PageCard>
         </div>
     );
 }
@@ -281,42 +310,37 @@ function ModerationView() {
 function RevenueView() {
     const [filter, setFilter] = useState("This Month");
     return (
-        <div className="space-y-5">
-            <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Revenue & Ledger</h1>
-                    <p className="mt-2 text-sm text-slate-500">Monthly billing and commission tracking across all shops.</p>
-                </div>
-                <div className="flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-slate-400" />
-                    <select value={filter} onChange={(e) => setFilter(e.target.value)} className="appearance-none bg-transparent pr-5 text-sm text-slate-700 focus:outline-none">
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                <PageHeading title="Revenue & Ledger" sub="Monthly billing and commission tracking across all shops." />
+                <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: T.white, border: `1px solid ${T.slate200}`, borderRadius: 12,
+                    padding: "10px 16px", fontSize: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}>
+                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
+                    <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ border: "none", outline: "none", fontSize: 14, color: T.slate700, background: "transparent", fontFamily: T.font, cursor: "pointer" }}>
                         <option>This Month</option>
                         <option>Last Month</option>
                         <option>Last 3 Months</option>
                         <option>This Year</option>
                     </select>
-                    <FontAwesomeIcon icon={faChevronDown} className="pointer-events-none -ml-4 text-xs text-slate-400" />
                 </div>
-            </section>
-            <section className="grid gap-4 md:grid-cols-3">
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
                 <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"    count="LKR 4.2M" meta="+18% vs last month" metaPositive />
                 <AdminSummaryCard accent="blue"   icon={faChartLine}     title="Total Commission" count="LKR 630K" meta="15% avg rate"       metaPositive />
                 <AdminSummaryCard accent="orange" icon={faStore}         title="Active Billing"   count="1,248"    meta="Shops billed"       metaPositive />
-            </section>
-            <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                    <h2 className="text-base font-semibold text-slate-900">Shop Revenue Breakdown</h2>
-                    <button className="flex items-center gap-2 rounded-xl bg-[#0f172a] px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
-                        <FontAwesomeIcon icon={faDownload} className="text-xs" />Export CSV
-                    </button>
-                </div>
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Shop</span><span>Bookings</span><span>Revenue</span><span>Commission</span><span>Status</span>
-                </div>
+            </div>
+            <PageCard
+                title="Shop Revenue Breakdown"
+                action={<button style={darkBtn()}><FontAwesomeIcon icon={faDownload} style={{ fontSize: 11 }} /> Export CSV</button>}
+            >
+                <TableHeader cols={["Shop", "Bookings", "Revenue", "Commission", "Status"]} five />
                 {[...REVENUE_ROWS, ...REVENUE_ROWS_EXTRA].map((row, idx, arr) => (
                     <RevenueRow key={row.id} row={row} isLast={idx === arr.length - 1} />
                 ))}
-            </section>
+            </PageCard>
         </div>
     );
 }
@@ -325,70 +349,100 @@ function RevenueView() {
 // PAGE: ADMIN SETTINGS
 // ============================================================
 function AdminSettingsView() {
+    const sections = [
+        {
+            icon: faUser,
+            iconBg: T.greenBg,
+            iconColor: T.green,
+            title: "Admin Account",
+            subtitle: "Manage admin profile and access.",
+            rows: [
+                { icon: faUser,         label: "Edit Profile" },
+                { icon: faShieldHalved, label: "Change Password" },
+                { icon: faFileLines,    label: "Activity Log" },
+            ],
+        },
+        {
+            icon: faGear,
+            iconBg: T.blueBg,
+            iconColor: T.blue,
+            title: "System Settings",
+            subtitle: "Platform-level configuration.",
+            rows: [
+                { icon: faStore,         label: "Commission Rates" },
+                { icon: faClipboardList, label: "Verification Rules" },
+                { icon: faRotate,        label: "API & Integrations" },
+            ],
+        },
+        {
+            icon: faBell,
+            iconBg: T.orangeBg,
+            iconColor: T.orange,
+            title: "Notifications",
+            subtitle: "Alert and notification preferences.",
+            rows: [
+                { icon: faBell, label: "Email Alerts" },
+                { icon: faFlag, label: "Moderation Alerts" },
+            ],
+        },
+    ];
+
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Settings</h1>
-                <p className="mt-2 text-sm text-slate-500">Manage system configuration and admin preferences.</p>
-            </section>
-            {[
-                {
-                    icon: faUser,
-                    color: "bg-[#edf9f0] text-[#16a34a]",
-                    title: "Admin Account",
-                    subtitle: "Manage admin profile and access.",
-                    rows: [
-                        { icon: faUser,         label: "Edit Profile" },
-                        { icon: faShieldHalved, label: "Change Password" },
-                        { icon: faFileLines,    label: "Activity Log" },
-                    ],
-                },
-                {
-                    icon: faGear,
-                    color: "bg-[#edf3ff] text-[#2563eb]",
-                    title: "System Settings",
-                    subtitle: "Platform-level configuration.",
-                    rows: [
-                        { icon: faStore,         label: "Commission Rates" },
-                        { icon: faClipboardList, label: "Verification Rules" },
-                        { icon: faRotate,        label: "API & Integrations" },
-                    ],
-                },
-                {
-                    icon: faBell,
-                    color: "bg-[#fff4ee] text-[#ff6b1a]",
-                    title: "Notifications",
-                    subtitle: "Alert and notification preferences.",
-                    rows: [
-                        { icon: faBell, label: "Email Alerts" },
-                        { icon: faFlag, label: "Moderation Alerts" },
-                    ],
-                },
-            ].map((section) => (
-                <section key={section.title} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-                    <div className="flex flex-col sm:flex-row">
-                        <div className="flex items-center gap-5 border-b border-slate-100 px-6 py-6 sm:w-[280px] sm:shrink-0 sm:border-b-0 sm:border-r">
-                            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${section.color}`}>
-                                <FontAwesomeIcon icon={section.icon} className="text-2xl" />
-                            </div>
-                            <div>
-                                <p className="text-base font-semibold text-slate-900">{section.title}</p>
-                                <p className="mt-1 text-xs text-slate-500">{section.subtitle}</p>
-                            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <PageHeading title="Settings" sub="Manage system configuration and admin preferences." />
+            {sections.map((sec) => (
+                <div key={sec.title} style={{ ...T.card, borderRadius: 14, overflow: "hidden", display: "flex" }}>
+                    {/* Left label */}
+                    <div style={{
+                        width: 260,
+                        flexShrink: 0,
+                        borderRight: `1px solid ${T.slate100}`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 16,
+                        padding: "24px 20px",
+                    }}>
+                        <div style={{
+                            width: 52, height: 52,
+                            borderRadius: 14,
+                            background: sec.iconBg,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                        }}>
+                            <FontAwesomeIcon icon={sec.icon} style={{ fontSize: 22, color: sec.iconColor }} />
                         </div>
-                        <div className="flex-1 divide-y divide-slate-100">
-                            {section.rows.map((row) => (
-                                <button key={row.label} className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition">
-                                    <div className="flex items-center gap-3">
-                                        <FontAwesomeIcon icon={row.icon} className="w-4 text-slate-400" />
-                                        <span className="text-sm text-slate-700">{row.label}</span>
-                                    </div>
-                                    <FontAwesomeIcon icon={faChevronRight} className="text-xs text-slate-400" />
-                                </button>
-                            ))}
+                        <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: T.slate900 }}>{sec.title}</div>
+                            <div style={{ fontSize: 12, color: T.slate500, marginTop: 3 }}>{sec.subtitle}</div>
                         </div>
                     </div>
-                </section>
+                    {/* Rows */}
+                    <div style={{ flex: 1 }}>
+                        {sec.rows.map((row) => (
+                            <button key={row.label} style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "16px 20px",
+                                background: "transparent",
+                                border: "none",
+                                borderBottom: `1px solid ${T.slate100}`,
+                                cursor: "pointer",
+                                fontFamily: T.font,
+                            }}
+                                onMouseEnter={e => e.currentTarget.style.background = T.slate50}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <FontAwesomeIcon icon={row.icon} style={{ color: T.slate400, width: 16 }} />
+                                    <span style={{ fontSize: 14, color: T.slate700 }}>{row.label}</span>
+                                </div>
+                                <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 11, color: T.slate400 }} />
+                            </button>
+                        ))}
+                    </div>
+                </div>
             ))}
         </div>
     );
@@ -401,119 +455,212 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
     return (
         <button
             onClick={onClick}
-            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
-                active ? "border-l-4 border-[#16a34a] bg-[#f0fdf4] font-medium text-[#16a34a]" : "text-slate-700 hover:bg-slate-50"
-            }`}
+            style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "none",
+                cursor: "pointer",
+                background: active ? T.greenLight : "transparent",
+                color: active ? T.green : T.slate700,
+                fontWeight: active ? 700 : 500,
+                fontSize: 14,
+                textAlign: "left",
+                fontFamily: T.font,
+                borderLeft: active ? `4px solid ${T.green}` : "4px solid transparent",
+                transition: "all 0.15s ease",
+            }}
         >
-            <FontAwesomeIcon icon={icon} className={active ? "text-[#16a34a]" : "text-slate-500"} />
-            <span>{label}</span>
+            <FontAwesomeIcon icon={icon} style={{ color: active ? T.green : T.slate500, fontSize: 16 }} />
+            <span style={{ flex: 1 }}>{label}</span>
             {badge && (
-                <span className="ml-auto rounded-full bg-[#16a34a] px-2 py-0.5 text-xs font-semibold text-white">{badge}</span>
+                <span style={{
+                    background: T.green, color: T.white,
+                    borderRadius: 99, fontSize: 11, fontWeight: 700,
+                    padding: "2px 7px", minWidth: 20, textAlign: "center",
+                }}>{badge}</span>
             )}
         </button>
     );
 }
 
 function AdminSummaryCard({ accent, icon, title, count, meta, metaPositive }) {
-    const s = {
-        green:  { iconWrap: "bg-[#edf9f0] text-[#16a34a]", meta: "text-[#16a34a]" },
-        orange: { iconWrap: "bg-[#fff4ee] text-[#ff6b1a]", meta: "text-[#ff6b1a]" },
-        blue:   { iconWrap: "bg-[#edf3ff] text-[#2563eb]", meta: "text-[#2563eb]" },
-        violet: { iconWrap: "bg-[#f5edff] text-[#a855f7]", meta: "text-[#a855f7]" },
+    const styles = {
+        green:  { iconBg: T.greenBg,  iconColor: T.green,  metaColor: T.green  },
+        orange: { iconBg: T.orangeBg, iconColor: T.orange, metaColor: T.orange },
+        blue:   { iconBg: T.blueBg,   iconColor: T.blue,   metaColor: T.blue   },
+        violet: { iconBg: T.violetBg, iconColor: T.violet, metaColor: T.violet },
     };
+    const s = styles[accent];
     return (
-        <article className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start gap-4">
-                <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${s[accent].iconWrap}`}>
-                    <FontAwesomeIcon icon={icon} className="text-2xl" />
+        <div style={{
+            background: T.white,
+            borderRadius: 18,
+            border: `1px solid ${T.slate200}`,
+            padding: "20px 24px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            transition: "all 0.25s ease",
+            cursor: "pointer",
+        }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 10px 24px rgba(0,0,0,0.08)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)"; }}
+        >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                <div style={{
+                    width: 52, height: 52,
+                    borderRadius: "50%",
+                    background: s.iconBg,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                }}>
+                    <FontAwesomeIcon icon={icon} style={{ fontSize: 20, color: s.iconColor }} />
                 </div>
-                <div className="min-w-0">
-                    <p className="text-sm text-slate-500">{title}</p>
-                    <p className="mt-1 text-3xl font-semibold text-slate-900">{count}</p>
+                <div>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{title}</p>
+                    <p style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: "4px 0" }}>{count}</p>
                     {meta && (
-                        <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${s[accent].meta}`}>
-                            <FontAwesomeIcon icon={metaPositive ? faArrowTrendUp : faArrowTrendDown} className="text-xs" />
+                        <p style={{ fontSize: 12, fontWeight: 600, color: s.metaColor, margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                            <FontAwesomeIcon icon={metaPositive ? faArrowTrendUp : faArrowTrendDown} style={{ fontSize: 10 }} />
                             {meta}
                         </p>
                     )}
                 </div>
             </div>
-        </article>
+        </div>
+    );
+}
+
+function PageCard({ title, subtitle, action, children }) {
+    return (
+        <div style={{ background: T.white, borderRadius: 18, border: `1px solid ${T.slate200}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+            {(title || action) && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: `1px solid ${T.slate100}` }}>
+                    <div>
+                        {title && <h2 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</h2>}
+                        {subtitle && <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>{subtitle}</p>}
+                    </div>
+                    {action && <div>{action}</div>}
+                </div>
+            )}
+            {children}
+        </div>
+    );
+}
+
+function PageHeading({ title, sub }) {
+    return (
+        <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</h1>
+            {sub && <p style={{ color: T.slate500, marginTop: 6, fontSize: 14, marginBottom: 0 }}>{sub}</p>}
+        </div>
+    );
+}
+
+function TableHeader({ cols, five }) {
+    const cols4 = "2fr 1.5fr 1fr 1fr";
+    const cols5 = "2fr 1fr 1fr 1fr 1fr";
+    return (
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: five ? cols5 : cols4,
+            gap: 16,
+            padding: "10px 24px",
+            background: T.slate50,
+            borderBottom: `1px solid ${T.slate100}`,
+            fontSize: 11,
+            fontWeight: 700,
+            color: T.slate500,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+        }}>
+            {cols.map(c => <span key={c}>{c}</span>)}
+        </div>
     );
 }
 
 function DocBadge({ label }) {
     return (
-        <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
-            {label}
-        </span>
+        <span style={{
+            borderRadius: 6, border: `1px solid ${T.slate200}`,
+            background: T.slate50, padding: "3px 8px",
+            fontSize: 11, fontWeight: 600, color: T.slate500,
+        }}>{label}</span>
     );
 }
 
 function VerificationRow({ shop, isLast }) {
     return (
-        <div className={`grid grid-cols-[2fr_1.5fr_1fr_1fr] gap-4 items-center px-6 py-4 ${!isLast ? "border-b border-slate-100" : ""}`}>
-            <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600 shrink-0">
-                    {shop.initials}
-                </div>
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
+            gap: 16,
+            alignItems: "center",
+            padding: "14px 24px",
+            borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
+        }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    background: T.slate100, display: "flex", alignItems: "center",
+                    justifyContent: "center", fontSize: 13, fontWeight: 700,
+                    color: T.slate500, flexShrink: 0,
+                }}>{shop.initials}</div>
                 <div>
-                    <p className="text-sm font-semibold text-slate-900">{shop.name}</p>
-                    <p className="text-xs text-slate-400">{shop.id}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>{shop.name}</p>
+                    <p style={{ fontSize: 11, color: T.slate400, margin: 0 }}>{shop.id}</p>
                 </div>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                 {shop.docs.map((d) => <DocBadge key={d} label={d} />)}
             </div>
             <div>
-                {shop.flag === "Verified"     && <span className="flex items-center gap-1 text-xs font-medium text-[#16a34a]"><FontAwesomeIcon icon={faCircleCheck} /> Verified</span>}
-                {shop.flag === "IP Match"     && <span className="flex items-center gap-1 text-xs font-medium text-[#ff6b1a]"><FontAwesomeIcon icon={faTriangleExclamation} /> IP Match</span>}
-                {shop.flag === "Pending Scan" && <span className="text-xs text-slate-400 italic">Pending Scan</span>}
+                {shop.flag === "Verified"     && <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: T.green }}><FontAwesomeIcon icon={faCircleCheck} /> Verified</span>}
+                {shop.flag === "IP Match"     && <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: T.orange }}><FontAwesomeIcon icon={faTriangleExclamation} /> IP Match</span>}
+                {shop.flag === "Pending Scan" && <span style={{ fontSize: 12, color: T.slate400, fontStyle: "italic" }}>Pending Scan</span>}
             </div>
-            <div className="flex gap-2">
+            <div>
                 {shop.action === "approve"
-                    ? <button className="rounded-xl bg-[#16a34a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#15803d] transition">Approve</button>
-                    : <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Review</button>
+                    ? <button style={{ borderRadius: 10, background: T.green, color: T.white, border: "none", padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: T.font }}>Approve</button>
+                    : <button style={{ borderRadius: 10, background: T.white, color: T.slate700, border: `1px solid ${T.slate200}`, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: T.font }}>Review</button>
                 }
             </div>
         </div>
     );
 }
 
-function ModerationAlertCard({ alert, expanded }) {
+function ModerationAlertCard({ alert }) {
     const typeStyle = {
-        "REVIEW REPORT": "text-[#ff6b1a] bg-[#fff4ee]",
-        "PROFILE FLAG":  "text-[#2563eb] bg-[#edf3ff]",
-        "FRAUD SIGNAL":  "text-[#a855f7] bg-[#f5edff]",
+        "REVIEW REPORT": { color: T.orange, bg: T.orangeBg, borderLeft: `4px solid ${T.orange}` },
+        "PROFILE FLAG":  { color: T.blue,   bg: T.blueBg,   borderLeft: "none" },
+        "FRAUD SIGNAL":  { color: T.violet, bg: T.violetBg, borderLeft: "none" },
     };
+    const ts = typeStyle[alert.type] || { color: T.slate500, bg: T.slate100, borderLeft: "none" };
     return (
-        <div className={`px-6 py-4 ${alert.type === "REVIEW REPORT" ? "border-l-4 border-[#ff6b1a]" : ""}`}>
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeStyle[alert.type] || "text-slate-500 bg-slate-100"}`}>
-                            {alert.type}
-                        </span>
-                        <span className="text-xs text-slate-400">{alert.time}</span>
-                    </div>
-                    <p className="text-sm text-slate-700">{alert.desc}</p>
-                    {alert.user && (
-                        <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                            <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                {alert.user[0]}
-                            </div>
-                            <span>User: {alert.user}</span>
-                            {alert.shop && <><FontAwesomeIcon icon={faArrowRight} className="text-[10px]" /><span className="text-[#16a34a] font-medium">{alert.shop}</span></>}
-                        </div>
-                    )}
-                </div>
+        <div style={{ padding: "16px 24px", borderBottom: `1px solid ${T.slate100}`, borderLeft: ts.borderLeft }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ borderRadius: 99, padding: "2px 10px", fontSize: 11, fontWeight: 700, color: ts.color, background: ts.bg }}>{alert.type}</span>
+                <span style={{ fontSize: 11, color: T.slate400 }}>{alert.time}</span>
             </div>
-            <div className="mt-3 flex gap-3">
+            <p style={{ fontSize: 13, color: T.slate700, margin: 0 }}>{alert.desc}</p>
+            {alert.user && (
+                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.slate500 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: T.slate200, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: T.slate500 }}>
+                        {alert.user[0]}
+                    </div>
+                    <span>User: {alert.user}</span>
+                    {alert.shop && <><FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 10 }} /><span style={{ color: T.green, fontWeight: 600 }}>{alert.shop}</span></>}
+                </div>
+            )}
+            <div style={{ marginTop: 10, display: "flex", gap: 16 }}>
                 {alert.actions.map((action) => (
-                    <button key={action} className={`text-xs font-medium ${
-                        action === "Dismiss Review" || action === "Investigate" || action === "Audit Logs"
-                            ? "text-[#16a34a] hover:underline" : "text-slate-500 hover:underline"
-                    }`}>{action}</button>
+                    <button key={action} style={{
+                        background: "none", border: "none", cursor: "pointer", padding: 0,
+                        fontSize: 12, fontWeight: 600, fontFamily: T.font,
+                        color: (action === "Dismiss Review" || action === "Investigate" || action === "Audit Logs") ? T.green : T.slate500,
+                    }}>{action}</button>
                 ))}
             </div>
         </div>
@@ -522,27 +669,59 @@ function ModerationAlertCard({ alert, expanded }) {
 
 function RevenueRow({ row, isLast }) {
     const statusStyle = {
-        Paid:    "bg-[#edf9f0] text-[#16a34a]",
-        Pending: "bg-[#fff4ee] text-[#ff6b1a]",
-        Overdue: "bg-[#fee2e2] text-[#dc2626]",
+        Paid:    { bg: T.greenBg,  color: T.green  },
+        Pending: { bg: T.orangeBg, color: T.orange },
+        Overdue: { bg: T.redBg,    color: T.red    },
     };
+    const ss = statusStyle[row.status] || {};
     return (
-        <div className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 items-center px-6 py-4 ${!isLast ? "border-b border-slate-100" : ""}`}>
-            <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-[#edf9f0] flex items-center justify-center text-xs font-bold text-[#16a34a] shrink-0">
-                    {row.initials}
-                </div>
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+            gap: 16,
+            alignItems: "center",
+            padding: "14px 24px",
+            borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
+        }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: T.greenBg, display: "flex", alignItems: "center",
+                    justifyContent: "center", fontSize: 11, fontWeight: 700,
+                    color: T.green, flexShrink: 0,
+                }}>{row.initials}</div>
                 <div>
-                    <p className="text-sm font-semibold text-slate-900">{row.shop}</p>
-                    <p className="text-xs text-slate-400">{row.id}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>{row.shop}</p>
+                    <p style={{ fontSize: 11, color: T.slate400, margin: 0 }}>{row.id}</p>
                 </div>
             </div>
-            <p className="text-sm text-slate-700">{row.bookings}</p>
-            <p className="text-sm font-semibold text-slate-900">{row.revenue}</p>
-            <p className="text-sm text-slate-700">{row.commission}</p>
-            <span className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${statusStyle[row.status]}`}>{row.status}</span>
+            <p style={{ fontSize: 13, color: T.slate700, margin: 0 }}>{row.bookings}</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>{row.revenue}</p>
+            <p style={{ fontSize: 13, color: T.slate700, margin: 0 }}>{row.commission}</p>
+            <span style={{
+                display: "inline-block", borderRadius: 99,
+                padding: "4px 12px", fontSize: 12, fontWeight: 600,
+                background: ss.bg, color: ss.color,
+            }}>{row.status}</span>
         </div>
     );
+}
+
+function Pill({ bg, color, children }) {
+    return (
+        <span style={{ borderRadius: 99, background: bg, color, padding: "4px 12px", fontSize: 12, fontWeight: 600 }}>{children}</span>
+    );
+}
+
+// ── Button helpers ───────────────────────────────────────────────────────────
+function linkBtn() {
+    return { background: "none", border: "none", cursor: "pointer", color: T.green, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, fontFamily: T.font };
+}
+function outlineBtn() {
+    return { display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: `1px solid ${T.slate200}`, background: T.white, fontSize: 13, fontWeight: 600, color: T.slate700, cursor: "pointer", fontFamily: T.font };
+}
+function darkBtn() {
+    return { display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: "none", background: T.slate900, fontSize: 13, fontWeight: 600, color: T.white, cursor: "pointer", fontFamily: T.font };
 }
 
 // ============================================================
@@ -558,12 +737,12 @@ const VERIFICATION_QUEUE_EXTRA = [
     { id: "#SHP-7308", initials: "CS", name: "City Service Center", docs: ["BR_CERT"],                     flag: "IP Match",  action: "review"  },
 ];
 const MODERATION_ALERTS = [
-    { id: 1, type: "REVIEW REPORT", time: "2 mins ago",   desc: '"The shop overcharged me and the mechanic was rude..."', user: "Saman P.", shop: "Elite Auto",   actions: ["Dismiss Review", "Ignore"] },
-    { id: 2, type: "PROFILE FLAG",  time: "45 mins ago",  desc: 'Suspected duplicate profile for "Vantage Service Center".', user: null, shop: null,            actions: ["Investigate"] },
-    { id: 3, type: "FRAUD SIGNAL",  time: "2 hours ago",  desc: "Unusual surge in 5-star ratings (50 reviews in 10 mins) for Shop ID #2214.", user: null, shop: null, actions: ["Audit Logs"] },
+    { id: 1, type: "REVIEW REPORT", time: "2 mins ago",  desc: '"The shop overcharged me and the mechanic was rude..."', user: "Saman P.", shop: "Elite Auto",   actions: ["Dismiss Review", "Ignore"] },
+    { id: 2, type: "PROFILE FLAG",  time: "45 mins ago", desc: 'Suspected duplicate profile for "Vantage Service Center".', user: null, shop: null,            actions: ["Investigate"] },
+    { id: 3, type: "FRAUD SIGNAL",  time: "2 hours ago", desc: "Unusual surge in 5-star ratings (50 reviews in 10 mins) for Shop ID #2214.", user: null, shop: null, actions: ["Audit Logs"] },
 ];
 const MODERATION_ALERTS_EXTRA = [
-    { id: 4, type: "REVIEW REPORT", time: "3 hours ago",  desc: '"Parts were substandard. Will not return."', user: "Nimal K.", shop: "QuickFix Auto", actions: ["Dismiss Review", "Ignore"] },
+    { id: 4, type: "REVIEW REPORT", time: "3 hours ago", desc: '"Parts were substandard. Will not return."', user: "Nimal K.", shop: "QuickFix Auto", actions: ["Dismiss Review", "Ignore"] },
 ];
 const REVENUE_ROWS = [
     { id: "#SHP-9021", initials: "KM", shop: "Kandy Motors Ltd.",  bookings: 124, revenue: "LKR 248,000", commission: "LKR 37,200", status: "Paid"    },

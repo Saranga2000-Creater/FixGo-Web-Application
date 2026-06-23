@@ -14,23 +14,58 @@ import {
     faUser,
 } from "@fortawesome/free-solid-svg-icons";
 
+// ── Design tokens — exact match to Admin ─────────────────────────────────────
+const T = {
+    green:     "#16A34A",
+    greenLight:"#F0FDF4",
+    greenBg:   "#EDF9F0",
+    greenMuted:"rgba(22,163,74,0.08)",
+    teal:      "#0D9488",
+    tealBg:    "rgba(13,148,136,0.08)",
+    blue:      "#2563EB",
+    blueBg:    "#EDF3FF",
+    violet:    "#A855F7",
+    violetBg:  "#F5EDFF",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate200:  "#E5E7EB",
+    slate100:  "#F3F4F6",
+    slate50:   "#F9FAFB",
+    white:     "#FFFFFF",
+    font:      "'Segoe UI', system-ui, sans-serif",
+    card: {
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
+
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=16a34a&color=fff&name=";
 
-function StatsCard({ icon, title, value, color }) {
-    const s = {
-        green:  { bg: "bg-[#16a34a]/10", text: "text-[#16a34a]",  border: "border-[#d1e7d7]" },
-        teal:   { bg: "bg-[#0d9488]/10", text: "text-[#0d9488]",  border: "border-[#99f6e4]/60" },
-        blue:   { bg: "bg-[#2563eb]/10", text: "text-[#2563eb]",  border: "border-[#bfdbfe]/60" },
-        violet: { bg: "bg-[#a855f7]/10", text: "text-[#a855f7]",  border: "border-[#e9d5ff]/60" },
-    };
+function StatsCard({ icon, title, value, iconBg, iconColor, borderColor }) {
     return (
-        <div className={`flex items-center gap-3 rounded-lg border ${s[color].border} bg-white p-3`}>
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${s[color].bg}`}>
-                <FontAwesomeIcon icon={icon} className={`text-base ${s[color].text}`} />
+        <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            background: T.white,
+            border: `1px solid ${borderColor}`,
+            borderRadius: 12,
+            padding: "12px 14px",
+        }}>
+            <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: iconBg, flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+                <FontAwesomeIcon icon={icon} style={{ fontSize: 15, color: iconColor }} />
             </div>
             <div>
-                <p className="text-xs font-mono text-[#274c3a]/60">{title}</p>
-                <p className="text-xl font-semibold text-[#14532d]">{value}</p>
+                <p style={{ fontSize: 11, color: T.slate500, fontFamily: "monospace", margin: 0 }}>{title}</p>
+                <p style={{ fontSize: 20, fontWeight: 700, color: T.slate900, margin: 0 }}>{value}</p>
             </div>
         </div>
     );
@@ -38,21 +73,32 @@ function StatsCard({ icon, title, value, color }) {
 
 function InfoRow({ label, value }) {
     return (
-        <div className="flex items-center justify-between border-b border-[#d1e7d7]/60 pb-4 last:border-0 last:pb-0">
-            <p className="text-sm font-mono text-[#274c3a]/60">{label}</p>
-            <p className="text-sm font-medium text-[#14532d]">{value}</p>
+        <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingBottom: 14,
+            borderBottom: `1px solid ${T.slate100}`,
+        }}>
+            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value}</p>
         </div>
     );
 }
 
-function SecurityRow({ label, value, hasArrow = false }) {
+function SecurityRow({ label, value }) {
     return (
-        <div className="flex items-center justify-between rounded-lg bg-[#16a34a]/5 px-4 py-3">
-            <p className="text-sm font-mono text-[#274c3a]">{label}</p>
-            <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-[#14532d]">{value}</p>
-                {hasArrow && <FontAwesomeIcon icon={faChevronRight} className="text-xs text-[#16a34a]/50" />}
-            </div>
+        <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: T.slate50,
+            borderRadius: 10,
+            padding: "12px 16px",
+            border: `1px solid ${T.slate100}`,
+        }}>
+            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value}</p>
         </div>
     );
 }
@@ -63,150 +109,214 @@ function Profile() {
     const [error, setError]       = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('jwt_token');
-        fetch('http://localhost:8000/api/getCustomerProfile.php', {
-            headers: { 'Authorization': 'Bearer ' + token }
+        const token = localStorage.getItem("jwt_token");
+        fetch("http://localhost:8000/api/getCustomerProfile.php", {
+            headers: { Authorization: "Bearer " + token },
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setCustomer(data);
-                } else {
-                    setError(data.message || 'Failed to load profile');
-                }
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) setCustomer(data);
+                else setError(data.message || "Failed to load profile");
                 setLoading(false);
             })
             .catch(() => {
-                setError('Could not connect to server');
+                setError("Could not connect to server");
                 setLoading(false);
             });
     }, []);
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-20">
-                <p className="text-sm font-mono text-[#274c3a]/60">Loading profile...</p>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+            <p style={{ fontSize: 13, color: T.slate500 }}>Loading profile...</p>
+        </div>
+    );
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center py-20">
-                <p className="text-sm font-mono text-red-500">{error}</p>
-            </div>
-        );
-    }
+    if (error) return (
+        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+            <p style={{ fontSize: 13, color: "#DC2626" }}>{error}</p>
+        </div>
+    );
 
     const avatarSrc = customer.profilePhoto
         ? customer.profilePhoto
         : DEFAULT_AVATAR + encodeURIComponent(customer.name);
 
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-[#14532d]">My Profile</h1>
-                <p className="mt-2 text-sm font-mono text-[#274c3a]/60">Manage your personal information, addresses and preferences.</p>
-            </section>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            <section className="rounded-[28px] border border-[#d1e7d7] bg-white p-6 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                    <div className="flex flex-1 items-start gap-6">
+            {/* ── Page heading — mirrors Admin DashboardView header ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
+                <div>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>My Profile</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        Manage your personal information, addresses and preferences.
+                    </p>
+                </div>
+            </div>
+
+            {/* ── Profile hero card ── */}
+            <div style={{ ...T.card, padding: 24 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+
+                    {/* Avatar + contact details */}
+                    <div style={{ display: "flex", gap: 24, flex: 1, minWidth: 280, alignItems: "flex-start" }}>
                         <img
                             src={avatarSrc}
                             alt={customer.name}
-                            className="h-28 w-28 shrink-0 rounded-full object-cover ring-2 ring-[#16a34a]/20"
+                            style={{
+                                width: 100, height: 100,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                flexShrink: 0,
+                                outline: `3px solid ${T.greenMuted}`,
+                                outlineOffset: 2,
+                            }}
                         />
                         <div>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <h2 className="text-2xl font-semibold text-[#14532d]">{customer.name}</h2>
-                                <span className="rounded-full bg-[#16a34a]/10 px-3 py-1 text-xs font-mono font-medium text-[#16a34a]">Customer</span>
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                                <h2 style={{ fontSize: 22, fontWeight: 700, color: T.slate900, margin: 0 }}>{customer.name}</h2>
+                                <span style={{
+                                    background: T.greenMuted, color: T.green,
+                                    borderRadius: 99, padding: "3px 12px",
+                                    fontSize: 11, fontWeight: 700,
+                                }}>Customer</span>
                             </div>
-                            <p className="mt-1 text-sm font-mono text-[#274c3a]/60">Member since {customer.memberSince}</p>
-                            <div className="mt-3 space-y-2 text-sm font-mono text-[#274c3a]/70">
-                                <div className="flex items-center gap-2">
-                                    <FontAwesomeIcon icon={faEnvelope} className="w-4 text-[#16a34a]/50" />
-                                    <span>{customer.email}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <FontAwesomeIcon icon={faPhone} className="w-4 text-[#16a34a]/50" />
-                                    <span>{customer.contactNumber || 'Not provided'}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <FontAwesomeIcon icon={faMapPin} className="w-4 text-[#16a34a]/50" />
-                                    <span>{customer.address || 'Not provided'}</span>
-                                </div>
+                            <p style={{ fontSize: 12, color: T.slate400, marginTop: 4, marginBottom: 12 }}>
+                                Member since {customer.memberSince}
+                            </p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                                {[
+                                    { icon: faEnvelope, val: customer.email },
+                                    { icon: faPhone,    val: customer.contactNumber || "Not provided" },
+                                    { icon: faMapPin,   val: customer.address       || "Not provided" },
+                                ].map(({ icon, val }) => (
+                                    <div key={val} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.slate500 }}>
+                                        <FontAwesomeIcon icon={icon} style={{ color: T.green, opacity: 0.6, width: 14 }} />
+                                        <span>{val}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-[18px] bg-[#f0f7f2] border border-[#d1e7d7] p-5 md:w-[420px]">
-                        <h3 className="text-sm font-mono font-semibold text-[#14532d]">Account Overview</h3>
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                            <StatsCard icon={faCar}          title="Total Repairs"         value="0" color="green" />
-                            <StatsCard icon={faCircleCheck}  title="Completed Repairs"     value="0" color="teal" />
-                            <StatsCard icon={faCalendarDays} title="Upcoming Appointments" value="0" color="blue" />
-                            <StatsCard icon={faStar}         title="Reviews Given"         value="0" color="violet" />
+                    {/* Account overview */}
+                    <div style={{
+                        background: T.slate50,
+                        border: `1px solid ${T.slate200}`,
+                        borderRadius: 18,
+                        padding: 20,
+                        minWidth: 280,
+                        width: 400,
+                        flexShrink: 0,
+                    }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: "0 0 14px" }}>Account Overview</p>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            <StatsCard icon={faCar}          title="Total Repairs"     value="0" iconBg={T.greenMuted} iconColor={T.green}  borderColor={T.slate200} />
+                            <StatsCard icon={faCircleCheck}  title="Completed"         value="0" iconBg={T.tealBg}    iconColor={T.teal}   borderColor={T.slate200} />
+                            <StatsCard icon={faCalendarDays} title="Appointments"      value="0" iconBg={T.blueBg}    iconColor={T.blue}   borderColor={T.slate200} />
+                            <StatsCard icon={faStar}         title="Reviews Given"     value="0" iconBg={T.violetBg}  iconColor={T.violet} borderColor={T.slate200} />
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <section className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-[28px] border border-[#d1e7d7] bg-white p-6 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                    <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faUser} className="text-[#16a34a]/60" />
-                        <h3 className="text-base font-semibold text-[#14532d]">Personal Information</h3>
+            {/* ── Personal info + Addresses ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+
+                {/* Personal Info */}
+                <div style={{ ...T.card, padding: 24 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                        <FontAwesomeIcon icon={faUser} style={{ color: T.slate400 }} />
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Personal Information</h3>
                     </div>
-                    <div className="mt-5 space-y-4">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                         <InfoRow label="Full Name"     value={customer.name} />
                         <InfoRow label="Email Address" value={customer.email} />
-                        <InfoRow label="Phone Number"  value={customer.contactNumber || 'Not provided'} />
-                        <InfoRow label="Address"       value={customer.address       || 'Not provided'} />
+                        <InfoRow label="Phone Number"  value={customer.contactNumber || "Not provided"} />
+                        <InfoRow label="Address"       value={customer.address       || "Not provided"} />
                         <InfoRow label="Member Since"  value={customer.memberSince} />
                     </div>
                 </div>
 
-                <div className="rounded-[28px] border border-[#d1e7d7] bg-white p-6 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faMapPin} className="text-[#16a34a]/60" />
-                            <h3 className="text-base font-semibold text-[#14532d]">Addresses</h3>
+                {/* Addresses */}
+                <div style={{ ...T.card, padding: 24 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <FontAwesomeIcon icon={faMapPin} style={{ color: T.slate400 }} />
+                            <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Addresses</h3>
                         </div>
-                        <button className="flex items-center gap-1 text-sm font-mono font-medium text-[#16a34a] hover:underline">
-                            <FontAwesomeIcon icon={faPlus} className="text-xs" /> Add New Address
+                        <button style={{
+                            display: "flex", alignItems: "center", gap: 5,
+                            fontSize: 12, fontWeight: 700,
+                            color: T.green, background: "none", border: "none", cursor: "pointer", fontFamily: T.font,
+                        }}>
+                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} /> Add New
                         </button>
                     </div>
-                    <div className="mt-5">
-                        {customer.address ? (
-                            <div className="rounded-lg border border-[#d1e7d7] bg-[#f0f7f2] p-4">
-                                <span className="rounded-full bg-[#16a34a]/10 px-3 py-1 text-xs font-mono font-medium text-[#16a34a]">Default</span>
-                                <p className="mt-2 text-sm font-mono text-[#274c3a]/70">{customer.address}</p>
-                                <p className="mt-2 text-sm font-mono text-[#274c3a]/70">
-                                    <FontAwesomeIcon icon={faPhone} className="mr-2 text-[#16a34a]/50" />
-                                    {customer.contactNumber || 'No number'}
-                                </p>
-                            </div>
-                        ) : (
-                            <p className="text-sm font-mono text-[#274c3a]/40">No address saved yet.</p>
-                        )}
-                    </div>
-                    <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#16a34a]/30 py-3 text-sm font-mono font-medium text-[#16a34a] hover:bg-[#16a34a]/5">
-                        <FontAwesomeIcon icon={faPlus} className="text-xs" /> Add New Address
+
+                    {customer.address ? (
+                        <div style={{
+                            background: T.slate50,
+                            borderRadius: 12,
+                            border: `1px solid ${T.slate200}`,
+                            padding: 16,
+                        }}>
+                            <span style={{
+                                background: T.greenMuted, color: T.green,
+                                borderRadius: 99, padding: "3px 12px",
+                                fontSize: 11, fontWeight: 700,
+                            }}>Default</span>
+                            <p style={{ fontSize: 13, color: T.slate700, marginTop: 10, marginBottom: 8 }}>
+                                {customer.address}
+                            </p>
+                            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>
+                                <FontAwesomeIcon icon={faPhone} style={{ marginRight: 8, color: T.green, opacity: 0.6 }} />
+                                {customer.contactNumber || "No number"}
+                            </p>
+                        </div>
+                    ) : (
+                        <p style={{ fontSize: 13, color: T.slate400 }}>No address saved yet.</p>
+                    )}
+
+                    <button
+                        style={{
+                            marginTop: 16, width: "100%",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            padding: "12px 0", borderRadius: 10,
+                            border: `1.5px dashed ${T.green}55`,
+                            background: "none",
+                            fontSize: 13, fontWeight: 700, color: T.green,
+                            cursor: "pointer", fontFamily: T.font,
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = T.greenMuted}
+                        onMouseLeave={e => e.currentTarget.style.background = "none"}
+                    >
+                        <FontAwesomeIcon icon={faPlus} style={{ fontSize: 11 }} /> Add New Address
                     </button>
                 </div>
-            </section>
+            </div>
 
-            <section className="rounded-[28px] border border-[#d1e7d7] bg-white p-6 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                <div className="flex items-center gap-2">
-                    <FontAwesomeIcon icon={faLock} className="text-[#16a34a]/60" />
-                    <h3 className="text-base font-semibold text-[#14532d]">Security</h3>
+            {/* ── Security ── */}
+            <div style={{ ...T.card, padding: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                    <FontAwesomeIcon icon={faLock} style={{ color: T.slate400 }} />
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Security</h3>
                 </div>
-                <div className="mt-5 space-y-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <SecurityRow label="Password"     value="••••••••••" />
                     <SecurityRow label="Member Since" value={customer.memberSince} />
                 </div>
-            </section>
+            </div>
+
         </div>
     );
 }

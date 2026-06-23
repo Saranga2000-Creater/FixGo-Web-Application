@@ -1,7 +1,7 @@
 <?php
 class ServiceRequest {
     private $conn;
-    private $table_name = 'serviceRequest';
+    private $table_name = 'servicerequest';
 
     public function __construct($db) {
         $this->conn = $db;

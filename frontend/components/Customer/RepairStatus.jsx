@@ -3,17 +3,44 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faPaperPlane, faCircleCheck, faHandshake, faStethoscope,
     faWrench, faBoxesStacked, faFlag, faShieldHalved,
-    faCar, faChevronDown, faChevronUp,
+    faCar, faChevronDown, faChevronUp, faCalendarDays,
 } from "@fortawesome/free-solid-svg-icons";
 
+// ── Design tokens — exact match to Admin ─────────────────────────────────────
+const T = {
+    green:     "#16A34A",
+    greenLight:"#F0FDF4",
+    greenBg:   "#EDF9F0",
+    greenMuted:"rgba(22,163,74,0.08)",
+    teal:      "#0D9488",
+    tealBg:    "rgba(13,148,136,0.10)",
+    blue:      "#2563EB",
+    blueBg:    "#EDF3FF",
+    slate900:  "#111827",
+    slate700:  "#374151",
+    slate500:  "#6B7280",
+    slate400:  "#9CA3AF",
+    slate200:  "#E5E7EB",
+    slate100:  "#F3F4F6",
+    slate50:   "#F9FAFB",
+    white:     "#FFFFFF",
+    font:      "'Segoe UI', system-ui, sans-serif",
+    card: {
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
+
 const STEPS = [
-    { key: "Pending",       icon: faPaperPlane,   label: "Request Sent",   desc: "Your repair request has been sent to the shop."               },
-    { key: "Accepted",      icon: faCircleCheck,  label: "Accepted",        desc: "The shop accepted your request. Please confirm to proceed."  },
-    { key: "Confirmed",     icon: faHandshake,    label: "Confirmed",       desc: "Booking confirmed! The shop will begin work soon."           },
-    { key: "Diagnosis",     icon: faStethoscope,  label: "Diagnosis",       desc: "The shop is diagnosing the issue with your vehicle."         },
-    { key: "In Progress",   icon: faWrench,       label: "Repairing",       desc: "Your vehicle is currently being repaired."                   },
-    { key: "Pending Parts", icon: faBoxesStacked, label: "Pending Parts",   desc: "Waiting for spare parts. Repair will resume shortly."       },
-    { key: "Completed",     icon: faFlag,         label: "Completed",       desc: "Your repair is complete and your vehicle is ready!"          },
+    { key: "Pending",       icon: faPaperPlane,   label: "Request Sent",  desc: "Your repair request has been sent to the shop."              },
+    { key: "Accepted",      icon: faCircleCheck,  label: "Accepted",      desc: "The shop accepted your request. Please confirm to proceed." },
+    { key: "Confirmed",     icon: faHandshake,    label: "Confirmed",     desc: "Booking confirmed! The shop will begin work soon."          },
+    { key: "Diagnosis",     icon: faStethoscope,  label: "Diagnosis",     desc: "The shop is diagnosing the issue with your vehicle."        },
+    { key: "In Progress",   icon: faWrench,       label: "Repairing",     desc: "Your vehicle is currently being repaired."                  },
+    { key: "Pending Parts", icon: faBoxesStacked, label: "Pending Parts", desc: "Waiting for spare parts. Repair will resume shortly."      },
+    { key: "Completed",     icon: faFlag,         label: "Completed",     desc: "Your repair is complete and your vehicle is ready!"         },
 ];
 
 const getStepIndex = (status) => {
@@ -27,15 +54,23 @@ const formatDate = (d) =>
 const formatTime = (d) =>
     d ? new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
 
-function RepairDetailRow({ label, value }) {
+// ── Sub-components ────────────────────────────────────────────────────────────
+function InfoRow({ label, value }) {
     return (
-        <div className="flex items-center justify-between border-b border-[#d1e7d7]/60 pb-4 last:border-0 last:pb-0">
-            <p className="text-sm font-mono font-semibold text-[#274c3a]/70">{label}</p>
-            <p className="text-sm font-mono text-[#14532d]">{value || "—"}</p>
+        <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingBottom: 14,
+            borderBottom: `1px solid ${T.slate100}`,
+        }}>
+            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value || "—"}</p>
         </div>
     );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function RepairStatus({ customerId }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading]   = useState(true);
@@ -65,120 +100,198 @@ export default function RepairStatus({ customerId }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex flex-col items-center gap-3 text-[#274c3a]/40">
-                    <FontAwesomeIcon icon={faWrench} className="text-4xl animate-pulse text-[#16a34a]/30" />
-                    <p className="text-sm font-mono">Loading repair status…</p>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 256 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                    <FontAwesomeIcon icon={faWrench} style={{ fontSize: 36, color: T.green, opacity: 0.3 }} />
+                    <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading repair status…</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-[#14532d]">Repair Status</h1>
-                <p className="mt-2 text-sm font-mono text-[#274c3a]/60">Track the progress of your repair request in real-time.</p>
-            </section>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
+            {/* ── Page heading ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
+                <div>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Repair Status</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        Track the progress of your repair request in real-time.
+                    </p>
+                </div>
+                <div style={{
+                    fontSize: 14, fontWeight: 600, color: T.slate700,
+                    background: T.white, padding: "10px 16px",
+                    borderRadius: 12, border: `1px solid ${T.slate200}`,
+                    display: "flex", alignItems: "center", gap: 8,
+                }}>
+                    {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
+                </div>
+            </div>
+
+            {/* ── Empty state ── */}
             {requests.length === 0 ? (
-                <section className="rounded-[28px] border border-[#d1e7d7] bg-white p-12 shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <FontAwesomeIcon icon={faCar} className="text-5xl text-[#d1e7d7]" />
-                        <p className="text-base font-semibold text-[#14532d]">No active repairs</p>
-                        <p className="text-sm font-mono text-[#274c3a]/50">Your in-progress service requests will appear here.</p>
-                    </div>
-                </section>
+                <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+                    <FontAwesomeIcon icon={faCar} style={{ fontSize: 48, color: T.slate200 }} />
+                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No active repairs</p>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Your in-progress service requests will appear here.</p>
+                </div>
             ) : (
                 requests.map((req) => {
-                    const currentIdx = getStepIndex(req.status);
-                    const isOpen     = expanded === req.id;
+                    const currentIdx  = getStepIndex(req.status);
+                    const isOpen      = expanded === req.id;
                     const currentStep = STEPS[currentIdx];
 
                     return (
-                        <div key={req.id} className="rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)] overflow-hidden">
+                        <div key={req.id} style={{ ...T.card, overflow: "hidden" }}>
 
-                            {/* ── Vehicle / Shop Header ── */}
-                            <div className="p-6 border-b border-[#d1e7d7]/60">
-                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#16a34a]/10">
-                                            <FontAwesomeIcon icon={faCar} className="text-2xl text-[#16a34a]" />
-                                        </div>
-                                        <div>
-                                            <p className="text-base font-semibold text-[#14532d]">
-                                                {req.vehicle_brand || "Your Vehicle"}
-                                                {req.vehicle_color ? ` · ${req.vehicle_color}` : ""}
-                                            </p>
-                                            <p className="mt-1 text-sm font-mono text-[#274c3a]/70">
-                                                Shop: <span className="font-semibold text-[#14532d]">{req.shop_name || "—"}</span>
-                                            </p>
-                                            <p className="text-sm font-mono text-[#274c3a]/70">
-                                                Request ID: <span className="font-semibold text-[#14532d]">#{req.id}</span>
-                                            </p>
-                                        </div>
+                            {/* ── Vehicle / Shop header ── */}
+                            <div style={{
+                                padding: "20px 24px",
+                                borderBottom: `1px solid ${T.slate100}`,
+                                display: "flex",
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 16,
+                            }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                                    {/* Vehicle icon */}
+                                    <div style={{
+                                        width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
+                                        background: T.greenBg,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                    }}>
+                                        <FontAwesomeIcon icon={faCar} style={{ fontSize: 22, color: T.green }} />
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="rounded-full bg-[#16a34a]/10 px-4 py-1.5 text-sm font-mono font-semibold text-[#16a34a]">
-                                            {req.status}
-                                        </span>
-                                        <button
-                                            onClick={() => setExpanded(isOpen ? null : req.id)}
-                                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d1e7d7] bg-white text-[#274c3a]/50 transition hover:bg-[#16a34a]/5"
-                                        >
-                                            <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} className="text-xs" />
-                                        </button>
+                                    <div>
+                                        <p style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                            {req.vehicle_brand || "Your Vehicle"}
+                                            {req.vehicle_color ? ` · ${req.vehicle_color}` : ""}
+                                        </p>
+                                        <p style={{ fontSize: 13, color: T.slate500, margin: "4px 0 0" }}>
+                                            Shop: <span style={{ fontWeight: 600, color: T.slate700 }}>{req.shop_name || "—"}</span>
+                                        </p>
+                                        <p style={{ fontSize: 13, color: T.slate500, margin: "2px 0 0" }}>
+                                            Request ID: <span style={{ fontWeight: 600, color: T.slate700 }}>#{req.id}</span>
+                                        </p>
                                     </div>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                    {/* Status badge */}
+                                    <span style={{
+                                        borderRadius: 99, background: T.greenBg,
+                                        padding: "4px 14px", fontSize: 12,
+                                        fontWeight: 700, color: T.green,
+                                    }}>
+                                        {req.status}
+                                    </span>
+                                    {/* Expand toggle */}
+                                    <button
+                                        onClick={() => setExpanded(isOpen ? null : req.id)}
+                                        style={{
+                                            width: 36, height: 36,
+                                            borderRadius: "50%",
+                                            border: `1px solid ${T.slate200}`,
+                                            background: T.white,
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            cursor: "pointer", color: T.slate400,
+                                            transition: "background 0.15s ease",
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = T.greenBg}
+                                        onMouseLeave={e => e.currentTarget.style.background = T.white}
+                                    >
+                                        <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} style={{ fontSize: 12 }} />
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* ── Expanded: Stepper + Details ── */}
+                            {/* ── Expanded body ── */}
                             {isOpen && (
-                                <div className="p-6 space-y-5">
+                                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
                                     {/* Stepper */}
-                                    <div className="overflow-x-auto">
-                                        <div className="flex min-w-[640px] items-start justify-between">
+                                    <div style={{ overflowX: "auto" }}>
+                                        <div style={{
+                                            display: "flex",
+                                            minWidth: 640,
+                                            alignItems: "flex-start",
+                                            justifyContent: "space-between",
+                                        }}>
                                             {STEPS.map((step, idx) => {
                                                 const done    = idx < currentIdx;
                                                 const active  = idx === currentIdx;
                                                 const pending = idx > currentIdx;
 
+                                                const circleStyle = {
+                                                    width: 56, height: 56, borderRadius: "50%",
+                                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                                    position: "relative",
+                                                    border: `2px solid ${done ? T.green : active ? T.teal : T.slate200}`,
+                                                    background: done ? T.greenBg : active ? T.tealBg : T.white,
+                                                };
+
                                                 return (
-                                                    <div key={step.key} className="flex flex-1 flex-col items-center">
-                                                        <div className="relative flex w-full items-center justify-center">
+                                                    <div key={step.key} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                        {/* Circle + connector */}
+                                                        <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                             {idx > 0 && (
-                                                                <div className={`absolute right-1/2 top-1/2 h-[3px] w-full -translate-y-1/2 ${done || active ? "bg-[#16a34a]" : "bg-[#d1e7d7]"}`} />
+                                                                <div style={{
+                                                                    position: "absolute",
+                                                                    right: "50%", top: "50%",
+                                                                    height: 3, width: "100%",
+                                                                    transform: "translateY(-50%)",
+                                                                    background: done || active ? T.green : T.slate200,
+                                                                }} />
                                                             )}
-                                                            <div className="relative z-10">
-                                                                {done && (
-                                                                    <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#16a34a] bg-[#16a34a]/10">
-                                                                        <FontAwesomeIcon icon={step.icon} className="text-xl text-[#16a34a]" />
-                                                                        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#16a34a] text-[10px] text-white">✓</span>
-                                                                    </div>
-                                                                )}
-                                                                {active && (
-                                                                    <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#0d9488] bg-[#0d9488]/10">
-                                                                        <FontAwesomeIcon icon={step.icon} className="text-xl text-[#0d9488]" />
-                                                                    </div>
-                                                                )}
-                                                                {pending && (
-                                                                    <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#d1e7d7] bg-white">
-                                                                        <FontAwesomeIcon icon={step.icon} className="text-xl text-[#d1e7d7]" />
-                                                                    </div>
-                                                                )}
+                                                            <div style={{ position: "relative", zIndex: 1 }}>
+                                                                <div style={circleStyle}>
+                                                                    <FontAwesomeIcon
+                                                                        icon={step.icon}
+                                                                        style={{ fontSize: 18, color: done ? T.green : active ? T.teal : T.slate200 }}
+                                                                    />
+                                                                    {done && (
+                                                                        <span style={{
+                                                                            position: "absolute", bottom: -4, right: -4,
+                                                                            width: 18, height: 18, borderRadius: "50%",
+                                                                            background: T.green, color: T.white,
+                                                                            fontSize: 9, display: "flex",
+                                                                            alignItems: "center", justifyContent: "center",
+                                                                            fontWeight: 700,
+                                                                        }}>✓</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="mt-4 w-full px-1 text-center">
-                                                            <p className={`text-xs font-mono font-semibold ${active ? "text-[#0d9488]" : done ? "text-[#14532d]" : "text-[#d1e7d7]"}`}>
+
+                                                        {/* Label */}
+                                                        <div style={{ marginTop: 12, textAlign: "center", padding: "0 4px" }}>
+                                                            <p style={{
+                                                                fontSize: 11, fontWeight: 700, margin: 0,
+                                                                color: active ? T.teal : done ? T.green : T.slate400,
+                                                            }}>
                                                                 {step.label}
                                                             </p>
                                                             {active && (
-                                                                <p className="mt-1 text-[10px] font-mono leading-4 text-[#274c3a]/50">{step.desc}</p>
+                                                                <p style={{ fontSize: 10, color: T.slate500, marginTop: 4, lineHeight: 1.4 }}>
+                                                                    {step.desc}
+                                                                </p>
                                                             )}
                                                             {!active && (
-                                                                <p className="mt-1 text-[10px] tracking-widest text-[#d1e7d7]">
-                                                                    {done ? formatDate(req.created_at) || "Done" : "- - - -"}
+                                                                <p style={{ fontSize: 10, color: done ? T.slate400 : T.slate200, marginTop: 4, letterSpacing: "0.08em" }}>
+                                                                    {done ? formatDate(req.created_at) || "Done" : "– – – –"}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -189,32 +302,52 @@ export default function RepairStatus({ customerId }) {
                                     </div>
 
                                     {/* Relax banner */}
-                                    <div className="flex items-center gap-4 rounded-2xl border border-[#d1e7d7] bg-[#f0f7f2] px-5 py-4">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#16a34a]/10">
-                                            <FontAwesomeIcon icon={faShieldHalved} className="text-[#16a34a]" />
+                                    <div style={{
+                                        display: "flex", alignItems: "center", gap: 16,
+                                        borderRadius: 14,
+                                        border: `1px solid ${T.slate200}`,
+                                        background: T.slate50,
+                                        padding: "16px 20px",
+                                    }}>
+                                        <div style={{
+                                            width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                                            background: T.greenBg,
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                        }}>
+                                            <FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 16, color: T.green }} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#14532d]">Sit back and relax!</p>
-                                            <p className="text-sm font-mono text-[#274c3a]/60">We'll keep you updated at every step of the way.</p>
+                                            <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>Sit back and relax!</p>
+                                            <p style={{ fontSize: 13, color: T.slate500, marginTop: 3, marginBottom: 0 }}>
+                                                We'll keep you updated at every step of the way.
+                                            </p>
                                         </div>
                                     </div>
 
-                                    {/* Repair Details */}
-                                    <div className="rounded-2xl border border-[#d1e7d7] bg-white p-5">
-                                        <h3 className="text-base font-semibold text-[#14532d] mb-5">Repair Details</h3>
-                                        <div className="space-y-4">
-                                            <RepairDetailRow label="Issue"           value={req.issue_category || req.description || "—"} />
-                                            <RepairDetailRow label="Workshop"        value={req.shop_name}                                 />
-                                            <RepairDetailRow label="Vehicle"         value={`${req.vehicle_brand || "—"} · ${req.vehicle_color || "—"}`} />
-                                            <RepairDetailRow label="Requested On"    value={`${formatDate(req.created_at)} · ${formatTime(req.created_at)}`} />
-                                            <RepairDetailRow label="Current Status"  value={req.status}                                   />
+                                    {/* Repair Details card */}
+                                    <div style={{
+                                        background: T.white, borderRadius: 14,
+                                        border: `1px solid ${T.slate200}`, padding: 20,
+                                    }}>
+                                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: "0 0 16px" }}>Repair Details</h3>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                            <InfoRow label="Issue"          value={req.issue_category || req.description} />
+                                            <InfoRow label="Workshop"       value={req.shop_name} />
+                                            <InfoRow label="Vehicle"        value={`${req.vehicle_brand || "—"} · ${req.vehicle_color || "—"}`} />
+                                            <InfoRow label="Requested On"   value={`${formatDate(req.created_at)} · ${formatTime(req.created_at)}`} />
+                                            <InfoRow label="Current Status" value={req.status} />
                                         </div>
                                     </div>
 
                                     {/* Accepted nudge */}
                                     {req.status === "Accepted" && (
-                                        <div className="rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/5 px-4 py-3">
-                                            <p className="text-sm font-mono text-[#2563eb]">
+                                        <div style={{
+                                            borderRadius: 12,
+                                            border: `1px solid rgba(37,99,235,0.2)`,
+                                            background: T.blueBg,
+                                            padding: "12px 16px",
+                                        }}>
+                                            <p style={{ fontSize: 13, color: T.blue, margin: 0 }}>
                                                 ℹ️ <strong>{req.shop_name}</strong> has accepted your request. Go to the shop's page to <strong>confirm</strong> and unlock their contact details.
                                             </p>
                                         </div>
