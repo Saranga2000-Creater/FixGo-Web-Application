@@ -87,4 +87,47 @@ class AuthController{
         }
     }
 
+    public function verifyEmail() {
+        // Only handle POST and GET requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        // Retrieve token
+        $token = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            $token = isset($data->token) ? trim($data->token) : null;
+        } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $token = isset($_GET['token']) ? trim($_GET['token']) : null;
+        }
+
+        if (empty($token)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Verification token is required."]);
+            return;
+        }
+
+        try {
+            $user = new User($this->db);
+
+            if (!$user->findByVerificationToken($token)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Invalid or expired verification token."]);
+                return;
+            }
+
+            $user->verifyEmail($user->id);
+
+            http_response_code(200);
+            echo json_encode(["message" => "Email verified successfully. You can now log in to your account."]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["message" => "Verification failed: " . $e->getMessage()]);
+        }
+    }
+
 }

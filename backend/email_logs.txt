@@ -298,3 +298,69 @@ Best regards,
 The FixGo Team
 ==================================================
 
+==================================================
+Timestamp: 2026-06-24 13:16:21
+To: shop2@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=a635155c7f3c91a255373761b042cae06a5cb2e69337ac687892d3386700aac3
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=a635155c7f3c91a255373761b042cae06a5cb2e69337ac687892d3386700aac3
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+
+==================================================
+Timestamp: 2026-06-24 13:17:59
+To: shop555@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=8827ae15a2f72aa2960aa2d1511ee53bdee4cc7aef3cb697014523626b13fbbe
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=8827ae15a2f72aa2960aa2d1511ee53bdee4cc7aef3cb697014523626b13fbbe
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+
+==================================================
+Timestamp: 2026-06-24 13:21:38
+To: customer3@gmail.com
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=ebe4ec760482c61b04ed11c5ed357da58df107caf5e5e5add118a61a201cd7a7
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=ebe4ec760482c61b04ed11c5ed357da58df107caf5e5e5add118a61a201cd7a7
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+

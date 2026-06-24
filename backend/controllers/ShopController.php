@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/../models/Shop.php';
+require_once __DIR__ . '/../models/userRole.php';
+require_once __DIR__ . '/../config/EmailSender.php';
 
 class ShopController {
     private $db;
@@ -108,6 +110,204 @@ class ShopController {
                 'success' => false,
                 'message' => 'Shop not found or is no longer active'
             ]);
+        }
+    }
+
+    public function register() {
+        // Only handle POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        // Check inputs in $_POST
+        $requiredFields = [
+            'ownerName', 'shopName', 'email', 'phone', 'address',
+            'openTime', 'closeTime', 'providesCarriage',
+            'category', 'vehicleCategory', 'description', 'latitude', 'longitude', 'password'
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (!isset($_POST[$field]) || trim($_POST[$field]) === '') {
+                http_response_code(400);
+                echo json_encode(["message" => "Missing required field: $field"]);
+                return;
+            }
+        }
+
+        $ownerName = trim($_POST['ownerName']);
+        $shopName = trim($_POST['shopName']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $address = trim($_POST['address']);
+        $licenseNumber = isset($_POST['licenseNumber']) ? trim($_POST['licenseNumber']) : '';
+        $openTime = trim($_POST['openTime']);
+        $closeTime = trim($_POST['closeTime']);
+        $providesCarriage = (int)$_POST['providesCarriage'];
+        $category = trim($_POST['category']);
+        $vehicleCategory = trim($_POST['vehicleCategory']);
+        $description = trim($_POST['description']);
+        $latitude = (float)$_POST['latitude'];
+        $longitude = (float)$_POST['longitude'];
+        $password = $_POST['password'];
+
+        $defaultDriverName = '';
+        $defaultDriverPhone = '';
+        $defaultTruckBrand = '';
+        $defaultTruckColor = '';
+        $towTruckPlate = '';
+
+        if ($providesCarriage === 1) {
+            $towFields = ['defaultDriverName', 'defaultDriverPhone', 'defaultTruckBrand', 'defaultTruckColor', 'towTruckPlate'];
+            foreach ($towFields as $tf) {
+                if (!isset($_POST[$tf]) || trim($_POST[$tf]) === '') {
+                    http_response_code(400);
+                    echo json_encode(["message" => "Missing required towing field: $tf"]);
+                    return;
+                }
+            }
+            $defaultDriverName = trim($_POST['defaultDriverName']);
+            $defaultDriverPhone = trim($_POST['defaultDriverPhone']);
+            $defaultTruckBrand = trim($_POST['defaultTruckBrand']);
+            $defaultTruckColor = trim($_POST['defaultTruckColor']);
+            $towTruckPlate = trim($_POST['towTruckPlate']);
+        }
+
+        // Validate profile photo
+        if (!isset($_FILES['shopImage']) || $_FILES['shopImage']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please upload a workshop photo."]);
+            return;
+        }
+
+        $file = $_FILES['shopImage'];
+        $fileSize = $file['size'];
+        $fileTmp = $file['tmp_name'];
+        $fileName = $file['name'];
+
+        // Check file size (5MB max)
+        if ($fileSize > 5 * 1024 * 1024) {
+            http_response_code(400);
+            echo json_encode(["message" => "Workshop photo must be under 5MB."]);
+            return;
+        }
+
+        // Check file type
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP."]);
+            return;
+        }
+
+        // Check if email already exists
+        $userModel = new User($this->db);
+        if ($userModel->findByEmail($email)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Email is already registered."]);
+            return;
+        }
+
+        // Map Shop Category
+        $categoryId = null;
+        if (strcasecmp($category, 'Garages') === 0) {
+            $categoryId = 1;
+        } elseif (strcasecmp($category, 'Service centers') === 0 || strcasecmp($category, 'Service Centers') === 0) {
+            $categoryId = 2;
+        } elseif (strcasecmp($category, 'Spare parts') === 0 || strcasecmp($category, 'Spare Parts') === 0) {
+            $categoryId = 3;
+        }
+
+        if ($categoryId === null) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid workshop category: $category"]);
+            return;
+        }
+
+        // Map Vehicle Category
+        $vehicleIds = [];
+        if (strcasecmp($vehicleCategory, '3 wheelers and bikes') === 0 || strcasecmp($vehicleCategory, '3 Wheelers & Bikes') === 0) {
+            $vehicleIds = [1];
+        } elseif (strcasecmp($vehicleCategory, '4 wheelers') === 0 || strcasecmp($vehicleCategory, '4 Wheelers') === 0) {
+            $vehicleIds = [2];
+        } elseif (strcasecmp($vehicleCategory, 'commercial vehicles') === 0 || strcasecmp($vehicleCategory, 'Commercial Vehicles') === 0) {
+            $vehicleIds = [3];
+        }
+
+        if (empty($vehicleIds)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid vehicle category: $vehicleCategory"]);
+            return;
+        }
+
+        // Create uploads/shopOwners folder if not exists
+        $targetDir = __DIR__ . '/../uploads/shopOwners/';
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        // Generate a unique file name
+        $uniqueFileName = uniqid('shop_', true) . '.' . $fileExtension;
+        $targetFilePath = $targetDir . $uniqueFileName;
+        $dbImagePath = 'uploads/shopOwners/' . $uniqueFileName;
+
+        // Move file
+        if (!move_uploaded_file($fileTmp, $targetFilePath)) {
+            http_response_code(500);
+            echo json_encode(["message" => "Failed to save uploaded photo."]);
+            return;
+        }
+
+        try {
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            $verificationToken = bin2hex(random_bytes(32));
+
+            $shopModel = new Shop($this->db);
+
+            $userData = [
+                'email' => $email,
+                'password' => $passwordHash,
+                'verification_token' => $verificationToken
+            ];
+
+            $shopData = [
+                'name' => $shopName,
+                'address' => $address,
+                'contactNumber' => $phone,
+                'owner' => $ownerName,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'description' => $description,
+                'openTime' => $openTime,
+                'closeTime' => $closeTime,
+                'carriageService' => $providesCarriage,
+                'BRN' => $licenseNumber,
+                'profileImageURL' => $dbImagePath,
+                'driverName' => $defaultDriverName,
+                'driverPhone' => $defaultDriverPhone,
+                'truckBrand' => $defaultTruckBrand,
+                'truckColor' => $defaultTruckColor,
+                'truckPlate' => $towTruckPlate
+            ];
+
+            $shopModel->register($userData, $shopData, $categoryId, $vehicleIds);
+
+            // Send verification email
+            EmailSender::sendVerificationEmail($email, $verificationToken);
+
+            http_response_code(201);
+            echo json_encode(["message" => "Shop owner registered successfully. Please check your email to verify your account."]);
+
+        } catch (Exception $e) {
+            // Delete file if db commit failed
+            if (file_exists($targetFilePath)) {
+                unlink($targetFilePath);
+            }
+            http_response_code(500);
+            echo json_encode(["message" => "Database registration failed: " . $e->getMessage()]);
         }
     }
 }

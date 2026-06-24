@@ -349,5 +349,85 @@ class Shop {
 
         return $details;
     }
+
+    /**
+     * Registers a new shop owner by inserting into 'users', 'shop', category mapping,
+     * and vehicle categories tables within a database transaction.
+     * 
+     * @param array $userData Contains email, password, verification_token
+     * @param array $shopData Contains shop metadata and location coordinates
+     * @param int $categoryId The category ID mapped
+     * @param array $vehicleIds Array of vehicle category IDs mapped
+     * @return int The newly created user/shop ID
+     * @throws Exception if registration fails
+     */
+    public function register($userData, $shopData, $categoryId, $vehicleIds) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Insert into users
+            $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified) 
+                          VALUES (:email, 'shop_owner', :password, 0, :token, 0)";
+            $userStmt = $this->conn->prepare($userQuery);
+            $userStmt->execute([
+                ':email' => $userData['email'],
+                ':password' => $userData['password'],
+                ':token' => $userData['verification_token']
+            ]);
+            
+            $userId = $this->conn->lastInsertId();
+
+            // 2. Insert into shop
+            $shopQuery = "INSERT INTO shop (id, name, address, contactNumber, owner, location, description, openTime, closeTime, isAvailable, carriageService, BRN, profileImageURL, default_driver_name, default_driver_phone, default_truck_brand, default_truck_color, tow_truck_plate) 
+                          VALUES (:id, :name, :address, :contactNumber, :owner, ST_GeomFromText(:location_point), :description, :openTime, :closeTime, 1, :carriageService, :BRN, :profileImageURL, :driverName, :driverPhone, :truckBrand, :truckColor, :truckPlate)";
+            
+            $shopStmt = $this->conn->prepare($shopQuery);
+            $shopStmt->execute([
+                ':id' => $userId,
+                ':name' => $shopData['name'],
+                ':address' => $shopData['address'],
+                ':contactNumber' => $shopData['contactNumber'],
+                ':owner' => $shopData['owner'],
+                ':location_point' => "POINT(" . $shopData['longitude'] . " " . $shopData['latitude'] . ")",
+                ':description' => $shopData['description'],
+                ':openTime' => $shopData['openTime'],
+                ':closeTime' => $shopData['closeTime'],
+                ':carriageService' => $shopData['carriageService'],
+                ':BRN' => $shopData['BRN'],
+                ':profileImageURL' => $shopData['profileImageURL'],
+                ':driverName' => $shopData['driverName'],
+                ':driverPhone' => $shopData['driverPhone'],
+                ':truckBrand' => $shopData['truckBrand'],
+                ':truckColor' => $shopData['truckColor'],
+                ':truckPlate' => $shopData['truckPlate']
+            ]);
+
+            // 3. Insert into shopCategoryMapping
+            $mappingQuery = "INSERT INTO shopCategoryMapping (shop_id, shop_category_id) VALUES (:shop_id, :shop_category_id)";
+            $mappingStmt = $this->conn->prepare($mappingQuery);
+            $mappingStmt->execute([
+                ':shop_id' => $userId,
+                ':shop_category_id' => $categoryId
+            ]);
+
+            // 4. Insert into shopVehicleCategories
+            $vehicleQuery = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :vehicle_category_id)";
+            $vehicleStmt = $this->conn->prepare($vehicleQuery);
+            foreach ($vehicleIds as $vId) {
+                $vehicleStmt->execute([
+                    ':shop_id' => $userId,
+                    ':vehicle_category_id' => $vId
+                ]);
+            }
+
+            $this->conn->commit();
+            return $userId;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
 }
 ?>
