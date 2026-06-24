@@ -129,10 +129,23 @@ class ShopController {
         ];
 
         foreach ($requiredFields as $field) {
-            if (!isset($_POST[$field]) || trim($_POST[$field]) === '') {
+            if (!isset($_POST[$field])) {
                 http_response_code(400);
                 echo json_encode(["message" => "Missing required field: $field"]);
                 return;
+            }
+            if (is_array($_POST[$field])) {
+                if (empty($_POST[$field])) {
+                    http_response_code(400);
+                    echo json_encode(["message" => "Missing required field: $field"]);
+                    return;
+                }
+            } else {
+                if (trim($_POST[$field]) === '') {
+                    http_response_code(400);
+                    echo json_encode(["message" => "Missing required field: $field"]);
+                    return;
+                }
             }
         }
 
@@ -146,7 +159,7 @@ class ShopController {
         $closeTime = trim($_POST['closeTime']);
         $providesCarriage = (int)$_POST['providesCarriage'];
         $category = trim($_POST['category']);
-        $vehicleCategory = trim($_POST['vehicleCategory']);
+        $vehicleCategory = $_POST['vehicleCategory'];
         $description = trim($_POST['description']);
         $latitude = (float)$_POST['latitude'];
         $longitude = (float)$_POST['longitude'];
@@ -229,17 +242,39 @@ class ShopController {
 
         // Map Vehicle Category
         $vehicleIds = [];
-        if (strcasecmp($vehicleCategory, '3 wheelers and bikes') === 0 || strcasecmp($vehicleCategory, '3 Wheelers & Bikes') === 0) {
-            $vehicleIds = [1];
-        } elseif (strcasecmp($vehicleCategory, '4 wheelers') === 0 || strcasecmp($vehicleCategory, '4 Wheelers') === 0) {
-            $vehicleIds = [2];
-        } elseif (strcasecmp($vehicleCategory, 'commercial vehicles') === 0 || strcasecmp($vehicleCategory, 'Commercial Vehicles') === 0) {
-            $vehicleIds = [3];
+        $categoriesToProcess = [];
+        if (is_array($vehicleCategory)) {
+            $categoriesToProcess = $vehicleCategory;
+        } else {
+            $trimmed = trim($vehicleCategory);
+            if (strpos($trimmed, '[') === 0) {
+                $decoded = json_decode($trimmed, true);
+                if (is_array($decoded)) {
+                    $categoriesToProcess = $decoded;
+                } else {
+                    $categoriesToProcess = [$trimmed];
+                }
+            } else {
+                $categoriesToProcess = array_map('trim', explode(',', $trimmed));
+            }
         }
+
+        foreach ($categoriesToProcess as $cat) {
+            if (strcasecmp($cat, '3 wheelers and bikes') === 0 || strcasecmp($cat, '3 Wheelers & Bikes') === 0) {
+                $vehicleIds[] = 1;
+            } elseif (strcasecmp($cat, '4 wheelers') === 0 || strcasecmp($cat, '4 Wheelers') === 0) {
+                $vehicleIds[] = 2;
+            } elseif (strcasecmp($cat, 'commercial vehicles') === 0 || strcasecmp($cat, 'Commercial Vehicles') === 0) {
+                $vehicleIds[] = 3;
+            }
+        }
+
+        $vehicleIds = array_unique($vehicleIds);
 
         if (empty($vehicleIds)) {
             http_response_code(400);
-            echo json_encode(["message" => "Invalid vehicle category: $vehicleCategory"]);
+            $errMessage = is_array($vehicleCategory) ? implode(', ', $vehicleCategory) : $vehicleCategory;
+            echo json_encode(["message" => "Invalid vehicle category: $errMessage"]);
             return;
         }
 

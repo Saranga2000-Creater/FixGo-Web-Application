@@ -16,7 +16,7 @@ export default function ShopForm() {
         closeTime: "17:00",
         providesCarriage: false,
         category: "",
-        vehicleCategory: "",
+        vehicleCategory: [],
         description: "",
         latitude: 6.9271,
         longitude: 79.8612,
@@ -59,6 +59,20 @@ export default function ShopForm() {
         });
     };
 
+    const handleVehicleCategoryChange = (e) => {
+        const { value, checked } = e.target;
+        setFormData(prev => {
+            const current = Array.isArray(prev.vehicleCategory) ? prev.vehicleCategory : [];
+            const updated = checked
+                ? [...current, value]
+                : current.filter(val => val !== value);
+            return {
+                ...prev,
+                vehicleCategory: updated
+            };
+        });
+    };
+
     const handleShopImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -90,8 +104,8 @@ export default function ShopForm() {
             return;
         }
 
-        if (!formData.vehicleCategory) {
-            setError("Please select a vehicle category.");
+        if (!formData.vehicleCategory || formData.vehicleCategory.length === 0) {
+            setError("Please select at least one vehicle category.");
             return;
         }
 
@@ -151,7 +165,7 @@ export default function ShopForm() {
         payload.append("closeTime", formData.closeTime);
         payload.append("providesCarriage", formData.providesCarriage ? "1" : "0");
         payload.append("category", formData.category);
-        payload.append("vehicleCategory", formData.vehicleCategory);
+        payload.append("vehicleCategory", JSON.stringify(formData.vehicleCategory));
         payload.append("description", formData.description);
         payload.append("latitude", formData.latitude);
         payload.append("longitude", formData.longitude);
@@ -309,20 +323,38 @@ export default function ShopForm() {
                             <option value="Spare parts">Spare parts</option>
                         </select>
                     </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-600 uppercase">Vehicle Category</label>
-                        <select
-                            name="vehicleCategory"
-                            required
-                            value={formData.vehicleCategory}
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
-                        >
-                            <option value="">Select Vehicle Category</option>
-                            <option value="3 wheelers and bikes">3 Wheelers and Bikes</option>
-                            <option value="4 wheelers">4 Wheelers</option>
-                            <option value="commercial vehicles">Commercial Vehicles</option>
-                        </select>
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Vehicle Categories Serviced</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                { id: "bikes", val: "3 wheelers and bikes", label: "3 Wheelers & Bikes", icon: "🏍️" },
+                                { id: "cars", val: "4 wheelers", label: "4 Wheelers", icon: "🚗" },
+                                { id: "commercial", val: "commercial vehicles", label: "Commercial Vehicles", icon: "🚛" }
+                            ].map((item) => {
+                                const isChecked = Array.isArray(formData.vehicleCategory) && formData.vehicleCategory.includes(item.val);
+                                return (
+                                    <label
+                                        key={item.id}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 select-none ${
+                                            isChecked 
+                                                ? "border-green-500 bg-green-50/50 shadow-sm text-green-950 font-semibold" 
+                                                : "border-gray-200 bg-white hover:border-gray-300 text-gray-700 hover:bg-gray-50/50"
+                                        }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="vehicleCategory"
+                                            value={item.val}
+                                            checked={isChecked}
+                                            onChange={handleVehicleCategoryChange}
+                                            className="rounded text-green-600 focus:ring-green-500 w-4 h-4 transition-all"
+                                        />
+                                        <span className="text-lg">{item.icon}</span>
+                                        <span className="text-sm font-medium">{item.label}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
