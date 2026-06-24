@@ -43,9 +43,7 @@ function ServiceHistory() {
     const shopId = localStorage.getItem("shopId");
 
   
-    fetch(
-  `http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`
-)
+fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {

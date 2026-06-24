@@ -7,7 +7,6 @@ import ReviewsRatings from "./ReviewsRatings";
 import ShopProfile from "./ShopProfile";
 import Notification from "./Notification";
 import Settings from "./Settings";
-import { Footer } from "../footer";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠" },
@@ -222,6 +221,7 @@ function renderPage(activeNav, shopData, requestCount) {
 
 // ── Main Layout (Guaranteed Spanning Layout) ──────────────────────────────────
 function ShopOwnerDashboard() {
+  console.log("ShopOwnerDashboard rendered");
   const [activeNav, setActiveNav] = useState("dashboard");
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
@@ -267,49 +267,33 @@ useEffect(() => {
     })
     .catch((err) => console.error(err));
 }, []);
- const currentLabel =
+ 
+    const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
-return (
-  <div
-    style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      background: "#F4F8F5",
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-    }}
-  >
-    {/* Main Content Area */}
+  return (
     <div
       style={{
         display: "flex",
-        flex: 1,
+        minHeight: "100vh",
+        background: "#F8FAFC",
       }}
     >
       <Sidebar
-  activeNav={activeNav}
-  setActiveNav={setActiveNav}
-  shopData={shopData}
-  requestCount={requestCount}
-/>
+        activeNav={activeNav}
+        setActiveNav={setActiveNav}
+        navItems={NAV_ITEMS}
+      />
 
-      <div
+      <main
         style={{
           flex: 1,
-          padding: "16px 24px",
-          overflowY: "auto",
-          boxSizing: "border-box",
-          background: "#F4F8F5",
+          padding: "24px",
         }}
       >
-      {renderPage(activeNav, shopData, requestCount)}
-      </div>
+        {renderPage(activeNav, shopData, requestCount)}
+      </main>
     </div>
-
-    {/* Footer spans full width */}
-    <Footer />
-  </div>
-);
+  );
 }
 
 export default ShopOwnerDashboard;

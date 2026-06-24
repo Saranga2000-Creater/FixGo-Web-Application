@@ -47,9 +47,7 @@ function ActiveRepairs() {
   useEffect(() => {
     const shopId = localStorage.getItem("shopId");
 
-      fetch(
-  `http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`
-)
+fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
     
       .then((res) => res.json())
       .then((data) => {
