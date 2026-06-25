@@ -6,15 +6,48 @@ import {
     faClock, faCircleXmark, faStethoscope,
 } from "@fortawesome/free-solid-svg-icons";
 
+// ── Design tokens — exact match to Profile & Admin ───────────────────────────
+const T = {
+    green:      "#16A34A",
+    greenLight: "#F0FDF4",
+    greenBg:    "#EDF9F0",
+    greenMuted: "rgba(22,163,74,0.08)",
+    teal:       "#0D9488",
+    tealBg:     "rgba(13,148,136,0.08)",
+    blue:       "#2563EB",
+    blueBg:     "#EDF3FF",
+    violet:     "#A855F7",
+    violetBg:   "#F5EDFF",
+    amber:      "#D97706",
+    amberBg:    "rgba(217,119,6,0.08)",
+    red:        "#DC2626",
+    redBg:      "#FEF2F2",
+    slate900:   "#111827",
+    slate700:   "#374151",
+    slate500:   "#6B7280",
+    slate400:   "#9CA3AF",
+    slate200:   "#E5E7EB",
+    slate100:   "#F3F4F6",
+    slate50:    "#F9FAFB",
+    white:      "#FFFFFF",
+    font:       "'Segoe UI', system-ui, sans-serif",
+    card: {
+        background:   "#FFFFFF",
+        border:       "1px solid #E5E7EB",
+        borderRadius: 18,
+        boxShadow:    "0 1px 4px rgba(0,0,0,0.06)",
+    },
+};
+
 const STATUS_META = {
-    Pending:          { icon: faClock,        iconBg: "bg-[#d97706]/10", iconColor: "text-[#d97706]", badge: "bg-[#d97706]/10 text-[#d97706]",   label: "Pending"       },
-    Accepted:         { icon: faCircleCheck,  iconBg: "bg-[#2563eb]/10", iconColor: "text-[#2563eb]", badge: "bg-[#2563eb]/10 text-[#2563eb]",   label: "Accepted"      },
-    Confirmed:        { icon: faHandshake,    iconBg: "bg-[#0d9488]/10", iconColor: "text-[#0d9488]", badge: "bg-[#0d9488]/10 text-[#0d9488]",   label: "Confirmed"     },
-    Diagnosis:        { icon: faStethoscope, iconBg: "bg-[#d97706]/10", iconColor: "text-[#d97706]", badge: "bg-[#d97706]/10 text-[#d97706]",   label: "Diagnosis"     },
-    "In Progress":    { icon: faWrench,       iconBg: "bg-[#a855f7]/10", iconColor: "text-[#a855f7]", badge: "bg-[#a855f7]/10 text-[#a855f7]",   label: "In Progress"   },
-    "Pending Parts":  { icon: faBoxesStacked, iconBg: "bg-[#d97706]/10", iconColor: "text-[#d97706]", badge: "bg-[#d97706]/10 text-[#d97706]",   label: "Pending Parts" },
-    Completed:        { icon: faCircleCheck,  iconBg: "bg-[#16a34a]/10", iconColor: "text-[#16a34a]", badge: "bg-[#16a34a]/10 text-[#16a34a]",   label: "Completed"     },
-    Cancelled:        { icon: faCircleXmark,  iconBg: "bg-red-100",      iconColor: "text-red-500",   badge: "bg-red-100 text-red-600",           label: "Cancelled"     },
+    Pending:         { icon: faClock,        iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
+    Accepted:        { icon: faCircleCheck,  iconBg: "rgba(37,99,235,0.10)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
+    Confirmed:       { icon: faHandshake,    iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    Diagnosis:       { icon: faStethoscope,  iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
+    "In Progress":   { icon: faWrench,       iconBg: "rgba(168,85,247,0.10)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
+    "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
+    Completed:       { icon: faCircleCheck,  iconBg: "rgba(22,163,74,0.10)",  iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)",  badgeColor: "#16A34A",  label: "Completed"     },
+    Cancelled:       { icon: faCircleXmark,  iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
 };
 
 const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
@@ -46,9 +79,7 @@ const formatTime = (dateStr) => {
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-
     const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-
     if (d.toDateString() === today.toDateString())     return `Today, ${timeStr}`;
     if (d.toDateString() === yesterday.toDateString()) return `Yesterday, ${timeStr}`;
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + `, ${timeStr}`;
@@ -115,56 +146,107 @@ export default function Notification({ customerId }) {
         return 0;
     };
 
+    // ── Loading ───────────────────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex flex-col items-center gap-3 text-[#274c3a]/40">
-                    <FontAwesomeIcon icon={faBell} className="text-4xl animate-pulse text-[#16a34a]/30" />
-                    <p className="text-sm font-mono">Loading notifications…</p>
-                </div>
+            <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+                <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading notifications…</p>
             </div>
         );
     }
 
+    // ── Main render ───────────────────────────────────────────────────────────
     return (
-        <div className="space-y-5">
-            <section>
-                <h1 className="text-[28px] font-semibold tracking-tight text-[#14532d]">Notifications</h1>
-                <p className="mt-2 text-sm font-mono text-[#274c3a]/60">Stay updated with the latest updates and alerts.</p>
-            </section>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-2">
-                    {TABS.map(tab => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`rounded-full border px-4 py-1.5 text-sm font-mono font-medium transition ${
-                                activeTab === tab.key
-                                    ? "border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]"
-                                    : "border-[#d1e7d7] bg-white text-[#274c3a] hover:border-[#16a34a]/50 hover:bg-[#16a34a]/5"
-                            }`}
-                        >
-                            {tab.label} ({tabCount(tab.key)})
-                        </button>
-                    ))}
+            {/* ── Page heading — mirrors Profile/Admin header ── */}
+            <div style={{
+                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
+                borderRadius: 18,
+                padding: "24px",
+                border: `1px solid ${T.slate200}`,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
+                <div>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Notifications</h1>
+                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                        Stay updated with the latest repair updates and alerts.
+                    </p>
                 </div>
+                {unreadCount > 0 && (
+                    <span style={{
+                        background: T.green, color: T.white,
+                        borderRadius: 99, padding: "4px 14px",
+                        fontSize: 12, fontWeight: 700,
+                    }}>
+                        {unreadCount} unread
+                    </span>
+                )}
+            </div>
+
+            {/* ── Tab bar + Mark all read ── */}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {TABS.map(tab => {
+                        const active = activeTab === tab.key;
+                        return (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                style={{
+                                    borderRadius: 99,
+                                    border: `1px solid ${active ? T.green : T.slate200}`,
+                                    background: active ? T.greenMuted : T.white,
+                                    color: active ? T.green : T.slate700,
+                                    padding: "6px 16px",
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    fontFamily: T.font,
+                                    cursor: "pointer",
+                                    transition: "all 0.15s",
+                                }}
+                            >
+                                {tab.label} ({tabCount(tab.key)})
+                            </button>
+                        );
+                    })}
+                </div>
+
                 {unreadCount > 0 && (
                     <button
                         onClick={markAllRead}
-                        className="flex shrink-0 items-center gap-2 rounded-xl border border-[#d1e7d7] bg-white px-4 py-2 text-sm font-mono font-medium text-[#274c3a] shadow-[0_4px_12px_rgb(22,163,74,0.06)] transition hover:bg-[#16a34a]/5"
+                        style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            border: `1px solid ${T.slate200}`,
+                            background: T.white,
+                            borderRadius: 10,
+                            padding: "8px 16px",
+                            fontSize: 13, fontWeight: 600,
+                            color: T.slate700,
+                            cursor: "pointer",
+                            fontFamily: T.font,
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                        }}
                     >
-                        <FontAwesomeIcon icon={faCheck} className="text-xs text-[#16a34a]" />
+                        <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11, color: T.green }} />
                         Mark all as read
                     </button>
                 )}
-            </section>
+            </div>
 
-            <section className="rounded-[28px] border border-[#d1e7d7] bg-white shadow-[0_4px_12px_rgb(22,163,74,0.06)]">
+            {/* ── Notifications list card ── */}
+            <div style={{ ...T.card, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-                        <FontAwesomeIcon icon={faBell} className="text-4xl text-[#d1e7d7]" />
-                        <p className="text-sm font-mono text-[#274c3a]/40">No notifications in this category.</p>
+                    <div style={{
+                        display: "flex", flexDirection: "column",
+                        alignItems: "center", gap: 12,
+                        padding: "64px 24px", textAlign: "center",
+                    }}>
+                        <FontAwesomeIcon icon={faBell} style={{ fontSize: 36, color: T.slate200 }} />
+                        <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>No notifications in this category.</p>
                     </div>
                 ) : (
                     filtered.map((notif, idx) => {
@@ -176,73 +258,122 @@ export default function Notification({ customerId }) {
                             <div
                                 key={notif.id}
                                 onClick={() => markRead(notif.id)}
-                                className={`cursor-pointer px-6 py-5 transition hover:bg-[#16a34a]/[0.02] ${!isLast ? "border-b border-[#d1e7d7]/60" : ""} ${!isRead ? "bg-[#f0f7f2]" : ""}`}
+                                style={{
+                                    display: "flex", alignItems: "flex-start", gap: 16,
+                                    padding: "20px 24px",
+                                    borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
+                                    background: !isRead ? "#F0FDF4" : T.white,
+                                    cursor: "pointer",
+                                    transition: "background 0.15s",
+                                }}
+                                onMouseEnter={e => { if (isRead) e.currentTarget.style.background = T.slate50; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = !isRead ? "#F0FDF4" : T.white; }}
                             >
-                                <div className="flex items-start gap-4">
-                                    {/* Icon */}
-                                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${meta.iconBg}`}>
-                                        <FontAwesomeIcon icon={meta.icon} className={`text-xl ${meta.iconColor}`} />
+                                {/* Icon circle */}
+                                <div style={{
+                                    width: 48, height: 48, borderRadius: "50%",
+                                    background: meta.iconBg, flexShrink: 0,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <FontAwesomeIcon icon={meta.icon} style={{ fontSize: 18, color: meta.iconColor }} />
+                                </div>
+
+                                {/* Body */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                                        <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                            {notif.status === "Completed" ? "Repair completed"   :
+                                             notif.status === "Accepted"  ? "Request accepted"   :
+                                             notif.status === "Confirmed" ? "Booking confirmed"  :
+                                             "Repair status updated"}
+                                        </p>
+                                        <span style={{
+                                            background: meta.badgeBg, color: meta.badgeColor,
+                                            borderRadius: 99, padding: "3px 12px",
+                                            fontSize: 11, fontWeight: 700,
+                                        }}>
+                                            {meta.label}
+                                        </span>
                                     </div>
 
-                                    {/* Body */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <p className="text-sm font-semibold text-[#14532d]">
-                                                {notif.status === "Completed" ? "Repair completed" :
-                                                 notif.status === "Accepted"  ? "Request accepted" :
-                                                 notif.status === "Confirmed" ? "Booking confirmed" :
-                                                 "Repair status updated"}
-                                            </p>
-                                            <span className={`rounded-full px-3 py-0.5 text-xs font-mono font-medium ${meta.badge}`}>
-                                                {meta.label}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 text-sm font-mono text-[#274c3a]/70">{getMessage(notif)}</p>
-                                        <span className="mt-2 inline-block rounded-lg bg-[#d1e7d7] px-3 py-1 text-xs font-mono font-medium text-[#14532d]">
-                                            {notif.vehicle_brand || "Vehicle"} · Request #{notif.id}
-                                        </span>
+                                    <p style={{ fontSize: 13, color: T.slate500, margin: "6px 0 8px", lineHeight: 1.5 }}>
+                                        {getMessage(notif)}
+                                    </p>
 
-                                        {/* Completed — show review prompt */}
-                                        {notif.status === "Completed" && (
-                                            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#d1e7d7] bg-[#16a34a]/5 px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <FontAwesomeIcon icon={faStar} className="text-[#16a34a]" />
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-[#14532d]">We'd love to hear about your experience!</p>
-                                                        <p className="text-xs font-mono text-[#274c3a]/60">Your feedback helps others find great workshops.</p>
-                                                    </div>
+                                    <span style={{
+                                        display: "inline-block",
+                                        background: T.slate100, color: T.slate700,
+                                        borderRadius: 8, padding: "4px 12px",
+                                        fontSize: 12, fontWeight: 600,
+                                    }}>
+                                        {notif.vehicle_brand || "Vehicle"} · Request #{notif.id}
+                                    </span>
+
+                                    {/* Completed — review prompt */}
+                                    {notif.status === "Completed" && (
+                                        <div style={{
+                                            marginTop: 12,
+                                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                                            background: T.greenMuted, border: `1px solid ${T.slate200}`,
+                                            borderRadius: 12, padding: "12px 16px",
+                                        }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                <FontAwesomeIcon icon={faStar} style={{ color: T.green }} />
+                                                <div>
+                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                                        We'd love to hear about your experience!
+                                                    </p>
+                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>
+                                                        Your feedback helps others find great workshops.
+                                                    </p>
                                                 </div>
-                                                <button className="ml-4 flex shrink-0 items-center gap-2 rounded-xl bg-[#16a34a] px-4 py-2 text-sm font-mono font-medium text-white transition hover:bg-[#16a34a]/80 active:scale-95">
-                                                    <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                                    Review & Rate
-                                                    <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
-                                                </button>
                                             </div>
-                                        )}
+                                            <button style={{
+                                                display: "flex", alignItems: "center", gap: 6,
+                                                background: T.green, color: T.white,
+                                                border: "none", borderRadius: 10,
+                                                padding: "8px 14px",
+                                                fontSize: 13, fontWeight: 700,
+                                                cursor: "pointer", fontFamily: T.font,
+                                                flexShrink: 0, marginLeft: 12,
+                                            }}>
+                                                <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
+                                                Review & Rate
+                                                <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+                                            </button>
+                                        </div>
+                                    )}
 
-                                        {/* Accepted — confirm nudge */}
-                                        {notif.status === "Accepted" && (
-                                            <div className="mt-3 rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/5 px-4 py-3">
-                                                <p className="text-xs font-mono text-[#2563eb]">
-                                                    ℹ️ Go to your <strong>Repair Status</strong> tab to confirm this shop and unlock their contact details.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* Accepted — confirm nudge */}
+                                    {notif.status === "Accepted" && (
+                                        <div style={{
+                                            marginTop: 12,
+                                            background: T.blueBg, border: `1px solid rgba(37,99,235,0.2)`,
+                                            borderRadius: 10, padding: "10px 14px",
+                                        }}>
+                                            <p style={{ fontSize: 12, color: T.blue, margin: 0 }}>
+                                                ℹ️ Go to your <strong>Repair Status</strong> tab to confirm this shop and unlock their contact details.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
 
-                                    {/* Time + unread dot */}
-                                    <div className="flex shrink-0 flex-col items-end gap-2">
-                                        <span className="text-xs font-mono text-[#274c3a]/40 whitespace-nowrap">
-                                            {formatTime(notif.created_at)}
-                                        </span>
-                                        <span className={`h-2.5 w-2.5 rounded-full ${!isRead ? "bg-[#16a34a]" : "bg-[#d1e7d7]"}`} />
-                                    </div>
+                                {/* Timestamp + unread dot */}
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+                                    <span style={{ fontSize: 11, color: T.slate400, whiteSpace: "nowrap" }}>
+                                        {formatTime(notif.created_at)}
+                                    </span>
+                                    <span style={{
+                                        width: 10, height: 10, borderRadius: "50%",
+                                        background: !isRead ? T.green : T.slate200,
+                                        display: "inline-block",
+                                    }} />
                                 </div>
                             </div>
                         );
                     })
                 )}
-            </section>
+            </div>
         </div>
     );
 }

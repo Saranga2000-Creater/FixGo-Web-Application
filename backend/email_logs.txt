@@ -299,10 +299,10 @@ The FixGo Team
 ==================================================
 
 ==================================================
-Timestamp: 2026-06-24 13:16:21
-To: shop2@gmail.com
+Timestamp: 2026-06-24 01:27:09
+To: shop@test.com
 Subject: FixGo - Verify Your Email Address
-Link: http://localhost:5173/verify-email?token=a635155c7f3c91a255373761b042cae06a5cb2e69337ac687892d3386700aac3
+Link: http://localhost:5173/verify-email?token=86e4ad1672a4882690a3d01967717fa18ccd4b3ff5010412fe6c7377c556fca4
 Headers:
 From: no-reply@fixgo.com
 Reply-To: no-reply@fixgo.com
@@ -312,116 +312,11 @@ Hello,
 
 Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
 
-http://localhost:5173/verify-email?token=a635155c7f3c91a255373761b042cae06a5cb2e69337ac687892d3386700aac3
+http://localhost:5173/verify-email?token=86e4ad1672a4882690a3d01967717fa18ccd4b3ff5010412fe6c7377c556fca4
 
 If you did not create an account, no further action is required.
 
 Best regards,
 The FixGo Team
 ==================================================
-
-==================================================
-Timestamp: 2026-06-24 13:17:59
-To: shop555@gmail.com
-Subject: FixGo - Verify Your Email Address
-Link: http://localhost:5173/verify-email?token=8827ae15a2f72aa2960aa2d1511ee53bdee4cc7aef3cb697014523626b13fbbe
-Headers:
-From: no-reply@fixgo.com
-Reply-To: no-reply@fixgo.com
-X-Mailer: PHP/8.2.12
-Message:
-Hello,
-
-Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
-
-http://localhost:5173/verify-email?token=8827ae15a2f72aa2960aa2d1511ee53bdee4cc7aef3cb697014523626b13fbbe
-
-If you did not create an account, no further action is required.
-
-Best regards,
-The FixGo Team
-==================================================
-
-==================================================
-Timestamp: 2026-06-24 13:21:38
-To: customer3@gmail.com
-Subject: FixGo - Verify Your Email Address
-Link: http://localhost:5173/verify-email?token=ebe4ec760482c61b04ed11c5ed357da58df107caf5e5e5add118a61a201cd7a7
-Headers:
-From: no-reply@fixgo.com
-Reply-To: no-reply@fixgo.com
-X-Mailer: PHP/8.2.12
-Message:
-Hello,
-
-Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
-
-http://localhost:5173/verify-email?token=ebe4ec760482c61b04ed11c5ed357da58df107caf5e5e5add118a61a201cd7a7
-
-If you did not create an account, no further action is required.
-
-Best regards,
-The FixGo Team
-==================================================
-
-==================================================
-Timestamp: 2026-06-24 14:43:58
-To: api_test_6a3bd10e0a71d@fixgo.com
-Subject: FixGo - Verify Your Email Address
-Link: http://localhost:5173/verify-email?token=b8af9cf21a908d1793de68f685e9a7d896966ffe30e2104103b51ae959c961a8
-Headers:
-From: no-reply@fixgo.com
-Reply-To: no-reply@fixgo.com
-X-Mailer: PHP/8.2.12
-Message:
-Hello,
-
-Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
-
-http://localhost:5173/verify-email?token=b8af9cf21a908d1793de68f685e9a7d896966ffe30e2104103b51ae959c961a8
-
-If you did not create an account, no further action is required.
-
-Best regards,
-The FixGo Team
-==================================================
-
-==================================================
-Timestamp: 2026-06-24 14:47:18
-To: shop5@gmail.com
-Subject: FixGo - Verify Your Email Address
-Link: http://localhost:5173/verify-email?token=cb33b8bffb652bb49a0d494eb598bb700dde34c53a30ecf21c83a72c7c8ab5df
-Headers:
-From: no-reply@fixgo.com
-Reply-To: no-reply@fixgo.com
-X-Mailer: PHP/8.2.12
-Message:
-Hello,
-
-Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
-
-http://localhost:5173/verify-email?token=cb33b8bffb652bb49a0d494eb598bb700dde34c53a30ecf21c83a72c7c8ab5df
-
-If you did not create an account, no further action is required.
-
-Best regards,
-The FixGo Team
-==================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
