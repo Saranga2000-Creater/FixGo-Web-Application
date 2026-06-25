@@ -1,5 +1,5 @@
 <?php
-// backend/api/update_status.php
+// backend/api/updateStatus.php
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -46,7 +46,7 @@ try {
     $controller = new ServiceRequestController($db);
     echo $controller->handleUpdateStatus($rawData, $headers);
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         "message" => "Server error.",

@@ -44,20 +44,20 @@ function ActiveRepairs() {
   const [activeRepairs, setActiveRepairs] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    const shopId = localStorage.getItem("shopId");
+useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
 
-fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
-    
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setActiveRepairs(data.data);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
+  fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("API DATA:", data);
 
+      if (data.success) {
+        setActiveRepairs(data.data);
+      }
+    })
+    .catch(console.error);
+}, []);
   const handleChangeStatus = async (requestId, currentStatus) => {
     const nextStatus = NEXT_STATUS[currentStatus];
     if (!nextStatus) return;

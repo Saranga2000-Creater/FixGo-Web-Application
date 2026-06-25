@@ -295,26 +295,35 @@ class ServiceRequest {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getActiveRepairsByShop($shop_id)
-    {
-        $query = "
-            SELECT
-                sr.*,
-                c.name          AS customer_name,
-                c.contactNumber AS customer_phone
-            FROM servicerequest sr
-            LEFT JOIN customer c ON sr.customer_id = c.id
-            WHERE sr.shop_id = :shop_id
-            AND sr.status IN ('Confirmed', 'In Progress')
-            ORDER BY sr.created_at DESC
-        ";
+public function getActiveRepairsByShop($shop_id)
+{
+    $query = "
+        SELECT
+            sr.id,
+            sr.customer_id,
+            sr.shop_id,
+            sr.vehicle_brand,
+            sr.vehicle_color,
+            sr.issue_category,
+            sr.description,
+            sr.status,
+            sr.urgency_level,
+            c.name AS customer_name,
+            c.contactNumber AS customer_phone
+        FROM servicerequest sr
+        LEFT JOIN customer c
+            ON sr.customer_id = c.id
+        WHERE sr.shop_id = :shop_id
+          AND sr.status IN ('Confirmed','In Progress')
+        ORDER BY sr.created_at DESC
+    ";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':shop_id', $shop_id);
-        $stmt->execute();
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':shop_id', $shop_id, PDO::PARAM_INT);
+    $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     public function updateRepairStatus($request_id, $status)
     {

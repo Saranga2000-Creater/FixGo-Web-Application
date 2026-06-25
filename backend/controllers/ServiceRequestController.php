@@ -262,16 +262,17 @@ class ServiceRequestController {
         ]);
     }
 
-    public function handleGetActiveRepairs($shop_id)
-    {
-        $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
+   public function handleGetActiveRepairs($shop_id)
+{
+    $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
 
-        http_response_code(200);
-        return json_encode([
-            "success" => true,
-            "data"    => $repairs
-        ]);
-    }
+    http_response_code(200);
+
+    return json_encode([
+        "success" => true,
+        "data" => $repairs
+    ]);
+}
 
     public function handleGetServiceHistory($shop_id)
     {
