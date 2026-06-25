@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faBell, faCheck, faCar, faCircleCheck, faStar,
     faArrowRight, faWrench, faBoxesStacked, faHandshake,
-    faClock, faCircleXmark, faStethoscope,
+    faClock, faCircleXmark, faStethoscope, faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens — exact match to Profile & Admin ───────────────────────────
 const T = {
     green:      "#16A34A",
     greenLight: "#F0FDF4",
@@ -52,17 +51,19 @@ const STATUS_META = {
 
 const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
 
+// ✅ CHANGE 1: Added "Cancelled" as its own tab
 const TABS = [
     { key: "all",      label: "All"            },
     { key: "unread",   label: "Unread"         },
     { key: "repair",   label: "Repair Updates" },
     { key: "complete", label: "Completed"      },
+    { key: "cancel",   label: "Cancelled"      },
 ];
 
 const getMessage = (req) => {
     const shop = req.shop_name || "the shop";
     switch (req.status) {
-        case "Accepted":       return `${shop} accepted your request. Please confirm to lock in your booking.`;
+        case "Accepted":       return `${shop} accepted your request. Please confirm below to lock in your booking.`;
         case "Confirmed":      return `Your booking with ${shop} is confirmed! Repair will begin soon.`;
         case "Diagnosis":      return `${shop} is currently diagnosing your vehicle.`;
         case "In Progress":    return `Your vehicle repair is now in progress at ${shop}.`;
@@ -85,68 +86,142 @@ const formatTime = (dateStr) => {
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + `, ${timeStr}`;
 };
 
-export default function Notification({ customerId }) {
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading]             = useState(true);
-    const [activeTab, setActiveTab]         = useState("all");
-    const [readIds, setReadIds]             = useState(() => {
-        try { return JSON.parse(localStorage.getItem("fixgo_read_notifs") || "[]"); }
-        catch { return []; }
-    });
+export function useUnreadCount(customerId) {
+    const [count, setCount] = useState(0);
 
     useEffect(() => {
         if (!customerId) return;
-        const fetchNotifs = async () => {
+
+        const fetch_ = async () => {
+            const readIds = (() => {
+                try { return JSON.parse(localStorage.getItem("fixgo_read_notifs") || "[]"); }
+                catch { return []; }
+            })();
+
             try {
                 const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
                 const data = await res.json();
                 if (data.success) {
-                    const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
-                    setNotifications(filtered);
+                    const notifs = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
+                    const unread = notifs.filter(n => !readIds.map(String).includes(String(n.id))).length;
+                    setCount(unread);
                 }
-            } catch (err) {
-                console.error("Notification fetch error:", err);
-            } finally {
-                setLoading(false);
-            }
+            } catch {}
         };
-        fetchNotifs();
-        const interval = setInterval(fetchNotifs, 30000);
+
+        fetch_();
+        const interval = setInterval(fetch_, 30000);
         return () => clearInterval(interval);
     }, [customerId]);
 
-    const markRead = (id) => {
-        const updated = [...new Set([...readIds, id])];
+    return count;
+}
+
+export default function Notification({ customerId, onUnreadChange }) {
+    const [notifications, setNotifications]   = useState([]);
+    const [loading, setLoading]               = useState(true);
+    const [activeTab, setActiveTab]           = useState("all");
+    const [confirming, setConfirming]         = useState(null);
+    const [localConfirmed, setLocalConfirmed] = useState([]);
+    const [readIds, setReadIds] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("fixgo_read_notifs") || "[]").map(String); }
+        catch { return []; }
+    });
+
+    const fetchNotifs = useCallback(async () => {
+        if (!customerId) return;
+        try {
+            const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+            const data = await res.json();
+            if (data.success) {
+                const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
+                setNotifications(filtered);
+                setLocalConfirmed(prev =>
+                    prev.filter(id => !filtered.find(n => String(n.id) === String(id) && n.status === "Confirmed"))
+                );
+            }
+        } catch (err) {
+            console.error("Notification fetch error:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [customerId]);
+
+    useEffect(() => {
+        if (!customerId) return;
+        fetchNotifs();
+        const interval = setInterval(fetchNotifs, 30000);
+        return () => clearInterval(interval);
+    }, [fetchNotifs]);
+
+    const unreadCount = notifications.filter(n => !readIds.includes(String(n.id))).length;
+    useEffect(() => {
+        onUnreadChange?.(unreadCount);
+    }, [unreadCount, onUnreadChange]);
+
+    const persistReadIds = (updated) => {
         setReadIds(updated);
         localStorage.setItem("fixgo_read_notifs", JSON.stringify(updated));
+    };
+
+    const markRead = (id) => {
+        persistReadIds([...new Set([...readIds, String(id)])]);
     };
 
     const markAllRead = () => {
-        const allIds = notifications.map(n => n.id);
-        const updated = [...new Set([...readIds, ...allIds])];
-        setReadIds(updated);
-        localStorage.setItem("fixgo_read_notifs", JSON.stringify(updated));
+        persistReadIds([...new Set([...readIds, ...notifications.map(n => String(n.id))])]);
     };
 
-    const unreadCount = notifications.filter(n => !readIds.includes(n.id)).length;
+    const handleConfirm = async (e, requestId) => {
+        e.stopPropagation();
+        setConfirming(requestId);
+        try {
+            const res = await fetch("http://localhost:8000/api/updateStatus.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    request_id: requestId,
+                    new_status: "Confirmed",
+                    actor_id:   customerId,
+                    actor_role: "customer",
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setLocalConfirmed(prev => [...prev, String(requestId)]);
+                markRead(requestId);
+                await fetchNotifs();
+            } else {
+                alert(data.message || "Could not confirm booking. Please try again.");
+            }
+        } catch (err) {
+            console.error("Confirm error:", err);
+            alert("Network error. Please check your connection and try again.");
+        } finally {
+            setConfirming(null);
+        }
+    };
 
+    // ✅ CHANGE 2: "complete" shows only Completed, "cancel" shows only Cancelled
     const filtered = notifications.filter(n => {
         if (activeTab === "all")      return true;
-        if (activeTab === "unread")   return !readIds.includes(n.id);
-        if (activeTab === "repair")   return ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts"].includes(n.status);
-        if (activeTab === "complete") return n.status === "Completed" || n.status === "Cancelled";
+        if (activeTab === "unread")   return !readIds.includes(String(n.id));
+        if (activeTab === "repair")   return ["Accepted","Confirmed","Diagnosis","In Progress","Pending Parts"].includes(n.status);
+        if (activeTab === "complete") return n.status === "Completed";
+        if (activeTab === "cancel")   return n.status === "Cancelled";
         return true;
     });
 
+    // ✅ CHANGE 3: tabCount updated to match
     const tabCount = (key) => {
         if (key === "all")      return notifications.length;
         if (key === "unread")   return unreadCount;
         if (key === "repair")   return notifications.filter(n => ["Accepted","Confirmed","Diagnosis","In Progress","Pending Parts"].includes(n.status)).length;
-        if (key === "complete") return notifications.filter(n => ["Completed","Cancelled"].includes(n.status)).length;
+        if (key === "complete") return notifications.filter(n => n.status === "Completed").length;
+        if (key === "cancel")   return notifications.filter(n => n.status === "Cancelled").length;
         return 0;
     };
 
-    // ── Loading ───────────────────────────────────────────────────────────────
     if (loading) {
         return (
             <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
@@ -155,20 +230,16 @@ export default function Notification({ customerId }) {
         );
     }
 
-    // ── Main render ───────────────────────────────────────────────────────────
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            {/* ── Page heading — mirrors Profile/Admin header ── */}
+            {/* ── Page heading ── */}
             <div style={{
                 background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18,
-                padding: "24px",
+                borderRadius: 18, padding: "24px",
                 border: `1px solid ${T.slate200}`,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
                 <div>
                     <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Notifications</h1>
@@ -201,12 +272,8 @@ export default function Notification({ customerId }) {
                                     border: `1px solid ${active ? T.green : T.slate200}`,
                                     background: active ? T.greenMuted : T.white,
                                     color: active ? T.green : T.slate700,
-                                    padding: "6px 16px",
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    fontFamily: T.font,
-                                    cursor: "pointer",
-                                    transition: "all 0.15s",
+                                    padding: "6px 16px", fontSize: 13, fontWeight: 600,
+                                    fontFamily: T.font, cursor: "pointer", transition: "all 0.15s",
                                 }}
                             >
                                 {tab.label} ({tabCount(tab.key)})
@@ -214,20 +281,15 @@ export default function Notification({ customerId }) {
                         );
                     })}
                 </div>
-
                 {unreadCount > 0 && (
                     <button
                         onClick={markAllRead}
                         style={{
                             display: "flex", alignItems: "center", gap: 6,
-                            border: `1px solid ${T.slate200}`,
-                            background: T.white,
-                            borderRadius: 10,
-                            padding: "8px 16px",
-                            fontSize: 13, fontWeight: 600,
-                            color: T.slate700,
-                            cursor: "pointer",
-                            fontFamily: T.font,
+                            border: `1px solid ${T.slate200}`, background: T.white,
+                            borderRadius: 10, padding: "8px 16px",
+                            fontSize: 13, fontWeight: 600, color: T.slate700,
+                            cursor: "pointer", fontFamily: T.font,
                             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                         }}
                     >
@@ -237,22 +299,23 @@ export default function Notification({ customerId }) {
                 )}
             </div>
 
-            {/* ── Notifications list card ── */}
+            {/* ── Notifications list ── */}
             <div style={{ ...T.card, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
                     <div style={{
-                        display: "flex", flexDirection: "column",
-                        alignItems: "center", gap: 12,
-                        padding: "64px 24px", textAlign: "center",
+                        display: "flex", flexDirection: "column", alignItems: "center",
+                        gap: 12, padding: "64px 24px", textAlign: "center",
                     }}>
                         <FontAwesomeIcon icon={faBell} style={{ fontSize: 36, color: T.slate200 }} />
                         <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>No notifications in this category.</p>
                     </div>
                 ) : (
                     filtered.map((notif, idx) => {
-                        const meta   = STATUS_META[notif.status] || STATUS_META["Pending"];
-                        const isRead = readIds.includes(notif.id);
-                        const isLast = idx === filtered.length - 1;
+                        const meta         = STATUS_META[notif.status] || STATUS_META["Pending"];
+                        const isRead       = readIds.includes(String(notif.id));
+                        const isLast       = idx === filtered.length - 1;
+                        const isConfirming = confirming === notif.id;
+                        const isConfirmed  = localConfirmed.includes(String(notif.id)) || notif.status === "Confirmed";
 
                         return (
                             <div
@@ -263,13 +326,12 @@ export default function Notification({ customerId }) {
                                     padding: "20px 24px",
                                     borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
                                     background: !isRead ? "#F0FDF4" : T.white,
-                                    cursor: "pointer",
-                                    transition: "background 0.15s",
+                                    cursor: "pointer", transition: "background 0.15s",
                                 }}
                                 onMouseEnter={e => { if (isRead) e.currentTarget.style.background = T.slate50; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = !isRead ? "#F0FDF4" : T.white; }}
                             >
-                                {/* Icon circle */}
+                                {/* Status icon */}
                                 <div style={{
                                     width: 48, height: 48, borderRadius: "50%",
                                     background: meta.iconBg, flexShrink: 0,
@@ -282,17 +344,20 @@ export default function Notification({ customerId }) {
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                                         <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>
-                                            {notif.status === "Completed" ? "Repair completed"   :
-                                             notif.status === "Accepted"  ? "Request accepted"   :
-                                             notif.status === "Confirmed" ? "Booking confirmed"  :
+                                            {notif.status === "Completed" ? "Repair completed"  :
+                                             notif.status === "Accepted"  ? "Request accepted"  :
+                                             notif.status === "Confirmed" ? "Booking confirmed" :
                                              "Repair status updated"}
                                         </p>
                                         <span style={{
-                                            background: meta.badgeBg, color: meta.badgeColor,
+                                            background: isConfirmed && notif.status === "Accepted"
+                                                ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
+                                            color: isConfirmed && notif.status === "Accepted"
+                                                ? STATUS_META["Confirmed"].badgeColor : meta.badgeColor,
                                             borderRadius: 99, padding: "3px 12px",
                                             fontSize: 11, fontWeight: 700,
                                         }}>
-                                            {meta.label}
+                                            {isConfirmed && notif.status === "Accepted" ? "Confirmed" : meta.label}
                                         </span>
                                     </div>
 
@@ -309,7 +374,77 @@ export default function Notification({ customerId }) {
                                         {notif.vehicle_brand || "Vehicle"} · Request #{notif.id}
                                     </span>
 
-                                    {/* Completed — review prompt */}
+                                    {/* Accepted: Confirm Booking CTA */}
+                                    {notif.status === "Accepted" && (
+                                        <div style={{
+                                            marginTop: 14,
+                                            background: isConfirmed ? T.greenMuted : T.blueBg,
+                                            border: `1px solid ${isConfirmed ? T.green : "rgba(37,99,235,0.2)"}`,
+                                            borderRadius: 14, padding: "16px 18px",
+                                            display: "flex", flexWrap: "wrap",
+                                            alignItems: "center", justifyContent: "space-between", gap: 12,
+                                            transition: "all 0.3s",
+                                        }}>
+                                            <div>
+                                                <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: isConfirmed ? T.green : T.blue }}>
+                                                    {isConfirmed ? "✅ Booking confirmed!" : "Action required — confirm your booking"}
+                                                </p>
+                                                <p style={{ fontSize: 12, color: T.slate500, margin: "4px 0 0" }}>
+                                                    {isConfirmed
+                                                        ? "Head to the Repair Status tab to track your vehicle's progress."
+                                                        : "Confirming locks in your appointment and lets the shop know you're coming."}
+                                                </p>
+                                            </div>
+                                            {isConfirmed ? (
+                                                <span style={{
+                                                    display: "flex", alignItems: "center", gap: 6,
+                                                    background: T.white, color: T.green,
+                                                    border: `1px solid ${T.green}`,
+                                                    borderRadius: 10, padding: "8px 16px",
+                                                    fontSize: 13, fontWeight: 700, flexShrink: 0,
+                                                }}>
+                                                    <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11 }} />
+                                                    Confirmed
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => handleConfirm(e, notif.id)}
+                                                    disabled={isConfirming}
+                                                    style={{
+                                                        display: "flex", alignItems: "center", gap: 8,
+                                                        background: isConfirming ? T.slate200 : T.blue,
+                                                        color: isConfirming ? T.slate500 : T.white,
+                                                        border: "none", borderRadius: 10, padding: "10px 18px",
+                                                        fontSize: 13, fontWeight: 700,
+                                                        cursor: isConfirming ? "not-allowed" : "pointer",
+                                                        fontFamily: T.font, flexShrink: 0, transition: "background 0.15s",
+                                                    }}
+                                                >
+                                                    {isConfirming ? (
+                                                        <><FontAwesomeIcon icon={faSpinner} spin style={{ fontSize: 12 }} /> Confirming…</>
+                                                    ) : (
+                                                        <><FontAwesomeIcon icon={faHandshake} style={{ fontSize: 13 }} /> Confirm Booking <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} /></>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Confirmed nudge */}
+                                    {notif.status === "Confirmed" && (
+                                        <div style={{
+                                            marginTop: 12,
+                                            background: "rgba(13,148,136,0.07)",
+                                            border: "1px solid rgba(13,148,136,0.2)",
+                                            borderRadius: 10, padding: "10px 14px",
+                                        }}>
+                                            <p style={{ fontSize: 12, color: T.teal, margin: 0 }}>
+                                                ✅ Head to the <strong>Repair Status</strong> tab to track your vehicle's progress in real-time.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Completed: review prompt */}
                                     {notif.status === "Completed" && (
                                         <div style={{
                                             marginTop: 12,
@@ -331,29 +466,14 @@ export default function Notification({ customerId }) {
                                             <button style={{
                                                 display: "flex", alignItems: "center", gap: 6,
                                                 background: T.green, color: T.white,
-                                                border: "none", borderRadius: 10,
-                                                padding: "8px 14px",
-                                                fontSize: 13, fontWeight: 700,
-                                                cursor: "pointer", fontFamily: T.font,
-                                                flexShrink: 0, marginLeft: 12,
+                                                border: "none", borderRadius: 10, padding: "8px 14px",
+                                                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                                                fontFamily: T.font, flexShrink: 0, marginLeft: 12,
                                             }}>
                                                 <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
                                                 Review & Rate
                                                 <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
                                             </button>
-                                        </div>
-                                    )}
-
-                                    {/* Accepted — confirm nudge */}
-                                    {notif.status === "Accepted" && (
-                                        <div style={{
-                                            marginTop: 12,
-                                            background: T.blueBg, border: `1px solid rgba(37,99,235,0.2)`,
-                                            borderRadius: 10, padding: "10px 14px",
-                                        }}>
-                                            <p style={{ fontSize: 12, color: T.blue, margin: 0 }}>
-                                                ℹ️ Go to your <strong>Repair Status</strong> tab to confirm this shop and unlock their contact details.
-                                            </p>
                                         </div>
                                     )}
                                 </div>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import Profile from "./Profile";
 import RepairStatus from "./RepairStatus";
@@ -22,6 +21,7 @@ function getCustomerIdFromToken() {
 
 function CustomerControllDashboard() {
     const [currentPage, setCurrentPage] = useState("dashboard");
+    const [unreadCount, setUnreadCount] = useState(0);
     const customerId = getCustomerIdFromToken();
 
     return (
@@ -34,6 +34,7 @@ function CustomerControllDashboard() {
             <CustomerSidebar
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
+                unreadCount={unreadCount}
             />
 
             <main style={{
@@ -44,12 +45,17 @@ function CustomerControllDashboard() {
             }}>
                 <div style={{ maxWidth: 1180, margin: "0 auto" }}>
                     {currentPage === "dashboard"     && <Dashboard      customerId={customerId} />}
-                    {currentPage === "profile"       && <Profile         customerId={customerId} />}
-                    {currentPage === "repair"        && <RepairStatus    customerId={customerId} />}
-                    {currentPage === "history"       && <ServiceHistory  customerId={customerId} />}
-                    {currentPage === "reviews"       && <ReviewsRatings  customerId={customerId} />}
-                    {currentPage === "notifications" && <Notification    customerId={customerId} />}
-                    {currentPage === "settings"      && <Settings        customerId={customerId} />}
+                    {currentPage === "profile"       && <Profile        customerId={customerId} />}
+                    {currentPage === "repair"        && <RepairStatus   customerId={customerId} />}
+                    {currentPage === "history"       && <ServiceHistory customerId={customerId} />}
+                    {currentPage === "reviews"       && <ReviewsRatings customerId={customerId} />}
+                    {currentPage === "notifications" && (
+                        <Notification
+                            customerId={customerId}
+                            onUnreadChange={setUnreadCount}
+                        />
+                    )}
+                    {currentPage === "settings"      && <Settings       customerId={customerId} />}
                 </div>
             </main>
         </div>

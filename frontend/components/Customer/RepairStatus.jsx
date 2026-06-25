@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faHandshake, faWrench, faFlag, faShieldHalved,
     faCar, faChevronDown, faChevronUp, faCalendarDays,
+    faClock, faCircleCheck, faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -15,6 +16,10 @@ const T = {
     tealBg:    "rgba(13,148,136,0.10)",
     blue:      "#2563EB",
     blueBg:    "#EDF3FF",
+    amber:     "#D97706",
+    amberBg:   "rgba(217,119,6,0.10)",
+    red:       "#DC2626",
+    redBg:     "#FEF2F2",
     slate900:  "#111827",
     slate700:  "#374151",
     slate500:  "#6B7280",
@@ -32,7 +37,17 @@ const T = {
     },
 };
 
-// ── Only 3 steps ──────────────────────────────────────────────────────────────
+// ── Status config ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+    Pending:       { label: "Pending",     color: T.amber, bg: T.amberBg, icon: faClock,       desc: "Your request has been sent. Waiting for the shop to accept." },
+    Accepted:      { label: "Accepted",    color: T.blue,  bg: T.blueBg,  icon: faCircleCheck, desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
+    Confirmed:     { label: "Confirmed",   color: T.teal,  bg: T.tealBg,  icon: faHandshake,   desc: "Booking confirmed! The shop will begin work soon." },
+    "In Progress": { label: "In Progress", color: "#A855F7", bg: "rgba(168,85,247,0.10)", icon: faWrench, desc: "Your vehicle is currently being repaired." },
+    Completed:     { label: "Completed",   color: T.green, bg: T.greenMuted, icon: faFlag,     desc: "Your repair is complete and your vehicle is ready!" },
+    Cancelled:     { label: "Cancelled",   color: T.red,   bg: T.redBg,   icon: faCircleXmark, desc: "This request was cancelled." },
+};
+
+// ── Stepper only applies once confirmed ──────────────────────────────────────
 const STEPS = [
     { key: "Confirmed",   icon: faHandshake, label: "Confirmed",   desc: "Booking confirmed! The shop will begin work soon."  },
     { key: "In Progress", icon: faWrench,    label: "In Progress", desc: "Your vehicle is currently being repaired."          },
@@ -44,6 +59,9 @@ const getStepIndex = (status) => {
     return idx === -1 ? 0 : idx;
 };
 
+// Which statuses show the stepper
+const STEPPER_STATUSES = ["Confirmed", "In Progress", "Completed"];
+
 const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
 
@@ -53,11 +71,8 @@ const formatTime = (d) =>
 function InfoRow({ label, value }) {
     return (
         <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingBottom: 14,
-            borderBottom: `1px solid ${T.slate100}`,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            paddingBottom: 14, borderBottom: `1px solid ${T.slate100}`,
         }}>
             <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
             <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value || "—"}</p>
@@ -77,12 +92,12 @@ export default function RepairStatus({ customerId }) {
                 const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
                 const data = await res.json();
                 if (data.success) {
-                    // Only show requests that are in our 3-step flow
+                    // Show ALL active statuses — Pending shows immediately after submission
                     const active = (data.data || []).filter(r =>
-                        ["Confirmed", "In Progress", "Completed"].includes(r.status)
+                        ["Pending", "Accepted", "Confirmed", "In Progress", "Completed", "Cancelled"].includes(r.status)
                     );
                     setRequests(active);
-                    if (active.length > 0) setExpanded(active[0].id);
+                    if (active.length > 0 && !expanded) setExpanded(active[0].id);
                 }
             } catch (err) {
                 console.error("RepairStatus fetch error:", err);
@@ -112,18 +127,15 @@ export default function RepairStatus({ customerId }) {
             {/* ── Page heading ── */}
             <div style={{
                 background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18,
-                padding: "24px",
+                borderRadius: 18, padding: "24px",
                 border: `1px solid ${T.slate200}`,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
                 <div>
                     <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Repair Status</h1>
                     <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
-                        Track the progress of your active repair in real-time.
+                        Track the progress of your service requests in real-time.
                     </p>
                 </div>
                 <div style={{
@@ -141,26 +153,20 @@ export default function RepairStatus({ customerId }) {
             {requests.length === 0 ? (
                 <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
                     <FontAwesomeIcon icon={faCar} style={{ fontSize: 48, color: T.slate200 }} />
-                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No active repairs</p>
-                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Your confirmed repair requests will appear here.</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No service requests yet</p>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Your service requests will appear here once submitted.</p>
                 </div>
             ) : (
                 requests.map((req) => {
-                    const currentIdx = getStepIndex(req.status);
+                    const cfg        = STATUS_CONFIG[req.status] || STATUS_CONFIG["Pending"];
                     const isOpen     = expanded === req.id;
-
-                    // Badge color per status
-                    const badgeColor = req.status === "Completed"   ? T.green
-                                     : req.status === "In Progress" ? "#D97706"
-                                     : T.blue;
-                    const badgeBg    = req.status === "Completed"   ? T.greenMuted
-                                     : req.status === "In Progress" ? "rgba(217,119,6,0.10)"
-                                     : T.blueBg;
+                    const showStepper = STEPPER_STATUSES.includes(req.status);
+                    const currentIdx  = getStepIndex(req.status);
 
                     return (
                         <div key={req.id} style={{ ...T.card, overflow: "hidden" }}>
 
-                            {/* ── Header ── */}
+                            {/* ── Card header ── */}
                             <div style={{
                                 padding: "20px 24px",
                                 borderBottom: `1px solid ${T.slate100}`,
@@ -170,10 +176,10 @@ export default function RepairStatus({ customerId }) {
                                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                                     <div style={{
                                         width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
-                                        background: T.greenBg,
+                                        background: cfg.bg,
                                         display: "flex", alignItems: "center", justifyContent: "center",
                                     }}>
-                                        <FontAwesomeIcon icon={faCar} style={{ fontSize: 22, color: T.green }} />
+                                        <FontAwesomeIcon icon={cfg.icon} style={{ fontSize: 22, color: cfg.color }} />
                                     </div>
                                     <div>
                                         <p style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>
@@ -191,11 +197,11 @@ export default function RepairStatus({ customerId }) {
 
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                     <span style={{
-                                        borderRadius: 99, background: badgeBg,
+                                        borderRadius: 99, background: cfg.bg,
                                         padding: "4px 14px", fontSize: 12,
-                                        fontWeight: 700, color: badgeColor,
+                                        fontWeight: 700, color: cfg.color,
                                     }}>
-                                        {req.status}
+                                        {cfg.label}
                                     </span>
                                     <button
                                         onClick={() => setExpanded(isOpen ? null : req.id)}
@@ -219,112 +225,157 @@ export default function RepairStatus({ customerId }) {
                             {isOpen && (
                                 <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-                                    {/* ── 3-Step Stepper ── */}
-                                    <div style={{
-                                        display: "grid",
-                                        gridTemplateColumns: "1fr 40px 1fr 40px 1fr",
-                                        alignItems: "center",
-                                        gap: 0,
-                                        padding: "24px 16px",
-                                        background: T.slate50,
-                                        borderRadius: 16,
-                                        border: `1px solid ${T.slate200}`,
-                                    }}>
-                                        {STEPS.map((step, idx) => {
-                                            const done   = idx < currentIdx;
-                                            const active = idx === currentIdx;
-
-                                            const iconColor = done ? T.green : active ? T.teal : T.slate300;
-                                            const circleBg  = done ? T.greenMuted : active ? T.tealBg : T.white;
-                                            const circleBorder = done ? T.green : active ? T.teal : T.slate200;
-
-                                            return (
-                                                <>
-                                                    {/* Step circle + label */}
-                                                    <div key={step.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                                                        <div style={{
-                                                            width: 64, height: 64, borderRadius: "50%",
-                                                            background: circleBg,
-                                                            border: `2.5px solid ${circleBorder}`,
-                                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                                            position: "relative",
-                                                            boxShadow: active ? `0 0 0 6px ${T.tealBg}` : "none",
-                                                        }}>
-                                                            <FontAwesomeIcon icon={step.icon} style={{ fontSize: 22, color: iconColor }} />
-                                                            {done && (
-                                                                <span style={{
-                                                                    position: "absolute", bottom: -4, right: -4,
-                                                                    width: 20, height: 20, borderRadius: "50%",
-                                                                    background: T.green, color: T.white,
-                                                                    fontSize: 10, display: "flex",
-                                                                    alignItems: "center", justifyContent: "center",
-                                                                    fontWeight: 700,
-                                                                }}>✓</span>
-                                                            )}
-                                                        </div>
-                                                        <div style={{ textAlign: "center" }}>
-                                                            <p style={{
-                                                                fontSize: 13, fontWeight: 700, margin: 0,
-                                                                color: active ? T.teal : done ? T.green : T.slate400,
-                                                            }}>{step.label}</p>
-                                                            <p style={{
-                                                                fontSize: 11, margin: "4px 0 0",
-                                                                color: active ? T.slate500 : T.slate400,
-                                                                lineHeight: 1.4,
-                                                            }}>
-                                                                {active ? step.desc : done ? "Done" : "Upcoming"}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Connector line (between steps) */}
-                                                    {idx < STEPS.length - 1 && (
-                                                        <div key={`line-${idx}`} style={{
-                                                            height: 3, borderRadius: 99,
-                                                            background: idx < currentIdx ? T.green : T.slate200,
-                                                            marginBottom: 36, // align with circle center
-                                                        }} />
-                                                    )}
-                                                </>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Relax banner */}
-                                    <div style={{
-                                        display: "flex", alignItems: "center", gap: 16,
-                                        borderRadius: 14,
-                                        border: `1px solid ${T.slate200}`,
-                                        background: T.slate50,
-                                        padding: "16px 20px",
-                                    }}>
+                                    {/* ── Status info banner (Pending / Accepted) ── */}
+                                    {!showStepper && req.status !== "Cancelled" && (
                                         <div style={{
-                                            width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                                            background: T.greenMuted,
-                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            display: "flex", alignItems: "center", gap: 16,
+                                            borderRadius: 14, border: `1px solid ${cfg.color}33`,
+                                            background: cfg.bg, padding: "16px 20px",
                                         }}>
-                                            <FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 16, color: T.green }} />
+                                            <div style={{
+                                                width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                                                background: `${cfg.color}18`,
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                            }}>
+                                                <FontAwesomeIcon icon={cfg.icon} style={{ fontSize: 18, color: cfg.color }} />
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: 13, fontWeight: 700, color: cfg.color, margin: 0 }}>
+                                                    {cfg.label}
+                                                </p>
+                                                <p style={{ fontSize: 13, color: T.slate500, margin: "3px 0 0" }}>
+                                                    {cfg.desc}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>Sit back and relax!</p>
-                                            <p style={{ fontSize: 13, color: T.slate500, marginTop: 3, marginBottom: 0 }}>
-                                                We'll keep you updated at every step of the way.
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
 
-                                    {/* Repair Details */}
+                                    {/* ── Cancelled banner ── */}
+                                    {req.status === "Cancelled" && (
+                                        <div style={{
+                                            display: "flex", alignItems: "center", gap: 16,
+                                            borderRadius: 14, border: `1px solid rgba(220,38,38,0.2)`,
+                                            background: T.redBg, padding: "16px 20px",
+                                        }}>
+                                            <FontAwesomeIcon icon={faCircleXmark} style={{ fontSize: 24, color: T.red, flexShrink: 0 }} />
+                                            <div>
+                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.red, margin: 0 }}>Request Cancelled</p>
+                                                {req.cancellation_reason && (
+                                                    <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>
+                                                        Reason: {req.cancellation_reason}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ── 3-Step Stepper (Confirmed → In Progress → Completed) ── */}
+                                    {showStepper && (
+                                        <div style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "1fr 40px 1fr 40px 1fr",
+                                            alignItems: "center",
+                                            gap: 0,
+                                            padding: "24px 16px",
+                                            background: T.slate50,
+                                            borderRadius: 16,
+                                            border: `1px solid ${T.slate200}`,
+                                        }}>
+                                            {STEPS.map((step, idx) => {
+                                                const done   = idx < currentIdx;
+                                                const active = idx === currentIdx;
+                                                const iconColor    = done ? T.green : active ? T.teal : T.slate300;
+                                                const circleBg     = done ? T.greenMuted : active ? T.tealBg : T.white;
+                                                const circleBorder = done ? T.green : active ? T.teal : T.slate200;
+
+                                                return (
+                                                    <>
+                                                        <div key={step.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                                                            <div style={{
+                                                                width: 64, height: 64, borderRadius: "50%",
+                                                                background: circleBg,
+                                                                border: `2.5px solid ${circleBorder}`,
+                                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                                position: "relative",
+                                                                boxShadow: active ? `0 0 0 6px ${T.tealBg}` : "none",
+                                                            }}>
+                                                                <FontAwesomeIcon icon={step.icon} style={{ fontSize: 22, color: iconColor }} />
+                                                                {done && (
+                                                                    <span style={{
+                                                                        position: "absolute", bottom: -4, right: -4,
+                                                                        width: 20, height: 20, borderRadius: "50%",
+                                                                        background: T.green, color: T.white,
+                                                                        fontSize: 10, display: "flex",
+                                                                        alignItems: "center", justifyContent: "center",
+                                                                        fontWeight: 700,
+                                                                    }}>✓</span>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ textAlign: "center" }}>
+                                                                <p style={{
+                                                                    fontSize: 13, fontWeight: 700, margin: 0,
+                                                                    color: active ? T.teal : done ? T.green : T.slate400,
+                                                                }}>{step.label}</p>
+                                                                <p style={{
+                                                                    fontSize: 11, margin: "4px 0 0",
+                                                                    color: active ? T.slate500 : T.slate400,
+                                                                    lineHeight: 1.4,
+                                                                }}>
+                                                                    {active ? step.desc : done ? "Done" : "Upcoming"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        {idx < STEPS.length - 1 && (
+                                                            <div key={`line-${idx}`} style={{
+                                                                height: 3, borderRadius: 99,
+                                                                background: idx < currentIdx ? T.green : T.slate200,
+                                                                marginBottom: 36,
+                                                            }} />
+                                                        )}
+                                                    </>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* ── Relax banner (only for active repair) ── */}
+                                    {showStepper && req.status !== "Completed" && (
+                                        <div style={{
+                                            display: "flex", alignItems: "center", gap: 16,
+                                            borderRadius: 14, border: `1px solid ${T.slate200}`,
+                                            background: T.slate50, padding: "16px 20px",
+                                        }}>
+                                            <div style={{
+                                                width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                                                background: T.greenMuted,
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                            }}>
+                                                <FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 16, color: T.green }} />
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>Sit back and relax!</p>
+                                                <p style={{ fontSize: 13, color: T.slate500, marginTop: 3, marginBottom: 0 }}>
+                                                    We'll keep you updated at every step of the way.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ── Request Details ── */}
                                     <div style={{
                                         background: T.white, borderRadius: 14,
                                         border: `1px solid ${T.slate200}`, padding: 20,
                                     }}>
-                                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: "0 0 16px" }}>Repair Details</h3>
+                                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: "0 0 16px" }}>
+                                            Request Details
+                                        </h3>
                                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                                             <InfoRow label="Issue"          value={req.issue_category || req.description} />
                                             <InfoRow label="Workshop"       value={req.shop_name} />
                                             <InfoRow label="Vehicle"        value={`${req.vehicle_brand || "—"} · ${req.vehicle_color || "—"}`} />
-                                            <InfoRow label="Requested On"   value={`${formatDate(req.created_at)} · ${formatTime(req.created_at)}`} />
-                                            <InfoRow label="Current Status" value={req.status} />
+                                            <InfoRow label="Submitted On"   value={`${formatDate(req.created_at)} · ${formatTime(req.created_at)}`} />
+                                            <InfoRow label="Preferred Date" value={req.preferred_date ? formatDate(req.preferred_date) : null} />
+                                            <InfoRow label="Current Status" value={cfg.label} />
                                         </div>
                                     </div>
 
