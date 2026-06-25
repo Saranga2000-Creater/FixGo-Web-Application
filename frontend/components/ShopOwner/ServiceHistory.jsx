@@ -39,20 +39,22 @@ function formatDate(value) {
 function ServiceHistory() {
   const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    const shopId = localStorage.getItem("shopId");
-
   
-fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setHistory(data.data);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
+useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
 
+  fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("API DATA:", data);
+
+      if (data.success) {
+        setHistory(data.data);
+      }
+    })
+    .catch(console.error);
+}, []);
+console.log("History state:", history);
   return (
     <div>
       <div style={{ marginBottom: 24 }}>

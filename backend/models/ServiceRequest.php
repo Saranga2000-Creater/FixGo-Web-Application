@@ -345,7 +345,14 @@ public function getActiveRepairsByShop($shop_id)
     {
         $query = "
             SELECT
-                sr.*,
+                 sr.id,
+                sr.status,
+                sr.vehicle_brand,
+                sr.vehicle_color,
+                sr.description,
+                sr.issue_category,
+                sr.created_at,
+                sr.completed_at,
                 c.name          AS customer_name,
                 c.contactNumber AS customer_phone
             FROM servicerequest sr
