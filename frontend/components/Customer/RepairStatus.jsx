@@ -39,12 +39,10 @@ const T = {
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-    Pending:       { label: "Pending",     color: T.amber, bg: T.amberBg, icon: faClock,       desc: "Your request has been sent. Waiting for the shop to accept." },
-    Accepted:      { label: "Accepted",    color: T.blue,  bg: T.blueBg,  icon: faCircleCheck, desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
-    Confirmed:     { label: "Confirmed",   color: T.teal,  bg: T.tealBg,  icon: faHandshake,   desc: "Booking confirmed! The shop will begin work soon." },
-    "In Progress": { label: "In Progress", color: "#A855F7", bg: "rgba(168,85,247,0.10)", icon: faWrench, desc: "Your vehicle is currently being repaired." },
-    Completed:     { label: "Completed",   color: T.green, bg: T.greenMuted, icon: faFlag,     desc: "Your repair is complete and your vehicle is ready!" },
-    Cancelled:     { label: "Cancelled",   color: T.red,   bg: T.redBg,   icon: faCircleXmark, desc: "This request was cancelled." },
+    Pending:       { label: "Pending",     color: T.amber,    bg: T.amberBg,               icon: faClock,        desc: "Your request has been sent. Waiting for the shop to accept." },
+    Accepted:      { label: "Accepted",    color: T.blue,     bg: T.blueBg,                icon: faCircleCheck,  desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
+    Confirmed:     { label: "Confirmed",   color: T.teal,     bg: T.tealBg,                icon: faHandshake,    desc: "Booking confirmed! The shop will begin work soon." },
+    "In Progress": { label: "In Progress", color: "#A855F7",  bg: "rgba(168,85,247,0.10)", icon: faWrench,       desc: "Your vehicle is currently being repaired." },
 };
 
 // ── Stepper only applies once confirmed ──────────────────────────────────────
@@ -59,14 +57,21 @@ const getStepIndex = (status) => {
     return idx === -1 ? 0 : idx;
 };
 
-// Which statuses show the stepper
-const STEPPER_STATUSES = ["Confirmed", "In Progress", "Completed"];
+const STEPPER_STATUSES = ["Confirmed", "In Progress"];
+
+// ── Only show ongoing repairs ─────────────────────────────────────────────────
+const ONGOING_STATUSES = ["Pending", "Accepted", "Confirmed", "In Progress"];
 
 const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
 
 const formatTime = (d) =>
     d ? new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
+
+const formatRefId = (id, createdAt) => {
+    const year = createdAt ? new Date(createdAt).getFullYear() : new Date().getFullYear();
+    return `REQ-${year}-${String(id).padStart(5, "0")}`;
+};
 
 function InfoRow({ label, value }) {
     return (
@@ -92,12 +97,12 @@ export default function RepairStatus({ customerId }) {
                 const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
                 const data = await res.json();
                 if (data.success) {
-                    // Show ALL active statuses — Pending shows immediately after submission
-                    const active = (data.data || []).filter(r =>
-                        ["Pending", "Accepted", "Confirmed", "In Progress", "Completed", "Cancelled"].includes(r.status)
+                    // ── Only show ONGOING repairs (not Completed or Cancelled) ──
+                    const ongoing = (data.data || []).filter(r =>
+                        ONGOING_STATUSES.includes(r.status)
                     );
-                    setRequests(active);
-                    if (active.length > 0 && !expanded) setExpanded(active[0].id);
+                    setRequests(ongoing);
+                    if (ongoing.length > 0 && !expanded) setExpanded(ongoing[0].id);
                 }
             } catch (err) {
                 console.error("RepairStatus fetch error:", err);
@@ -135,7 +140,7 @@ export default function RepairStatus({ customerId }) {
                 <div>
                     <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Repair Status</h1>
                     <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
-                        Track the progress of your service requests in real-time.
+                        Track the progress of your active service requests.
                     </p>
                 </div>
                 <div style={{
@@ -153,13 +158,15 @@ export default function RepairStatus({ customerId }) {
             {requests.length === 0 ? (
                 <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
                     <FontAwesomeIcon icon={faCar} style={{ fontSize: 48, color: T.slate200 }} />
-                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No service requests yet</p>
-                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Your service requests will appear here once submitted.</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No active repairs</p>
+                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>
+                        You have no ongoing repairs right now. Completed repairs can be found in Service History.
+                    </p>
                 </div>
             ) : (
                 requests.map((req) => {
-                    const cfg        = STATUS_CONFIG[req.status] || STATUS_CONFIG["Pending"];
-                    const isOpen     = expanded === req.id;
+                    const cfg         = STATUS_CONFIG[req.status] || STATUS_CONFIG["Pending"];
+                    const isOpen      = expanded === req.id;
                     const showStepper = STEPPER_STATUSES.includes(req.status);
                     const currentIdx  = getStepIndex(req.status);
 
@@ -190,7 +197,7 @@ export default function RepairStatus({ customerId }) {
                                             Shop: <span style={{ fontWeight: 600, color: T.slate700 }}>{req.shop_name || "—"}</span>
                                         </p>
                                         <p style={{ fontSize: 13, color: T.slate500, margin: "2px 0 0" }}>
-                                            Request ID: <span style={{ fontWeight: 600, color: T.slate700 }}>#{req.id}</span>
+                                            <span style={{ fontWeight: 600, color: T.slate700 }}>{formatRefId(req.id, req.created_at)}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -226,7 +233,7 @@ export default function RepairStatus({ customerId }) {
                                 <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
                                     {/* ── Status info banner (Pending / Accepted) ── */}
-                                    {!showStepper && req.status !== "Cancelled" && (
+                                    {!showStepper && (
                                         <div style={{
                                             display: "flex", alignItems: "center", gap: 16,
                                             borderRadius: 14, border: `1px solid ${cfg.color}33`,
@@ -250,25 +257,6 @@ export default function RepairStatus({ customerId }) {
                                         </div>
                                     )}
 
-                                    {/* ── Cancelled banner ── */}
-                                    {req.status === "Cancelled" && (
-                                        <div style={{
-                                            display: "flex", alignItems: "center", gap: 16,
-                                            borderRadius: 14, border: `1px solid rgba(220,38,38,0.2)`,
-                                            background: T.redBg, padding: "16px 20px",
-                                        }}>
-                                            <FontAwesomeIcon icon={faCircleXmark} style={{ fontSize: 24, color: T.red, flexShrink: 0 }} />
-                                            <div>
-                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.red, margin: 0 }}>Request Cancelled</p>
-                                                {req.cancellation_reason && (
-                                                    <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>
-                                                        Reason: {req.cancellation_reason}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
                                     {/* ── 3-Step Stepper (Confirmed → In Progress → Completed) ── */}
                                     {showStepper && (
                                         <div style={{
@@ -282,8 +270,8 @@ export default function RepairStatus({ customerId }) {
                                             border: `1px solid ${T.slate200}`,
                                         }}>
                                             {STEPS.map((step, idx) => {
-                                                const done   = idx < currentIdx;
-                                                const active = idx === currentIdx;
+                                                const done         = idx < currentIdx;
+                                                const active       = idx === currentIdx;
                                                 const iconColor    = done ? T.green : active ? T.teal : T.slate300;
                                                 const circleBg     = done ? T.greenMuted : active ? T.tealBg : T.white;
                                                 const circleBorder = done ? T.green : active ? T.teal : T.slate200;
@@ -338,8 +326,8 @@ export default function RepairStatus({ customerId }) {
                                         </div>
                                     )}
 
-                                    {/* ── Relax banner (only for active repair) ── */}
-                                    {showStepper && req.status !== "Completed" && (
+                                    {/* ── Relax banner (active repair in progress) ── */}
+                                    {showStepper && (
                                         <div style={{
                                             display: "flex", alignItems: "center", gap: 16,
                                             borderRadius: 14, border: `1px solid ${T.slate200}`,
@@ -370,6 +358,7 @@ export default function RepairStatus({ customerId }) {
                                             Request Details
                                         </h3>
                                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                            <InfoRow label="Reference ID"   value={formatRefId(req.id, req.created_at)} />
                                             <InfoRow label="Issue"          value={req.issue_category || req.description} />
                                             <InfoRow label="Workshop"       value={req.shop_name} />
                                             <InfoRow label="Vehicle"        value={`${req.vehicle_brand || "—"} · ${req.vehicle_color || "—"}`} />

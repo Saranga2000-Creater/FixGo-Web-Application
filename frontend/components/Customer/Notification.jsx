@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faBell, faCheck, faCar, faCircleCheck, faStar,
+    faBell, faCheck, faCircleCheck, faStar,
     faArrowRight, faWrench, faBoxesStacked, faHandshake,
     faClock, faCircleXmark, faStethoscope, faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
@@ -12,15 +12,10 @@ const T = {
     greenBg:    "#EDF9F0",
     greenMuted: "rgba(22,163,74,0.08)",
     teal:       "#0D9488",
-    tealBg:     "rgba(13,148,136,0.08)",
     blue:       "#2563EB",
     blueBg:     "#EDF3FF",
-    violet:     "#A855F7",
-    violetBg:   "#F5EDFF",
     amber:      "#D97706",
-    amberBg:    "rgba(217,119,6,0.08)",
     red:        "#DC2626",
-    redBg:      "#FEF2F2",
     slate900:   "#111827",
     slate700:   "#374151",
     slate500:   "#6B7280",
@@ -51,7 +46,6 @@ const STATUS_META = {
 
 const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
 
-// ✅ CHANGE 1: Added "Cancelled" as its own tab
 const TABS = [
     { key: "all",      label: "All"            },
     { key: "unread",   label: "Unread"         },
@@ -59,6 +53,24 @@ const TABS = [
     { key: "complete", label: "Completed"      },
     { key: "cancel",   label: "Cancelled"      },
 ];
+
+// ── Shared storage helpers ────────────────────────────────────────────────────
+const storageKey = (id) => `fixgo_read_notifs_${String(id)}`;
+
+const getReadIds = (id) => {
+    try {
+        return JSON.parse(localStorage.getItem(storageKey(id)) || "[]").map(String);
+    } catch {
+        return [];
+    }
+};
+
+const saveReadIds = (id, ids) => {
+    const deduped = [...new Set(ids.map(String))];
+    localStorage.setItem(storageKey(id), JSON.stringify(deduped));
+    window.dispatchEvent(new CustomEvent("fixgo_read_changed", { detail: { customerId: String(id) } }));
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 const getMessage = (req) => {
     const shop = req.shop_name || "the shop";
@@ -86,47 +98,77 @@ const formatTime = (dateStr) => {
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + `, ${timeStr}`;
 };
 
+const formatRefId = (id, createdAt) => {
+    const year = createdAt ? new Date(createdAt).getFullYear() : new Date().getFullYear();
+    return `REQ-${year}-${String(id).padStart(5, "0")}`;
+};
+
+// ── Exported hook ─────────────────────────────────────────────────────────────
 export function useUnreadCount(customerId) {
     const [count, setCount] = useState(0);
 
     useEffect(() => {
-        if (!customerId) return;
+        if (!customerId) { setCount(0); return; }
+        const id = String(customerId);
 
-        const fetch_ = async () => {
-            const readIds = (() => {
-                try { return JSON.parse(localStorage.getItem("fixgo_read_notifs") || "[]"); }
-                catch { return []; }
-            })();
+        // Always reads localStorage fresh — no cached state that can go stale
+        const computeCount = (notifs) => {
+            const readIds = getReadIds(id);
+            const unread  = notifs.filter(n => !readIds.includes(String(n.id))).length;
+            console.log(`[useUnreadCount] id=${id} readIds=${JSON.stringify(readIds)} unread=${unread}`);
+            return unread;
+        };
 
+        // Plain closure variable — avoids stale state in event handler
+        let cachedNotifs = [];
+
+        const fetchAndCount = async () => {
             try {
-                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${id}`);
                 const data = await res.json();
                 if (data.success) {
-                    const notifs = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
-                    const unread = notifs.filter(n => !readIds.map(String).includes(String(n.id))).length;
-                    setCount(unread);
+                    cachedNotifs = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
+                    setCount(computeCount(cachedNotifs));
                 }
             } catch {}
         };
 
-        fetch_();
-        const interval = setInterval(fetch_, 30000);
-        return () => clearInterval(interval);
+        // Re-compute instantly when Notification component marks items read
+        const onReadChanged = (e) => {
+            if (String(e.detail?.customerId) !== id) return;
+            setCount(computeCount(cachedNotifs));
+        };
+
+        window.addEventListener("fixgo_read_changed", onReadChanged);
+        fetchAndCount();
+        const interval = setInterval(fetchAndCount, 30000);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("fixgo_read_changed", onReadChanged);
+        };
     }, [customerId]);
 
     return count;
 }
 
-export default function Notification({ customerId, onUnreadChange }) {
+// ── Main Notification component ───────────────────────────────────────────────
+export default function Notification({ customerId: rawId }) {
+    const customerId = String(rawId || "");
+
     const [notifications, setNotifications]   = useState([]);
     const [loading, setLoading]               = useState(true);
     const [activeTab, setActiveTab]           = useState("all");
     const [confirming, setConfirming]         = useState(null);
     const [localConfirmed, setLocalConfirmed] = useState([]);
-    const [readIds, setReadIds] = useState(() => {
-        try { return JSON.parse(localStorage.getItem("fixgo_read_notifs") || "[]").map(String); }
-        catch { return []; }
-    });
+    const [readIds, setReadIds]               = useState([]);
+    const [readIdsLoaded, setReadIdsLoaded]   = useState(false);
+
+    useEffect(() => {
+        if (!customerId) return;
+        setReadIds(getReadIds(customerId));
+        setReadIdsLoaded(true);
+    }, [customerId]);
 
     const fetchNotifs = useCallback(async () => {
         if (!customerId) return;
@@ -137,7 +179,7 @@ export default function Notification({ customerId, onUnreadChange }) {
                 const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
                 setNotifications(filtered);
                 setLocalConfirmed(prev =>
-                    prev.filter(id => !filtered.find(n => String(n.id) === String(id) && n.status === "Confirmed"))
+                    prev.filter(id => !filtered.find(n => String(n.id) === id && n.status === "Confirmed"))
                 );
             }
         } catch (err) {
@@ -155,22 +197,15 @@ export default function Notification({ customerId, onUnreadChange }) {
     }, [fetchNotifs]);
 
     const unreadCount = notifications.filter(n => !readIds.includes(String(n.id))).length;
-    useEffect(() => {
-        onUnreadChange?.(unreadCount);
-    }, [unreadCount, onUnreadChange]);
 
     const persistReadIds = (updated) => {
-        setReadIds(updated);
-        localStorage.setItem("fixgo_read_notifs", JSON.stringify(updated));
+        const deduped = [...new Set(updated.map(String))];
+        setReadIds(deduped);
+        saveReadIds(customerId, deduped);
     };
 
-    const markRead = (id) => {
-        persistReadIds([...new Set([...readIds, String(id)])]);
-    };
-
-    const markAllRead = () => {
-        persistReadIds([...new Set([...readIds, ...notifications.map(n => String(n.id))])]);
-    };
+    const markRead    = (id) => persistReadIds([...readIds, String(id)]);
+    const markAllRead = ()   => persistReadIds([...readIds, ...notifications.map(n => String(n.id))]);
 
     const handleConfirm = async (e, requestId) => {
         e.stopPropagation();
@@ -202,7 +237,6 @@ export default function Notification({ customerId, onUnreadChange }) {
         }
     };
 
-    // ✅ CHANGE 2: "complete" shows only Completed, "cancel" shows only Cancelled
     const filtered = notifications.filter(n => {
         if (activeTab === "all")      return true;
         if (activeTab === "unread")   return !readIds.includes(String(n.id));
@@ -212,7 +246,6 @@ export default function Notification({ customerId, onUnreadChange }) {
         return true;
     });
 
-    // ✅ CHANGE 3: tabCount updated to match
     const tabCount = (key) => {
         if (key === "all")      return notifications.length;
         if (key === "unread")   return unreadCount;
@@ -222,7 +255,7 @@ export default function Notification({ customerId, onUnreadChange }) {
         return 0;
     };
 
-    if (loading) {
+    if (loading || !readIdsLoaded) {
         return (
             <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
                 <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading notifications…</p>
@@ -233,7 +266,6 @@ export default function Notification({ customerId, onUnreadChange }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            {/* ── Page heading ── */}
             <div style={{
                 background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
                 borderRadius: 18, padding: "24px",
@@ -258,48 +290,39 @@ export default function Notification({ customerId, onUnreadChange }) {
                 )}
             </div>
 
-            {/* ── Tab bar + Mark all read ── */}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {TABS.map(tab => {
                         const active = activeTab === tab.key;
                         return (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key)}
-                                style={{
-                                    borderRadius: 99,
-                                    border: `1px solid ${active ? T.green : T.slate200}`,
-                                    background: active ? T.greenMuted : T.white,
-                                    color: active ? T.green : T.slate700,
-                                    padding: "6px 16px", fontSize: 13, fontWeight: 600,
-                                    fontFamily: T.font, cursor: "pointer", transition: "all 0.15s",
-                                }}
-                            >
+                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                borderRadius: 99,
+                                border: `1px solid ${active ? T.green : T.slate200}`,
+                                background: active ? T.greenMuted : T.white,
+                                color: active ? T.green : T.slate700,
+                                padding: "6px 16px", fontSize: 13, fontWeight: 600,
+                                fontFamily: T.font, cursor: "pointer", transition: "all 0.15s",
+                            }}>
                                 {tab.label} ({tabCount(tab.key)})
                             </button>
                         );
                     })}
                 </div>
                 {unreadCount > 0 && (
-                    <button
-                        onClick={markAllRead}
-                        style={{
-                            display: "flex", alignItems: "center", gap: 6,
-                            border: `1px solid ${T.slate200}`, background: T.white,
-                            borderRadius: 10, padding: "8px 16px",
-                            fontSize: 13, fontWeight: 600, color: T.slate700,
-                            cursor: "pointer", fontFamily: T.font,
-                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                        }}
-                    >
+                    <button onClick={markAllRead} style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        border: `1px solid ${T.slate200}`, background: T.white,
+                        borderRadius: 10, padding: "8px 16px",
+                        fontSize: 13, fontWeight: 600, color: T.slate700,
+                        cursor: "pointer", fontFamily: T.font,
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}>
                         <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11, color: T.green }} />
                         Mark all as read
                     </button>
                 )}
             </div>
 
-            {/* ── Notifications list ── */}
             <div style={{ ...T.card, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
                     <div style={{
@@ -318,20 +341,16 @@ export default function Notification({ customerId, onUnreadChange }) {
                         const isConfirmed  = localConfirmed.includes(String(notif.id)) || notif.status === "Confirmed";
 
                         return (
-                            <div
-                                key={notif.id}
-                                onClick={() => markRead(notif.id)}
-                                style={{
-                                    display: "flex", alignItems: "flex-start", gap: 16,
-                                    padding: "20px 24px",
-                                    borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
-                                    background: !isRead ? "#F0FDF4" : T.white,
-                                    cursor: "pointer", transition: "background 0.15s",
-                                }}
+                            <div key={notif.id} onClick={() => markRead(notif.id)} style={{
+                                display: "flex", alignItems: "flex-start", gap: 16,
+                                padding: "20px 24px",
+                                borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
+                                background: !isRead ? "#F0FDF4" : T.white,
+                                cursor: "pointer", transition: "background 0.15s",
+                            }}
                                 onMouseEnter={e => { if (isRead) e.currentTarget.style.background = T.slate50; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = !isRead ? "#F0FDF4" : T.white; }}
                             >
-                                {/* Status icon */}
                                 <div style={{
                                     width: 48, height: 48, borderRadius: "50%",
                                     background: meta.iconBg, flexShrink: 0,
@@ -340,7 +359,6 @@ export default function Notification({ customerId, onUnreadChange }) {
                                     <FontAwesomeIcon icon={meta.icon} style={{ fontSize: 18, color: meta.iconColor }} />
                                 </div>
 
-                                {/* Body */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                                         <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>
@@ -350,12 +368,9 @@ export default function Notification({ customerId, onUnreadChange }) {
                                              "Repair status updated"}
                                         </p>
                                         <span style={{
-                                            background: isConfirmed && notif.status === "Accepted"
-                                                ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
-                                            color: isConfirmed && notif.status === "Accepted"
-                                                ? STATUS_META["Confirmed"].badgeColor : meta.badgeColor,
-                                            borderRadius: 99, padding: "3px 12px",
-                                            fontSize: 11, fontWeight: 700,
+                                            background: isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
+                                            color:      isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeColor : meta.badgeColor,
+                                            borderRadius: 99, padding: "3px 12px", fontSize: 11, fontWeight: 700,
                                         }}>
                                             {isConfirmed && notif.status === "Accepted" ? "Confirmed" : meta.label}
                                         </span>
@@ -366,15 +381,12 @@ export default function Notification({ customerId, onUnreadChange }) {
                                     </p>
 
                                     <span style={{
-                                        display: "inline-block",
-                                        background: T.slate100, color: T.slate700,
-                                        borderRadius: 8, padding: "4px 12px",
-                                        fontSize: 12, fontWeight: 600,
+                                        display: "inline-block", background: T.slate100, color: T.slate700,
+                                        borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 600,
                                     }}>
-                                        {notif.vehicle_brand || "Vehicle"} · Request #{notif.id}
+                                        {notif.vehicle_brand || "Vehicle"} · {formatRefId(notif.id, notif.created_at)}
                                     </span>
 
-                                    {/* Accepted: Confirm Booking CTA */}
                                     {notif.status === "Accepted" && (
                                         <div style={{
                                             marginTop: 14,
@@ -398,45 +410,34 @@ export default function Notification({ customerId, onUnreadChange }) {
                                             {isConfirmed ? (
                                                 <span style={{
                                                     display: "flex", alignItems: "center", gap: 6,
-                                                    background: T.white, color: T.green,
-                                                    border: `1px solid ${T.green}`,
-                                                    borderRadius: 10, padding: "8px 16px",
-                                                    fontSize: 13, fontWeight: 700, flexShrink: 0,
+                                                    background: T.white, color: T.green, border: `1px solid ${T.green}`,
+                                                    borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, flexShrink: 0,
                                                 }}>
-                                                    <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11 }} />
-                                                    Confirmed
+                                                    <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11 }} /> Confirmed
                                                 </span>
                                             ) : (
-                                                <button
-                                                    onClick={(e) => handleConfirm(e, notif.id)}
-                                                    disabled={isConfirming}
-                                                    style={{
-                                                        display: "flex", alignItems: "center", gap: 8,
-                                                        background: isConfirming ? T.slate200 : T.blue,
-                                                        color: isConfirming ? T.slate500 : T.white,
-                                                        border: "none", borderRadius: 10, padding: "10px 18px",
-                                                        fontSize: 13, fontWeight: 700,
-                                                        cursor: isConfirming ? "not-allowed" : "pointer",
-                                                        fontFamily: T.font, flexShrink: 0, transition: "background 0.15s",
-                                                    }}
-                                                >
-                                                    {isConfirming ? (
-                                                        <><FontAwesomeIcon icon={faSpinner} spin style={{ fontSize: 12 }} /> Confirming…</>
-                                                    ) : (
-                                                        <><FontAwesomeIcon icon={faHandshake} style={{ fontSize: 13 }} /> Confirm Booking <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} /></>
-                                                    )}
+                                                <button onClick={(e) => handleConfirm(e, notif.id)} disabled={isConfirming} style={{
+                                                    display: "flex", alignItems: "center", gap: 8,
+                                                    background: isConfirming ? T.slate200 : T.blue,
+                                                    color: isConfirming ? T.slate500 : T.white,
+                                                    border: "none", borderRadius: 10, padding: "10px 18px",
+                                                    fontSize: 13, fontWeight: 700,
+                                                    cursor: isConfirming ? "not-allowed" : "pointer",
+                                                    fontFamily: T.font, flexShrink: 0, transition: "background 0.15s",
+                                                }}>
+                                                    {isConfirming
+                                                        ? <><FontAwesomeIcon icon={faSpinner} spin style={{ fontSize: 12 }} /> Confirming…</>
+                                                        : <><FontAwesomeIcon icon={faHandshake} style={{ fontSize: 13 }} /> Confirm Booking <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} /></>
+                                                    }
                                                 </button>
                                             )}
                                         </div>
                                     )}
 
-                                    {/* Confirmed nudge */}
                                     {notif.status === "Confirmed" && (
                                         <div style={{
-                                            marginTop: 12,
-                                            background: "rgba(13,148,136,0.07)",
-                                            border: "1px solid rgba(13,148,136,0.2)",
-                                            borderRadius: 10, padding: "10px 14px",
+                                            marginTop: 12, background: "rgba(13,148,136,0.07)",
+                                            border: "1px solid rgba(13,148,136,0.2)", borderRadius: 10, padding: "10px 14px",
                                         }}>
                                             <p style={{ fontSize: 12, color: T.teal, margin: 0 }}>
                                                 ✅ Head to the <strong>Repair Status</strong> tab to track your vehicle's progress in real-time.
@@ -444,31 +445,24 @@ export default function Notification({ customerId, onUnreadChange }) {
                                         </div>
                                     )}
 
-                                    {/* Completed: review prompt */}
                                     {notif.status === "Completed" && (
                                         <div style={{
-                                            marginTop: 12,
-                                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                                            marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between",
                                             background: T.greenMuted, border: `1px solid ${T.slate200}`,
                                             borderRadius: 12, padding: "12px 16px",
                                         }}>
                                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                                 <FontAwesomeIcon icon={faStar} style={{ color: T.green }} />
                                                 <div>
-                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>
-                                                        We'd love to hear about your experience!
-                                                    </p>
-                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>
-                                                        Your feedback helps others find great workshops.
-                                                    </p>
+                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>We'd love to hear about your experience!</p>
+                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Your feedback helps others find great workshops.</p>
                                                 </div>
                                             </div>
                                             <button style={{
                                                 display: "flex", alignItems: "center", gap: 6,
-                                                background: T.green, color: T.white,
-                                                border: "none", borderRadius: 10, padding: "8px 14px",
-                                                fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                                fontFamily: T.font, flexShrink: 0, marginLeft: 12,
+                                                background: T.green, color: T.white, border: "none",
+                                                borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700,
+                                                cursor: "pointer", fontFamily: T.font, flexShrink: 0, marginLeft: 12,
                                             }}>
                                                 <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
                                                 Review & Rate
@@ -478,7 +472,6 @@ export default function Notification({ customerId, onUnreadChange }) {
                                     )}
                                 </div>
 
-                                {/* Timestamp + unread dot */}
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
                                     <span style={{ fontSize: 11, color: T.slate400, whiteSpace: "nowrap" }}>
                                         {formatTime(notif.created_at)}

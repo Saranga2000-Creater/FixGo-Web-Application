@@ -10,7 +10,6 @@ import {
     faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Shared design tokens (mirrors Admin) ─────────────────────────────────────
 const T = {
     green:     "#16A34A",
     greenLight:"#F0FDF4",
@@ -44,6 +43,7 @@ function SummaryCard({ accent, icon, title, count, linkText, meta, onClick }) {
     const a = ACCENT[accent];
     return (
         <div
+            onClick={onClick}
             style={{
                 background: T.white,
                 borderRadius: 18,
@@ -51,7 +51,7 @@ function SummaryCard({ accent, icon, title, count, linkText, meta, onClick }) {
                 padding: "20px 24px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                 transition: "all 0.25s ease",
-                cursor: "pointer",
+                cursor: onClick ? "pointer" : "default",
             }}
             onMouseEnter={e => {
                 e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
@@ -104,20 +104,65 @@ function getGreeting() {
     return "Good evening";
 }
 
-function Dashboard({ customerId }) {
-    const [firstName, setFirstName] = useState("");
+const ONGOING_STATUSES   = ["Pending", "Accepted", "Confirmed", "In Progress"];
+const NOTIF_WORTHY       = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
 
+function Dashboard({ customerId, onNavigate }) {
+    const [firstName, setFirstName] = useState("");
+    const [counts, setCounts]       = useState({
+        active:        0,
+        completed:     0,
+        appointments:  0,
+        notifications: 0,
+    });
+
+    // Fetch profile for greeting name
     useEffect(() => {
         const token = localStorage.getItem("jwt_token");
         fetch("http://localhost:8000/api/getCustomerProfile.php", {
             headers: { Authorization: "Bearer " + token },
         })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) setFirstName(data.name.split(" ")[0]);
-            })
+            .then(res => res.json())
+            .then(data => { if (data.success) setFirstName(data.name.split(" ")[0]); })
             .catch(() => {});
     }, []);
+
+    // Fetch counts from service requests
+    useEffect(() => {
+        if (!customerId) return;
+
+        const fetchCounts = async () => {
+            try {
+                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+                const data = await res.json();
+                if (!data.success) return;
+
+                const all = data.data || [];
+
+                // Read-state from localStorage (same key pattern as Notification.jsx)
+                let readIds = [];
+                try {
+                    readIds = JSON.parse(
+                        localStorage.getItem(`fixgo_read_notifs_${String(customerId)}`) || "[]"
+                    ).map(String);
+                } catch { /* ignore */ }
+
+                const notifItems = all.filter(r => NOTIF_WORTHY.includes(r.status));
+                const unread     = notifItems.filter(r => !readIds.includes(String(r.id))).length;
+
+                setCounts({
+                    active:        all.filter(r => ONGOING_STATUSES.includes(r.status)).length,
+                    completed:     all.filter(r => r.status === "Completed").length,
+                    appointments:  all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
+                    notifications: unread,
+                });
+            } catch { /* ignore */ }
+        };
+
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000);
+        return () => clearInterval(interval);
+    }, [customerId]);
 
     const today = new Date().toLocaleDateString("en-US", {
         month: "long", day: "numeric", year: "numeric",
@@ -146,16 +191,10 @@ function Dashboard({ customerId }) {
                     </p>
                 </div>
                 <div style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: T.slate700,
-                    background: T.white,
-                    padding: "10px 16px",
-                    borderRadius: 12,
-                    border: `1px solid ${T.slate200}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
+                    fontSize: 14, fontWeight: 600, color: T.slate700,
+                    background: T.white, padding: "10px 16px",
+                    borderRadius: 12, border: `1px solid ${T.slate200}`,
+                    display: "flex", alignItems: "center", gap: 8,
                 }}>
                     {today}
                     <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
@@ -172,30 +211,34 @@ function Dashboard({ customerId }) {
                     accent="green"
                     icon={faCircleInfo}
                     title="Active Repairs"
-                    count="0"
+                    count={String(counts.active)}
                     meta="Up to date"
                     linkText="View details"
+                    onClick={() => onNavigate("repair")}
                 />
                 <SummaryCard
                     accent="blue"
                     icon={faCircleCheck}
                     title="Completed Repairs"
-                    count="0"
+                    count={String(counts.completed)}
                     linkText="View history"
+                    onClick={() => onNavigate("history")}
                 />
                 <SummaryCard
                     accent="orange"
                     icon={faCalendarCheck}
                     title="Upcoming Appointments"
-                    count="0"
-                    linkText="View calendar"
+                    count={String(counts.appointments)}
+                    linkText="View status"
+                    onClick={() => onNavigate("repair")}
                 />
                 <SummaryCard
                     accent="violet"
                     icon={faBell}
                     title="Notifications"
-                    count="0"
+                    count={String(counts.notifications)}
                     linkText="View all"
+                    onClick={() => onNavigate("notifications")}
                 />
             </div>
 

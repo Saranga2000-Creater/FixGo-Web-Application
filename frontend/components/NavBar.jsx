@@ -12,9 +12,25 @@ export const NavBar = () => {
     const profileImage = localStorage.getItem("profileImage");
 
     const handleSignOut = () => {
+        // Preserve notification read state across logout
+        const preserved = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("fixgo_read_notifs_")) {
+                preserved[key] = localStorage.getItem(key);
+            }
+        }
+
         localStorage.clear();
+
+        // Restore notification read state
+        Object.entries(preserved).forEach(([key, value]) => {
+            localStorage.setItem(key, value);
+        });
+
         navigate("/");
     };
+
     const handleRegister = () => {
         setShowSignIn(false)
         document.getElementById("register")?.scrollIntoView({
@@ -24,21 +40,21 @@ export const NavBar = () => {
 
     return (
         <>
-            <header className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9]/95 backdrop-blur-md border-b border-[#d1e7d7] shadow-sm py-3 px-4 md:px-8"  >
+            <header className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9]/95 backdrop-blur-md border-b border-[#d1e7d7] shadow-sm py-3 px-4 md:px-8">
 
                 <div className="flex items-center gap-2 sm:gap-4">
                     <img alt="FixGo Logo" className="h-8 sm:h-10 w-auto" src={logo} />
                     <span className="text-base sm:text-lg font-bold text-[#14532d]">FixGo</span>
                 </div>
 
-                <nav className="hidden md:flex items-center gap-6 lg:gap-10" >
-                    <NavLink to="/" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors" >Homepage</NavLink>
-                    <NavLink to="/shops" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors"  >Find Shops</NavLink>
-                    <NavLink to="/services" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors" >Dashboard</NavLink>
-                    <NavLink to="/support" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors" >Support</NavLink>
+                <nav className="hidden md:flex items-center gap-6 lg:gap-10">
+                    <NavLink to="/" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Homepage</NavLink>
+                    <NavLink to="/shops" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Find Shops</NavLink>
+                    <NavLink to="/services" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Dashboard</NavLink>
+                    <NavLink to="/support" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Support</NavLink>
                 </nav>
 
-                <div className="flex items-center gap-2 sm:gap-4" >
+                <div className="flex items-center gap-2 sm:gap-4">
 
                     <FontAwesomeIcon icon={faBell} className="hidden sm:block hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer" />
                     <FontAwesomeIcon icon={faCircleQuestion} className="hidden sm:block hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer" />
