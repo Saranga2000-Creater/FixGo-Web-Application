@@ -16,7 +16,6 @@ const COLORS = {
   page: "#F8FAFC",
 };
 
-
 function Avatar({ initials, color, size = 40 }) {
   return (
     <div
@@ -41,56 +40,101 @@ function Avatar({ initials, color, size = 40 }) {
   );
 }
 
-function ServiceRequests() {
+function TowField({ label, value, onChange, type = "text", placeholder }) {
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span
+        style={{
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: COLORS.textMuted,
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+        }}
+      >
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        style={{
+          padding: "11px 14px",
+          borderRadius: 10,
+          border: `1px solid ${COLORS.border}`,
+          fontSize: 15,
+          color: COLORS.text,
+          outline: "none",
+          background: COLORS.page,
+        }}
+        onFocus={(e) => (e.target.style.borderColor = "#2563EB")}
+        onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
+      />
+    </label>
+  );
+}
+
+function ServiceRequests({ shopCategory }) {
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const updateStatus = async (requestId, status) => {
-  try {
-    const token = localStorage.getItem("jwt_token");
-
-const response = await fetch(
-  "http://localhost:8000/api/updateStatus.php",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      request_id: requestId,
-      new_status: status,
-      actor_id: parseInt(localStorage.getItem("shopId")),
-      actor_role: "shop_owner"
-    }),
-  }
-);
-
-const data = await response.json();
-
-console.log(data);
-
-alert(data.message);
-
-    fetchRequests();
-
-  } catch (error) {
-    console.error(error);
-  }
-};
+  const [showTowModal, setShowTowModal] = useState(false);
+  const [towTruck, setTowTruck] = useState({
+    default_driver_name: "",
+    default_driver_phone: "",
+    default_truck_brand: "",
+    default_truck_color: "",
+    tow_truck_plate: "",
+    promised_eta: "",
+  });
   const [hoveredRow, setHoveredRow] = useState(null);
 
   useEffect(() => {
     fetchRequests();
   }, []);
 
+  const updateStatus = async (requestId, status) => {
+    try {
+      const token = localStorage.getItem("jwt_token");
+
+      const response = await fetch(
+        "http://localhost:8000/api/updateStatus.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            request_id: requestId,
+            new_status: status,
+            actor_id: parseInt(localStorage.getItem("shopId")),
+            actor_role: "shop_owner"
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log(data);
+
+      alert(data.message);
+
+      fetchRequests();
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const fetchRequests = async () => {
     try {
-   const shopId = localStorage.getItem("shopId");
-  console.log("Current Shop ID:", shopId);
+      const shopId = localStorage.getItem("shopId");
+      console.log("Current Shop ID:", shopId);
 
-const response = await fetch(
- `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
-);
+      const response = await fetch(
+        `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
+      );
 
       const data = await response.json();
 
@@ -99,6 +143,53 @@ const response = await fetch(
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const openTowTruckModal = async (shopId) => {
+    const res = await fetch(
+      `http://localhost:8000/api/getTowTruckDetails.php?shop_id=${shopId}`
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setTowTruck({
+        ...data.data,
+        promised_eta: selectedRequest?.promised_eta || "",
+      });
+      setShowTowModal(true);
+    }
+  };
+
+  const saveTowTruckDetails = async () => {
+    const res = await fetch(
+      "http://localhost:8000/api/updateTowTruckDetails.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          request_id: selectedRequest.id,
+
+          driver_name: towTruck.default_driver_name,
+          driver_phone: towTruck.default_driver_phone,
+          truck_brand: towTruck.default_truck_brand,
+          truck_color: towTruck.default_truck_color,
+          truck_plate: towTruck.tow_truck_plate,
+          promised_eta: towTruck.promised_eta,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Tow truck details updated.");
+      setShowTowModal(false);
+    } else {
+      alert(data.message);
     }
   };
 
@@ -339,7 +430,10 @@ const response = await fetch(
               {/* Details */}
               <div>
                 <button
-                  onClick={() => setSelectedRequest(r)}
+                  onClick={() => {
+                    console.log(r);
+                    setSelectedRequest(r);
+                  }}
                   style={{
                     padding: "9px 14px",
                     borderRadius: 9,
@@ -358,77 +452,76 @@ const response = await fetch(
                 </button>
               </div>
 
-        {/* Actions */}
-<div style={{ display: "flex", gap: 8 }}>
-  {r.status === "Pending" ? (
-    <>
-      <button
-        style={{
-          padding: "9px 18px",
-          borderRadius: 10,
-          border: "none",
-          background: COLORS.primary,
-          color: "#FFFFFF",
-          fontWeight: 600,
-          fontSize: 14,
-          cursor: "pointer",
-          transition: "background 0.15s ease",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
-        onClick={() => updateStatus(r.id, "Accepted")}
-      >
-        Accept
-      </button>
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 8 }}>
+                {r.status === "Pending" ? (
+                  <>
+                    <button
+                      style={{
+                        padding: "9px 18px",
+                        borderRadius: 10,
+                        border: "none",
+                        background: COLORS.primary,
+                        color: "#FFFFFF",
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        transition: "background 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                      onClick={() => updateStatus(r.id, "Accepted")}
+                    >
+                      Accept
+                    </button>
 
-      <button
-        style={{
-          padding: "9px 18px",
-          borderRadius: 10,
-          border: `1px solid ${COLORS.dangerBorder}`,
-          color: COLORS.danger,
-          background: COLORS.surface,
-          fontWeight: 600,
-          fontSize: 14,
-          cursor: "pointer",
-          transition: "background 0.15s ease",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
-        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
-        onClick={() => updateStatus(r.id, "Declined")}
-      >
-        Decline
-      </button>
-    </>
-  ) :r.status === "Accepted" ? (
-    <span
-      style={{
-        padding: "8px 14px",
-        borderRadius: "999px",
-        background: "#FEF3C7",
-        color: "#92400E",
-        fontWeight: 600,
-        fontSize: 13,
-      }}
-    >
-      Waiting for customer confirmation
-    </span>
-  ) : (
-    <span
-      style={{
-        padding: "8px 14px",
-        borderRadius: "999px",
-        background: "#FEE2E2",
-        color: "#DC2626",
-        fontWeight: 600,
-        fontSize: 13,
-      }}
-    >
-      {r.status}
-    </span>
-  )}
-</div> 
-  
+                    <button
+                      style={{
+                        padding: "9px 18px",
+                        borderRadius: 10,
+                        border: `1px solid ${COLORS.dangerBorder}`,
+                        color: COLORS.danger,
+                        background: COLORS.surface,
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        transition: "background 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                      onClick={() => updateStatus(r.id, "Declined")}
+                    >
+                      Decline
+                    </button>
+                  </>
+                ) : r.status === "Accepted" ? (
+                  <span
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "999px",
+                      background: "#FEF3C7",
+                      color: "#92400E",
+                      fontWeight: 600,
+                      fontSize: 13,
+                    }}
+                  >
+                    Waiting for customer confirmation
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "999px",
+                      background: "#FEE2E2",
+                      color: "#DC2626",
+                      fontWeight: 600,
+                      fontSize: 13,
+                    }}
+                  >
+                    {r.status}
+                  </span>
+                )}
+              </div>
             </div>
           ))
         )}
@@ -455,7 +548,7 @@ const response = await fetch(
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Service Request Details Modal */}
       {selectedRequest && (
         <div
           style={{
@@ -504,45 +597,46 @@ const response = await fetch(
               </div>
 
               <div>
-  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
-    Issue
-  </div>
-  <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
-    {selectedRequest.issue_category}
-  </div>
-</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                  Issue
+                </div>
+                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+                  {selectedRequest.issue_category}
+                </div>
+              </div>
 
-{/* Appointment Section */}
-<div>
-  <div
-    style={{
-      fontSize: 13,
-      fontWeight: 600,
-      color: COLORS.textMuted,
-      textTransform: "uppercase",
-      letterSpacing: 0.4
-    }}
-  >
-    Appointment
-  </div>
+              {shopCategory === "Service Centers" && (
+                <div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: COLORS.textMuted,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    Appointment
+                  </div>
 
-  <div
-    style={{
-      fontSize: 16.5,
-      color: COLORS.text,
-      marginTop: 2
-    }}
-  >
-    {selectedRequest.preferred_date
-      ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
-      : "Not specified"}
-  </div>
-</div>
+                  <div
+                    style={{
+                      fontSize: 16.5,
+                      color: COLORS.text,
+                      marginTop: 2,
+                    }}
+                  >
+                    {selectedRequest.preferred_date
+                      ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
+                      : "Not specified"}
+                  </div>
+                </div>
+              )}
 
-<div>
-  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
-    Description
-  </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
+                  Description
+                </div>
                 <div
                   style={{
                     background: COLORS.page,
@@ -561,7 +655,7 @@ const response = await fetch(
 
             {selectedRequest.photo && (
               <img
-             src={`http://localhost:8000/uploads/${selectedRequest.photo}`}
+                src={`http://localhost:8000/${selectedRequest.photo}`}
                 alt="Problem"
                 style={{
                   width: "100%",
@@ -572,25 +666,211 @@ const response = await fetch(
               />
             )}
 
-            <button
-              onClick={() => setSelectedRequest(null)}
+            <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+              {selectedRequest.requires_tow == 1 && (
+                <button
+                  onClick={() => openTowTruckModal(selectedRequest.shop_id)}
+                  style={{
+                    padding: "11px 20px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#2563EB",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: 15,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
+                >
+                  🚚 Tow Truck Details
+                </button>
+              )}
+
+              <button
+                onClick={() => setSelectedRequest(null)}
+                style={{
+                  padding: "11px 24px",
+                  background: COLORS.primary,
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: 10,
+                  fontWeight: 600,
+                  fontSize: 15,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tow Truck Details Modal */}
+      {showTowModal && towTruck && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.surface,
+              width: 480,
+              maxWidth: "100%",
+              borderRadius: 18,
+              overflow: "hidden",
+              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
+            }}
+          >
+            {/* Header */}
+            <div
               style={{
-                marginTop: 24,
-                padding: "11px 24px",
-                background: COLORS.primary,
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: 10,
-                fontWeight: 600,
-                fontSize: 15,
-                cursor: "pointer",
-                transition: "background 0.15s ease",
+                padding: "20px 28px",
+                borderBottom: `1px solid ${COLORS.border}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
             >
-              Close
-            </button>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  background: "#DBEAFE",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  flexShrink: 0,
+                }}
+              >
+                🚚
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: COLORS.text }}>
+                  Tow Truck Details
+                </h2>
+                <p style={{ margin: 0, fontSize: 13.5, color: COLORS.textMuted, marginTop: 2 }}>
+                  Dispatch info for this pickup
+                </p>
+              </div>
+            </div>
+
+            {/* Fields */}
+            <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <TowField
+                  label="Driver Name"
+                  value={towTruck.default_driver_name}
+                  onChange={(e) =>
+                    setTowTruck({ ...towTruck, default_driver_name: e.target.value })
+                  }
+                />
+                <TowField
+                  label="Driver Phone"
+                  value={towTruck.default_driver_phone}
+                  onChange={(e) =>
+                    setTowTruck({ ...towTruck, default_driver_phone: e.target.value })
+                  }
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <TowField
+                  label="Truck Brand"
+                  value={towTruck.default_truck_brand}
+                  onChange={(e) =>
+                    setTowTruck({ ...towTruck, default_truck_brand: e.target.value })
+                  }
+                />
+                <TowField
+                  label="Truck Color"
+                  value={towTruck.default_truck_color}
+                  onChange={(e) =>
+                    setTowTruck({ ...towTruck, default_truck_color: e.target.value })
+                  }
+                />
+              </div>
+
+              <TowField
+                label="Truck Plate"
+                value={towTruck.tow_truck_plate}
+                onChange={(e) =>
+                  setTowTruck({ ...towTruck, tow_truck_plate: e.target.value })
+                }
+              />
+
+              <TowField
+                label="Promised ETA (minutes)"
+                type="number"
+                placeholder="e.g. 25"
+                value={towTruck.promised_eta}
+                onChange={(e) =>
+                  setTowTruck({ ...towTruck, promised_eta: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                padding: "16px 28px",
+                borderTop: `1px solid ${COLORS.border}`,
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                background: COLORS.page,
+              }}
+            >
+              <button
+                onClick={() => setShowTowModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 10,
+                  border: `1px solid ${COLORS.border}`,
+                  background: COLORS.surface,
+                  color: COLORS.textMuted,
+                  fontWeight: 600,
+                  fontSize: 14.5,
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.page)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={saveTowTruckDetails}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#2563EB",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: 14.5,
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -401,5 +401,29 @@ public function getActiveRepairsByShop($shop_id)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function updateTowTruckDetails($data)
+{
+    $sql="
+    UPDATE servicerequest
+    SET
+        dispatched_driver_name=?,
+        dispatched_driver_phone=?,
+        dispatched_truck_brand=?,
+        dispatched_truck_color=?,
+        dispatched_truck_plate=?
+    WHERE id=?";
+
+    $stmt=$this->conn->prepare($sql);
+
+    return $stmt->execute([
+        $data["driver_name"],
+        $data["driver_phone"],
+        $data["truck_brand"],
+        $data["truck_color"],
+        $data["truck_plate"],
+        $data["request_id"]
+    ]);
+}
+
 }
 ?>

@@ -203,6 +203,98 @@ useEffect(() => {
             </div>
           ))}
         </div>
+
+        {/* Shop Gallery */}
+<div
+  style={{
+    background: "#fff",
+    borderRadius: 14,
+    border: "1px solid #F3F4F6",
+    padding: 20,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+  }}
+>
+  <h3
+    style={{
+      fontWeight: 700,
+      fontSize: 16,
+      color: "#111827",
+      marginBottom: 16,
+    }}
+  >
+    Shop Gallery
+  </h3>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(2, 1fr)",
+      gap: 12,
+      marginBottom: 18,
+    }}
+  >
+    {[1, 2, 3, 4].map((img) => (
+      <div
+        key={img}
+        style={{
+          height: 120,
+          borderRadius: 10,
+          overflow: "hidden",
+          border: "1px solid #E5E7EB",
+          background: "#F9FAFB",
+        }}
+      >
+        <img
+          src={`/gallery/image${img}.jpg`}
+          alt="Gallery"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      </div>
+    ))}
+  </div>
+
+  <div
+    style={{
+      display: "flex",
+      gap: 10,
+    }}
+  >
+    <button
+      style={{
+        flex: 1,
+        padding: "10px",
+        background: "#16A34A",
+        color: "#fff",
+        border: "none",
+        borderRadius: 10,
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      + Add Images
+    </button>
+
+    <button
+      style={{
+        flex: 1,
+        padding: "10px",
+        background: "#fff",
+        color: "#DC2626",
+        border: "1px solid #DC2626",
+        borderRadius: 10,
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      Remove Images
+    </button>
+  </div>
+</div>
+
       </div>
     </div>
   );

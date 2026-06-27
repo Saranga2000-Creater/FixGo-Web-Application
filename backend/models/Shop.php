@@ -429,5 +429,25 @@ class Shop {
             throw $e;
         }
     }
+
+    public function getTowTruckDetails($shopId)
+{
+    $query="
+        SELECT
+            default_driver_name,
+            default_driver_phone,
+            default_truck_brand,
+            default_truck_color,
+            tow_truck_plate
+        FROM shop
+        WHERE id=:id
+    ";
+
+    $stmt=$this->conn->prepare($query);
+    $stmt->bindParam(":id",$shopId);
+    $stmt->execute();
+
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 }
 ?>

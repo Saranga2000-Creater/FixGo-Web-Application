@@ -345,4 +345,32 @@ class ShopController {
             echo json_encode(["message" => "Database registration failed: " . $e->getMessage()]);
         }
     }
+
+public function getTowTruckDetails()
+{
+    if (!isset($_GET['shop_id'])) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Shop ID is required."
+        ]);
+        return;
+    }
+
+    $shopId = intval($_GET['shop_id']);
+    $shopModel = new Shop($this->db);
+
+    $details = $shopModel->getTowTruckDetails($shopId);
+
+    if ($details) {
+        echo json_encode([
+            "success" => true,
+            "data" => $details
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Tow truck details not found."
+        ]);
+    }
+}
 }

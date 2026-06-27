@@ -1,15 +1,18 @@
 <?php
 class ServiceRequestController {
     private $serviceRequestModel;
+    private $shopModel;
     private $jwtHandler;
     private $db;
 
     public function __construct($db) {
         $this->db = $db;
         require_once __DIR__ . '/../models/ServiceRequest.php';
+        require_once __DIR__ . '/../models/Shop.php';
         require_once __DIR__ . '/../config/JwtHandler.php';
 
         $this->serviceRequestModel = new ServiceRequest($db);
+        $this->shopModel           = new Shop($db);
         $this->jwtHandler          = new JwtHandler();
     }
 
@@ -284,6 +287,28 @@ class ServiceRequestController {
             "data"    => $history
         ]);
     }
+public function updateTowTruckDetails()
+{
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (empty($data['request_id'])) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Request ID is required."
+        ]);
+        return;
+    }
+
+    $result = $this->serviceRequestModel->updateTowTruckDetails($data);
+
+    if ($result) {
+        echo json_encode(["success" => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["success" => false]);
+    }
+}
 
     // ==========================================
     // CUSTOMER-SIDE HISTORY

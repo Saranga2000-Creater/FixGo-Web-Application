@@ -4,12 +4,12 @@ import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
-  { id: "requests", label: "Service Requests", icon: <FiClipboard />},
-  { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver />, badge: 8 },
+  { id: "requests", label: "Service Requests", icon: <FiClipboard /> },
+  { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver /> },
   { id: "history", label: "Service History", icon: <FiClock /> },
   { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
   { id: "profile", label: "Shop Profile", icon: <FiHome /> },
-  { id: "notifications", label: "Notifications", icon: <FiBell />, badge: 5 },
+  { id: "notifications", label: "Notifications", icon: <FiBell /> },
   { id: "settings", label: "Settings", icon: <FiSettings /> },
 ];
 
@@ -34,24 +34,27 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav,shopData,requestCount }) {
+function Sidebar({ activeNav, setActiveNav,shopData,requestCount, activeRepairCount, notificationCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
 
   return (
     <div
-      style={{
-        width: "240px",
-        height: "calc(100vh - 50px)",
-        background: "#fff",
-        borderRight: "1px solid #F3F4F6",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        boxShadow: "4px 0 24px rgba(0,0,0,0.10)",
-      }}
-    >
+  style={{
+    width: "240px",
+    minHeight: "100vh",
+    background: "#fff",
+    borderRight: "1px solid #F3F4F6",
+    display: "flex",
+    flexDirection: "column",
+    flexShrink: 0,
+    boxShadow: "4px 0 24px rgba(0,0,0,0.10)",
+    position: "sticky",
+    top: 0,
+    alignSelf: "flex-start",
+  }}
+>
       {/* Shop Header */}
       <div
         style={{
@@ -145,11 +148,15 @@ function Sidebar({ activeNav, setActiveNav,shopData,requestCount }) {
   {item.icon}
 </span>
             <span style={{ flex: 1 }}>{item.label}</span>
-   <Badge
+<Badge
   count={
     item.id === "requests"
       ? requestCount
-      : item.badge
+      : item.id === "repairs"
+      ? activeRepairCount
+      : item.id === "notifications"
+      ? notificationCount
+      : 0
   }
 />
           </button>

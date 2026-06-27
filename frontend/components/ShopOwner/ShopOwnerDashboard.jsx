@@ -8,6 +8,7 @@ import ShopProfile from "./ShopProfile";
 import Notification from "./Notification";
 import Settings from "./Settings";
 
+
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠" },
   { id: "requests", label: "Service Requests", icon: "📋" },
@@ -20,11 +21,11 @@ const NAV_ITEMS = [
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView({ shopData, requestCount })  {
+function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
   const stats = [
     {label: "New Requests",value: requestCount,sub: "Pending requests",subColor: "#16A34A",icon: "📋"},
-    { label: "Active Jobs", value: 8, sub: "View all", subColor: "#059669", icon: "🔧" },
-    { label: "Completed Jobs", value: 54, sub: "+6 this week", subColor: "#059669", icon: "✅" },
+    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "#059669", icon: "🔧" },
+    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "#059669", icon: "✅" },
     { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "#6B7280", icon: "⭐" },
   ];
   const quickActions = [
@@ -47,6 +48,13 @@ function DashboardView({ shopData, requestCount })  {
     iconBg: "#16A34A",
   },
 ];
+
+const currentDate = new Date().toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
   return (
     <div style={{ width: "100%", display: "block" }}>
   <div
@@ -74,22 +82,22 @@ function DashboardView({ shopData, requestCount })  {
         margin: 0,
       }}
     >
-     Hello, {shopData?.owner || "Shop"}! 👋
+     Hello, {shopData?.name || "Shop"}! 👋
     </h1>
 
-    <span
-      style={{
-        fontSize: 14,
-        fontWeight: 600,
-        color: "#374151",
-        background: "#FFFFFF",
-        padding: "10px 16px",
-        borderRadius: 12,
-        border: "1px solid #E5E7EB",
-      }}
-    >
-      June 15, 2026
-    </span>
+   <span
+  style={{
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#374151",
+    background: "#FFFFFF",
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid #E5E7EB",
+  }}
+>
+  {currentDate}
+</span>
   </div>
 
   <p
@@ -204,11 +212,10 @@ onMouseLeave={(e) => {
 
 
 
-function renderPage(activeNav, shopData, requestCount) {
+function renderPage(activeNav, shopData, requestCount,activeRepairCount, completedJobCount) {
   switch (activeNav) {
-   
-    case "dashboard":     return (<DashboardView shopData={shopData}requestCount={requestCount}/>);
-    case "requests":      return <ServiceRequests />;
+       case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
+    case "requests":      return <ServiceRequests shopCategory={shopData?.categories} />;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
@@ -225,6 +232,9 @@ function ShopOwnerDashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
+  const [activeRepairCount, setActiveRepairCount] = useState(0);
+  const [completedJobCount, setCompletedJobCount] = useState(0); 
+  const [notificationCount, setNotificationCount] = useState(0);
 
 useEffect(() => {
   const shopId = localStorage.getItem("shopId");
@@ -240,7 +250,48 @@ useEffect(() => {
     })
     .catch((err) => console.error(err));
 }, []);
-  
+
+useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
+
+  fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setActiveRepairCount(data.data.length);
+      }
+    })
+    .catch((err) => console.error(err));
+}, []);
+ 
+useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
+
+  fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setCompletedJobCount(data.data.length);
+      }
+    })
+    .catch((err) => console.error(err));
+}, []);
+
+useEffect(() => {
+  const shopId = localStorage.getItem("shopId");
+
+  fetch(
+    `http://localhost:8000/api/getConfirmedRequeststoShop.php?shop_id=${shopId}`
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setNotificationCount(data.data.length);
+      }
+    })
+    .catch(console.error);
+}, []);
+
 useEffect(() => {
   const token = localStorage.getItem("jwt_token");
 
@@ -278,11 +329,14 @@ useEffect(() => {
         background: "#F8FAFC",
       }}
     >
-      <Sidebar
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-        navItems={NAV_ITEMS}
-      />
+     <Sidebar
+  activeNav={activeNav}
+  setActiveNav={setActiveNav}
+  shopData={shopData}
+  requestCount={requestCount}
+  activeRepairCount={activeRepairCount}
+  notificationCount={notificationCount}
+/>
 
       <main
         style={{
@@ -290,7 +344,7 @@ useEffect(() => {
           padding: "24px",
         }}
       >
-        {renderPage(activeNav, shopData, requestCount)}
+        {renderPage(activeNav, shopData, requestCount, activeRepairCount, completedJobCount)}
       </main>
     </div>
   );
