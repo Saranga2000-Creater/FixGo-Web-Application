@@ -204,6 +204,43 @@ class ServiceRequest {
         return $stmt->execute();
     }
 
+
+public function declineRequest($request_id, $reason) {
+    $query = "UPDATE " . $this->table_name . " 
+              SET status              = 'Declined', 
+                  cancelled_at        = NOW(), 
+                  cancelled_by        = 'Shop', 
+                  cancellation_reason = :reason 
+              WHERE id = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":reason", $reason);
+    $stmt->bindParam(":id",     $request_id, PDO::PARAM_INT);
+
+    return $stmt->execute();
+}
+
+public function getDeclinedRequestsByShop($shop_id) {
+    $query = "SELECT sr.*, 
+                     c.name          as customer_name, 
+                     c.contactNumber as customer_phone 
+              FROM " . $this->table_name . " sr
+              LEFT JOIN customer c ON sr.customer_id = c.id
+              WHERE sr.shop_id = :shop_id
+              AND sr.status = 'Declined'
+              ORDER BY sr.cancelled_at DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($results as &$row) {
+        unset($row['location']);
+    }
+    return $results;
+}
+
     public function cancelCompetingRequests($customer_id, $winning_request_id) {
         $reason = "Customer confirmed a different shop for this incident.";
         $by     = "System";
@@ -369,6 +406,33 @@ public function getActiveRepairsByShop($shop_id)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function updateTowTruckDetails($data)
+{
+    $sql = "
+    UPDATE servicerequest
+    SET
+        dispatched_driver_name  = ?,
+        dispatched_driver_phone = ?,
+        dispatched_truck_brand  = ?,
+        dispatched_truck_color  = ?,
+        dispatched_truck_plate  = ?,
+        promised_eta            = ?
+    WHERE id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        $data["driver_name"],
+        $data["driver_phone"],
+        $data["truck_brand"],
+        $data["truck_color"],
+        $data["truck_plate"],
+        $data["promised_eta"] ?? null,
+        $data["request_id"]
+    ]);
+
+    return $stmt->rowCount() > 0;
+}
+
     // ==========================================
     // 5. CUSTOMER-SIDE HISTORY
     // ==========================================
@@ -401,29 +465,39 @@ public function getActiveRepairsByShop($shop_id)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateTowTruckDetails($data)
+    public function getShopNotifications($shop_id)
 {
-    $sql="
-    UPDATE servicerequest
-    SET
-        dispatched_driver_name=?,
-        dispatched_driver_phone=?,
-        dispatched_truck_brand=?,
-        dispatched_truck_color=?,
-        dispatched_truck_plate=?
-    WHERE id=?";
+    $query = "
+        SELECT
+            sr.id,
+            sr.status,
+            sr.vehicle_brand,
+            sr.description,
+            sr.created_at,
+            sr.confirmed_at,
+            sr.cancelled_at,
+            c.name AS customer_name
+        FROM servicerequest sr
+        JOIN customer c
+            ON c.id = sr.customer_id
+        WHERE sr.shop_id = :shop_id
+        AND sr.status IN ('Pending','Confirmed','Cancelled')
+        ORDER BY
+        CASE
+            WHEN sr.status='Pending' THEN sr.created_at
+            WHEN sr.status='Confirmed' THEN sr.confirmed_at
+            WHEN sr.status='Cancelled' THEN sr.cancelled_at
+        END DESC
+    ";
 
-    $stmt=$this->conn->prepare($sql);
+    $stmt=$this->conn->prepare($query);
+    $stmt->bindParam(":shop_id",$shop_id);
+    $stmt->execute();
 
-    return $stmt->execute([
-        $data["driver_name"],
-        $data["driver_phone"],
-        $data["truck_brand"],
-        $data["truck_color"],
-        $data["truck_plate"],
-        $data["request_id"]
-    ]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+
 
 }
 ?>

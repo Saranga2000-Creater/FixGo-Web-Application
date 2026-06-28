@@ -212,7 +212,14 @@ onMouseLeave={(e) => {
 
 
 
-function renderPage(activeNav, shopData, requestCount,activeRepairCount, completedJobCount) {
+function renderPage(
+    activeNav,
+    shopData,
+    requestCount,
+    activeRepairCount,
+    completedJobCount,
+    setActiveNav
+)  {
   switch (activeNav) {
        case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
     case "requests":      return <ServiceRequests shopCategory={shopData?.categories} />;
@@ -220,7 +227,12 @@ function renderPage(activeNav, shopData, requestCount,activeRepairCount, complet
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
     case "profile":       return <ShopProfile />;
-    case "notifications": return <Notification />; 
+    case "notifications":
+    return (
+        <Notification
+            setActiveNav={setActiveNav}
+        />
+    );
     case "settings":      return <Settings />;
     default:              return <DashboardView />;
   }
@@ -344,7 +356,14 @@ useEffect(() => {
           padding: "24px",
         }}
       >
-        {renderPage(activeNav, shopData, requestCount, activeRepairCount, completedJobCount)}
+        {renderPage(
+    activeNav,
+    shopData,
+    requestCount,
+    activeRepairCount,
+    completedJobCount,
+    setActiveNav
+)}
       </main>
     </div>
   );

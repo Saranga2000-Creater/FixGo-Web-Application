@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const COLORS = {
-  primary: "#15803D",      // deeper, richer green (better contrast than #16A34A)
+  primary: "#15803D",
   primaryLight: "#16A34A",
   primarySoft: "#ECFDF3",
   primaryBorder: "#BBF7D0",
@@ -76,9 +76,15 @@ function TowField({ label, value, onChange, type = "text", placeholder }) {
 }
 
 function ServiceRequests({ shopCategory }) {
+  const [activeTab, setActiveTab] = useState("new"); // "new" | "declined"
+
   const [requests, setRequests] = useState([]);
+  const [declinedRequests, setDeclinedRequests] = useState([]);
+  const [declinedLoaded, setDeclinedLoaded] = useState(false);
+
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showTowModal, setShowTowModal] = useState(false);
+  const [isAcceptFlow, setIsAcceptFlow] = useState(false);
   const [towTruck, setTowTruck] = useState({
     default_driver_name: "",
     default_driver_phone: "",
@@ -92,6 +98,13 @@ function ServiceRequests({ shopCategory }) {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  // Fetch the declined list lazily, the first time that tab is opened
+  useEffect(() => {
+    if (activeTab === "declined" && !declinedLoaded) {
+      fetchDeclinedRequests();
+    }
+  }, [activeTab, declinedLoaded]);
 
   const updateStatus = async (requestId, status) => {
     try {
@@ -118,9 +131,17 @@ function ServiceRequests({ shopCategory }) {
 
       console.log(data);
 
-      alert(data.message);
+      // No popup for Accept or Decline — both have their own UI feedback
+      if (status !== "Accepted" && status !== "Declined") {
+        alert(data.message);
+      }
 
       fetchRequests();
+
+      // Keep the Declined tab fresh too, in case it's already been loaded
+      if (status === "Declined" && declinedLoaded) {
+        fetchDeclinedRequests();
+      }
 
     } catch (error) {
       console.error(error);
@@ -130,7 +151,6 @@ function ServiceRequests({ shopCategory }) {
   const fetchRequests = async () => {
     try {
       const shopId = localStorage.getItem("shopId");
-      console.log("Current Shop ID:", shopId);
 
       const response = await fetch(
         `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
@@ -143,6 +163,35 @@ function ServiceRequests({ shopCategory }) {
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const fetchDeclinedRequests = async () => {
+    try {
+      const shopId = localStorage.getItem("shopId");
+
+      const response = await fetch(
+        `http://localhost:8000/api/getDeclinedRequests.php?shop_id=${shopId}`
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setDeclinedRequests(data.data);
+        setDeclinedLoaded(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAcceptClick = (r) => {
+    if (Number(r.requires_tow) === 1) {
+      setSelectedRequest(r);
+      setIsAcceptFlow(true);
+      openTowTruckModal(r.shop_id);
+    } else {
+      updateStatus(r.id, "Accepted");
     }
   };
 
@@ -193,6 +242,45 @@ function ServiceRequests({ shopCategory }) {
     }
   };
 
+  const confirmTowAndAccept = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:8000/api/updateTowTruckDetails.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            request_id: selectedRequest.id,
+
+            driver_name: towTruck.default_driver_name,
+            driver_phone: towTruck.default_driver_phone,
+            truck_brand: towTruck.default_truck_brand,
+            truck_color: towTruck.default_truck_color,
+            truck_plate: towTruck.tow_truck_plate,
+            promised_eta: towTruck.promised_eta,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        await updateStatus(selectedRequest.id, "Accepted");
+        setShowTowModal(false);
+        setIsAcceptFlow(false);
+        setSelectedRequest(null);
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const visibleRequests = activeTab === "new" ? requests : declinedRequests;
+
   return (
     <div style={{ width: "100%", fontFamily: "inherit" }}>
       {/* Header */}
@@ -218,6 +306,49 @@ function ServiceRequests({ shopCategory }) {
         >
           Review and respond to incoming service requests.
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {[
+          { key: "new", label: "Service Requests" },
+          { key: "declined", label: "Declined Requests" },
+        ].map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 10,
+                border: `1.5px solid ${isActive ? COLORS.primary : COLORS.border}`,
+                background: isActive ? COLORS.primarySoft : COLORS.surface,
+                color: isActive ? COLORS.primary : COLORS.textMuted,
+                fontWeight: 600,
+                fontSize: 14.5,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {tab.label}
+              {tab.key === "declined" && declinedRequests.length > 0 && (
+                <span
+                  style={{
+                    marginLeft: 8,
+                    background: isActive ? COLORS.primary : COLORS.textFaint,
+                    color: "#FFFFFF",
+                    borderRadius: 999,
+                    padding: "2px 8px",
+                    fontSize: 12,
+                  }}
+                >
+                  {declinedRequests.length}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search + Filter */}
@@ -281,11 +412,17 @@ function ServiceRequests({ shopCategory }) {
             borderBottom: `1px solid ${COLORS.border}`,
             background: COLORS.page,
             display: "grid",
-            gridTemplateColumns: "2.2fr 1.5fr 1fr 1fr 1.5fr",
+            gridTemplateColumns:
+              activeTab === "new"
+                ? "2.2fr 1.5fr 1fr 1fr 1.5fr"
+                : "2.2fr 1.5fr 1fr 2fr",
             gap: 8,
           }}
         >
-          {["Customer & Vehicle", "Service", "Urgency", "Details", "Action"].map((h) => (
+          {(activeTab === "new"
+            ? ["Customer & Vehicle", "Service", "Urgency", "Details", "Action"]
+            : ["Customer & Vehicle", "Service", "Urgency", "Reason"]
+          ).map((h) => (
             <span
               key={h}
               style={{
@@ -302,7 +439,7 @@ function ServiceRequests({ shopCategory }) {
         </div>
 
         {/* Rows */}
-        {requests.length === 0 ? (
+        {visibleRequests.length === 0 ? (
           <div
             style={{
               padding: "48px 20px",
@@ -311,19 +448,23 @@ function ServiceRequests({ shopCategory }) {
               fontSize: 15,
             }}
           >
-            No service requests found
+            {activeTab === "new" ? "No service requests found" : "No declined requests"}
           </div>
         ) : (
-          requests.map((r, i) => (
+          visibleRequests.map((r, i) => (
             <div
               key={r.id}
               onMouseEnter={() => setHoveredRow(r.id)}
               onMouseLeave={() => setHoveredRow(null)}
               style={{
                 padding: "18px 24px",
-                borderBottom: i < requests.length - 1 ? `1px solid ${COLORS.border}` : "none",
+                borderBottom:
+                  i < visibleRequests.length - 1 ? `1px solid ${COLORS.border}` : "none",
                 display: "grid",
-                gridTemplateColumns: "2.2fr 1.5fr 1fr 1fr 1.5fr",
+                gridTemplateColumns:
+                  activeTab === "new"
+                    ? "2.2fr 1.5fr 1fr 1fr 1.5fr"
+                    : "2.2fr 1.5fr 1fr 2fr",
                 gap: 8,
                 alignItems: "center",
                 background: hoveredRow === r.id ? COLORS.page : "transparent",
@@ -334,7 +475,7 @@ function ServiceRequests({ shopCategory }) {
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <Avatar
                   initials={r.customer_name?.substring(0, 2).toUpperCase()}
-                  color={COLORS.primary}
+                  color={activeTab === "new" ? COLORS.primary : COLORS.textFaint}
                 />
 
                 <div>
@@ -355,7 +496,7 @@ function ServiceRequests({ shopCategory }) {
                   <div
                     style={{
                       fontSize: 13,
-                      color: COLORS.primary,
+                      color: activeTab === "new" ? COLORS.primary : COLORS.textFaint,
                       fontWeight: 600,
                       marginTop: 1,
                     }}
@@ -377,7 +518,7 @@ function ServiceRequests({ shopCategory }) {
                   {r.issue_category}
                 </div>
 
-                {Number(r.requires_tow) === 1 && (
+                {activeTab === "new" && Number(r.requires_tow) === 1 && (
                   <div
                     style={{
                       marginTop: 8,
@@ -395,7 +536,7 @@ function ServiceRequests({ shopCategory }) {
                   </div>
                 )}
 
-                {r.pickup_landmark && Number(r.requires_tow) === 1 && (
+                {activeTab === "new" && r.pickup_landmark && Number(r.requires_tow) === 1 && (
                   <div
                     style={{
                       marginTop: 6,
@@ -427,101 +568,107 @@ function ServiceRequests({ shopCategory }) {
                 </span>
               </div>
 
-              {/* Details */}
-              <div>
-                <button
-                  onClick={() => {
-                    console.log(r);
-                    setSelectedRequest(r);
-                  }}
-                  style={{
-                    padding: "9px 14px",
-                    borderRadius: 9,
-                    border: `1px solid ${COLORS.primary}`,
-                    background: COLORS.surface,
-                    color: COLORS.primary,
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    transition: "background 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.primarySoft)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
-                >
-                  View Details
-                </button>
-              </div>
-
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 8 }}>
-                {r.status === "Pending" ? (
-                  <>
+              {activeTab === "new" ? (
+                <>
+                  {/* Details */}
+                  <div>
                     <button
+                      onClick={() => setSelectedRequest(r)}
                       style={{
-                        padding: "9px 18px",
-                        borderRadius: 10,
-                        border: "none",
-                        background: COLORS.primary,
-                        color: "#FFFFFF",
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: "pointer",
-                        transition: "background 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
-                      onClick={() => updateStatus(r.id, "Accepted")}
-                    >
-                      Accept
-                    </button>
-
-                    <button
-                      style={{
-                        padding: "9px 18px",
-                        borderRadius: 10,
-                        border: `1px solid ${COLORS.dangerBorder}`,
-                        color: COLORS.danger,
+                        padding: "9px 14px",
+                        borderRadius: 9,
+                        border: `1px solid ${COLORS.primary}`,
                         background: COLORS.surface,
+                        color: COLORS.primary,
                         fontWeight: 600,
                         fontSize: 14,
                         cursor: "pointer",
                         transition: "background 0.15s ease",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.primarySoft)}
                       onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
-                      onClick={() => updateStatus(r.id, "Declined")}
                     >
-                      Decline
+                      View Details
                     </button>
-                  </>
-                ) : r.status === "Accepted" ? (
-                  <span
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "999px",
-                      background: "#FEF3C7",
-                      color: "#92400E",
-                      fontWeight: 600,
-                      fontSize: 13,
-                    }}
-                  >
-                    Waiting for customer confirmation
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "999px",
-                      background: "#FEE2E2",
-                      color: "#DC2626",
-                      fontWeight: 600,
-                      fontSize: 13,
-                    }}
-                  >
-                    {r.status}
-                  </span>
-                )}
-              </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {r.status === "Pending" ? (
+                      <>
+                        <button
+                          style={{
+                            padding: "9px 18px",
+                            borderRadius: 10,
+                            border: "none",
+                            background: COLORS.primary,
+                            color: "#FFFFFF",
+                            fontWeight: 600,
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "background 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                          onClick={() => handleAcceptClick(r)}
+                        >
+                          Accept
+                        </button>
+
+                        <button
+                          style={{
+                            padding: "9px 18px",
+                            borderRadius: 10,
+                            border: `1px solid ${COLORS.dangerBorder}`,
+                            color: COLORS.danger,
+                            background: COLORS.surface,
+                            fontWeight: 600,
+                            fontSize: 14,
+                            cursor: "pointer",
+                            transition: "background 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                          onClick={() => updateStatus(r.id, "Declined")}
+                        >
+                          Decline
+                        </button>
+                      </>
+                    ) : r.status === "Accepted" ? (
+                      <span
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "999px",
+                          background: "#FEF3C7",
+                          color: "#92400E",
+                          fontWeight: 600,
+                          fontSize: 13,
+                        }}
+                      >
+                        Waiting for customer confirmation
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "999px",
+                          background: "#FEE2E2",
+                          color: "#DC2626",
+                          fontWeight: 600,
+                          fontSize: 13,
+                        }}
+                      >
+                        {r.status}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* Declined tab — show reason instead of action buttons */
+                <div style={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.5 }}>
+                  {r.cancellation_reason || "No reason provided"}
+                </div>
+              )}
             </div>
           ))
         )}
@@ -667,26 +814,6 @@ function ServiceRequests({ shopCategory }) {
             )}
 
             <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-              {selectedRequest.requires_tow == 1 && (
-                <button
-                  onClick={() => openTowTruckModal(selectedRequest.shop_id)}
-                  style={{
-                    padding: "11px 20px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "#2563EB",
-                    color: "#fff",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: 15,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
-                >
-                  🚚 Tow Truck Details
-                </button>
-              )}
-
               <button
                 onClick={() => setSelectedRequest(null)}
                 style={{
@@ -764,7 +891,9 @@ function ServiceRequests({ shopCategory }) {
                   Tow Truck Details
                 </h2>
                 <p style={{ margin: 0, fontSize: 13.5, color: COLORS.textMuted, marginTop: 2 }}>
-                  Dispatch info for this pickup
+                  {isAcceptFlow
+                    ? "Confirm dispatch info to accept this request"
+                    : "Dispatch info for this pickup"}
                 </p>
               </div>
             </div>
@@ -836,7 +965,10 @@ function ServiceRequests({ shopCategory }) {
               }}
             >
               <button
-                onClick={() => setShowTowModal(false)}
+                onClick={() => {
+                  setShowTowModal(false);
+                  setIsAcceptFlow(false);
+                }}
                 style={{
                   padding: "10px 20px",
                   borderRadius: 10,
@@ -853,23 +985,43 @@ function ServiceRequests({ shopCategory }) {
                 Cancel
               </button>
 
-              <button
-                onClick={saveTowTruckDetails}
-                style={{
-                  padding: "10px 22px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#2563EB",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
-              >
-                Save Changes
-              </button>
+              {isAcceptFlow ? (
+                <button
+                  onClick={confirmTowAndAccept}
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: COLORS.primary,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 14.5,
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                >
+                  Confirm
+                </button>
+              ) : (
+                <button
+                  onClick={saveTowTruckDetails}
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#2563EB",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 14.5,
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
+                >
+                  Save Changes
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -879,4 +1031,3 @@ function ServiceRequests({ shopCategory }) {
 }
 
 export default ServiceRequests;
-
