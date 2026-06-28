@@ -174,6 +174,18 @@ function ShopDetails() {
   // NEW: A single variable to control all UI locks!
   const isFullyUnlocked = isHandshakeComplete || shopCategories?.includes("Spare Parts");
 
+  // NEW: Google Maps Navigation Handler
+  const handleGetDirections = () => {
+    if (!isFullyUnlocked || !info?.mapQuery) return;
+    
+    // Create the Universal Google Maps Directions URL
+    const destination = encodeURIComponent(info.mapQuery);
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    
+    // Open in a new tab (or launch the native app on mobile)
+    window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <>
       <NavBar />
@@ -516,7 +528,11 @@ function ShopDetails() {
                       )}
                     </div>
                     
-                    <button disabled={!isFullyUnlocked} className={`mt-4 w-full rounded-xl py-3 font-semibold transition ${isFullyUnlocked ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}>
+                    <button 
+                      disabled={!isFullyUnlocked} 
+                      onClick={handleGetDirections} /* <-- THE FIX */
+                      className={`mt-4 w-full rounded-xl py-3 font-semibold transition ${isFullyUnlocked ? 'bg-green-600 text-white hover:bg-green-700 active:scale-95 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                    >
                       {isFullyUnlocked ? "Get Directions" : "Directions Locked"}
                     </button>
                   </div>

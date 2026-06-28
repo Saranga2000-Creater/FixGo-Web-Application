@@ -227,6 +227,7 @@ class ServiceRequestController {
     // ==========================================
 
     public function handleGetCustomerRequests($customer_id) {
+        $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByCustomer($customer_id);
 
         foreach ($requests as &$req) {
@@ -241,6 +242,7 @@ class ServiceRequestController {
     }
 
     public function handleGetShopRequests($shop_id) {
+        $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByShop($shop_id);
 
         foreach ($requests as &$req) {

@@ -197,7 +197,8 @@ class Shop {
         $details['isHandshakeComplete'] = false; // Default to false
         if ($customerId) {
             $checkHandshake = "SELECT id FROM serviceRequest 
-                               WHERE customer_id = :cid AND shop_id = :sid AND status = 'Accepted' 
+                               WHERE customer_id = :cid AND shop_id = :sid 
+                               AND status IN ('Confirmed', 'In Progress', 'Diagnosis', 'Pending Parts') 
                                LIMIT 1";
             $handshakeStmt = $this->conn->prepare($checkHandshake);
             $handshakeStmt->bindParam(':cid', $customerId);

@@ -15,6 +15,27 @@ import {
     faMessage
 } from "@fortawesome/free-solid-svg-icons";
 
+const formatResponseTime = (minutes) => {
+    // 1. Handle missing data (your default fallback)
+    if (!minutes) return "15 mins"; 
+
+    const mins = parseInt(minutes, 10);
+    
+    // 2. Handle cases where the backend might accidentally send a string
+    if (isNaN(mins)) return minutes; 
+
+    // 3. The UX Formatting Logic
+    if (mins < 60) {
+        return `${mins} mins`;
+    } else if (mins < 1440) { // Less than 24 hours
+        const hours = Math.round(mins / 60);
+        return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+        const days = Math.round(mins / 1440);
+        return `${days} day${days > 1 ? 's' : ''}`;
+    }
+};
+
 export function ShopList({ shopsList, isLoading, error, locationName }) {
     const navigate = useNavigate();
 
@@ -135,7 +156,7 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                             <div className="hidden lg:flex items-center gap-4 text-[10px] font-bold text-[#16a34a] truncate">
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <FontAwesomeIcon icon={faMessage} />
-                                    <span>Within {shop.response_time || "15 mins"}</span>
+                                    <span>Within {formatResponseTime(shop.response_time)}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <FontAwesomeIcon icon={faShieldHalved} />

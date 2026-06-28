@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import Profile from "./Profile";
 import RepairStatus from "./RepairStatus";
@@ -21,7 +22,9 @@ function getCustomerIdFromToken() {
 }
 
 function CustomerControllDashboard() {
-    const [currentPage, setCurrentPage] = useState("dashboard");
+    const location = useLocation();
+    // 3. Check for the router state. If it exists, use it. Otherwise, default to "dashboard".
+    const [currentPage, setCurrentPage] = useState(location.state?.targetPage || "dashboard");
     const customerId = getCustomerIdFromToken();
     const unreadCount = useUnreadCount(customerId);
 

@@ -226,6 +226,30 @@ class ServiceRequest {
         return $stmt->execute();
     }
 
+    //Database cleanup: Cancel stale requests that have been pending for too long. For clear statistics generation
+    public function cancelStaleRequests() {
+        $query = "
+            UPDATE " . $this->table_name . " 
+            SET status = 'Cancelled', 
+                cancelled_by = 'System', 
+                cancellation_reason = 'Automatically cancelled due to shop inactivity'
+            WHERE status = 'Pending' 
+            AND (
+                /* Tier 1: Urgent requests older than 30 minutes */
+                (urgency_level = 'Urgent' AND created_at <= DATE_SUB(NOW(), INTERVAL 30 MINUTE))
+                OR 
+                /* Tier 2: Normal requests older than 24 hours */
+                (urgency_level = 'Normal' AND preferred_date IS NULL AND created_at <= DATE_SUB(NOW(), INTERVAL 24 HOUR))
+                OR
+                /* Tier 3: Appointments where the requested date has already passed */
+                (preferred_date IS NOT NULL AND preferred_date < CURDATE())
+            )
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+    }
+
     // ==========================================
     // 4. DASHBOARD RETRIEVAL QUERIES
     // ==========================================

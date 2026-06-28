@@ -78,13 +78,16 @@ class ShopController {
                 
                 // If decode() returns an array (not false), the signature is valid and it hasn't expired!
                 if ($payload !== false) {
+                    
+                    // THE FIX: Check for 'role' first, fallback to 'userRole' just in case
+                    $role = $payload['role'] ?? $payload['userRole'] ?? '';
+                    
                     // Check if the user is specifically a customer
-                    if (isset($payload['userRole']) && $payload['userRole'] === 'customer') {
-                        // Extract the user ID from the JWT payload
-                        if (isset($payload['id'])) {
-                            $customerId = intval($payload['id']); 
-                        } elseif (isset($payload['user_id'])) {
-                            $customerId = intval($payload['user_id']); // Fallback just in case
+                    if ($role === 'customer') {
+                        // Extract the user ID safely using null coalescing
+                        $extractedId = $payload['user_id'] ?? $payload['id'] ?? null;
+                        if ($extractedId) {
+                            $customerId = intval($extractedId); 
                         }
                     }
                 }
