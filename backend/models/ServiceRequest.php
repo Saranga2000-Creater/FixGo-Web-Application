@@ -162,27 +162,7 @@ class ServiceRequest {
         return $stmt->execute();
     }
 
-    public function updateTowDetails($request_id, $eta, $truck_brand, $truck_color, $truck_plate, $driver_name, $driver_phone) {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET promised_eta          = :eta, 
-                      dispatched_truck_brand = :truck_brand,
-                      dispatched_truck_color = :truck_color,
-                      dispatched_truck_plate = :truck_plate,
-                      dispatched_driver_name = :driver_name,
-                      dispatched_driver_phone= :driver_phone
-                  WHERE id = :id";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":eta",         $eta,         PDO::PARAM_INT);
-        $stmt->bindParam(":truck_brand", $truck_brand);
-        $stmt->bindParam(":truck_color", $truck_color);
-        $stmt->bindParam(":truck_plate", $truck_plate);
-        $stmt->bindParam(":driver_name", $driver_name);
-        $stmt->bindParam(":driver_phone",$driver_phone);
-        $stmt->bindParam(":id",          $request_id,  PDO::PARAM_INT);
-
-        return $stmt->execute();
-    }
 
     // ==========================================
     // 3. CANCELLATION & ACCOUNTABILITY
@@ -406,7 +386,7 @@ public function getActiveRepairsByShop($shop_id)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateTowTruckDetails($data)
+public function updateTowTruckDetails($data)
 {
     $sql = "
     UPDATE servicerequest
@@ -420,7 +400,8 @@ public function getActiveRepairsByShop($shop_id)
     WHERE id = ?";
 
     $stmt = $this->conn->prepare($sql);
-    $stmt->execute([
+
+    $result = $stmt->execute([
         $data["driver_name"],
         $data["driver_phone"],
         $data["truck_brand"],
@@ -430,7 +411,7 @@ public function getActiveRepairsByShop($shop_id)
         $data["request_id"]
     ]);
 
-    return $stmt->rowCount() > 0;
+    return $result;
 }
 
     // ==========================================
@@ -483,11 +464,11 @@ public function getActiveRepairsByShop($shop_id)
         WHERE sr.shop_id = :shop_id
         AND sr.status IN ('Pending','Confirmed','Cancelled')
         ORDER BY
-        CASE
-            WHEN sr.status='Pending' THEN sr.created_at
-            WHEN sr.status='Confirmed' THEN sr.confirmed_at
-            WHEN sr.status='Cancelled' THEN sr.cancelled_at
-        END DESC
+CASE
+    WHEN sr.status='Pending' THEN sr.created_at
+    WHEN sr.status='Confirmed' THEN sr.confirmed_at
+    WHEN sr.status='Cancelled' THEN sr.cancelled_at
+END DESC
     ";
 
     $stmt=$this->conn->prepare($query);

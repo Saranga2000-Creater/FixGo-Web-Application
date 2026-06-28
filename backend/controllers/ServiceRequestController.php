@@ -176,17 +176,6 @@ class ServiceRequestController {
                     return json_encode(["message" => "You can only accept 'Pending' requests."]);
                 }
 
-                if (isset($requestData['promised_eta'])) {
-                    $this->serviceRequestModel->updateTowDetails(
-                        $request_id,
-                        $requestData['promised_eta'],
-                        $requestData['dispatched_truck_brand'] ?? null,
-                        $requestData['dispatched_truck_color'] ?? null,
-                        $requestData['dispatched_truck_plate'] ?? null,
-                        $requestData['dispatched_driver_name'] ?? null,
-                        $requestData['dispatched_driver_phone'] ?? null
-                    );
-                }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Accepted');
                 http_response_code(200);
