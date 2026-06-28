@@ -711,7 +711,18 @@ function ShopDetails() {
         </div>
       )}
 
-      <ServiceRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} shop={shop} distance={passedDistance} initialNeedsTow={false} />
+      
+      <ServiceRequestModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    shop={shop}
+    distance={passedDistance}
+    initialNeedsTow={false}
+    onTrackRequest={(requestId) => {
+        setIsModalOpen(false);
+        navigate("/services", { state: { navigateTo: "repair", requestId } });
+    }}
+/>
       <Footer />
     </>
   );

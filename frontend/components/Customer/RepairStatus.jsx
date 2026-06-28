@@ -6,7 +6,6 @@ import {
     faClock, faCircleCheck, faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
     green:     "#16A34A",
     greenLight:"#F0FDF4",
@@ -37,7 +36,6 @@ const T = {
     },
 };
 
-// ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
     Pending:       { label: "Pending",     color: T.amber,    bg: T.amberBg,               icon: faClock,        desc: "Your request has been sent. Waiting for the shop to accept." },
     Accepted:      { label: "Accepted",    color: T.blue,     bg: T.blueBg,                icon: faCircleCheck,  desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
@@ -45,7 +43,6 @@ const STATUS_CONFIG = {
     "In Progress": { label: "In Progress", color: "#A855F7",  bg: "rgba(168,85,247,0.10)", icon: faWrench,       desc: "Your vehicle is currently being repaired." },
 };
 
-// ── Stepper only applies once confirmed ──────────────────────────────────────
 const STEPS = [
     { key: "Confirmed",   icon: faHandshake, label: "Confirmed",   desc: "Booking confirmed! The shop will begin work soon."  },
     { key: "In Progress", icon: faWrench,    label: "In Progress", desc: "Your vehicle is currently being repaired."          },
@@ -58,8 +55,6 @@ const getStepIndex = (status) => {
 };
 
 const STEPPER_STATUSES = ["Confirmed", "In Progress"];
-
-// ── Only show ongoing repairs ─────────────────────────────────────────────────
 const ONGOING_STATUSES = ["Pending", "Accepted", "Confirmed", "In Progress"];
 
 const formatDate = (d) =>
@@ -85,7 +80,7 @@ function InfoRow({ label, value }) {
     );
 }
 
-export default function RepairStatus({ customerId }) {
+export default function RepairStatus({ customerId, targetRequestId }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading]   = useState(true);
     const [expanded, setExpanded] = useState(null);
@@ -97,12 +92,18 @@ export default function RepairStatus({ customerId }) {
                 const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
                 const data = await res.json();
                 if (data.success) {
-                    // ── Only show ONGOING repairs (not Completed or Cancelled) ──
                     const ongoing = (data.data || []).filter(r =>
                         ONGOING_STATUSES.includes(r.status)
                     );
                     setRequests(ongoing);
-                    if (ongoing.length > 0 && !expanded) setExpanded(ongoing[0].id);
+
+                    if (targetRequestId) {
+                        const rawId = parseInt(targetRequestId.split("-")[2]);
+                        const match = ongoing.find(r => r.id === rawId);
+                        setExpanded(match ? match.id : ongoing[0]?.id);
+                    } else {
+                        if (ongoing.length > 0 && !expanded) setExpanded(ongoing[0].id);
+                    }
                 }
             } catch (err) {
                 console.error("RepairStatus fetch error:", err);
@@ -113,7 +114,7 @@ export default function RepairStatus({ customerId }) {
         fetchRequests();
         const interval = setInterval(fetchRequests, 30000);
         return () => clearInterval(interval);
-    }, [customerId]);
+    }, [customerId, targetRequestId]);
 
     if (loading) {
         return (
@@ -129,7 +130,6 @@ export default function RepairStatus({ customerId }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            {/* ── Page heading ── */}
             <div style={{
                 background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
                 borderRadius: 18, padding: "24px",
@@ -154,7 +154,6 @@ export default function RepairStatus({ customerId }) {
                 </div>
             </div>
 
-            {/* ── Empty state ── */}
             {requests.length === 0 ? (
                 <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
                     <FontAwesomeIcon icon={faCar} style={{ fontSize: 48, color: T.slate200 }} />
@@ -173,7 +172,6 @@ export default function RepairStatus({ customerId }) {
                     return (
                         <div key={req.id} style={{ ...T.card, overflow: "hidden" }}>
 
-                            {/* ── Card header ── */}
                             <div style={{
                                 padding: "20px 24px",
                                 borderBottom: `1px solid ${T.slate100}`,
@@ -228,11 +226,9 @@ export default function RepairStatus({ customerId }) {
                                 </div>
                             </div>
 
-                            {/* ── Expanded body ── */}
                             {isOpen && (
                                 <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-                                    {/* ── Status info banner (Pending / Accepted) ── */}
                                     {!showStepper && (
                                         <div style={{
                                             display: "flex", alignItems: "center", gap: 16,
@@ -257,7 +253,6 @@ export default function RepairStatus({ customerId }) {
                                         </div>
                                     )}
 
-                                    {/* ── 3-Step Stepper (Confirmed → In Progress → Completed) ── */}
                                     {showStepper && (
                                         <div style={{
                                             display: "grid",
@@ -326,7 +321,6 @@ export default function RepairStatus({ customerId }) {
                                         </div>
                                     )}
 
-                                    {/* ── Relax banner (active repair in progress) ── */}
                                     {showStepper && (
                                         <div style={{
                                             display: "flex", alignItems: "center", gap: 16,
@@ -349,7 +343,6 @@ export default function RepairStatus({ customerId }) {
                                         </div>
                                     )}
 
-                                    {/* ── Request Details ── */}
                                     <div style={{
                                         background: T.white, borderRadius: 14,
                                         border: `1px solid ${T.slate200}`, padding: 20,

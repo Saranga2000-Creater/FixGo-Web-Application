@@ -1,8 +1,10 @@
 <?php
 
 // Allow any localhost port (5173, 5174, etc.) for local development
+//Setting Up Communication Rules (CORS)
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (preg_match('/^http:\/\/localhost:\d+$/', $origin)) {
+
     header("Access-Control-Allow-Origin: $origin");
 } else {
     header("Access-Control-Allow-Origin: http://localhost:5173");

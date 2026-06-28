@@ -176,29 +176,25 @@ class ServiceRequestController {
                     return json_encode(["message" => "You can only accept 'Pending' requests."]);
                 }
 
-                if (isset($requestData['promised_eta'])) {
-                    $this->serviceRequestModel->updateTowDetails(
-                        $request_id,
-                        $requestData['promised_eta'],
-                        $requestData['dispatched_truck_brand'] ?? null,
-                        $requestData['dispatched_truck_color'] ?? null,
-                        $requestData['dispatched_truck_plate'] ?? null,
-                        $requestData['dispatched_driver_name'] ?? null,
-                        $requestData['dispatched_driver_phone'] ?? null
-                    );
-                }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Accepted');
                 http_response_code(200);
                 return json_encode(["message" => "Request Accepted. Waiting for customer confirmation."]);
             }
 
-            elseif ($new_status === 'Cancelled' || $new_status === 'Declined') {
-                $reason = $requestData['reason'] ?? "Shop declined/cancelled the request.";
-                $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
-                http_response_code(200);
-                return json_encode(["message" => "Request successfully cancelled."]);
-            }
+          elseif ($new_status === 'Declined') {
+    $reason = $requestData['reason'] ?? "Shop declined the request.";
+    $this->serviceRequestModel->declineRequest($request_id, $reason);
+    http_response_code(200);
+    return json_encode(["message" => "Request successfully declined."]);
+}
+
+elseif ($new_status === 'Cancelled') {
+    $reason = $requestData['reason'] ?? "Shop cancelled the request.";
+    $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
+    http_response_code(200);
+    return json_encode(["message" => "Request successfully cancelled."]);
+} 
 
             elseif (in_array($new_status, ['Diagnosis', 'Pending Parts', 'In Progress', 'Completed'])) {
 
@@ -256,6 +252,17 @@ class ServiceRequestController {
         return json_encode(["success" => true, "data" => $requests]);
     }
 
+
+public function handleGetDeclinedRequests($shop_id) {
+    $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
+
+    http_response_code(200);
+    return json_encode([
+        "success" => true,
+        "data"    => $requests
+    ]);
+}
+
     public function handleGetConfirmedRequests($shop_id)
     {
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
@@ -295,20 +302,26 @@ public function updateTowTruckDetails()
 
     if (empty($data['request_id'])) {
         http_response_code(400);
-        echo json_encode([
-            "success" => false,
-            "message" => "Request ID is required."
-        ]);
+        echo json_encode(["success" => false, "message" => "Request ID is required."]);
         return;
     }
 
-    $result = $this->serviceRequestModel->updateTowTruckDetails($data);
+    try {
+        $result = $this->serviceRequestModel->updateTowTruckDetails($data);
 
-    if ($result) {
-        echo json_encode(["success" => true]);
-    } else {
+        if ($result) {
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Update failed — no rows affected."]);
+        }
+    } catch (Throwable $e) {
         http_response_code(500);
-        echo json_encode(["success" => false]);
+        echo json_encode([
+            "success" => false,
+            "message" => "Server error.",
+            "debug"   => $e->getMessage() // remove in production
+        ]);
     }
 }
 
@@ -326,6 +339,18 @@ public function updateTowTruckDetails()
             "data"    => $history
         ]);
     }
+
+    public function handleGetShopNotifications($shop_id)
+{
+    $notifications =
+        $this->serviceRequestModel
+             ->getShopNotifications($shop_id);
+     http_response_code(200);
+    return json_encode([
+        "success"=>true,
+        "data"=>$notifications
+    ]);
+}
 
 }
 ?>
