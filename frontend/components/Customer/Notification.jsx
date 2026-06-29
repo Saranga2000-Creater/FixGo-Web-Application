@@ -77,10 +77,9 @@ const getMessage = (req) => {
     const shop = req.shop_name || "the shop";
     switch (req.status) {
         case "Accepted":       return `${shop} accepted your request. Please confirm or decline below.`;
-       
         case "Confirmed":      return req.requires_tow == 1
-    ? `Your booking with ${shop} is confirmed! We're on our way to pick up your vehicle. Sit tight!`
-    : `Your booking with ${shop} is confirmed! Please take your vehicle to the shop at your scheduled time.`;
+            ? `Your booking with ${shop} is confirmed! We're on our way to pick up your vehicle. Sit tight!`
+            : `Your booking with ${shop} is confirmed! Please bring your vehicle to the shop.`;
         case "Diagnosis":      return `${shop} is currently diagnosing your vehicle.`;
         case "In Progress":    return `Your vehicle repair is now in progress at ${shop}.`;
         case "Pending Parts":  return `${shop} is waiting for spare parts to arrive.`;
@@ -126,7 +125,6 @@ const DeclineModal = ({ shopName, refId, onConfirm, onCancel, isLoading }) => (
             display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
             animation: "slideUp 0.2s ease",
         }}>
-            {/* Icon */}
             <div style={{
                 width: 56, height: 56, borderRadius: "50%",
                 background: T.redBg,
@@ -135,7 +133,6 @@ const DeclineModal = ({ shopName, refId, onConfirm, onCancel, isLoading }) => (
                 <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 24, color: T.red }} />
             </div>
 
-            {/* Text */}
             <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: 17, fontWeight: 700, color: T.slate900, margin: "0 0 8px" }}>
                     Decline this booking?
@@ -148,10 +145,8 @@ const DeclineModal = ({ shopName, refId, onConfirm, onCancel, isLoading }) => (
                 </p>
             </div>
 
-            {/* Divider */}
             <div style={{ width: "100%", height: 1, background: T.slate200 }} />
 
-            {/* Buttons */}
             <div style={{ display: "flex", gap: 10, width: "100%" }}>
                 <button
                     onClick={onCancel}
@@ -238,7 +233,6 @@ const TowTruckCard = ({ notif }) => {
                 </span>
             </div>
 
-            {/* Dispatch details — show only if available */}
             {hasDetails && (
                 <>
                     <div style={{ height: 1, background: "rgba(13,148,136,0.15)" }} />
@@ -259,7 +253,6 @@ const TowTruckCard = ({ notif }) => {
                 </>
             )}
 
-            {/* No details yet — friendly message */}
             {!hasDetails && (
                 <div style={{
                     background: "rgba(217,119,6,0.06)",
@@ -355,7 +348,7 @@ export default function Notification({ customerId: rawId }) {
     const [localDeclined, setLocalDeclined]   = useState([]);
     const [readIds, setReadIds]               = useState([]);
     const [readIdsLoaded, setReadIdsLoaded]   = useState(false);
-    const [declineModal, setDeclineModal]     = useState(null); // { requestId, shopName, refId }
+    const [declineModal, setDeclineModal]     = useState(null);
 
     useEffect(() => {
         if (!customerId) return;
@@ -399,7 +392,6 @@ export default function Notification({ customerId: rawId }) {
     const markRead    = (id) => persistReadIds([...readIds, String(id)]);
     const markAllRead = ()   => persistReadIds([...readIds, ...notifications.map(n => String(n.id))]);
 
-    // ── Confirm booking ───────────────────────────────────────────────────────
     const handleConfirm = async (e, requestId) => {
         e.stopPropagation();
         setConfirming(requestId);
@@ -425,7 +417,6 @@ export default function Notification({ customerId: rawId }) {
         }
     };
 
-    // ── Decline booking (opens modal) ─────────────────────────────────────────
     const openDeclineModal = (e, notif) => {
         e.stopPropagation();
         setDeclineModal({
@@ -497,7 +488,6 @@ export default function Notification({ customerId: rawId }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
 
-            {/* ── Decline Modal ── */}
             {declineModal && (
                 <DeclineModal
                     shopName={declineModal.shopName}
@@ -644,7 +634,6 @@ export default function Notification({ customerId: rawId }) {
                                             border: `1px solid ${isConfirmed ? T.green : isDeclined ? T.red : "rgba(37,99,235,0.2)"}`,
                                             borderRadius: 14, padding: "16px 18px", transition: "all 0.3s",
                                         }}>
-                                            {/* Confirmed state */}
                                             {isConfirmed && (
                                                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                                                     <div>
@@ -657,7 +646,6 @@ export default function Notification({ customerId: rawId }) {
                                                 </div>
                                             )}
 
-                                            {/* Declined state */}
                                             {isDeclined && !isConfirmed && (
                                                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                                                     <div>
@@ -670,7 +658,6 @@ export default function Notification({ customerId: rawId }) {
                                                 </div>
                                             )}
 
-                                            {/* Awaiting action */}
                                             {!isConfirmed && !isDeclined && (
                                                 <>
                                                     <div style={{ marginBottom: 14 }}>
@@ -685,7 +672,6 @@ export default function Notification({ customerId: rawId }) {
                                                     {hasTow && <TowTruckCard notif={notif} />}
 
                                                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: hasTow ? 14 : 0 }}>
-                                                        {/* Decline */}
                                                         <button
                                                             onClick={(e) => openDeclineModal(e, notif)}
                                                             disabled={isDeclining || isConfirming}
@@ -702,7 +688,6 @@ export default function Notification({ customerId: rawId }) {
                                                             <FontAwesomeIcon icon={faXmark} style={{ fontSize: 13 }} /> Decline
                                                         </button>
 
-                                                        {/* Confirm */}
                                                         <button
                                                             onClick={(e) => handleConfirm(e, notif.id)}
                                                             disabled={isConfirming || isDeclining}
@@ -722,7 +707,6 @@ export default function Notification({ customerId: rawId }) {
                                                             }
                                                         </button>
 
-                                                        {/* View Shop */}
                                                         {notif.shop_id && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); navigate(`/shop/${notif.shop_id}`); }}
@@ -748,14 +732,38 @@ export default function Notification({ customerId: rawId }) {
                                         </div>
                                     )}
 
-                                    {/* ── CONFIRMED: Track hint ── */}
+                                    {/* ── CONFIRMED: Tow card + track hint + View Shop button ── */}
                                     {notif.status === "Confirmed" && (
-                                       <p style={{ fontSize: 12, color: T.teal, margin: 0 }}>
-                                        {notif.requires_tow == 1
-                                            ? <>🚛 Your tow truck is on the way! Track your vehicle's progress in the <strong>Repair Status</strong> tab.</>
-                                            : <>🏪 Please bring your vehicle to the shop. Track progress in the <strong>Repair Status</strong> tab.</>
-                                        }
-                                        </p>
+                                        <>
+                                            {hasTow && <TowTruckCard notif={notif} />}
+                                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: hasTow ? 10 : 0 }}>
+                                                <p style={{ fontSize: 12, color: T.teal, margin: 0 }}>
+                                                    {hasTow
+                                                        ? <>🚛 Your tow truck is on the way! Track progress in the <strong>Repair Status</strong> tab.</>
+                                                        : <>🏪 Please bring your vehicle to the shop. Track progress in the <strong>Repair Status</strong> tab.</>
+                                                    }
+                                                </p>
+                                                {!hasTow && notif.shop_id && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); navigate(`/shop/${notif.shop_id}`); }}
+                                                        style={{
+                                                            display: "flex", alignItems: "center", gap: 6,
+                                                            background: T.white, color: T.slate700,
+                                                            border: `1.5px solid ${T.slate200}`,
+                                                            borderRadius: 10, padding: "8px 14px",
+                                                            fontSize: 13, fontWeight: 600,
+                                                            cursor: "pointer", fontFamily: T.font, flexShrink: 0, transition: "all 0.15s",
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.green; e.currentTarget.style.color = T.green; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.slate200; e.currentTarget.style.color = T.slate700; }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faStore} style={{ fontSize: 12 }} />
+                                                        View Shop & Take Directions
+                                                        <FontAwesomeIcon icon={faExternalLinkAlt} style={{ fontSize: 10 }} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
 
                                     {/* ── COMPLETED: Review prompt ── */}

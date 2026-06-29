@@ -5,10 +5,8 @@ import { faTimes, faTruckPickup, faCar, faInfoCircle, faCamera,
     faCopy, faStar, faMapMarkerAlt, faBolt, faMotorcycle, faTruck, 
     faCogs, faBatteryFull, faLifeRing, faWrench, faQuestionCircle, 
     faPaperPlane, faShieldAlt, faLock, faCheck} from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from 'react-router-dom'; // 1. Import the hook
-    
+
 export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNeedsTow = false, onTrackRequest }) => {
-    const navigate = useNavigate();
     // NEW: Wizard Step State (1: Form, 2: Review, 3: Success)
     const [step, setStep] = useState(1);
 
@@ -829,29 +827,16 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
 
             {/* Action Buttons */}
             <div className="w-full max-w-md flex gap-3 mb-6">
-                <button 
-                    onClick={() => {
-                        onClose(); 
-                        
-                        // Use the new prop-based architecture if it was passed down
-                        if (typeof onTrackRequest === 'function') {
-                            onTrackRequest(referenceId);
-                        } else {
-                            // Otherwise, safely fall back to our direct router navigation
-                            setTimeout(() => {
-                                navigate('/services', { state: { targetPage: 'repair' } });
-                            }, 100); 
-                        }
-                    }}
-                    className="flex-1 py-3.5 rounded-xl font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                >
-                    <FontAwesomeIcon icon={faClock} className="text-[#16a34a]" /> Track Request
-                </button>
-                
-                <button 
-                    onClick={onClose} 
-                    className="flex-1 py-3.5 rounded-xl font-bold bg-[#16a34a] text-white hover:bg-[#15803d] transition-colors text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer"
-                >
+               <button
+    onClick={() => {
+        onClose();
+        if (onTrackRequest) onTrackRequest(referenceId);
+    }}
+    className="flex-1 py-3.5 rounded-xl font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center justify-center gap-2"
+>
+    <FontAwesomeIcon icon={faClock} className="text-[#16a34a]" /> Track Request
+</button>
+                <button onClick={onClose} className="flex-1 py-3.5 rounded-xl font-bold bg-[#16a34a] text-white hover:bg-[#15803d] transition-colors text-sm flex items-center justify-center gap-2 shadow-md">
                     <FontAwesomeIcon icon={faCar} /> Back to Shops
                 </button>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faHandshake, faWrench, faFlag, faShieldHalved,
@@ -39,7 +39,7 @@ const T = {
 const STATUS_CONFIG = {
     Pending:       { label: "Pending",     color: T.amber,    bg: T.amberBg,               icon: faClock,        desc: "Your request has been sent. Waiting for the shop to accept." },
     Accepted:      { label: "Accepted",    color: T.blue,     bg: T.blueBg,                icon: faCircleCheck,  desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
-    Confirmed:     { label: "Confirmed",   color: T.teal,     bg: T.tealBg,                icon: faHandshake,    desc: "Booking confirmed! The shop will begin work soon." },
+    Confirmed:     { label: "Confirmed",   color: T.teal,     bg: T.tealBg,                icon: faHandshake,    desc: "" },
     "In Progress": { label: "In Progress", color: "#A855F7",  bg: "rgba(168,85,247,0.10)", icon: faWrench,       desc: "Your vehicle is currently being repaired." },
 };
 
@@ -168,6 +168,7 @@ export default function RepairStatus({ customerId, targetRequestId }) {
                     const isOpen      = expanded === req.id;
                     const showStepper = STEPPER_STATUSES.includes(req.status);
                     const currentIdx  = getStepIndex(req.status);
+                    const hasTow      = req.requires_tow == 1;
 
                     return (
                         <div key={req.id} style={{ ...T.card, overflow: "hidden" }}>
@@ -229,6 +230,40 @@ export default function RepairStatus({ customerId, targetRequestId }) {
                             {isOpen && (
                                 <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
+                                    {/* ── TOW TRUCK BANNER (Confirmed + requires_tow) ── */}
+                                    {hasTow && req.status === "Confirmed" && (
+                                        <div style={{
+                                            display: "flex", alignItems: "center", gap: 14,
+                                            background: "linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(22,163,74,0.06) 100%)",
+                                            border: "1px solid rgba(13,148,136,0.30)",
+                                            borderRadius: 14, padding: "16px 20px",
+                                        }}>
+                                            <div style={{
+                                                width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                                                background: "rgba(13,148,136,0.12)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                            }}>
+                                                <span style={{ fontSize: 22 }}>🚛</span>
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.teal, margin: 0 }}>
+                                                    Your tow truck is on the way!
+                                                </p>
+                                                <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>
+                                                    Sit tight — the driver will arrive at your location shortly to pick up your vehicle.
+                                                </p>
+                                            </div>
+                                            <span style={{
+                                                marginLeft: "auto", flexShrink: 0,
+                                                background: "rgba(13,148,136,0.12)",
+                                                color: T.teal, borderRadius: 99,
+                                                padding: "4px 12px", fontSize: 11, fontWeight: 700,
+                                            }}>
+                                                En Route
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {!showStepper && (
                                         <div style={{
                                             display: "flex", alignItems: "center", gap: 16,
@@ -253,6 +288,7 @@ export default function RepairStatus({ customerId, targetRequestId }) {
                                         </div>
                                     )}
 
+                                    {/* ── STEPPER ── */}
                                     {showStepper && (
                                         <div style={{
                                             display: "grid",
@@ -271,9 +307,17 @@ export default function RepairStatus({ customerId, targetRequestId }) {
                                                 const circleBg     = done ? T.greenMuted : active ? T.tealBg : T.white;
                                                 const circleBorder = done ? T.green : active ? T.teal : T.slate200;
 
+                                                const stepDesc = active
+                                                    ? (step.key === "Confirmed"
+                                                        ? (hasTow
+                                                            ? "Your tow truck is on the way to pick up your vehicle. Sit tight!"
+                                                            : "Please bring your vehicle to the shop. The shop will begin work once your vehicle arrives.")
+                                                        : step.desc)
+                                                    : done ? "Done" : "Upcoming";
+
                                                 return (
-                                                    <>
-                                                        <div key={step.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                                                    <Fragment key={step.key}>
+                                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                                                             <div style={{
                                                                 width: 64, height: 64, borderRadius: "50%",
                                                                 background: circleBg,
@@ -304,18 +348,18 @@ export default function RepairStatus({ customerId, targetRequestId }) {
                                                                     color: active ? T.slate500 : T.slate400,
                                                                     lineHeight: 1.4,
                                                                 }}>
-                                                                    {active ? step.desc : done ? "Done" : "Upcoming"}
+                                                                    {stepDesc}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                         {idx < STEPS.length - 1 && (
-                                                            <div key={`line-${idx}`} style={{
+                                                            <div style={{
                                                                 height: 3, borderRadius: 99,
                                                                 background: idx < currentIdx ? T.green : T.slate200,
                                                                 marginBottom: 36,
                                                             }} />
                                                         )}
-                                                    </>
+                                                    </Fragment>
                                                 );
                                             })}
                                         </div>
