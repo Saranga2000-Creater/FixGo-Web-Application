@@ -13,7 +13,6 @@ const SERVICES = [
 ];
 
 
-
 function Stars({ count, max = 5 }) {
   return (
     <span style={{ display: "inline-flex", gap: 2 }}>
@@ -26,6 +25,95 @@ function Stars({ count, max = 5 }) {
 
 function ShopProfile() {
   const [shopData, setShopData] = useState(null);
+
+  const isGarage = shopData?.categories?.toLowerCase().includes("garage") || false;
+const hasTowService = shopData ? Number(shopData.carriageService) === 1 : false;
+
+const [towDetails, setTowDetails] = useState(null);
+const [towLoading, setTowLoading] = useState(false);
+const [showTowForm, setShowTowForm] = useState(false);
+const [towSaving, setTowSaving] = useState(false);
+const [towError, setTowError] = useState("");
+const [towForm, setTowForm] = useState({
+  driverName: "", driverPhone: "", truckBrand: "", truckColor: "", truckPlate: "",
+});
+
+useEffect(() => {
+  if (!shopData) return;
+
+  const token = localStorage.getItem("jwt_token");
+  setTowLoading(true);
+
+  fetch(`http://localhost:8000/api/getTowTruckDetails.php?shop_id=${shopData.id}`, {
+    
+    method: "GET",
+    
+  })
+    
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        setTowDetails(data.data);
+        setTowForm({
+          driverName: data.data.default_driver_name || "",
+          driverPhone: data.data.default_driver_phone || "",
+          truckBrand: data.data.default_truck_brand || "",
+          truckColor: data.data.default_truck_color || "",
+          truckPlate: data.data.tow_truck_plate || "",
+        });
+      }
+    })
+    .catch(err => console.error("Error loading tow truck details:", err))
+    .finally(() => setTowLoading(false));
+}, [shopData, hasTowService]);
+
+const handleTowFormChange = (e) => {
+  setTowForm({ ...towForm, [e.target.name]: e.target.value });
+};
+
+const handleTowSave = () => {
+  setTowError("");
+  for (const field of ["driverName", "driverPhone", "truckBrand", "truckColor", "truckPlate"]) {
+    if (!towForm[field]?.trim()) {
+      setTowError("Please fill in all fields.");
+      return;
+    }
+  }
+
+  const token = localStorage.getItem("jwt_token");
+  setTowSaving(true);
+
+  fetch("http://localhost:8000/api/updateShopTowTruckDetails.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+  shop_id: shopData.id,
+  ...towForm,
+}),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        setTowDetails({
+          default_driver_name: towForm.driverName,
+          default_driver_phone: towForm.driverPhone,
+          default_truck_brand: towForm.truckBrand,
+          default_truck_color: towForm.truckColor,
+          tow_truck_plate: towForm.truckPlate,
+        });
+        setShopData({ ...shopData, carriageService: 1 });
+        setShowTowForm(false);
+      } else {
+        setTowError(data.message || "Failed to save tow truck details.");
+      }
+    })
+    .catch(err => {
+      console.error("Error saving tow truck details:", err);
+      setTowError("Something went wrong. Please try again.");
+    })
+    .finally(() => setTowSaving(false));
+};
+
 useEffect(() => {
     const token = localStorage.getItem("jwt_token");
 
@@ -295,6 +383,112 @@ useEffect(() => {
   </div>
 </div>
 
+{isGarage && (
+  <div style={{
+    background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
+    padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
+  }}>
+    <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+      Tow Truck Details
+    </h3>
+
+    {!hasTowService && !showTowForm && (
+      <div>
+        <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 14 }}>
+          Do you provide tow truck / vehicle carriage services?
+        </p>
+        <button onClick={() => setShowTowForm(true)} style={{
+          padding: "10px 16px", borderRadius: 10, border: "none",
+          background: "#16A34A", color: "#fff", fontWeight: 600,
+          fontSize: 14, cursor: "pointer"
+        }}>
+          Yes, I provide this service
+        </button>
+      </div>
+    )}
+
+    {hasTowService && !showTowForm && (
+      <div>
+        {towLoading ? (
+          <p style={{ fontSize: 13, color: "#6B7280" }}>Loading tow truck details...</p>
+        ) : towDetails ? (
+          <>
+            {[
+              ["Driver Name", towDetails.default_driver_name],
+              ["Driver Phone", towDetails.default_driver_phone],
+              ["Truck Brand", towDetails.default_truck_brand],
+              ["Truck Color", towDetails.default_truck_color],
+              ["Plate Number", towDetails.tow_truck_plate],
+            ].map(([k, v]) => (
+              <div key={k} style={{
+                display: "flex", justifyContent: "space-between",
+                padding: "8px 0", borderBottom: "1px solid #F9FAFB", fontSize: 13
+              }}>
+                <span style={{ color: "#6B7280" }}>{k}</span>
+                <span style={{ color: "#111827", fontWeight: 500 }}>{v || "—"}</span>
+              </div>
+            ))}
+            <button onClick={() => setShowTowForm(true)} style={{
+              marginTop: 16, width: "100%", padding: "10px",
+              borderRadius: 10, border: "1.5px solid #16A34A",
+              color: "#16A34A", background: "transparent",
+              fontWeight: 600, fontSize: 14, cursor: "pointer"
+            }}>
+              Edit Tow Truck Details
+            </button>
+          </>
+        ) : (
+          <p style={{ fontSize: 13, color: "#6B7280" }}>No tow truck details found.</p>
+        )}
+      </div>
+    )}
+
+    {showTowForm && (
+      <div>
+        {[
+          ["driverName", "Driver Name", "e.g. John Doe"],
+          ["driverPhone", "Driver Phone", "e.g. +94 77 123 4567"],
+          ["truckBrand", "Truck Brand", "e.g. Isuzu, Toyota"],
+          ["truckColor", "Truck Color", "e.g. White, Blue"],
+          ["truckPlate", "Plate Number", "e.g. WP GA-1234"],
+        ].map(([name, label, placeholder]) => (
+          <div key={name} style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>{label}</label>
+            <input
+              type="text" name={name} value={towForm[name]}
+              onChange={handleTowFormChange} placeholder={placeholder}
+              style={{
+                width: "100%", padding: "8px 10px", marginTop: 4,
+                borderRadius: 8, border: "1px solid #D1D5DB", fontSize: 13,
+                boxSizing: "border-box"
+              }}
+            />
+          </div>
+        ))}
+
+        {towError && <p style={{ color: "#DC2626", fontSize: 12, marginBottom: 10 }}>{towError}</p>}
+
+        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+          <button onClick={handleTowSave} disabled={towSaving} style={{
+            flex: 1, padding: "10px", borderRadius: 10, border: "none",
+            background: "#16A34A", color: "#fff", fontWeight: 600,
+            fontSize: 14, cursor: towSaving ? "not-allowed" : "pointer",
+            opacity: towSaving ? 0.7 : 1
+          }}>
+            {towSaving ? "Saving..." : "Save Details"}
+          </button>
+          <button onClick={() => { setShowTowForm(false); setTowError(""); }} style={{
+            flex: 1, padding: "10px", borderRadius: 10,
+            border: "1px solid #D1D5DB", background: "#fff",
+            color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer"
+          }}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+)}
       </div>
     </div>
   );

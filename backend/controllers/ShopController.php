@@ -376,4 +376,45 @@ public function getTowTruckDetails()
         ]);
     }
 }
+
+public function updateShopTowTruckDetails() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        return;
+    }
+
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!isset($input['shop_id']) || empty($input['shop_id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Shop ID is required.']);
+        return;
+    }
+
+    foreach (['driverName', 'driverPhone', 'truckBrand', 'truckColor', 'truckPlate'] as $field) {
+        if (!isset($input[$field]) || trim($input[$field]) === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+            return;
+        }
+    }
+
+    $shopModel = new Shop($this->db);
+
+    try {
+        $success = $shopModel->updateShopTowTruckDetails(intval($input['shop_id']), $input);
+
+        if ($success) {
+            http_response_code(200);
+            echo json_encode(['success' => true, 'message' => 'Tow truck details updated successfully.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update tow truck details.']);
+        }
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+    }
+}
 }

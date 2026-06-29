@@ -450,5 +450,29 @@ class Shop {
 
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+public function updateShopTowTruckDetails($shopId, $data) {
+    $query = "UPDATE shop SET 
+                carriageService = 1,
+                default_driver_name = :driverName,
+                default_driver_phone = :driverPhone,
+                default_truck_brand = :truckBrand,
+                default_truck_color = :truckColor,
+                tow_truck_plate = :truckPlate
+              WHERE id = :id";
+
+    $stmt = $this->conn->prepare($query);
+
+    // Using execute()'s return value, not rowCount() — same fix as the
+    // earlier tow-truck false-failure bug (no-change updates report rowCount 0)
+    return $stmt->execute([
+        ':driverName'  => $data['driverName'],
+        ':driverPhone' => $data['driverPhone'],
+        ':truckBrand'  => $data['truckBrand'],
+        ':truckColor'  => $data['truckColor'],
+        ':truckPlate'  => $data['truckPlate'],
+        ':id'          => $shopId
+    ]);
+}
 }
 ?>
