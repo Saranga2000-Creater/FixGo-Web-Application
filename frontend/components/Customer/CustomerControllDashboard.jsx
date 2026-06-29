@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";  // add useNavigate
 import Dashboard from "./Dashboard";
 import Profile from "./Profile";
 import RepairStatus from "./RepairStatus";
@@ -21,9 +22,38 @@ function getCustomerIdFromToken() {
 }
 
 function CustomerControllDashboard() {
-    const [currentPage, setCurrentPage] = useState("dashboard");
-    const customerId = getCustomerIdFromToken();
+    const [currentPage, setCurrentPage]         = useState("dashboard");
+    const [targetRequestId, setTargetRequestId] = useState(null);
+    const customerId  = getCustomerIdFromToken();
     const unreadCount = useUnreadCount(customerId);
+    const location    = useLocation();
+    const navigate    = useNavigate();
+
+    useEffect(() => {
+        if (location.state?.navigateTo === "repair") {
+            setCurrentPage("repair");
+            setTargetRequestId(location.state?.requestId || null);
+
+            // Clear the state so revisiting /services doesn't re-trigger this
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state?.navigateTo]);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.detail?.tab === "repair-status") {
+                setCurrentPage("repair");
+            }
+        };
+        window.addEventListener("fixgo_navigate", handler);
+        return () => window.removeEventListener("fixgo_navigate", handler);
+    }, []);
+
+    // When user manually clicks a sidebar link, clear the deep-link target
+    const handlePageChange = (page) => {
+        if (page !== "repair") setTargetRequestId(null);
+        setCurrentPage(page);
+    };
 
     return (
         <div style={{
@@ -34,7 +64,7 @@ function CustomerControllDashboard() {
         }}>
             <CustomerSidebar
                 currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
+                setCurrentPage={handlePageChange}
                 unreadCount={unreadCount}
             />
 
@@ -48,11 +78,11 @@ function CustomerControllDashboard() {
                     {currentPage === "dashboard" && (
                         <Dashboard
                             customerId={customerId}
-                            onNavigate={setCurrentPage}
+                            onNavigate={handlePageChange}
                         />
                     )}
                     {currentPage === "profile"       && <Profile        customerId={customerId} />}
-                    {currentPage === "repair"        && <RepairStatus   customerId={customerId} />}
+                    {currentPage === "repair"        && <RepairStatus   customerId={customerId} targetRequestId={targetRequestId} />}
                     {currentPage === "history"       && <ServiceHistory customerId={customerId} />}
                     {currentPage === "reviews"       && <ReviewsRatings customerId={customerId} />}
                     {currentPage === "notifications" && <Notification   customerId={customerId} />}
