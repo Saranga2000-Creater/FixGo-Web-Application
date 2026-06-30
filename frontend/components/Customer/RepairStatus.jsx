@@ -80,16 +80,20 @@ function InfoRow({ label, value }) {
     );
 }
 
-export default function RepairStatus({ customerId, targetRequestId }) {
+export default function RepairStatus({targetRequestId }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading]   = useState(true);
     const [expanded, setExpanded] = useState(null);
 
     useEffect(() => {
-        if (!customerId) return;
         const fetchRequests = async () => {
             try {
-                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+                const token = localStorage.getItem("jwt_token");
+                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
                 const data = await res.json();
                 if (data.success) {
                     const ongoing = (data.data || []).filter(r =>
@@ -114,7 +118,7 @@ export default function RepairStatus({ customerId, targetRequestId }) {
         fetchRequests();
         const interval = setInterval(fetchRequests, 30000);
         return () => clearInterval(interval);
-    }, [customerId, targetRequestId]);
+    }, [targetRequestId]);
 
     if (loading) {
         return (

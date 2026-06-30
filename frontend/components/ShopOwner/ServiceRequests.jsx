@@ -116,13 +116,11 @@ function ServiceRequests({ shopCategory }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             request_id: requestId,
             new_status: status,
-            actor_id: parseInt(localStorage.getItem("shopId")),
-            actor_role: "shop_owner"
           }),
         }
       );
@@ -150,10 +148,15 @@ function ServiceRequests({ shopCategory }) {
 
   const fetchRequests = async () => {
     try {
-      const shopId = localStorage.getItem("shopId");
+      const token = localStorage.getItem("jwt_token");
 
       const response = await fetch(
-        `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
+        "http://localhost:8000/api/getServiceRequests.php",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const data = await response.json();
@@ -168,10 +171,15 @@ function ServiceRequests({ shopCategory }) {
 
   const fetchDeclinedRequests = async () => {
     try {
-      const shopId = localStorage.getItem("shopId");
+      const token = localStorage.getItem("jwt_token");
 
       const response = await fetch(
-        `http://localhost:8000/api/getDeclinedRequests.php?shop_id=${shopId}`
+        "http://localhost:8000/api/getDeclinedRequests.php",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const data = await response.json();
@@ -189,18 +197,31 @@ function ServiceRequests({ shopCategory }) {
     if (Number(r.requires_tow) === 1) {
       setSelectedRequest(r);
       setIsAcceptFlow(true);
-      openTowTruckModal(r.shop_id);
+      openTowTruckModal();
     } else {
       updateStatus(r.id, "Accepted");
     }
   };
 
-  const openTowTruckModal = async (shopId) => {
-    const res = await fetch(
-      `http://localhost:8000/api/getTowTruckDetails.php?shop_id=${shopId}`
-    );
+  const openTowTruckModal = async () => {
+    const token = localStorage.getItem("jwt_token");
 
+    const res = await fetch(
+      "http://localhost:8000/api/getTowTruckDetails.php",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     const data = await res.json();
+
+console.log(data);
+
+if (!res.ok) {
+    alert(data.message);
+    return;
+}
 
     if (data.success) {
       setTowTruck({
@@ -212,12 +233,15 @@ function ServiceRequests({ shopCategory }) {
   };
 
   const saveTowTruckDetails = async () => {
+    const token = localStorage.getItem("jwt_token");
+
     const res = await fetch(
       "http://localhost:8000/api/updateTowTruckDetails.php",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           request_id: selectedRequest.id,
@@ -244,12 +268,15 @@ function ServiceRequests({ shopCategory }) {
 
   const confirmTowAndAccept = async () => {
     try {
+      const token = localStorage.getItem("jwt_token");
+
       const res = await fetch(
         "http://localhost:8000/api/updateTowTruckDetails.php",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             request_id: selectedRequest.id,

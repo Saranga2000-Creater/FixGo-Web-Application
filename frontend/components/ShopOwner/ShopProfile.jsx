@@ -44,12 +44,12 @@ useEffect(() => {
   const token = localStorage.getItem("jwt_token");
   setTowLoading(true);
 
-  fetch(`http://localhost:8000/api/getTowTruckDetails.php?shop_id=${shopData.id}`, {
-    
+  fetch("http://localhost:8000/api/getTowTruckDetails.php", {
     method: "GET",
-    
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   })
-    
     .then(res => res.json())
     .then(data => {
       if (data.success) {
@@ -63,9 +63,12 @@ useEffect(() => {
         });
       }
     })
-    .catch(err => console.error("Error loading tow truck details:", err))
+    .catch(err => console.error(err))
     .finally(() => setTowLoading(false));
+
 }, [shopData, hasTowService]);
+    
+    
 
 const handleTowFormChange = (e) => {
   setTowForm({ ...towForm, [e.target.name]: e.target.value });
@@ -87,7 +90,6 @@ const handleTowSave = () => {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({
-  shop_id: shopData.id,
   ...towForm,
 }),
   })

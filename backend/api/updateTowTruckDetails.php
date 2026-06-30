@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../config/EnvLoader.php';
+require_once __DIR__ . '/../config/AuthMiddleware.php';
 EnvLoader::load(__DIR__ . '/../.env');
 
 require_once __DIR__ . '/../config/Database.php';
@@ -20,5 +21,7 @@ require_once __DIR__ . '/../controllers/ServiceRequestController.php';
 $database = new Database();
 $db = $database->connect();
 
+$payload = AuthMiddleware::authenticate();
 $controller = new ServiceRequestController($db);
-$controller->updateTowTruckDetails();
+
+$controller->updateTowTruckDetails($payload);

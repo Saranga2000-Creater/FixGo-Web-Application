@@ -1,31 +1,26 @@
 <?php
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 require_once __DIR__ . '/../config/EnvLoader.php';
 EnvLoader::load(__DIR__ . '/../.env');
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../controllers/ServiceRequestController.php';
+require_once __DIR__ . '/../config/AuthMiddleware.php';
 
-// Check if shop_id is provided
-if (!isset($_GET['shop_id'])) {
-    http_response_code(400);
-    echo json_encode([
-        "success" => false,
-        "message" => "Missing shop_id parameter."
-    ]);
-    exit();
-}
-
-// Database connection
 $database = new Database();
 $db = $database->connect();
 
-// Controller
+$payload = AuthMiddleware::authenticate();
+
 $controller = new ServiceRequestController($db);
 
-// Return notifications
-echo $controller->handleGetShopNotifications($_GET['shop_id']);
-?>
+echo $controller->handleGetShopNotifications($payload);

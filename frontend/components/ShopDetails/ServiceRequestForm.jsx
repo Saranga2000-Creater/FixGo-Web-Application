@@ -97,14 +97,19 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
         setError('');
 
         try {
-            const token = localStorage.getItem('token'); 
+            const token = localStorage.getItem("jwt_token");
+
+if (!token) {
+    setError("Please log in again.");
+    setIsSubmitting(false);
+    return;
+}
             let base64Image = null;
             if (imageFile) {
                 base64Image = await convertToBase64(imageFile);
             }
             
             const requestData = {
-                customer_id: parseInt(localStorage.getItem("shopId")),
                 shop_id: shop.info.id,
                 vehicle_category_id: vehicleCategory, 
                 vehicle_brand: brand,
@@ -112,8 +117,8 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                 description: description,
                 requires_tow: requiresTow,
                 problem_image: base64Image, 
-                lat: 6.9061, 
-                lng: 79.9696,
+                lat: lat,
+                lng: lng,
                 // NEW: Send the upgraded DB fields
                 // If it's a Garage, send urgency. If not, send null.
                 urgency_level: shop.shopCategories?.includes('Garages') ? urgencyLevel : null,
@@ -127,7 +132,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${token}` 
+                    Authorization: `Bearer ${token}`, 
                 },
                 body: JSON.stringify(requestData)
             });

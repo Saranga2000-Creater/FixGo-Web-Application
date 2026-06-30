@@ -58,95 +58,96 @@ function Notification({ setActiveNav }) {
 
     const loadNotifications = () => {
 
-        const shopId = localStorage.getItem("shopId");
+        const token = localStorage.getItem("jwt_token");
 
-        if (!shopId) return;
+if (!token) return;
 
-        fetch(
-            `http://localhost:8000/api/getShopNotifications.php?shop_id=${shopId}`
-        )
-            .then((res) => res.json())
-            .then((data) => {
+fetch("http://localhost:8000/api/getShopNotifications.php", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+})
+.then((res) => {
+    if (res.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return null;
+    }
+    return res.json();
+})
+.then((data) => {
+    if (!data || !data.success) return;
 
-                if (!data.success) return;
+    setNotifications((prev) => {
 
-                setNotifications((prev) => {
+        const formatted = data.data.map((item) => {
 
-    const formatted = data.data.map((item) => {
+            let title = "";
+            let icon = faClipboard;
+            let iconBg = "bg-blue-500";
 
-        let title = "";
-        let icon = faClipboard;
-        let iconBg = "bg-blue-500";
+            let actionText = "";
+            let buttonText = "";
+            let actionColor = "";
 
-        let actionText = "";
-        let buttonText = "";
-        let actionColor = "";
+            switch (item.status) {
+                case "Pending":
+                    title = `${item.customer_name} sent a new service request`;
+                    icon = faClipboard;
+                    iconBg = "bg-blue-500";
+                    actionText =
+                        "Review this request and decide whether to accept or decline it.";
+                    buttonText = "View Service Requests";
+                    actionColor = "bg-blue-50 border-blue-200";
+                    break;
 
-        switch (item.status) {
+                case "Confirmed":
+                    title = `${item.customer_name} confirmed the booking`;
+                    icon = faWrench;
+                    iconBg = "bg-green-500";
+                    actionText =
+                        "The customer confirmed the booking. You can now begin the repair.";
+                    buttonText = "Go to Active Repairs";
+                    actionColor = "bg-green-50 border-green-200";
+                    break;
 
-            case "Pending":
+                case "Cancelled":
+                    title = `${item.customer_name} cancelled the request`;
+                    icon = faComment;
+                    iconBg = "bg-red-500";
+                    actionText = "No further action is required.";
+                    buttonText = "";
+                    actionColor = "bg-red-50 border-red-200";
+                    break;
+            }
 
-                title = `${item.customer_name} sent a new service request`;
-                icon = faClipboard;
-                iconBg = "bg-blue-500";
-                actionText =
-                    "Review this request and decide whether to accept or decline it.";
-                buttonText = "View Service Requests";
-                actionColor = "bg-blue-50 border-blue-200";
-                break;
+            const old = prev.find((n) => n.id === item.id);
 
-            case "Confirmed":
+            return {
+                id: item.id,
+                title,
+                subtitle: item.description,
+                status: item.status,
+                timestamp:
+                    item.status === "Pending"
+                        ? item.created_at
+                        : item.status === "Confirmed"
+                        ? item.confirmed_at
+                        : item.cancelled_at,
+                icon,
+                iconBg,
+                actionText,
+                buttonText,
+                actionColor,
+                requestNumber: item.request_number || `REQ-${item.id}`,
+                vehicle: item.vehicle_brand || "",
+                isUnread: old ? old.isUnread : true,
+            };
+        });
 
-                title = `${item.customer_name} confirmed the booking`;
-                icon = faWrench;
-                iconBg = "bg-green-500";
-                actionText =
-                    "The customer confirmed the booking. You can now begin the repair.";
-                buttonText = "Go to Active Repairs";
-                actionColor = "bg-green-50 border-green-200";
-                break;
-
-            case "Cancelled":
-
-                title = `${item.customer_name} cancelled the request`;
-                icon = faComment;
-                iconBg = "bg-red-500";
-                actionText = "No further action is required.";
-                buttonText = "";
-                actionColor = "bg-red-50 border-red-200";
-                break;
-        }
-
-        const old = prev.find((n) => n.id === item.id);
-
-        return {
-            id: item.id,
-            title,
-            subtitle: item.description,
-            status: item.status,
-            timestamp:
-                item.status === "Pending"
-                    ? item.created_at
-                    : item.status === "Confirmed"
-                    ? item.confirmed_at
-                    : item.cancelled_at,
-            icon,
-            iconBg,
-            actionText,
-            buttonText,
-            actionColor,
-            requestNumber: item.request_number || `REQ-${item.id}`,
-            vehicle: item.vehicle_brand || "",
-
-            // Preserve previous read state
-            isUnread: old ? old.isUnread : true,
-        };
+        return formatted;
     });
-
-    return formatted;
-});
-            })
-            .catch(console.error);
+})
+.catch(console.error);
 
     };
 

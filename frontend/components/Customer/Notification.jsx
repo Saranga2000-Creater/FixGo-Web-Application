@@ -73,6 +73,19 @@ const saveReadIds = (id, ids) => {
     window.dispatchEvent(new CustomEvent("fixgo_read_changed", { detail: { customerId: String(id) } }));
 };
 
+// ── Helper: decode the logged-in user's id from the stored JWT ──────────────
+const getUserIdFromToken = () => {
+    try {
+        const token = localStorage.getItem("jwt_token");
+        if (!token) return null;
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const id = payload.user_id || payload.id;
+        return id ? String(id) : null;
+    } catch {
+        return null;
+    }
+};
+
 const getMessage = (req) => {
     const shop = req.shop_name || "the shop";
     switch (req.status) {
@@ -297,12 +310,16 @@ const DetailRow = ({ icon, label, value, isPhone, isMono }) => (
 );
 
 // ── Exported hook ─────────────────────────────────────────────────────────────
-export function useUnreadCount(customerId) {
+export function useUnreadCount() {
     const [count, setCount] = useState(0);
 
     useEffect(() => {
-        if (!customerId) { setCount(0); return; }
-        const id = String(customerId);
+        const id = getUserIdFromToken();
+        if (!id) {
+            setCount(0);
+            return;
+        }
+
         const computeCount = (notifs) => {
             const readIds = getReadIds(id);
             return notifs.filter(n => !readIds.includes(String(n.id))).length;
@@ -311,7 +328,12 @@ export function useUnreadCount(customerId) {
 
         const fetchAndCount = async () => {
             try {
-                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${id}`);
+                const token = localStorage.getItem("jwt_token");
+                const res = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 const data = await res.json();
                 if (data.success) {
                     cachedNotifs = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
@@ -329,14 +351,13 @@ export function useUnreadCount(customerId) {
         fetchAndCount();
         const interval = setInterval(fetchAndCount, 30000);
         return () => { clearInterval(interval); window.removeEventListener("fixgo_read_changed", onReadChanged); };
-    }, [customerId]);
+    }, []);
 
     return count;
 }
 
 // ── Main Notification component ───────────────────────────────────────────────
-export default function Notification({ customerId: rawId }) {
-    const customerId = String(rawId || "");
+export default function Notification() {
     const navigate   = useNavigate();
 
     const [notifications, setNotifications]   = useState([]);
@@ -349,17 +370,28 @@ export default function Notification({ customerId: rawId }) {
     const [readIds, setReadIds]               = useState([]);
     const [readIdsLoaded, setReadIdsLoaded]   = useState(false);
     const [declineModal, setDeclineModal]     = useState(null);
+    const [userId, setUserId]                 = useState(null);
 
     useEffect(() => {
-        if (!customerId) return;
-        setReadIds(getReadIds(customerId));
+        const id = getUserIdFromToken();
+        if (!id) return;
+
+        setUserId(id);
+        setReadIds(getReadIds(id));
         setReadIdsLoaded(true);
-    }, [customerId]);
+    }, []);
 
     const fetchNotifs = useCallback(async () => {
-        if (!customerId) return;
+        const token = localStorage.getItem("jwt_token");
         try {
-            const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+            const res = await fetch(
+                "http://localhost:8000/api/getCustomerRequest.php",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
             const data = await res.json();
             if (data.success) {
                 const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
@@ -372,21 +404,24 @@ export default function Notification({ customerId: rawId }) {
         } finally {
             setLoading(false);
         }
-    }, [customerId]);
+    }, []);
 
     useEffect(() => {
-        if (!customerId) return;
+        if (!userId) return;
         fetchNotifs();
         const interval = setInterval(fetchNotifs, 30000);
         return () => clearInterval(interval);
-    }, [fetchNotifs]);
+    }, [userId, fetchNotifs]);
 
     const unreadCount = notifications.filter(n => !readIds.includes(String(n.id))).length;
 
     const persistReadIds = (updated) => {
         const deduped = [...new Set(updated.map(String))];
         setReadIds(deduped);
-        saveReadIds(customerId, deduped);
+
+        const id = getUserIdFromToken();
+        if (!id) return;
+        saveReadIds(id, deduped);
     };
 
     const markRead    = (id) => persistReadIds([...readIds, String(id)]);
@@ -396,10 +431,17 @@ export default function Notification({ customerId: rawId }) {
         e.stopPropagation();
         setConfirming(requestId);
         try {
+            const token = localStorage.getItem("jwt_token");
             const res = await fetch("http://localhost:8000/api/updateStatus.php", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ request_id: requestId, new_status: "Confirmed", actor_id: customerId, actor_role: "customer" }),
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    request_id: requestId,
+                    new_status: "Confirmed",
+                }),
             });
             const data = await res.json();
             if (res.ok) {
@@ -431,14 +473,16 @@ export default function Notification({ customerId: rawId }) {
         const requestId = declineModal.requestId;
         setDeclining(requestId);
         try {
+            const token = localStorage.getItem("jwt_token");
             const res = await fetch("http://localhost:8000/api/updateStatus.php", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     request_id: requestId,
                     new_status: "Cancelled",
-                    actor_id:   customerId,
-                    actor_role: "customer",
                     reason:     "Customer declined the booking.",
                 }),
             });
@@ -798,3 +842,4 @@ export default function Notification({ customerId: rawId }) {
         </div>
     );
 }
+

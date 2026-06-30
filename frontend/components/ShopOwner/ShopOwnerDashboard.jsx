@@ -249,11 +249,13 @@ function ShopOwnerDashboard() {
   const [notificationCount, setNotificationCount] = useState(0);
 
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+const token = localStorage.getItem("jwt_token");
 
-  fetch(
-    `http://localhost:8000/api/getServiceRequests.php?shop_id=${shopId}`
-  )
+fetch("http://localhost:8000/api/getServiceRequests.php", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
@@ -264,9 +266,13 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+const token = localStorage.getItem("jwt_token");
 
-  fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
+fetch("http://localhost:8000/api/getActiveRepairs.php", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
@@ -277,9 +283,13 @@ useEffect(() => {
 }, []);
  
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+ const token = localStorage.getItem("jwt_token");
 
-  fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
+fetch("http://localhost:8000/api/getServiceHistory.php", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
@@ -290,11 +300,13 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+  const token = localStorage.getItem("jwt_token");
 
-  fetch(
-    `http://localhost:8000/api/getConfirmedRequeststoShop.php?shop_id=${shopId}`
-  )
+fetch("http://localhost:8000/api/getConfirmedRequeststoShop.php", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {

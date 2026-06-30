@@ -45,9 +45,13 @@ function ActiveRepairs() {
   const [updatingId, setUpdatingId] = useState(null);
 
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+  const token = localStorage.getItem("jwt_token");
 
-  fetch(`http://localhost:8000/api/getActiveRepairs.php?shop_id=${shopId}`)
+  fetch("http://localhost:8000/api/getActiveRepairs.php", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       console.log("API DATA:", data);
@@ -61,23 +65,22 @@ useEffect(() => {
   const handleChangeStatus = async (requestId, currentStatus) => {
     const nextStatus = NEXT_STATUS[currentStatus];
     if (!nextStatus) return;
-
-    const shopId = localStorage.getItem("shopId");
     setUpdatingId(requestId);
 
     try {
-     const res = await fetch(
+ const token = localStorage.getItem("jwt_token");
+
+const res = await fetch(
   "http://localhost:8000/api/updateStatus.php",
   {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       request_id: requestId,
       new_status: nextStatus,
-      actor_id: shopId,
-      actor_role: "shop_owner",
     }),
   }
 );

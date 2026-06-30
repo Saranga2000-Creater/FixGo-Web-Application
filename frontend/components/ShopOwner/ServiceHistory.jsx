@@ -38,13 +38,25 @@ function formatDate(value) {
 
 function ServiceHistory() {
   const [history, setHistory] = useState([]);
-
-  
 useEffect(() => {
-  const shopId = localStorage.getItem("shopId");
+  const token = localStorage.getItem("jwt_token");
 
-  fetch(`http://localhost:8000/api/getServiceHistory.php?shop_id=${shopId}`)
-    .then((res) => res.json())
+  if (!token) {
+    console.error("No JWT token found.");
+    return;
+  }
+
+  fetch("http://localhost:8000/api/getServiceHistory.php", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => {
+      if (res.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      return res.json();
+    })
     .then((data) => {
       console.log("API DATA:", data);
 
@@ -52,8 +64,12 @@ useEffect(() => {
         setHistory(data.data);
       }
     })
-    .catch(console.error);
+    .catch((err) => {
+      console.error(err);
+    });
 }, []);
+  
+
 console.log("History state:", history);
   return (
     <div>

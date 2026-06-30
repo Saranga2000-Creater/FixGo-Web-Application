@@ -107,7 +107,7 @@ function getGreeting() {
 const ONGOING_STATUSES   = ["Pending", "Accepted", "Confirmed", "In Progress"];
 const NOTIF_WORTHY       = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
 
-function Dashboard({ customerId, onNavigate }) {
+function Dashboard({ onNavigate }) {
     const [firstName, setFirstName] = useState("");
     const [counts, setCounts]       = useState({
         active:        0,
@@ -129,11 +129,15 @@ function Dashboard({ customerId, onNavigate }) {
 
     // Fetch counts from service requests
     useEffect(() => {
-        if (!customerId) return;
+        const token = localStorage.getItem("jwt_token");
 
         const fetchCounts = async () => {
             try {
-                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
                 const data = await res.json();
                 if (!data.success) return;
 
@@ -141,11 +145,17 @@ function Dashboard({ customerId, onNavigate }) {
 
                 // Read-state from localStorage (same key pattern as Notification.jsx)
                 let readIds = [];
-                try {
-                    readIds = JSON.parse(
-                        localStorage.getItem(`fixgo_read_notifs_${String(customerId)}`) || "[]"
-                    ).map(String);
-                } catch { /* ignore */ }
+
+try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const userId = payload.user_id || payload.id;
+
+    readIds = JSON.parse(
+        localStorage.getItem(`fixgo_read_notifs_${userId}`) || "[]"
+    ).map(String);
+} catch {
+    readIds = [];
+}
 
                 const notifItems = all.filter(r => NOTIF_WORTHY.includes(r.status));
                 const unread     = notifItems.filter(r => !readIds.includes(String(r.id))).length;
@@ -162,7 +172,7 @@ function Dashboard({ customerId, onNavigate }) {
         fetchCounts();
         const interval = setInterval(fetchCounts, 30000);
         return () => clearInterval(interval);
-    }, [customerId]);
+    }, []);
 
     const today = new Date().toLocaleDateString("en-US", {
         month: "long", day: "numeric", year: "numeric",

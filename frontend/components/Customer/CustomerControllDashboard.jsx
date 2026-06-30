@@ -9,17 +9,6 @@ import Notification, { useUnreadCount } from "./Notification";
 import Settings from "./Settings";
 import CustomerSidebar from "./CustomerSidebar";
 
-function getCustomerIdFromToken() {
-    const token = localStorage.getItem("jwt_token");
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        const id = payload.user_id || payload.id || null;
-        return id ? String(id) : null;
-    } catch {
-        return null;
-    }
-}
 
 function CustomerControllDashboard() {
     // 1. Initialize hooks first (React requirement)
@@ -31,8 +20,7 @@ function CustomerControllDashboard() {
     const [targetRequestId, setTargetRequestId] = useState(null);
 
     // 3. Keep your existing variables
-    const customerId = getCustomerIdFromToken();
-    const unreadCount = useUnreadCount(customerId);
+    const unreadCount = useUnreadCount();
     
 
     useEffect(() => {
@@ -82,17 +70,14 @@ function CustomerControllDashboard() {
             }}>
                 <div style={{ maxWidth: 1180, margin: "0 auto" }}>
                     {currentPage === "dashboard" && (
-                        <Dashboard
-                            customerId={customerId}
-                            onNavigate={handlePageChange}
-                        />
+                        <Dashboard onNavigate={handlePageChange} />
                     )}
-                    {currentPage === "profile"       && <Profile        customerId={customerId} />}
-                    {currentPage === "repair"        && <RepairStatus   customerId={customerId} targetRequestId={targetRequestId} />}
-                    {currentPage === "history"       && <ServiceHistory customerId={customerId} />}
-                    {currentPage === "reviews"       && <ReviewsRatings customerId={customerId} />}
-                    {currentPage === "notifications" && <Notification   customerId={customerId} />}
-                    {currentPage === "settings"      && <Settings       customerId={customerId} />}
+                    {currentPage === "profile"       && <Profile/>}
+                    {currentPage === "repair"        && <RepairStatus targetRequestId={targetRequestId} />}
+                    {currentPage === "history"       && <ServiceHistory/>}
+                    {currentPage === "reviews"       && <ReviewsRatings />}
+                    {currentPage === "notifications" && <Notification/>}
+                    {currentPage === "settings"      && <Settings/>}
                 </div>
             </main>
         </div>

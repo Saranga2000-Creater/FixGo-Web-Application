@@ -14,11 +14,37 @@ require_once __DIR__ . '/../config/EnvLoader.php';
 EnvLoader::load(__DIR__ . '/../.env');
 
 require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/JwtHandler.php';
 require_once __DIR__ . '/../models/Shop.php';
 require_once __DIR__ . '/../controllers/ShopController.php';
+
+// Get Authorization header
+$headers = getallheaders();
+$authHeader = $headers['Authorization'] ?? '';
+
+if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    http_response_code(401);
+    echo json_encode([
+        "success" => false,
+        "message" => "Authorization token missing."
+    ]);
+    exit();
+}
+
+$jwtHandler = new JwtHandler();
+$payload = $jwtHandler->decode($matches[1]);
+
+if ($payload === false) {
+    http_response_code(401);
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid or expired token."
+    ]);
+    exit();
+}
 
 $database = new Database();
 $db = $database->connect();
 
 $controller = new ShopController($db);
-$controller->updateShopTowTruckDetails();
+$controller->updateShopTowTruckDetails($payload);

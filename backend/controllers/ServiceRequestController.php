@@ -16,13 +16,9 @@ class ServiceRequestController {
         $this->jwtHandler          = new JwtHandler();
     }
 
-    public function handleCreateRequest($requestData, $headers) {
-        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-        $token = null;
-
-        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-            $token = $matches[1];
-        }
+    public function handleCreateRequest($requestData, $payload)
+{
+    $requestData['customer_id'] = $payload['user_id'];
 
         if (
             empty($requestData['shop_id']) ||
@@ -87,16 +83,17 @@ class ServiceRequestController {
         }
     }
 
-    public function handleUpdateStatus($requestData, $headers) {
-        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-        $token = null;
-        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-            $token = $matches[1];
-        }
+    public function handleUpdateStatus($requestData, $payload)
+{
+    $actor_id = $payload['user_id'] ?? null;
+    $actor_role = $payload['role'] ?? null;
 
-        // DUMMY DATA FOR TESTING (Remove when JWT is active)
-        $actor_id   = $requestData['actor_id'];
-        $actor_role = $requestData['actor_role'];
+    if (!$actor_id || !$actor_role) {
+        http_response_code(401);
+        return json_encode([
+            "message" => "Unauthorized."
+        ]);
+    }
 
         if (empty($requestData['request_id']) || empty($requestData['new_status'])) {
             http_response_code(400);
@@ -221,8 +218,9 @@ elseif ($new_status === 'Cancelled') {
     // ==========================================
     // DASHBOARD RETRIEVAL & PRIVACY MASKING
     // ==========================================
-
-    public function handleGetCustomerRequests($customer_id) {
+public function handleGetCustomerRequests($payload)
+{
+    $customer_id = $payload['user_id'];
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByCustomer($customer_id);
 
@@ -237,7 +235,9 @@ elseif ($new_status === 'Cancelled') {
         return json_encode(["success" => true, "data" => $requests]);
     }
 
-    public function handleGetShopRequests($shop_id) {
+ public function handleGetShopRequests($payload)
+{
+    $shop_id = $payload['user_id'];   
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByShop($shop_id);
 
@@ -252,8 +252,9 @@ elseif ($new_status === 'Cancelled') {
         return json_encode(["success" => true, "data" => $requests]);
     }
 
-
-public function handleGetDeclinedRequests($shop_id) {
+public function handleGetDeclinedRequests($payload)
+{
+    $shop_id = $payload['user_id'];
     $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
 
     http_response_code(200);
@@ -263,8 +264,10 @@ public function handleGetDeclinedRequests($shop_id) {
     ]);
 }
 
-    public function handleGetConfirmedRequests($shop_id)
-    {
+    
+ public function handleGetConfirmedRequests($payload)
+{
+    $shop_id = $payload['user_id'];   
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
 
         http_response_code(200);
@@ -274,8 +277,9 @@ public function handleGetDeclinedRequests($shop_id) {
         ]);
     }
 
-   public function handleGetActiveRepairs($shop_id)
+    public function handleGetActiveRepairs($payload)
 {
+    $shop_id = $payload['user_id'];
     $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
 
     http_response_code(200);
@@ -286,8 +290,9 @@ public function handleGetDeclinedRequests($shop_id) {
     ]);
 }
 
-    public function handleGetServiceHistory($shop_id)
-    {
+    public function handleGetServiceHistory($payload)
+{
+    $shop_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByShop($shop_id);
 
         http_response_code(200);
@@ -296,13 +301,31 @@ public function handleGetDeclinedRequests($shop_id) {
             "data"    => $history
         ]);
     }
-public function updateTowTruckDetails()
+public function updateTowTruckDetails($payload)
 {
+    $shop_id = $payload['user_id'];
+
+    // Read request body first
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (empty($data['request_id'])) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Request ID is required."]);
+        echo json_encode([
+            "success" => false,
+            "message" => "Request ID is required."
+        ]);
+        return;
+    }
+
+    // Check that the request belongs to this shop
+    $request = $this->serviceRequestModel->getById($data['request_id']);
+
+    if (!$request || $request['shop_id'] != $shop_id) {
+        http_response_code(403);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unauthorized."
+        ]);
         return;
     }
 
@@ -310,17 +333,22 @@ public function updateTowTruckDetails()
         $result = $this->serviceRequestModel->updateTowTruckDetails($data);
 
         if ($result) {
-            echo json_encode(["success" => true]);
+            echo json_encode([
+                "success" => true
+            ]);
         } else {
             http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Update failed — no rows affected."]);
+            echo json_encode([
+                "success" => false,
+                "message" => "Update failed — no rows affected."
+            ]);
         }
     } catch (Throwable $e) {
         http_response_code(500);
         echo json_encode([
             "success" => false,
             "message" => "Server error.",
-            "debug"   => $e->getMessage() // remove in production
+            "debug" => $e->getMessage() // remove in production
         ]);
     }
 }
@@ -329,8 +357,9 @@ public function updateTowTruckDetails()
     // CUSTOMER-SIDE HISTORY
     // ==========================================
 
-    public function handleGetCustomerServiceHistory($customer_id)
-    {
+    public function handleGetCustomerServiceHistory($payload)
+{
+    $customer_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByCustomer($customer_id);
 
         http_response_code(200);
@@ -340,8 +369,9 @@ public function updateTowTruckDetails()
         ]);
     }
 
-    public function handleGetShopNotifications($shop_id)
+    public function handleGetShopNotifications($payload)
 {
+    $shop_id = $payload['user_id'];
     $notifications =
         $this->serviceRequestModel
              ->getShopNotifications($shop_id);

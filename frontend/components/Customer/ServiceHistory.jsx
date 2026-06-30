@@ -280,18 +280,22 @@ function DetailsModal({ record, onClose }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function ServiceHistory({ customerId }) {
+export default function ServiceHistory( ) {
     const [history,       setHistory]       = useState([]);
     const [loading,       setLoading]       = useState(true);
     const [filter,        setFilter]        = useState("All Time");
     const [selectedRecord, setSelectedRecord] = useState(null);  // modal
 
     useEffect(() => {
-        if (!customerId) return;
         const fetchHistory = async () => {
             try {
+                const token = localStorage.getItem("jwt_token");
                 // ── Fetch ALL requests (not just completed) ──
-                const res  = await fetch(`http://localhost:8000/api/getCustomerRequest.php?customer_id=${customerId}`);
+                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
                 const data = await res.json();
                 if (data.success) {
                     // Only show finished requests — ongoing ones live in Repair Status
@@ -307,7 +311,7 @@ export default function ServiceHistory({ customerId }) {
             }
         };
         fetchHistory();
-    }, [customerId]);
+    }, []);
 
     // Filter uses created_at since we show all statuses now
     const filtered = history.filter(r => isWithinFilter(r.created_at, filter));
