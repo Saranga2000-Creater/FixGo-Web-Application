@@ -27,6 +27,8 @@ class Shop {
         s.carriageService,
         s.BRN,
         s.profileImageURL,
+        ST_Y(s.location) AS latitude,
+        ST_X(s.location) AS longitude,
 
         GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories,
 

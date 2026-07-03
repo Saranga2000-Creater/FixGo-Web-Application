@@ -294,7 +294,10 @@ public function getDeclinedRequestsByShop($shop_id) {
     }
 
     public function getRequestsByShop($shop_id) {
+        //Explicitly extract ST_Y (Latitude) and ST_X (Longitude)
         $query = "SELECT sr.*, 
+                         ST_Y(sr.location) AS customer_lat,
+                         ST_X(sr.location) AS customer_lng,
                          c.name          as customer_name, 
                          c.contactNumber as customer_phone 
                   FROM " . $this->table_name . " sr
@@ -349,6 +352,11 @@ public function getActiveRepairsByShop($shop_id)
             sr.description,
             sr.status,
             sr.urgency_level,
+            sr.requires_tow,       
+            sr.pickup_landmark,   
+            sr.dispatched_driver_phone, 
+            ST_Y(sr.location) AS customer_lat, 
+            ST_X(sr.location) AS customer_lng,
             c.name AS customer_name,
             c.contactNumber AS customer_phone
         FROM servicerequest sr

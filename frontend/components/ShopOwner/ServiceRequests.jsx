@@ -40,7 +40,7 @@ function Avatar({ initials, color, size = 40 }) {
   );
 }
 
-function TowField({ label, value, onChange, type = "text", placeholder }) {
+function TowField({ label, value, onChange, type = "text", placeholder, disabled , min}) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <span
@@ -59,6 +59,8 @@ function TowField({ label, value, onChange, type = "text", placeholder }) {
         value={value}
         placeholder={placeholder}
         onChange={onChange}
+        disabled={disabled}
+        min={min}
         style={{
           padding: "11px 14px",
           borderRadius: 10,
@@ -75,7 +77,7 @@ function TowField({ label, value, onChange, type = "text", placeholder }) {
   );
 }
 
-function ServiceRequests({ shopCategory }) {
+function ServiceRequests({ shopCategory, shopCoordinates}) {
   const [activeTab, setActiveTab] = useState("new"); // "new" | "declined"
 
   const [requests, setRequests] = useState([]);
@@ -83,6 +85,7 @@ function ServiceRequests({ shopCategory }) {
   const [declinedLoaded, setDeclinedLoaded] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [requestPendingTow, setRequestPendingTow] = useState(null);
   const [showTowModal, setShowTowModal] = useState(false);
   const [isAcceptFlow, setIsAcceptFlow] = useState(false);
   const [towTruck, setTowTruck] = useState({
@@ -94,6 +97,9 @@ function ServiceRequests({ shopCategory }) {
     promised_eta: "",
   });
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [isCalculatingEta, setIsCalculatingEta] = useState(false);
+  const [minEta, setMinEta] = useState(0);
+  const [etaError, setEtaError] = useState("");
 
   useEffect(() => {
     fetchRequests();
@@ -195,44 +201,82 @@ function ServiceRequests({ shopCategory }) {
 
   const handleAcceptClick = (r) => {
     if (Number(r.requires_tow) === 1) {
-      setSelectedRequest(r);
+      // THE FIX: Use the new dedicated state, NOT setSelectedRequest
+      setRequestPendingTow(r); 
       setIsAcceptFlow(true);
-      openTowTruckModal();
+      openTowTruckModal(r, true); 
     } else {
       updateStatus(r.id, "Accepted");
     }
   };
 
-  const openTowTruckModal = async () => {
+  // THE FIX: Accept 'isAccepting' as a parameter
+  const openTowTruckModal = async (requestData, isAccepting = false) => {
     const token = localStorage.getItem("jwt_token");
 
-    const res = await fetch(
-      "http://localhost:8000/api/getTowTruckDetails.php",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    // 1. Fetch default Tow Truck info from YOUR backend
+    const res = await fetch("http://localhost:8000/api/getTowTruckDetails.php", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     const data = await res.json();
 
-console.log(data);
-
-if (!res.ok) {
-    alert(data.message);
-    return;
-}
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
 
     if (data.success) {
+      // 2. Open the modal with whatever data we currently have
       setTowTruck({
         ...data.data,
-        promised_eta: selectedRequest?.promised_eta || "",
+        promised_eta: requestData?.promised_eta || "",
       });
       setShowTowModal(true);
+
+      // 3. SILENTLY FETCH ETA FROM GOOGLE
+      // THE FIX: Use 'isAccepting' and add optional chaining (?.) to shopCoordinates
+      if (isAccepting && shopCoordinates?.lat && requestData.customer_lat && requestData.customer_lng) {
+        setIsCalculatingEta(true); 
+
+        try {
+          const googleRes = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": import.meta.env.VITE_GOOGLE_MAPS_API_KEY, 
+              "X-Goog-FieldMask": "routes.duration", 
+            },
+            body: JSON.stringify({
+              origin: { location: { latLng: { latitude: shopCoordinates.lat, longitude: shopCoordinates.lng } } },
+              destination: { location: { latLng: { latitude: requestData.customer_lat, longitude: requestData.customer_lng } } },
+              travelMode: "DRIVE",
+            }),
+          });
+
+          const googleData = await googleRes.json();
+
+          if (googleData.routes && googleData.routes.length > 0) {
+            const seconds = parseInt(googleData.routes[0].duration.replace("s", ""));
+            const calculatedMinutes = Math.ceil(seconds / 60);
+
+            setTowTruck((prev) => ({ ...prev, promised_eta: calculatedMinutes }));
+            setMinEta(calculatedMinutes);
+          }
+        } catch (error) {
+          console.error("Failed to calculate ETA via Google:", error);
+        } finally {
+          setIsCalculatingEta(false); 
+        }
+      }
     }
   };
 
   const saveTowTruckDetails = async () => {
+
+    if (parseInt(towTruck.promised_eta) < minEta) {
+      setEtaError(`ETA cannot be less than the calculated drive time (${minEta} mins).`);
+      return; // Stop the function instantly
+    }
     const token = localStorage.getItem("jwt_token");
 
     const res = await fetch(
@@ -244,7 +288,7 @@ if (!res.ok) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          request_id: selectedRequest.id,
+          request_id: requestPendingTow.id,
 
           driver_name: towTruck.default_driver_name,
           driver_phone: towTruck.default_driver_phone,
@@ -267,6 +311,11 @@ if (!res.ok) {
   };
 
   const confirmTowAndAccept = async () => {
+
+    if (parseInt(towTruck.promised_eta) < minEta) {
+      setEtaError(`ETA cannot be less than the calculated drive time (${minEta} mins).`);
+      return; // Stop the function instantly
+    }
     try {
       const token = localStorage.getItem("jwt_token");
 
@@ -279,7 +328,7 @@ if (!res.ok) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            request_id: selectedRequest.id,
+            request_id: requestPendingTow.id,
 
             driver_name: towTruck.default_driver_name,
             driver_phone: towTruck.default_driver_phone,
@@ -294,10 +343,10 @@ if (!res.ok) {
       const data = await res.json();
 
       if (data.success) {
-        await updateStatus(selectedRequest.id, "Accepted");
+        await updateStatus(requestPendingTow.id, "Accepted");
         setShowTowModal(false);
         setIsAcceptFlow(false);
-        setSelectedRequest(null);
+        setRequestPendingTow(null);
       } else {
         alert(data.message);
       }
@@ -972,13 +1021,41 @@ if (!res.ok) {
               <TowField
                 label="Promised ETA (minutes)"
                 type="number"
-                placeholder="e.g. 25"
-                value={towTruck.promised_eta}
-                onChange={(e) =>
-                  setTowTruck({ ...towTruck, promised_eta: e.target.value })
-                }
+                // THE FIX: Dynamic UI feedback based on our new loading state
+                placeholder={isCalculatingEta ? "Calculating Route..." : "e.g. 25"}
+                value={isCalculatingEta ? "" : towTruck.promised_eta}
+                disabled={isCalculatingEta} // Lock the input so they can't type while loading
+                min={minEta}
+                onChange={(e) => {
+                  setTowTruck({ ...towTruck, promised_eta: e.target.value });
+                  // THE FIX 3: Clear the error the moment they start typing again
+                  if (etaError) setEtaError(""); 
+                }}
               />
             </div>
+            
+            {/* THE FIX 4: The Inline Warning Box */}
+            {etaError && (
+              <div
+                style={{
+                  margin: "0 28px 20px 28px",
+                  padding: "12px 16px",
+                  background: COLORS.dangerSoft,
+                  border: `1px solid ${COLORS.dangerBorder}`,
+                  borderRadius: 10,
+                  color: COLORS.danger,
+                  fontSize: 14.5,
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  animation: "fadeIn 0.2s ease", // Gives it a nice pop
+                }}
+              >
+                <span style={{ fontSize: 18 }}>⚠️</span>
+                {etaError}
+              </div>
+            )}
 
             {/* Footer */}
             <div
@@ -995,6 +1072,7 @@ if (!res.ok) {
                 onClick={() => {
                   setShowTowModal(false);
                   setIsAcceptFlow(false);
+                  setEtaError("");
                 }}
                 style={{
                   padding: "10px 20px",

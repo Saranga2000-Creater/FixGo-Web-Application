@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FaWhatsapp, FaMapMarkerAlt } from "react-icons/fa";
 
 function Avatar({ initials, color, size = 36 }) {
   return (
@@ -38,6 +39,39 @@ function getInitials(name = "") {
     .slice(0, 2)
     .map((p) => p[0].toUpperCase())
     .join("");
+}
+
+function generateMapsUrl(lat, lng) {
+  if (!lat || !lng) return "";
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
+function generateWhatsAppLink(repair) {
+  // 1. Clean the driver's phone number (remove +, spaces, hyphens)
+  const cleanPhone = repair.dispatched_driver_phone?.replace(/[^0-9]/g, "") || "";
+  
+  if (!cleanPhone) {
+    alert("No driver phone number saved for this dispatch.");
+    return "#";
+  }
+
+  // 2. Generate the Maps URL
+  const mapsUrl = generateMapsUrl(repair.customer_lat, repair.customer_lng);
+  
+  // 3. Build the Ticket string
+  let message = `🚨 *TOW DISPATCH*\n\n`;
+  message += `*Customer:* ${repair.customer_name}\n`;
+  message += `*Phone:* ${repair.customer_phone}\n`;
+  message += `*Vehicle:* ${repair.vehicle_brand} (${repair.vehicle_color})\n\n`;
+  
+  if (repair.pickup_landmark) {
+    message += `*Landmark:* ${repair.pickup_landmark}\n`;
+  }
+  
+  message += `📍 *Navigate to Customer:*\n${mapsUrl}`;
+
+  // 4. URL-Encode the message and build the final wa.me link
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
 function ActiveRepairs() {
@@ -163,11 +197,11 @@ const res = await fetch(
         boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
       }}>
 
-        {/* Header */}
+        {/* Header - Updated grid columns to give Action column more space */}
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid #F3F4F6",
           display: "grid",
-          gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.3fr",
+          gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.5fr",
           gap: 12
         }}>
           {["Customer", "Vehicle", "Service", "Status", "Action"].map(h => (
@@ -186,7 +220,7 @@ const res = await fetch(
               padding: "16px 20px",
               borderBottom: i < activeRepairs.length - 1 ? "1px solid #F9FAFB" : "none",
               display: "grid",
-              gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.3fr",
+              gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.5fr", // Matching header grid columns
               gap: 12, alignItems: "center"
             }}>
               {/* Customer */}
@@ -241,45 +275,94 @@ const res = await fetch(
                 {r.status}
               </span>
 
-              {/* Action */}
-              {nextLabel ? (
-                <button
-                  disabled={isUpdating}
-                  onClick={() => handleChangeStatus(r.id, r.status)}
-                  style={{
-                    padding: "10px 18px",
-                    borderRadius: 10,
-                    border: "1px solid #D1D5DB",
-                    background: isUpdating ? "#F3F4F6" : "#FFFFFF",
-                    color: "#374151",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: isUpdating ? "not-allowed" : "pointer",
-                    minWidth: "120px",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isUpdating) return;
-                    e.currentTarget.style.background = "#16A34A";
-                    e.currentTarget.style.color = "#FFFFFF";
-                    e.currentTarget.style.borderColor = "#16A34A";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (isUpdating) return;
-                    e.currentTarget.style.background = "#FFFFFF";
-                    e.currentTarget.style.color = "#374151";
-                    e.currentTarget.style.borderColor = "#D1D5DB";
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
-                >
-                  {isUpdating ? "Updating..." : nextLabel}
-                </button>
-              ) : (
-                <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>
-                  Completed
-                </span>
-              )}
+              {/* Action Column - Wrapped completely in a Flex Column */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+                
+                {/* 1. Main Action Button */}
+                {nextLabel ? (
+                  <button
+                    disabled={isUpdating}
+                    onClick={() => handleChangeStatus(r.id, r.status)}
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: 10,
+                      border: "1px solid #D1D5DB",
+                      background: isUpdating ? "#F3F4F6" : "#FFFFFF",
+                      color: "#374151",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: isUpdating ? "not-allowed" : "pointer",
+                      width: "100%", // Forces it to span the column neatly
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isUpdating) return;
+                      e.currentTarget.style.background = "#16A34A";
+                      e.currentTarget.style.color = "#FFFFFF";
+                      e.currentTarget.style.borderColor = "#16A34A";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (isUpdating) return;
+                      e.currentTarget.style.background = "#FFFFFF";
+                      e.currentTarget.style.color = "#374151";
+                      e.currentTarget.style.borderColor = "#D1D5DB";
+                    }}
+                  >
+                    {isUpdating ? "Updating..." : nextLabel}
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600, padding: "10px 0" }}>
+                    Completed
+                  </span>
+                )}
+
+                {/* 2. Dispatch Utilities (Stacked neatly under the main button) */}
+                {r.requires_tow == 1 && r.status === "Confirmed" && (
+                  <div style={{ display: "flex", gap: 6, width: "100%" }}>
+                    
+                    {/* Map Button */}
+                    <a
+                      href={generateMapsUrl(r.customer_lat, r.customer_lng)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Navigate to Customer"
+                      style={{
+                        flex: 1, 
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                        padding: "6px 0", borderRadius: 8,
+                        background: "#E0F2FE", color: "#0369A1", 
+                        textDecoration: "none", fontSize: 12, fontWeight: 600,
+                        transition: "background 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#BAE6FD"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "#E0F2FE"}
+                    >
+                      <FaMapMarkerAlt size={14} /> Map
+                    </a>
+
+                    {/* WhatsApp Button */}
+                    <a
+                      href={generateWhatsAppLink(r)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Text Driver Details"
+                      style={{
+                        flex: 1, 
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                        padding: "6px 0", borderRadius: 8,
+                        background: "#DCFCE7", color: "#15803D",
+                        textDecoration: "none", fontSize: 12, fontWeight: 600,
+                        transition: "background 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#BBF7D0"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "#DCFCE7"}
+                    >
+                      <FaWhatsapp size={16} /> Driver
+                    </a>
+
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

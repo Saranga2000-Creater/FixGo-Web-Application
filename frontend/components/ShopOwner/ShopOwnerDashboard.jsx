@@ -222,7 +222,13 @@ function renderPage(
 )  {
   switch (activeNav) {
        case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
-    case "requests":      return <ServiceRequests shopCategory={shopData?.categories} />;
+    case "requests":      return <ServiceRequests 
+                                    shopCategory={shopData?.categories} 
+                                    shopCoordinates={{ 
+                                      lat: shopData?.latitude, 
+                                      lng: shopData?.longitude 
+                                    }} 
+                                 />;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
