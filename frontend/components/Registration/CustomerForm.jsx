@@ -187,7 +187,7 @@ export default function CustomerForm() {
                             required
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="e.g. +94 77 123 4567"
+                            placeholder="e.g. +94771234567 or 0771234567"
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         />
                     </div>

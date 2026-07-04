@@ -28,8 +28,6 @@ function Home() {
                 {/* THE NEW, CLEAN COMPONENT */}
                 <QuickSearchHub onRequireAuth={() => setShowSignIn(true)} />
 
-
-
                 {/* PROMO CARDS SECTION */}
                 <section className="mt-10 px-4 md:px-8" id='register' >
                     <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">

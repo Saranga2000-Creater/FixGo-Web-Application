@@ -168,6 +168,19 @@ class ShopController {
         $longitude = (float)$_POST['longitude'];
         $password = $_POST['password'];
 
+        $sanitizedEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
+        if (!filter_var($sanitizedEmail, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid email format."]);
+            return;
+        }
+
+        if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
+            return;
+        }
+
         $defaultDriverName = '';
         $defaultDriverPhone = '';
         $defaultTruckBrand = '';
@@ -185,6 +198,11 @@ class ShopController {
             }
             $defaultDriverName = trim($_POST['defaultDriverName']);
             $defaultDriverPhone = trim($_POST['defaultDriverPhone']);
+            if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $defaultDriverPhone)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Invalid driver phone number format. Valid formats: +94123456789 or 0123456789."]);
+                return;
+            }
             $defaultTruckBrand = trim($_POST['defaultTruckBrand']);
             $defaultTruckColor = trim($_POST['defaultTruckColor']);
             $towTruckPlate = trim($_POST['towTruckPlate']);
@@ -413,6 +431,15 @@ public function updateShopTowTruckDetails($payload)
             ]);
             return;
         }
+    }
+
+    if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $input['driverPhone'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid driver phone number format. Valid formats: +94123456789 or 0123456789.'
+        ]);
+        return;
     }
 
     $shopModel = new Shop($this->db);
