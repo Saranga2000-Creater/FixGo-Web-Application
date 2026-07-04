@@ -77,7 +77,7 @@ function TowField({ label, value, onChange, type = "text", placeholder, disabled
   );
 }
 
-function ServiceRequests({ shopCategory, shopCoordinates}) {
+function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   const [activeTab, setActiveTab] = useState("new"); // "new" | "declined"
 
   const [requests, setRequests] = useState([]);
@@ -141,6 +141,7 @@ function ServiceRequests({ shopCategory, shopCoordinates}) {
       }
 
       fetchRequests();
+      fetchRequestCount();
 
       // Keep the Declined tab fresh too, in case it's already been loaded
       if (status === "Declined" && declinedLoaded) {
@@ -408,20 +409,6 @@ function ServiceRequests({ shopCategory, shopCoordinates}) {
               }}
             >
               {tab.label}
-              {tab.key === "declined" && declinedRequests.length > 0 && (
-                <span
-                  style={{
-                    marginLeft: 8,
-                    background: isActive ? COLORS.primary : COLORS.textFaint,
-                    color: "#FFFFFF",
-                    borderRadius: 999,
-                    padding: "2px 8px",
-                    fontSize: 12,
-                  }}
-                >
-                  {declinedRequests.length}
-                </span>
-              )}
             </button>
           );
         })}
@@ -1136,3 +1123,4 @@ function ServiceRequests({ shopCategory, shopCoordinates}) {
 }
 
 export default ServiceRequests;
+

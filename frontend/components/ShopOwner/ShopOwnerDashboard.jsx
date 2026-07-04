@@ -218,17 +218,19 @@ function renderPage(
     requestCount,
     activeRepairCount,
     completedJobCount,
-    setActiveNav
+    setActiveNav,
+    fetchRequestCount
 )  {
   switch (activeNav) {
        case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
-    case "requests":      return <ServiceRequests 
-                                    shopCategory={shopData?.categories} 
-                                    shopCoordinates={{ 
-                                      lat: shopData?.latitude, 
-                                      lng: shopData?.longitude 
-                                    }} 
-                                 />;
+    case "requests":      return <ServiceRequests
+  shopCategory={shopData?.categories}
+  shopCoordinates={{
+    lat: shopData?.latitude,
+    lng: shopData?.longitude
+  }}
+  fetchRequestCount={fetchRequestCount}
+/>;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
@@ -254,21 +256,29 @@ function ShopOwnerDashboard() {
   const [completedJobCount, setCompletedJobCount] = useState(0); 
   const [notificationCount, setNotificationCount] = useState(0);
 
-useEffect(() => {
-const token = localStorage.getItem("jwt_token");
+const fetchRequestCount = () => {
+  const token = localStorage.getItem("jwt_token");
 
-fetch("http://localhost:8000/api/getServiceRequests.php", {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
+  fetch("http://localhost:8000/api/getServiceRequests.php", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
-        setRequestCount(data.data.length);
+        const pendingCount = data.data.filter(
+    request => request.status === "Pending"
+).length;
+
+setRequestCount(pendingCount);
       }
     })
     .catch((err) => console.error(err));
+};
+
+useEffect(() => {
+  fetchRequestCount();
 }, []);
 
 useEffect(() => {
@@ -380,7 +390,8 @@ useEffect(() => {
     requestCount,
     activeRepairCount,
     completedJobCount,
-    setActiveNav
+    setActiveNav,
+    fetchRequestCount
 )}
       </main>
     </div>
