@@ -364,3 +364,25 @@ Best regards,
 The FixGo Team
 ==================================================
 
+==================================================
+Timestamp: 2026-07-04 07:52:51
+To: nipuninirupama0916@gmail
+Subject: FixGo - Verify Your Email Address
+Link: http://localhost:5173/verify-email?token=db8c047943d7c498995d2648184428e841d0b0d9ab727b91b2e5124c5c62f153
+Headers:
+From: no-reply@fixgo.com
+Reply-To: no-reply@fixgo.com
+X-Mailer: PHP/8.2.12
+Message:
+Hello,
+
+Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:
+
+http://localhost:5173/verify-email?token=db8c047943d7c498995d2648184428e841d0b0d9ab727b91b2e5124c5c62f153
+
+If you did not create an account, no further action is required.
+
+Best regards,
+The FixGo Team
+==================================================
+
