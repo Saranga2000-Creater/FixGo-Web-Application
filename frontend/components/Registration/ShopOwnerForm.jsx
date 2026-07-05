@@ -367,7 +367,7 @@ export default function ShopForm() {
                             required
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="e.g. +94 11 234 5678"
+                            placeholder="e.g. +94112345678 or 0112345678"
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         />
                     </div>
@@ -505,7 +505,7 @@ export default function ShopForm() {
                                         required={formData.providesCarriage}
                                         value={formData.defaultDriverPhone}
                                         onChange={handleChange}
-                                        placeholder="e.g. +94 77 123 4567"
+                                        placeholder="e.g. +94771234567 or 0771234567"
                                         className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all bg-white"
                                     />
                                 </div>

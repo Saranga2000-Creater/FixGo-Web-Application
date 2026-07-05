@@ -67,6 +67,20 @@ class CustomerController {
         $address = trim($_POST['address']);
         $password = $_POST['password'];
 
+        $sanitizedEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
+        if (!filter_var($sanitizedEmail, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid email format."]);
+            return;
+        }
+
+      
+        if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
+            return;
+        }
+
         // Validate profile picture
         if (!isset($_FILES['profilePic']) || $_FILES['profilePic']['error'] !== UPLOAD_ERR_OK) {
             http_response_code(400);
@@ -98,7 +112,7 @@ class CustomerController {
 
         // Check if email already exists
         $userModel = new User($this->db);
-        if ($userModel->findByEmail($email)) {
+        if ($userModel->findByEmail($sanitizedEmail)) {
             http_response_code(400);
             echo json_encode(["message" => "Email is already registered."]);
             return;
@@ -129,14 +143,14 @@ class CustomerController {
             $customerModel = new Customer($this->db);
             
             $userData = [
-                'email' => $email,
+                'email' => $sanitizedEmail,
                 'password' => $passwordHash,
                 'verification_token' => $verificationToken
             ];
 
             $customerData = [
                 'name' => $name,
-                'contactNumber' => $phone,
+                'contactNumber' => $sanitizedPhone,
                 'address' => $address,
                 'profilePhoto' => $dbImagePath
             ];
@@ -144,7 +158,7 @@ class CustomerController {
             $customerModel->register($userData, $customerData);
 
             // Send verification email
-            EmailSender::sendVerificationEmail($email, $verificationToken);
+            EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
 
             http_response_code(201);
             echo json_encode(["message" => "Customer registered successfully. Please check your email to verify your account."]);

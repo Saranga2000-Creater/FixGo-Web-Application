@@ -116,6 +116,12 @@ const handleTowSave = () => {
     .finally(() => setTowSaving(false));
 };
 
+const handleGoToShop = () => {
+  if (shopData?.id) {
+    window.location.href = `/shop/${shopData.id}`;
+  }
+};
+
 useEffect(() => {
     const token = localStorage.getItem("jwt_token");
 
@@ -226,6 +232,89 @@ useEffect(() => {
           <p style={{ fontSize: 14, color: "#374151", margin: 0 }}>
            {shopData.description} 
           </p>
+
+          {/* Shop Gallery — condensed strip */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginBottom: 12
+            }}>
+              <h4 style={{ fontWeight: 700, fontSize: 13.5, color: "#111827", margin: 0 }}>
+                Shop Gallery
+              </h4>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  title="Add Images"
+                  style={{
+                    width: 28, height: 28, borderRadius: 8, border: "none",
+                    background: "#16A34A", color: "#fff", fontWeight: 700,
+                    fontSize: 15, cursor: "pointer", display: "flex",
+                    alignItems: "center", justifyContent: "center", lineHeight: 1
+                  }}
+                >
+                  +
+                </button>
+                <button
+                  title="Remove Images"
+                  style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    border: "1px solid #DC2626", background: "#fff",
+                    color: "#DC2626", fontWeight: 700, fontSize: 13,
+                    cursor: "pointer", display: "flex",
+                    alignItems: "center", justifyContent: "center", lineHeight: 1
+                  }}
+                >
+                  −
+                </button>
+              </div>
+            </div>
+
+            <div style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              paddingBottom: 4,
+            }}>
+              {[1, 2, 3, 4].map((img) => (
+                <div
+                  key={img}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    border: "1px solid #E5E7EB",
+                    background: "#F9FAFB",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src={`/gallery/image${img}.jpg`}
+                    alt="Gallery"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Go to my Shop */}
+          <button
+            onClick={handleGoToShop}
+            style={{
+              marginTop: 20, width: "100%", padding: "11px",
+              borderRadius: 10, border: "none",
+              background: "#16A34A", color: "#fff",
+              fontWeight: 600, fontSize: 14, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+            }}
+          >
+            🔗 Go to my Shop
+          </button>
         </div>
 
         {/* Business Info Card */}
@@ -293,97 +382,6 @@ useEffect(() => {
             </div>
           ))}
         </div>
-
-        {/* Shop Gallery */}
-<div
-  style={{
-    background: "#fff",
-    borderRadius: 14,
-    border: "1px solid #F3F4F6",
-    padding: 20,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-  }}
->
-  <h3
-    style={{
-      fontWeight: 700,
-      fontSize: 16,
-      color: "#111827",
-      marginBottom: 16,
-    }}
-  >
-    Shop Gallery
-  </h3>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: 12,
-      marginBottom: 18,
-    }}
-  >
-    {[1, 2, 3, 4].map((img) => (
-      <div
-        key={img}
-        style={{
-          height: 120,
-          borderRadius: 10,
-          overflow: "hidden",
-          border: "1px solid #E5E7EB",
-          background: "#F9FAFB",
-        }}
-      >
-        <img
-          src={`/gallery/image${img}.jpg`}
-          alt="Gallery"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-      </div>
-    ))}
-  </div>
-
-  <div
-    style={{
-      display: "flex",
-      gap: 10,
-    }}
-  >
-    <button
-      style={{
-        flex: 1,
-        padding: "10px",
-        background: "#16A34A",
-        color: "#fff",
-        border: "none",
-        borderRadius: 10,
-        cursor: "pointer",
-        fontWeight: 600,
-      }}
-    >
-      + Add Images
-    </button>
-
-    <button
-      style={{
-        flex: 1,
-        padding: "10px",
-        background: "#fff",
-        color: "#DC2626",
-        border: "1px solid #DC2626",
-        borderRadius: 10,
-        cursor: "pointer",
-        fontWeight: 600,
-      }}
-    >
-      Remove Images
-    </button>
-  </div>
-</div>
 
 {isGarage && (
   <div style={{

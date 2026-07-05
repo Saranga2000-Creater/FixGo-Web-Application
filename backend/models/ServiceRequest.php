@@ -391,32 +391,34 @@ public function getActiveRepairsByShop($shop_id)
     }
 
     public function getServiceHistoryByShop($shop_id)
-    {
-        $query = "
-            SELECT
-                 sr.id,
-                sr.status,
-                sr.vehicle_brand,
-                sr.vehicle_color,
-                sr.description,
-                sr.issue_category,
-                sr.created_at,
-                sr.completed_at,
-                c.name          AS customer_name,
-                c.contactNumber AS customer_phone
-            FROM servicerequest sr
-            LEFT JOIN customer c ON sr.customer_id = c.id
-            WHERE sr.shop_id = :shop_id
-            AND sr.status = 'Completed'
-            ORDER BY sr.completed_at DESC
-        ";
+{
+    $query = "
+        SELECT
+             sr.id,
+            sr.status,
+            sr.vehicle_brand,
+            sr.vehicle_color,
+            sr.description,
+            sr.issue_category,
+            sr.photo,
+            sr.created_at,
+            sr.confirmed_at,
+            sr.completed_at,
+            c.name          AS customer_name,
+            c.contactNumber AS customer_phone
+        FROM servicerequest sr
+        LEFT JOIN customer c ON sr.customer_id = c.id
+        WHERE sr.shop_id = :shop_id
+        AND sr.status = 'Completed'
+        ORDER BY sr.completed_at DESC
+    ";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':shop_id', $shop_id);
-        $stmt->execute();
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':shop_id', $shop_id);
+    $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 public function updateTowTruckDetails($data)
 {

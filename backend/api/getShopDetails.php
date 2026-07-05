@@ -1,7 +1,7 @@
 <?php
-require_once '../config/Database.php';
-require_once '../models/Shop.php';
-require_once '../controllers/ShopController.php';
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../models/Shop.php';
+require_once __DIR__ . '/../controllers/ShopController.php';
 require_once __DIR__.'/../config/EnvLoader.php';
 EnvLoader::load(__DIR__.'/../.env');
 

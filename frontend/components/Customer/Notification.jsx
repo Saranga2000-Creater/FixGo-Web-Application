@@ -5,7 +5,7 @@ import {
     faBell, faCheck, faCircleCheck, faStar,
     faArrowRight, faWrench, faBoxesStacked, faHandshake,
     faClock, faCircleXmark, faStethoscope, faSpinner,
-    faTruckPickup, faUser, faPhone, faCar, faIdCard,
+    faTruckPickup, faUser, faPhone, faIdCard,
     faStore, faXmark, faExternalLinkAlt, faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -59,20 +59,6 @@ const TABS = [
     { key: "cancel",   label: "Cancelled"      },
 ];
 
-const storageKey = (id) => `fixgo_read_notifs_${String(id)}`;
-
-const getReadIds = (id) => {
-    try {
-        return JSON.parse(localStorage.getItem(storageKey(id)) || "[]").map(String);
-    } catch { return []; }
-};
-
-const saveReadIds = (id, ids) => {
-    const deduped = [...new Set(ids.map(String))];
-    localStorage.setItem(storageKey(id), JSON.stringify(deduped));
-    window.dispatchEvent(new CustomEvent("fixgo_read_changed", { detail: { customerId: String(id) } }));
-};
-
 // ── Helper: decode the logged-in user's id from the stored JWT ──────────────
 const getUserIdFromToken = () => {
     try {
@@ -87,6 +73,8 @@ const getUserIdFromToken = () => {
 };
 
 const getMessage = (req) => {
+    // Prefer the DB-stored message if present, otherwise derive from status
+    if (req.message) return req.message;
     const shop = req.shop_name || "the shop";
     switch (req.status) {
         case "Accepted":       return `${shop} accepted your request. Please confirm or decline below.`;
@@ -320,37 +308,23 @@ export function useUnreadCount() {
             return;
         }
 
-        const computeCount = (notifs) => {
-            const readIds = getReadIds(id);
-            return notifs.filter(n => !readIds.includes(String(n.id))).length;
-        };
-        let cachedNotifs = [];
-
         const fetchAndCount = async () => {
             try {
                 const token = localStorage.getItem("jwt_token");
-                const res = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const res = await fetch("http://localhost:8000/api/getNotifications.php", {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
                 if (data.success) {
-                    cachedNotifs = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
-                    setCount(computeCount(cachedNotifs));
+                    const unread = (data.data || []).filter(n => Number(n.isRead) === 0).length;
+                    setCount(unread);
                 }
             } catch {}
         };
 
-        const onReadChanged = (e) => {
-            if (String(e.detail?.customerId) !== id) return;
-            setCount(computeCount(cachedNotifs));
-        };
-
-        window.addEventListener("fixgo_read_changed", onReadChanged);
         fetchAndCount();
         const interval = setInterval(fetchAndCount, 30000);
-        return () => { clearInterval(interval); window.removeEventListener("fixgo_read_changed", onReadChanged); };
+        return () => clearInterval(interval);
     }, []);
 
     return count;
@@ -367,37 +341,27 @@ export default function Notification() {
     const [declining, setDeclining]           = useState(null);
     const [localConfirmed, setLocalConfirmed] = useState([]);
     const [localDeclined, setLocalDeclined]   = useState([]);
-    const [readIds, setReadIds]               = useState([]);
-    const [readIdsLoaded, setReadIdsLoaded]   = useState(false);
     const [declineModal, setDeclineModal]     = useState(null);
     const [userId, setUserId]                 = useState(null);
 
     useEffect(() => {
         const id = getUserIdFromToken();
         if (!id) return;
-
         setUserId(id);
-        setReadIds(getReadIds(id));
-        setReadIdsLoaded(true);
     }, []);
 
     const fetchNotifs = useCallback(async () => {
         const token = localStorage.getItem("jwt_token");
         try {
-            const res = await fetch(
-                "http://localhost:8000/api/getCustomerRequest.php",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const res = await fetch("http://localhost:8000/api/getNotifications.php", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             const data = await res.json();
             if (data.success) {
                 const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
                 setNotifications(filtered);
-                setLocalConfirmed(prev => prev.filter(id => !filtered.find(n => String(n.id) === id && n.status === "Confirmed")));
-                setLocalDeclined(prev  => prev.filter(id => !filtered.find(n => String(n.id) === id && n.status === "Cancelled")));
+                setLocalConfirmed(prev => prev.filter(id => !filtered.find(n => String(n.service_request_id) === id && n.current_status === "Confirmed")));
+                setLocalDeclined(prev  => prev.filter(id => !filtered.find(n => String(n.service_request_id) === id && n.current_status === "Cancelled")));
             }
         } catch (err) {
             console.error("Notification fetch error:", err);
@@ -413,23 +377,41 @@ export default function Notification() {
         return () => clearInterval(interval);
     }, [userId, fetchNotifs]);
 
-    const unreadCount = notifications.filter(n => !readIds.includes(String(n.id))).length;
+    const unreadCount = notifications.filter(n => Number(n.isRead) === 0).length;
 
-    const persistReadIds = (updated) => {
-        const deduped = [...new Set(updated.map(String))];
-        setReadIds(deduped);
-
-        const id = getUserIdFromToken();
-        if (!id) return;
-        saveReadIds(id, deduped);
+    const markRead = async (notificationId) => {
+        // optimistic update
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: 1 } : n));
+        try {
+            const token = localStorage.getItem("jwt_token");
+            await fetch("http://localhost:8000/api/markNotificationRead.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ notification_id: notificationId }),
+            });
+        } catch (err) {
+            console.error("Mark read error:", err);
+        }
     };
 
-    const markRead    = (id) => persistReadIds([...readIds, String(id)]);
-    const markAllRead = ()   => persistReadIds([...readIds, ...notifications.map(n => String(n.id))]);
+    const markAllRead = async () => {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })));
+        try {
+            const token = localStorage.getItem("jwt_token");
+            await fetch("http://localhost:8000/api/markNotificationRead.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ mark_all: true }),
+            });
+        } catch (err) {
+            console.error("Mark all read error:", err);
+        }
+    };
 
-    const handleConfirm = async (e, requestId) => {
+    const handleConfirm = async (e, notif) => {
         e.stopPropagation();
-        setConfirming(requestId);
+        const requestId = notif.service_request_id;
+        setConfirming(notif.id);
         try {
             const token = localStorage.getItem("jwt_token");
             const res = await fetch("http://localhost:8000/api/updateStatus.php", {
@@ -446,10 +428,15 @@ export default function Notification() {
             const data = await res.json();
             if (res.ok) {
                 setLocalConfirmed(prev => [...prev, String(requestId)]);
-                markRead(requestId);
+                await markRead(notif.id);
                 await fetchNotifs();
             } else {
                 alert(data.message || "Could not confirm booking. Please try again.");
+                // The request may already be Confirmed (or moved further) on the
+                // server even though this card still shows the action buttons —
+                // refresh so current_status catches up and the UI stops offering
+                // an action that's no longer valid.
+                await fetchNotifs();
             }
         } catch (err) {
             console.error("Confirm error:", err);
@@ -462,15 +449,16 @@ export default function Notification() {
     const openDeclineModal = (e, notif) => {
         e.stopPropagation();
         setDeclineModal({
-            requestId: notif.id,
+            notifId:   notif.id,
+            requestId: notif.service_request_id,
             shopName:  notif.shop_name,
-            refId:     formatRefId(notif.id, notif.created_at),
+            refId:     formatRefId(notif.service_request_id, notif.created_at),
         });
     };
 
     const handleDeclineConfirmed = async () => {
         if (!declineModal) return;
-        const requestId = declineModal.requestId;
+        const { requestId, notifId } = declineModal;
         setDeclining(requestId);
         try {
             const token = localStorage.getItem("jwt_token");
@@ -489,11 +477,13 @@ export default function Notification() {
             const data = await res.json();
             if (res.ok) {
                 setLocalDeclined(prev => [...prev, String(requestId)]);
-                markRead(requestId);
+                await markRead(notifId);
                 setDeclineModal(null);
                 await fetchNotifs();
             } else {
                 alert(data.message || "Could not decline booking. Please try again.");
+                setDeclineModal(null);
+                await fetchNotifs();
             }
         } catch (err) {
             console.error("Decline error:", err);
@@ -505,7 +495,7 @@ export default function Notification() {
 
     const filtered = notifications.filter(n => {
         if (activeTab === "all")      return true;
-        if (activeTab === "unread")   return !readIds.includes(String(n.id));
+        if (activeTab === "unread")   return Number(n.isRead) === 0;
         if (activeTab === "repair")   return ["Accepted","Confirmed","Diagnosis","In Progress","Pending Parts"].includes(n.status);
         if (activeTab === "complete") return n.status === "Completed";
         if (activeTab === "cancel")   return n.status === "Cancelled";
@@ -521,7 +511,7 @@ export default function Notification() {
         return 0;
     };
 
-    if (loading || !readIdsLoaded) {
+    if (loading) {
         return (
             <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
                 <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading notifications…</p>
@@ -607,17 +597,29 @@ export default function Notification() {
                 ) : (
                     filtered.map((notif, idx) => {
                         const meta         = STATUS_META[notif.status] || STATUS_META["Pending"];
-                        const isRead       = readIds.includes(String(notif.id));
+                        const isRead       = Number(notif.isRead) === 1;
                         const isLast       = idx === filtered.length - 1;
                         const isConfirming = confirming === notif.id;
-                        const isDeclining  = declining  === notif.id;
-                        const isConfirmed  = localConfirmed.includes(String(notif.id)) || notif.status === "Confirmed";
-                        const isDeclined   = localDeclined.includes(String(notif.id));
+                        const isDeclining  = declining  === notif.service_request_id;
+
+                        // isConfirmed/isDeclined are driven primarily by the LIVE
+                        // service request status (notif.current_status), not the
+                        // notification's own type. The notification row for an
+                        // "Accepted" event never changes after creation, so relying
+                        // on notif.status alone would keep showing Confirm/Decline
+                        // buttons forever, even after the booking is genuinely
+                        // confirmed elsewhere. localConfirmed/localDeclined only
+                        // provide instant feedback right after clicking, before the
+                        // refetch completes.
+                        const isConfirmed  = localConfirmed.includes(String(notif.service_request_id))
+                            || ["Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed"].includes(notif.current_status);
+                        const isDeclined   = localDeclined.includes(String(notif.service_request_id))
+                            || notif.current_status === "Cancelled";
                         const hasTow       = notif.requires_tow == 1;
                         return (
                             <div
                                 key={notif.id}
-                                onClick={() => markRead(notif.id)}
+                                onClick={() => !isRead && markRead(notif.id)}
                                 style={{
                                     display: "flex", alignItems: "flex-start", gap: 16,
                                     padding: "20px 24px",
@@ -643,10 +645,12 @@ export default function Notification() {
                                     {/* Title + Badge */}
                                     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                                         <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>
-                                            {notif.status === "Completed" ? "Repair completed"  :
-                                             notif.status === "Accepted"  ? "Request accepted"  :
-                                             notif.status === "Confirmed" ? "Booking confirmed" :
-                                             "Repair status updated"}
+                                            {notif.title || (
+                                                notif.status === "Completed" ? "Repair completed"  :
+                                                notif.status === "Accepted"  ? "Request accepted"  :
+                                                notif.status === "Confirmed" ? "Booking confirmed" :
+                                                "Repair status updated"
+                                            )}
                                         </p>
                                         <span style={{
                                             background: isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
@@ -667,7 +671,7 @@ export default function Notification() {
                                         display: "inline-block", background: T.slate100, color: T.slate700,
                                         borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 600,
                                     }}>
-                                        {notif.vehicle_brand || "Vehicle"} · {formatRefId(notif.id, notif.created_at)}
+                                        {notif.vehicle_brand || "Vehicle"} · {formatRefId(notif.service_request_id, notif.created_at)}
                                     </span>
 
                                     {/* ── ACCEPTED: Action card ── */}
@@ -733,7 +737,7 @@ export default function Notification() {
                                                         </button>
 
                                                         <button
-                                                            onClick={(e) => handleConfirm(e, notif.id)}
+                                                            onClick={(e) => handleConfirm(e, notif)}
                                                             disabled={isConfirming || isDeclining}
                                                             style={{
                                                                 display: "flex", alignItems: "center", gap: 8,
@@ -842,4 +846,3 @@ export default function Notification() {
         </div>
     );
 }
-

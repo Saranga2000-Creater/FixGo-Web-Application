@@ -16,6 +16,33 @@ class ServiceRequestController {
         $this->jwtHandler          = new JwtHandler();
     }
 
+    // ==========================================
+    // NOTIFICATION HELPER
+    // ==========================================
+    // Inserts a row into `notification`. Message is left NULL on purpose —
+    // Notification.jsx derives the live message text from the joined
+    // servicerequest/shop data (shop name, tow details, etc.) so it never
+    // goes stale. `type` already stores the status value at creation time
+    // (e.g. 'Accepted', 'In Progress', 'Completed'), so getNotifications.php
+    // selects it as `status` — no separate status column needed.
+    // Failure here should never break the main status-update flow.
+    private function notifyCustomer($userId, $requestId, $type, $title) {
+        try {
+            $stmt = $this->db->prepare(
+                "INSERT INTO notification (user_id, service_request_id, type, title, message, isRead)
+                 VALUES (:user_id, :request_id, :type, :title, NULL, 0)"
+            );
+            $stmt->execute([
+                'user_id'    => $userId,
+                'request_id' => $requestId,
+                'type'       => $type,
+                'title'      => $title,
+            ]);
+        } catch (Throwable $e) {
+            error_log("notifyCustomer failed: " . $e->getMessage());
+        }
+    }
+
     public function handleCreateRequest($requestData, $payload)
 {
     $requestData['customer_id'] = $payload['user_id'];
@@ -110,6 +137,7 @@ class ServiceRequestController {
         }
 
         $current_status = $currentRequest['status'];
+        $customer_id    = $currentRequest['customer_id'];
 
         if ($actor_role === 'customer' && $currentRequest['customer_id'] != $actor_id) {
             http_response_code(403);
@@ -175,6 +203,9 @@ class ServiceRequestController {
 
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Accepted');
+
+                $this->notifyCustomer($customer_id, $request_id, 'Accepted', 'Request accepted');
+
                 http_response_code(200);
                 return json_encode(["message" => "Request Accepted. Waiting for customer confirmation."]);
             }
@@ -182,6 +213,9 @@ class ServiceRequestController {
           elseif ($new_status === 'Declined') {
     $reason = $requestData['reason'] ?? "Shop declined the request.";
     $this->serviceRequestModel->declineRequest($request_id, $reason);
+
+    $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
+
     http_response_code(200);
     return json_encode(["message" => "Request successfully declined."]);
 }
@@ -189,6 +223,9 @@ class ServiceRequestController {
 elseif ($new_status === 'Cancelled') {
     $reason = $requestData['reason'] ?? "Shop cancelled the request.";
     $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
+
+    $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
+
     http_response_code(200);
     return json_encode(["message" => "Request successfully cancelled."]);
 } 
@@ -201,6 +238,9 @@ elseif ($new_status === 'Cancelled') {
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, $new_status);
+
+                $this->notifyCustomer($customer_id, $request_id, $new_status, "Repair status: $new_status");
+
                 http_response_code(200);
                 return json_encode(["message" => "Repair milestone updated to: $new_status."]);
             }

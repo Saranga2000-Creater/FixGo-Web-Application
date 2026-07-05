@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 
+const COLORS = {
+  primary: "#15803D",
+  text: "#0F172A",
+  textMuted: "#64748B",
+  border: "#E5E9F0",
+  surface: "#FFFFFF",
+  page: "#F8FAFC",
+};
+
 function Avatar({ initials, color, size = 32 }) {
   return (
     <div style={{
@@ -36,8 +45,10 @@ function formatDate(value) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function ServiceHistory() {
+function ServiceHistory({ shopCategory }) {
   const [history, setHistory] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
 useEffect(() => {
   const token = localStorage.getItem("jwt_token");
 
@@ -129,6 +140,7 @@ console.log("History state:", history);
                   <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{formatDate(r.completed_at)}</td>
                   <td style={{ padding: "14px 16px" }}>
                     <button
+                      onClick={() => setSelectedRequest(r)}
                       style={{
                         padding: "10px 18px",
                         borderRadius: 10,
@@ -171,9 +183,150 @@ console.log("History state:", history);
           }}>View all past services</button>
         </div>
       </div>
+
+      {/* Service Request Details Modal — same as Service Requests page */}
+      {selectedRequest && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 999,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.surface,
+              width: 600,
+              maxWidth: "100%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              borderRadius: 20,
+              padding: 28,
+              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
+            }}
+          >
+            <h2
+              style={{
+                margin: 0,
+                marginBottom: 20,
+                fontSize: 21,
+                fontWeight: 700,
+                color: COLORS.text,
+              }}
+            >
+              Service Request Details
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                  Customer
+                </div>
+                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+                  {selectedRequest.customer_name}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                  Issue
+                </div>
+                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+                  {selectedRequest.issue_category}
+                </div>
+              </div>
+
+              {shopCategory === "Service Centers" && (
+                <div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: COLORS.textMuted,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    Appointment
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 16.5,
+                      color: COLORS.text,
+                      marginTop: 2,
+                    }}
+                  >
+                    {selectedRequest.preferred_date
+                      ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
+                      : "Not specified"}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
+                  Description
+                </div>
+                <div
+                  style={{
+                    background: COLORS.page,
+                    border: `1px solid ${COLORS.border}`,
+                    padding: 14,
+                    borderRadius: 10,
+                    fontSize: 15,
+                    color: COLORS.text,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {selectedRequest.description}
+                </div>
+              </div>
+            </div>
+
+            {selectedRequest.photo && (
+              <img
+                src={`http://localhost:8000/${selectedRequest.photo}`}
+                alt="Problem"
+                style={{
+                  width: "100%",
+                  borderRadius: 12,
+                  marginTop: 6,
+                  border: `1px solid ${COLORS.border}`,
+                }}
+              />
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                style={{
+                  padding: "11px 24px",
+                  background: COLORS.primary,
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: 10,
+                  fontWeight: 600,
+                  fontSize: 15,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default ServiceHistory;
-
