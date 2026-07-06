@@ -51,8 +51,8 @@ class Customer {
             $this->conn->beginTransaction();
 
             // 1. Insert into users
-            $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified) 
-                          VALUES (:email, 'customer', :password, 0, :token, 0)";
+            $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified, token_expiry) 
+                          VALUES (:email, 'customer', :password, 0, :token, 0, DATE_ADD(NOW(), INTERVAL 1 HOUR))";
             $userStmt = $this->conn->prepare($userQuery);
             $userStmt->execute([
                 ':email' => $userData['email'],

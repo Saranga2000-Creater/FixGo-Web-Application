@@ -19,7 +19,8 @@ export default function VerifyEmail() {
 
         const verifyToken = async () => {
             try {
-                const response = await fetch("http://localhost:8000/api/verifyEmail.php", {
+                const host = window.location.hostname;
+                const response = await fetch(`http://${host}:8000/api/verifyEmail.php`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

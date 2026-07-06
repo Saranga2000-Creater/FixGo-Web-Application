@@ -178,7 +178,8 @@ export default function ShopForm() {
         payload.append("towTruckPlate", formData.towTruckPlate);
 
         try {
-            const response = await fetch("http://localhost:8000/api/registerShop.php", {
+            const host = window.location.hostname;
+            const response = await fetch(`http://${host}:8000/api/registerShop.php`, {
                 method: "POST",
                 body: payload,
             });

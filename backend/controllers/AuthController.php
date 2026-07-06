@@ -84,6 +84,9 @@ class AuthController{
 
             http_response_code(401);
             echo json_encode(["message"=>"Invalid email or password."]);
+        } else {
+            http_response_code(401);
+            echo json_encode(["message"=>"Invalid email or password."]);
         }
     }
 
@@ -119,14 +122,22 @@ class AuthController{
                 return;
             }
 
+            if($user->token_expiry && strtotime($user->token_expiry)<time()){
+                http_response_code(400);
+                echo json_encode(["message" => "Verification link has expired. Please try again later." ]);
+                return;
+            }
+
             $user->verifyEmail($user->id);
 
             http_response_code(200);
             echo json_encode(["message" => "Email verified successfully. You can now log in to your account."]);
-
+            return;
+    
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["message" => "Verification failed: " . $e->getMessage()]);
+            return;
         }
     }
 

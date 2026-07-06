@@ -25,7 +25,8 @@ function Sign({ setShowSignIn }) {
         setError("");
 
         try {
-            const response = await fetch('http://localhost:8000/api/login.php', {
+            const host = window.location.hostname;
+            const response = await fetch(`http://${host}:8000/api/login.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

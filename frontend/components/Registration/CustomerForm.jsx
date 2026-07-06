@@ -77,7 +77,8 @@ export default function CustomerForm() {
         payload.append("profilePic", profilePic);
 
         try {
-            const response = await fetch("http://localhost:8000/api/registerCustomer.php", {
+            const host = window.location.hostname;
+            const response = await fetch(`http://${host}:8000/api/registerCustomer.php`, {
                 method: "POST",
                 body: payload,
             });
