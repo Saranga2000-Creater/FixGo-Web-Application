@@ -443,14 +443,69 @@ if (!token) {
                 <div>
                     <div className="flex items-center gap-2 mb-3">
                         <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">5</div>
-                        <h3 className="font-bold text-[#1f2937] text-[13px]">Attach Photos (Optional)</h3>
+                        <h3 className="font-bold text-[#1f2937] text-[13px]">Attach a Photo (Optional)</h3>
                     </div>
-                    <label className="flex flex-col items-center justify-center w-full py-6 px-4 rounded-xl border-2 border-dashed border-[#16a34a]/30 bg-[#f0fdf4]/50 hover:bg-[#f0fdf4] cursor-pointer transition-colors text-sm text-gray-600">
-                        <FontAwesomeIcon icon={faCamera} className="text-[#16a34a] text-2xl mb-2 opacity-80" />
-                        <span className="font-bold text-[#14532d]">{imageFile ? imageFile.name : "Drag & drop photos here or click to browse"}</span>
-                        <span className="text-[11px] text-gray-500 mt-1">PNG, JPG up to 10MB</span>
-                        <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="hidden" />
-                    </label>
+                    
+                    {imageFile ? (
+                        /* STATE 1: IMAGE UPLOADED (Centered on a Full-Width Stage) */
+                        <div className="w-full py-6 flex justify-center items-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 animate-in fade-in duration-200">
+                            
+                            <div className="relative inline-block group">
+                                
+                                {/* The Image Container */}
+                                <div className="w-48 sm:w-64 h-32 sm:h-40 rounded-xl overflow-hidden border border-gray-200 shadow-sm relative bg-white">
+                                    <img 
+                                        src={URL.createObjectURL(imageFile)} 
+                                        alt="Upload preview" 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                    />
+                                    
+                                    {/* Sleek Gradient Overlay for Text */}
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-10 flex flex-col justify-end pointer-events-none">
+                                        <span className="text-white text-[12px] sm:text-[13px] font-bold truncate drop-shadow-md">
+                                            {imageFile.name}
+                                        </span>
+                                        <span className="text-white/80 text-[10px] sm:text-[11px] font-medium mt-0.5 drop-shadow-md">
+                                            {(imageFile.size / (1024 * 1024)).toFixed(2)} MB
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Floating Close Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setImageFile(null)}
+                                    className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-white hover:bg-red-500 hover:border-red-500 flex items-center justify-center transition-all shadow-md z-10 cursor-pointer"
+                                    title="Remove photo"
+                                >
+                                    <FontAwesomeIcon icon={faTimes} className="text-sm" />
+                                </button>
+                            </div>
+
+                        </div>
+                    ) : (
+                        /* STATE 2: EMPTY UPLOAD ZONE (Clickable Label) */
+                        <label className="flex flex-col items-center justify-center w-full py-8 px-4 rounded-xl border-2 border-dashed border-[#16a34a]/30 bg-[#f0fdf4]/50 hover:bg-[#f0fdf4] cursor-pointer transition-colors text-sm text-gray-600 group">
+                            
+                            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                                <FontAwesomeIcon icon={faCamera} className="text-[#16a34a] text-xl opacity-80" />
+                            </div>
+                            
+                            <span className="font-bold text-[#14532d]">Drag & drop photos here or click to browse</span>
+                            <span className="text-[11px] text-gray-500 mt-1">PNG, JPG up to 10MB</span>
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setImageFile(e.target.files[0]);
+                                    }
+                                }} 
+                                className="hidden" 
+                            />
+                        </label>
+                    )}
                 </div>
             )}
 

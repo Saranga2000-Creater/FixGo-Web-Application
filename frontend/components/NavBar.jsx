@@ -48,10 +48,33 @@ export const NavBar = () => {
                 </div>
 
                 <nav className="hidden md:flex items-center gap-6 lg:gap-10">
-                    <NavLink to="/" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Homepage</NavLink>
-                    <NavLink to="/shops" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Find Shops</NavLink>
-                    <NavLink to="/services" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Dashboard</NavLink>
-                    <NavLink to="/support" className="text-[#000000] font-mono hover:text-[#16a34a] active:scale-105 py-1 transition-colors">Support</NavLink>
+                    <NavLink 
+                        to="/" 
+                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
+                    >
+                        Homepage
+                    </NavLink>
+                    
+                    <NavLink 
+                        to="/shops" 
+                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
+                    >
+                        Find Shops
+                    </NavLink>
+                    
+                    <NavLink 
+                        to="/services" 
+                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
+                    >
+                        Dashboard
+                    </NavLink>
+                    
+                    <NavLink 
+                        to="/support" 
+                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
+                    >
+                        Support
+                    </NavLink>
                 </nav>
 
                 <div className="flex items-center gap-2 sm:gap-4">
