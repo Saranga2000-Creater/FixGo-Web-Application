@@ -101,6 +101,10 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   const [minEta, setMinEta] = useState(0);
   const [etaError, setEtaError] = useState("");
 
+  // Decline confirmation
+  const [requestPendingDecline, setRequestPendingDecline] = useState(null);
+  const [isDeclining, setIsDeclining] = useState(false);
+
   useEffect(() => {
     fetchRequests();
   }, []);
@@ -208,6 +212,21 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       openTowTruckModal(r, true); 
     } else {
       updateStatus(r.id, "Accepted");
+    }
+  };
+
+  const handleDeclineClick = (r) => {
+    setRequestPendingDecline(r);
+  };
+
+  const confirmDecline = async () => {
+    if (!requestPendingDecline) return;
+    setIsDeclining(true);
+    try {
+      await updateStatus(requestPendingDecline.id, "Declined");
+    } finally {
+      setIsDeclining(false);
+      setRequestPendingDecline(null);
     }
   };
 
@@ -692,7 +711,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
                           onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
-                          onClick={() => updateStatus(r.id, "Declined")}
+                          onClick={() => handleDeclineClick(r)}
                         >
                           Decline
                         </button>
@@ -894,6 +913,119 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                 onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Decline Confirmation Modal */}
+      {requestPendingDecline && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: COLORS.surface,
+              width: 420,
+              maxWidth: "100%",
+              borderRadius: 18,
+              overflow: "hidden",
+              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "22px 26px 4px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 14,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: COLORS.dangerSoft,
+                  border: `1px solid ${COLORS.dangerBorder}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 19,
+                  flexShrink: 0,
+                }}
+              >
+                ⚠️
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 17.5, fontWeight: 700, color: COLORS.text }}>
+                  Decline this request?
+                </h2>
+                <p style={{ margin: 0, marginTop: 6, fontSize: 14, color: COLORS.textMuted, lineHeight: 1.5 }}>
+                  {requestPendingDecline.customer_name
+                    ? `${requestPendingDecline.customer_name}'s request will be moved to Declined and they'll be notified. This action can't be undone.`
+                    : "This request will be moved to Declined and the customer will be notified. This action can't be undone."}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                padding: "20px 26px 24px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+              }}
+            >
+              <button
+                onClick={() => setRequestPendingDecline(null)}
+                disabled={isDeclining}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 10,
+                  border: `1px solid ${COLORS.border}`,
+                  background: COLORS.surface,
+                  color: COLORS.textMuted,
+                  fontWeight: 600,
+                  fontSize: 14.5,
+                  cursor: isDeclining ? "not-allowed" : "pointer",
+                }}
+                onMouseEnter={(e) => !isDeclining && (e.currentTarget.style.background = COLORS.page)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDecline}
+                disabled={isDeclining}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: COLORS.danger,
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: 14.5,
+                  cursor: isDeclining ? "not-allowed" : "pointer",
+                  opacity: isDeclining ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => !isDeclining && (e.currentTarget.style.background = "#B91C1C")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.danger)}
+              >
+                {isDeclining ? "Declining..." : "Yes, Decline"}
               </button>
             </div>
           </div>
@@ -1123,4 +1255,5 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 }
 
 export default ServiceRequests;
+
 
