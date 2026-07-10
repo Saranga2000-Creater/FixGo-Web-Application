@@ -34,7 +34,7 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav,shopData,requestCount, activeRepairCount, notificationCount }) {
+function Sidebar({ activeNav, setActiveNav,shopData,requestCount, activeRepairCount, notificationCount, reviewCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
@@ -149,16 +149,19 @@ function Sidebar({ activeNav, setActiveNav,shopData,requestCount, activeRepairCo
 </span>
             <span style={{ flex: 1 }}>{item.label}</span>
 <Badge
-  count={
-    item.id === "requests"
-      ? requestCount
-      : item.id === "repairs"
-      ? activeRepairCount
-      : item.id === "notifications"
-      ? notificationCount
-      : 0
-  }
+    count={
+        item.id === "requests"
+            ? requestCount
+            : item.id === "repairs"
+            ? activeRepairCount
+            : item.id === "reviews"
+            ? reviewCount
+            : item.id === "notifications"
+            ? notificationCount
+            : 0
+    }
 />
+
           </button>
         ))}
       </nav>

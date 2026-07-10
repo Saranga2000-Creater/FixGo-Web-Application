@@ -480,37 +480,7 @@ public function updateTowTruckDetails($data)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getShopNotifications($shop_id)
-{
-    $query = "
-        SELECT
-            sr.id,
-            sr.status,
-            sr.vehicle_brand,
-            sr.description,
-            sr.created_at,
-            sr.confirmed_at,
-            sr.cancelled_at,
-            c.name AS customer_name
-        FROM servicerequest sr
-        JOIN customer c
-            ON c.id = sr.customer_id
-        WHERE sr.shop_id = :shop_id
-        AND sr.status IN ('Pending','Confirmed','Cancelled')
-        ORDER BY
-CASE
-    WHEN sr.status='Pending' THEN sr.created_at
-    WHEN sr.status='Confirmed' THEN sr.confirmed_at
-    WHEN sr.status='Cancelled' THEN sr.cancelled_at
-END DESC
-    ";
-
-    $stmt=$this->conn->prepare($query);
-    $stmt->bindParam(":shop_id",$shop_id);
-    $stmt->execute();
-
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+   
 
 
 
