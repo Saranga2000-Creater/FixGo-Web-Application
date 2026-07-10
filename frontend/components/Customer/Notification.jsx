@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import ReviewModal from "./ReviewModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faBell, faCheck, faCircleCheck, faStar,
@@ -343,6 +344,8 @@ export default function Notification() {
     const [localDeclined, setLocalDeclined]   = useState([]);
     const [declineModal, setDeclineModal]     = useState(null);
     const [userId, setUserId]                 = useState(null);
+    const [reviewModal, setReviewModal]       = useState(null);   
+    const [reviewedIds, setReviewedIds]       = useState([]);     
 
     useEffect(() => {
         const id = getUserIdFromToken();
@@ -529,6 +532,16 @@ export default function Notification() {
                     isLoading={declining === declineModal.requestId}
                     onConfirm={handleDeclineConfirmed}
                     onCancel={() => setDeclineModal(null)}
+                />
+            )}
+            {reviewModal && (
+                <ReviewModal
+                    isOpen={!!reviewModal}
+                     onClose={() => setReviewModal(null)}
+                    serviceRequestId={reviewModal.requestId}
+                    shopId={reviewModal.shopId}
+                    shopName={reviewModal.shopName}
+                    onSubmitted={(requestId) => setReviewedIds(prev => [...prev, String(requestId)])}
                 />
             )}
 
@@ -816,21 +829,38 @@ export default function Notification() {
 
                                     {/* ── COMPLETED: Review prompt ── */}
                                     {notif.status === "Completed" && (
-                                        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", background: T.greenMuted, border: `1px solid ${T.slate200}`, borderRadius: 12, padding: "12px 16px" }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                <FontAwesomeIcon icon={faStar} style={{ color: T.green }} />
-                                                <div>
-                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>We'd love to hear about your experience!</p>
-                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Your feedback helps others find great workshops.</p>
-                                                </div>
-                                            </div>
-                                            <button style={{ display: "flex", alignItems: "center", gap: 6, background: T.green, color: T.white, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: T.font, flexShrink: 0, marginLeft: 12 }}>
-                                                <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
-                                                Review & Rate
-                                                <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
-                                            </button>
-                                        </div>
-                                    )}
+    <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", background: T.greenMuted, border: `1px solid ${T.slate200}`, borderRadius: 12, padding: "12px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <FontAwesomeIcon icon={faStar} style={{ color: T.green }} />
+            <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>We'd love to hear about your experience!</p>
+                <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Your feedback helps others find great workshops.</p>
+            </div>
+        </div>
+
+        {reviewedIds.includes(String(notif.service_request_id)) ? (
+            <span style={{ display: "flex", alignItems: "center", gap: 6, color: T.green, fontSize: 13, fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>
+                <FontAwesomeIcon icon={faCheck} /> Reviewed
+            </span>
+        ) : (
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setReviewModal({
+                        requestId: notif.service_request_id,
+                        shopId: notif.shop_id,
+                        shopName: notif.shop_name,
+                    });
+                }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: T.green, color: T.white, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: T.font, flexShrink: 0, marginLeft: 12 }}
+            >
+                <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
+                Review & Rate
+                <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+            </button>
+        )}
+    </div>
+)}
                                 </div>
 
                                 {/* Timestamp + dot */}

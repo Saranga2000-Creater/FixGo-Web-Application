@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faCalendarDays,
     faChevronDown,
-    faClipboardList,
     faCommentDots,
-    faOilCan,
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -39,29 +37,6 @@ const T = {
     },
 };
 
-const ACCENT = {
-    green:  { iconBg: T.greenBg,  iconColor: T.green  },
-    teal:   { iconBg: T.tealBg,   iconColor: T.teal   },
-    blue:   { iconBg: T.blueBg,   iconColor: T.blue   },
-    violet: { iconBg: T.violetBg, iconColor: T.violet },
-    yellow: { iconBg: T.yellowBg, iconColor: T.yellow },
-};
-
-const RATING_BREAKDOWN = [
-    { stars: 5, count: 8,  pct: 67 },
-    { stars: 4, count: 3,  pct: 25 },
-    { stars: 3, count: 1,  pct: 8  },
-    { stars: 2, count: 0,  pct: 0  },
-    { stars: 1, count: 0,  pct: 0  },
-];
-
-const MY_REVIEWS = [
-    { id: 1, title: "Engine Overheating",    shop: "Advanced Auto Service Center", date: "May 25, 2026", rating: 5.0, comment: "Excellent service! The team was professional and fixed the issue quickly. Very satisfied.", icon: faWrench,        accent: "green"  },
-    { id: 2, title: "Brake Pad Replacement", shop: "QuickFix Auto Care",           date: "Mar 12, 2026", rating: 4.5, comment: "Good service and on-time delivery.\nStaff is polite.",                                   icon: faClipboardList, accent: "blue"   },
-    { id: 3, title: "Oil Change & Filter",   shop: "Advanced Auto Service Center", date: "Jan 18, 2026", rating: 5.0, comment: "Very happy with the service quality.\nHighly recommend!",                                icon: faOilCan,        accent: "teal"   },
-    { id: 4, title: "General Checkup",       shop: "AutoCare Plus",                date: "Nov 05, 2025", rating: 4.0, comment: "Nice experience overall.\nWill use FixGo again.",                                        icon: faClipboardList, accent: "violet" },
-];
-
 function StarDisplay({ rating, size = "sm" }) {
     const fontSize = size === "lg" ? 22 : 15;
     return (
@@ -78,6 +53,44 @@ function StarDisplay({ rating, size = "sm" }) {
 
 function ReviewsRatings() {
     const [filter, setFilter] = useState("All Time");
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const token = localStorage.getItem("jwt_token");
+                const res = await fetch("http://localhost:8000/api/getCustomerReviews.php", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = await res.json();
+                if (data.success) setReviews(data.data || []);
+            } catch (err) {
+                console.error("Fetch reviews error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReviews();
+    }, []);
+
+    const totalReviews = reviews.length;
+    const avgRating = totalReviews
+        ? (reviews.reduce((sum, r) => sum + Number(r.rating), 0) / totalReviews).toFixed(1)
+        : "0.0";
+
+    const breakdown = [5, 4, 3, 2, 1].map((stars) => {
+        const count = reviews.filter((r) => Number(r.rating) === stars).length;
+        return { stars, count, pct: totalReviews ? Math.round((count / totalReviews) * 100) : 0 };
+    });
+
+    if (loading) {
+        return (
+            <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+                <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading reviews…</p>
+            </div>
+        );
+    }
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
@@ -105,16 +118,14 @@ function ReviewsRatings() {
             <div style={{ ...T.card, padding: 24 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 32 }}>
 
-                    {/* Average score */}
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 140 }}>
-                        <p style={{ fontSize: 56, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>4.8</p>
-                        <div style={{ marginTop: 8 }}><StarDisplay rating={4.8} size="lg" /></div>
-                        <p style={{ fontSize: 13, color: T.slate500, marginTop: 6, marginBottom: 0 }}>Based on 12 reviews</p>
+                        <p style={{ fontSize: 56, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>{avgRating}</p>
+                        <div style={{ marginTop: 8 }}><StarDisplay rating={Number(avgRating)} size="lg" /></div>
+                        <p style={{ fontSize: 13, color: T.slate500, marginTop: 6, marginBottom: 0 }}>Based on {totalReviews} reviews</p>
                     </div>
 
-                    {/* Rating breakdown bars */}
                     <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
-                        {RATING_BREAKDOWN.map((row) => (
+                        {breakdown.map((row) => (
                             <div key={row.stars} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                                 <span style={{ width: 52, flexShrink: 0, fontSize: 13, color: T.slate500 }}>
                                     {row.stars} {row.stars === 1 ? "Star" : "Stars"}
@@ -134,7 +145,6 @@ function ReviewsRatings() {
                         ))}
                     </div>
 
-                    {/* Total reviews */}
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 120 }}>
                         <div style={{
                             width: 60, height: 60, borderRadius: "50%",
@@ -143,7 +153,7 @@ function ReviewsRatings() {
                         }}>
                             <FontAwesomeIcon icon={faCommentDots} style={{ fontSize: 22, color: T.violet }} />
                         </div>
-                        <p style={{ fontSize: 36, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>12</p>
+                        <p style={{ fontSize: 36, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>{totalReviews}</p>
                         <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Total Reviews</p>
                     </div>
                 </div>
@@ -152,7 +162,6 @@ function ReviewsRatings() {
             {/* ── My Reviews list ── */}
             <div style={{ ...T.card, overflow: "hidden" }}>
 
-                {/* Card header with filter */}
                 <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     padding: "16px 24px",
@@ -184,72 +193,73 @@ function ReviewsRatings() {
                     </div>
                 </div>
 
-                {/* Review rows */}
-                {MY_REVIEWS.map((review, idx) => {
-                    const a      = ACCENT[review.accent];
-                    const isLast = idx === MY_REVIEWS.length - 1;
+                {totalReviews === 0 ? (
+                    <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                        <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>You haven't left any reviews yet.</p>
+                    </div>
+                ) : (
+                    reviews.map((review, idx) => {
+                        const isLast = idx === reviews.length - 1;
+                        return (
+                            <div
+                                key={review.id}
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "auto 1fr auto 1fr",
+                                    alignItems: "start",
+                                    borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
+                                }}
+                            >
+                                <div style={{ padding: "20px 20px 20px 24px", display: "flex", alignItems: "center" }}>
+                                    <div style={{
+                                        width: 52, height: 52, borderRadius: "50%",
+                                        background: T.greenBg,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                    }}>
+                                        <FontAwesomeIcon icon={faWrench} style={{ fontSize: 20, color: T.green }} />
+                                    </div>
+                                </div>
 
-                    return (
-                        <div
-                            key={review.id}
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "auto 1fr auto 1fr",
-                                alignItems: "start",
-                                borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
-                            }}
-                        >
-                            {/* Icon */}
-                            <div style={{ padding: "20px 20px 20px 24px", display: "flex", alignItems: "center" }}>
                                 <div style={{
-                                    width: 52, height: 52, borderRadius: "50%",
-                                    background: a.iconBg,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    padding: "20px 20px 20px 0",
+                                    borderRight: `1px solid ${T.slate100}`,
+                                    display: "flex", flexDirection: "column", justifyContent: "center",
                                 }}>
-                                    <FontAwesomeIcon icon={review.icon} style={{ fontSize: 20, color: a.iconColor }} />
+                                    <p style={{ fontSize: 14, fontWeight: 600, color: T.slate900, margin: 0 }}>
+                                        {review.issue_category || review.vehicle_brand || "Service"}
+                                    </p>
+                                    <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>{review.shop_name}</p>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: T.slate400 }}>
+                                        <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} />
+                                        <span>{new Date(review.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    padding: "20px 24px",
+                                    borderRight: `1px solid ${T.slate100}`,
+                                    display: "flex", flexDirection: "column",
+                                    alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <p style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                        {Number(review.rating).toFixed(1)}
+                                    </p>
+                                    <div style={{ marginTop: 4 }}><StarDisplay rating={Number(review.rating)} /></div>
+                                </div>
+
+                                <div style={{ padding: "20px 24px", display: "flex", alignItems: "center" }}>
+                                    <p style={{
+                                        fontSize: 13, color: T.slate700,
+                                        lineHeight: 1.6, margin: 0,
+                                        whiteSpace: "pre-line",
+                                    }}>
+                                        {review.comment || "No comment left."}
+                                    </p>
                                 </div>
                             </div>
-
-                            {/* Title + shop + date */}
-                            <div style={{
-                                padding: "20px 20px 20px 0",
-                                borderRight: `1px solid ${T.slate100}`,
-                                display: "flex", flexDirection: "column", justifyContent: "center",
-                            }}>
-                                <p style={{ fontSize: 14, fontWeight: 600, color: T.slate900, margin: 0 }}>{review.title}</p>
-                                <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>{review.shop}</p>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: T.slate400 }}>
-                                    <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} />
-                                    <span>{review.date}</span>
-                                </div>
-                            </div>
-
-                            {/* Star rating */}
-                            <div style={{
-                                padding: "20px 24px",
-                                borderRight: `1px solid ${T.slate100}`,
-                                display: "flex", flexDirection: "column",
-                                alignItems: "center", justifyContent: "center",
-                            }}>
-                                <p style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>
-                                    {review.rating.toFixed(1)}
-                                </p>
-                                <div style={{ marginTop: 4 }}><StarDisplay rating={review.rating} /></div>
-                            </div>
-
-                            {/* Comment */}
-                            <div style={{ padding: "20px 24px", display: "flex", alignItems: "center" }}>
-                                <p style={{
-                                    fontSize: 13, color: T.slate700,
-                                    lineHeight: 1.6, margin: 0,
-                                    whiteSpace: "pre-line",
-                                }}>
-                                    {review.comment}
-                                </p>
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                )}
             </div>
         </div>
     );
