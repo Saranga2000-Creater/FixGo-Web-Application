@@ -22,17 +22,24 @@ import {
 import { useLoadScript } from "@react-google-maps/api"
 
 function Shops() {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const urlLat = searchParams.get('lat');
     const urlLng = searchParams.get('lng');
     const urlLocName = searchParams.get('locName');
 
+    const isCurrentLoc = urlLocName === 'Current Location';
+
     const [userLocation, setUserLocation] = useState({ 
-        lat: urlLat ? parseFloat(urlLat) : 6.9271, 
-        lng: urlLng ? parseFloat(urlLng) : 79.8612 
+        lat: parseFloat(searchParams.get('lat') || sessionStorage.getItem('fixgo_lat') || 6.9271), 
+        lng: parseFloat(searchParams.get('lng') || sessionStorage.getItem('fixgo_lng') || 79.8612) 
     });
-    const [displayLocationName, setDisplayLocationName] = useState(urlLocName ? `Near ${urlLocName}` : "Near Colombo, Sri Lanka");
+    const [displayLocationName, setDisplayLocationName] = useState(
+        sessionStorage.getItem('fixgo_locName') || "Loading..."
+    );
+    const [manualLocationText, setManualLocationText] = useState(
+        sessionStorage.getItem('fixgo_manualLoc') || ""
+    );
     
     const [locationAlert, setLocationAlert] = useState(null)
 
@@ -68,12 +75,20 @@ function Shops() {
     const [serviceFilters, setServiceFilters] = useState([]);
 
     const handleLocationUpdate = (lat, lng, textDesc) => {
-        setUserLocation({ lat, lng });
+        const params = new URLSearchParams(searchParams);
+        params.set('lat', lat);
+        params.set('lng', lng);
+        
         if (textDesc && textDesc !== "Current Location") {
+            params.set('locName', textDesc);
             setLocationAlert(`Showing results for ${textDesc}.`);
         } else {
+            params.set('locName', 'Current Location');
             setLocationAlert(null);
         }
+        
+        // Pushing to the URL triggers the Master useEffect automatically!
+        setSearchParams(params); 
     };
 
     useEffect(() => {
@@ -111,32 +126,170 @@ function Shops() {
         sessionStorage.setItem('fixgo_sortBy', sortBy);
         sessionStorage.setItem('fixgo_searchName', searchName);
         sessionStorage.setItem('fixgo_needsTow', needsTow.toString());
+        
     }, [activeVehicle, activeService, sortBy, searchName, needsTow]);
 
     useEffect(() => {
-        if (urlLat && urlLng) {
-            setLocationAlert("Showing results for your searched city.");
-            return; 
+        const urlLat = searchParams.get('lat');
+        const urlLng = searchParams.get('lng');
+        const urlLocName = searchParams.get('locName');
+        const forceLocate = searchParams.get('locate'); // From Navbar or Button
+
+        // --- HELPER: Unified GPS & Geocoding logic ---
+        // This runs the API fetch for both Scenario 1 (Button) and Scenario 4 (Fallback)
+        const runGPSAndGeocode = async (isExplicitCommand) => {
+            setDisplayLocationName("Locating...");
+            
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        setUserLocation({ lat, lng });
+                        setManualLocationText("");
+
+                        let fetchedLocationName = "Near your location"; // Default fallback
+
+                        // Google Maps API Fetch
+                        try {
+                            const response = await fetch(`https://geocode.googleapis.com/v4/geocode/location/${lat},${lng}?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`);
+                            const data = await response.json();
+                            
+                            if (data.results && data.results.length > 0) {
+                                const addressComponents = data.results[0].addressComponents;
+                                // Robust hierarchy to accurately catch cities and suburban towns
+                                const validTypes = [
+                                    "locality",
+                                    "sublocality_level_1",
+                                    "sublocality",
+                                    "administrative_area_level_4",
+                                    "administrative_area_level_3"
+                                ];
+                                
+                                let bestMatch = null;
+                                for (let type of validTypes) {
+                                    bestMatch = addressComponents.find(comp => comp.types.includes(type));
+                                    if (bestMatch) break;
+                                }
+
+                                if (bestMatch) {
+                                    fetchedLocationName = `Near ${bestMatch.longText}`;
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Geocoding failed:", error);
+                        }
+
+                        // 1. Update the UI Labels
+                        setDisplayLocationName(fetchedLocationName);
+                        
+                        // 2. Save to session so the BACK BUTTON remembers the real city name
+                        sessionStorage.setItem('fixgo_lat', lat);
+                        sessionStorage.setItem('fixgo_lng', lng);
+                        sessionStorage.setItem('fixgo_locName', fetchedLocationName); 
+                        sessionStorage.setItem('fixgo_manualLoc', "");
+
+                        // 3. Clean up and anchor the URL if this was triggered by a button/navbar
+                        if (isExplicitCommand) {
+                            const params = new URLSearchParams(searchParams);
+                            params.delete('locate'); // Remove command
+                            params.set('lat', lat);  // Anchor coordinates
+                            params.set('lng', lng);
+                            // Feed the raw city name into the URL so Scenario 2 can handle it perfectly on refresh/back
+                            params.set('locName', fetchedLocationName.replace('Near ', ''));
+                            setSearchParams(params, { replace: true });
+                        }
+                    },
+                    () => {
+                        // Geolocation Denied Fallback
+                        const defaultLat = 6.9271;
+                        const defaultLng = 79.8612;
+                        const defaultName = "Colombo, Sri Lanka";
+
+                        // 1. Update the UI and clear the input box
+                        setUserLocation({ lat: defaultLat, lng: defaultLng });
+                        setDisplayLocationName(`Near ${defaultName}`);
+                        setManualLocationText(""); 
+
+                        // 2. Save to session so the BACK BUTTON remembers this fallback!
+                        sessionStorage.setItem('fixgo_lat', defaultLat);
+                        sessionStorage.setItem('fixgo_lng', defaultLng);
+                        sessionStorage.setItem('fixgo_locName', `Near ${defaultName}`);
+                        sessionStorage.setItem('fixgo_manualLoc', "");
+
+                        // 3. Clean up the URL if they clicked a button to get here
+                        if (isExplicitCommand) {
+                            const params = new URLSearchParams(searchParams);
+                            params.delete('locate');
+                            params.set('lat', defaultLat);
+                            params.set('lng', defaultLng);
+                            params.set('locName', defaultName);
+                            setSearchParams(params, { replace: true });
+                        }
+                    }
+                );
+            }
+        };
+
+        // ==========================================
+        // SCENARIO 1: Explicit Command (Navbar, Button, or Homepage 'Current Location')
+        // ==========================================
+        if (forceLocate === 'true' || urlLocName === 'Current Location') {
+            // Reset visual filters if this came from the Navbar command
+            if (forceLocate === 'true') {
+                setActiveVehicle("");
+                setActiveService("");
+                setSortBy("distance");
+                setSearchName("");
+                setNeedsTow(false);
+                if (typeof setQuickFilter === 'function') setQuickFilter("all");
+            }
+            runGPSAndGeocode(true); // Run the unified helper!
+            return;
         }
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setUserLocation({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                    setLocationAlert(null); 
-                },
-                (error) => {
-                    console.warn("Geolocation error:", error.message);
-                    setLocationAlert("Location access denied. Showing default results for Colombo.");
-                }
-            );
-        } else {
-            setLocationAlert("Geolocation is not supported by your browser.");
+        // ==========================================
+        // SCENARIO 2: URL has explicit data (Manual Search OR Back Button restoring state)
+        // ==========================================
+        if (urlLat && urlLng && urlLocName) {
+            setUserLocation({ lat: parseFloat(urlLat), lng: parseFloat(urlLng) });
+            
+            const rawName = urlLocName.replace('Near ', '');
+            setDisplayLocationName(`Near ${rawName}`);
+            
+            if (rawName.toLowerCase() === 'your location' || rawName.includes('Colombo')) {
+                setManualLocationText("");
+            } else {
+                setManualLocationText(rawName);
+            }
+
+            sessionStorage.setItem('fixgo_lat', urlLat);
+            sessionStorage.setItem('fixgo_lng', urlLng);
+            sessionStorage.setItem('fixgo_locName', `Near ${rawName}`);
+            sessionStorage.setItem('fixgo_manualLoc', rawName);
+            return;
         }
-    }, [urlLat, urlLng]);
+
+        // ==========================================
+        // SCENARIO 3: The Back Button (URL is clean, but session has memory)
+        // ==========================================
+        const savedLat = sessionStorage.getItem('fixgo_lat');
+        const savedLng = sessionStorage.getItem('fixgo_lng');
+        const savedLocName = sessionStorage.getItem('fixgo_locName');
+        
+        if (savedLat && savedLng) {
+            setUserLocation({ lat: parseFloat(savedLat), lng: parseFloat(savedLng) });
+            setDisplayLocationName(savedLocName || "Near your location");
+            setManualLocationText(sessionStorage.getItem('fixgo_manualLoc') || "");
+            return;
+        }
+
+        // ==========================================
+        // SCENARIO 4: Absolute Fallback (Direct visit with empty URL and empty Session)
+        // ==========================================
+        runGPSAndGeocode(false); // Run the unified helper!
+
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchShops = async () => {
@@ -213,37 +366,10 @@ function Shops() {
                         </div>
                         <button 
                             onClick={() => {
-                                if ("geolocation" in navigator) {
-                                    // 1. Give the user instant feedback (Make sure there are no typos here!)
-                                    setDisplayLocationName("Locating..."); 
-                                    
-                                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                                        const lat = pos.coords.latitude;
-                                        const lng = pos.coords.longitude;
-                                        
-                                        // 2. Update the map and search coordinates
-                                        setUserLocation({ lat, lng });
-                                        
-                                        // 3. NEW V4 API FETCH
-                                        try {
-                                            const response = await fetch(`https://geocode.googleapis.com/v4/geocode/location/${lat},${lng}?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`);
-                                            const data = await response.json();
-                                            
-                                            if (data.results && data.results.length > 0) {
-                                                // V4 uses camelCase 'addressComponents' and 'longText'
-                                                const cityObj = data.results[0].addressComponents.find(comp => comp.types.includes("locality"));
-                                                const cityName = cityObj ? cityObj.longText : "your location";
-                                                
-                                                setDisplayLocationName(`Near ${cityName}`);
-                                            } else {
-                                                setDisplayLocationName("Near your location");
-                                            }
-                                        } catch (error) {
-                                            console.error("Geocoding failed:", error);
-                                            setDisplayLocationName("Near your location");
-                                        }
-                                    });
-                                }
+                                // 1. Just issue the command to our Master Brain!
+                                const params = new URLSearchParams(searchParams);
+                                params.set('locate', 'true');
+                                setSearchParams(params);
                             }}
                             className="flex items-center gap-2 px-4 py-2 border border-[#16a34a] text-[#16a34a] rounded-lg text-xs font-bold hover:bg-[#16a34a]/5 transition-colors"
                         >
@@ -257,7 +383,7 @@ function Shops() {
                     <ShopFilterBar 
                         vehicleOptions={vehicleFilters}
                         serviceOptions={serviceFilters}
-                        initialLocationText={urlLocName || ""}
+                        initialLocationText={manualLocationText}
                         onLocationChange={handleLocationUpdate}
                         searchName={searchName}
                         setSearchName={setSearchName}

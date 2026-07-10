@@ -57,6 +57,14 @@ export const NavBar = () => {
                     
                     <NavLink 
                         to="/shops" 
+                        onClick={() => {
+                            // Automatically find and remove ANY saved filter or location data
+                            Object.keys(sessionStorage).forEach(key => {
+                                if (key.startsWith('fixgo_')) {
+                                    sessionStorage.removeItem(key);
+                                }
+                            });
+                        }}
                         className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
                     >
                         Find Shops
