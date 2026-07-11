@@ -14,7 +14,7 @@ import {
     faUser,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens — exact match to Admin ─────────────────────────────────────
+
 const T = {
     green:     "#16A34A",
     greenLight:"#F0FDF4",

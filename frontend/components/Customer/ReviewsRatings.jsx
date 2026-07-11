@@ -6,7 +6,6 @@ import {
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
     green:     "#16A34A",
     greenBg:   "#EDF9F0",

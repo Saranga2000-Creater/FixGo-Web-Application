@@ -11,7 +11,7 @@ import {
     faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens — exact match to Profile & Notification ────────────────────
+
 const T = {
     green:      "#16A34A",
     greenMuted: "rgba(22,163,74,0.08)",

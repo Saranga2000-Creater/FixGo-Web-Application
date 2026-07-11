@@ -48,9 +48,10 @@ const STATUS_META = {
     "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
     Completed:       { icon: faCircleCheck,  iconBg: "rgba(22,163,74,0.10)",  iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)",  badgeColor: "#16A34A",  label: "Completed"     },
     Cancelled:       { icon: faCircleXmark,  iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
+    Declined:        { icon: faCircleXmark,  iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
 };
 
-const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
+const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled", "Declined"];
 
 const TABS = [
     { key: "all",      label: "All"            },
@@ -87,6 +88,7 @@ const getMessage = (req) => {
         case "Pending Parts":  return `${shop} is waiting for spare parts to arrive.`;
         case "Completed":      return `Your repair at ${shop} is complete. Your vehicle is ready!`;
         case "Cancelled":      return `Your service request with ${shop} was cancelled.`;
+        case "Declined":       return `Unfortunately, ${shop} declined your service request. Feel free to try another shop.`;
         default:               return `Your request status was updated to ${req.status}.`;
     }
 };
@@ -298,6 +300,12 @@ const DetailRow = ({ icon, label, value, isPhone, isMono }) => (
     </div>
 );
 
+// ── Shared sync signal: tells useUnreadCount() to refetch immediately
+// instead of waiting for its own independent 30s poll to catch up.
+const notifyUnreadChanged = () => {
+    window.dispatchEvent(new Event("fixgo_unread_changed"));
+};
+
 // ── Exported hook ─────────────────────────────────────────────────────────────
 export function useUnreadCount() {
     const [count, setCount] = useState(0);
@@ -324,8 +332,14 @@ export function useUnreadCount() {
         };
 
         fetchAndCount();
-        const interval = setInterval(fetchAndCount, 30000);
-        return () => clearInterval(interval);
+        const interval = setInterval(fetchAndCount, 15000);
+        // Instant refresh whenever Notification.jsx reports a change
+        // (mark read, mark all read, or a fresh poll turning up new items).
+        window.addEventListener("fixgo_unread_changed", fetchAndCount);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("fixgo_unread_changed", fetchAndCount);
+        };
     }, []);
 
     return count;
@@ -384,6 +398,7 @@ export default function Notification() {
                 setNotifications(filtered);
                 setLocalConfirmed(prev => prev.filter(id => !filtered.find(n => String(n.service_request_id) === id && n.current_status === "Confirmed")));
                 setLocalDeclined(prev  => prev.filter(id => !filtered.find(n => String(n.service_request_id) === id && n.current_status === "Cancelled")));
+                notifyUnreadChanged();
             }
         } catch (err) {
             console.error("Notification fetch error:", err);
@@ -413,6 +428,8 @@ export default function Notification() {
             });
         } catch (err) {
             console.error("Mark read error:", err);
+        } finally {
+            notifyUnreadChanged();
         }
     };
 
@@ -427,6 +444,8 @@ export default function Notification() {
             });
         } catch (err) {
             console.error("Mark all read error:", err);
+        } finally {
+            notifyUnreadChanged();
         }
     };
 
@@ -520,7 +539,7 @@ export default function Notification() {
         if (activeTab === "unread")   return Number(n.isRead) === 0;
         if (activeTab === "repair")   return ["Accepted","Confirmed","Diagnosis","In Progress","Pending Parts"].includes(n.status);
         if (activeTab === "complete") return n.status === "Completed";
-        if (activeTab === "cancel")   return n.status === "Cancelled";
+        if (activeTab === "cancel")   return n.status === "Cancelled" || n.status === "Declined";
         return true;
     });
 
@@ -529,7 +548,7 @@ export default function Notification() {
         if (key === "unread")   return unreadCount;
         if (key === "repair")   return notifications.filter(n => ["Accepted","Confirmed","Diagnosis","In Progress","Pending Parts"].includes(n.status)).length;
         if (key === "complete") return notifications.filter(n => n.status === "Completed").length;
-        if (key === "cancel")   return notifications.filter(n => n.status === "Cancelled").length;
+        if (key === "cancel")   return notifications.filter(n => n.status === "Cancelled" || n.status === "Declined").length;
         return 0;
     };
 
@@ -681,6 +700,7 @@ export default function Notification() {
                                                 notif.status === "Completed" ? "Repair completed"  :
                                                 notif.status === "Accepted"  ? "Request accepted"  :
                                                 notif.status === "Confirmed" ? "Booking confirmed" :
+                                                notif.status === "Declined"  ? "Request declined"  :
                                                 "Repair status updated"
                                             )}
                                         </p>
@@ -844,6 +864,37 @@ export default function Notification() {
                                                 )}
                                             </div>
                                         </>
+                                    )}
+
+                                    {/* ── DECLINED: Simple heads-up, encourage trying another shop ── */}
+                                    {notif.status === "Declined" && (
+                                        <div style={{
+                                            marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between",
+                                            background: T.redMuted, border: `1px solid ${T.red}33`,
+                                            borderRadius: 12, padding: "12px 16px", gap: 12,
+                                        }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                <FontAwesomeIcon icon={faXmark} style={{ color: T.red }} />
+                                                <div>
+                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>This shop couldn't take your request</p>
+                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Browse other nearby shops to get your vehicle sorted.</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); navigate("/shops"); }}
+                                                style={{
+                                                    display: "flex", alignItems: "center", gap: 6,
+                                                    background: T.white, color: T.slate700,
+                                                    border: `1.5px solid ${T.slate200}`,
+                                                    borderRadius: 10, padding: "8px 14px",
+                                                    fontSize: 13, fontWeight: 600,
+                                                    cursor: "pointer", fontFamily: T.font, flexShrink: 0,
+                                                }}
+                                            >
+                                                Find Another Shop
+                                                <FontAwesomeIcon icon={faExternalLinkAlt} style={{ fontSize: 10 }} />
+                                            </button>
+                                        </div>
                                     )}
 
                                     {/* ── COMPLETED: Review prompt ── */}
