@@ -47,34 +47,41 @@ function getInitials(name = "") {
 
 function generateMapsUrl(lat, lng) {
   if (!lat || !lng) return "";
+  // Leaves origin blank so the driver's phone GPS automatically fills it in!
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
 
 function generateWhatsAppLink(repair) {
-  // 1. Clean the driver's phone number (remove +, spaces, hyphens)
-  const cleanPhone = repair.dispatched_driver_phone?.replace(/[^0-9]/g, "") || "";
+  // 1. Clean the driver's phone number
+  let cleanPhone = repair.dispatched_driver_phone?.replace(/[^0-9]/g, "") || "";
 
   if (!cleanPhone) {
     alert("No driver phone number saved for this dispatch.");
     return "#";
   }
 
-  // 2. Generate the Maps URL
+  // 2. Format for WhatsApp API (Assuming Sri Lankan numbers)
+  // If it starts with 0 (e.g., 0712345678), replace the 0 with 94
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "94" + cleanPhone.substring(1);
+  }
+
+  // 3. Generate the Maps URL
   const mapsUrl = generateMapsUrl(repair.customer_lat, repair.customer_lng);
 
-  // 3. Build the Ticket string
-  let message = `🚨 *TOW DISPATCH*\n\n`;
+  // 4. Build the Ticket string (Removed complex emojis to prevent  corruption)
+  let message = `*TOW DISPATCH*\n\n`;
   message += `*Customer:* ${repair.customer_name}\n`;
   message += `*Phone:* ${repair.customer_phone}\n`;
   message += `*Vehicle:* ${repair.vehicle_brand} (${repair.vehicle_color})\n\n`;
 
   if (repair.pickup_landmark) {
-    message += `*Landmark:* ${repair.pickup_landmark}\n`;
+    message += `*Landmark:* ${repair.pickup_landmark}\n\n`;
   }
 
-  message += `📍 *Navigate to Customer:*\n${mapsUrl}`;
+  message += `*Navigate to Customer:*\n${mapsUrl}`;
 
-  // 4. URL-Encode the message and build the final wa.me link
+  // 5. Build the final wa.me link
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
