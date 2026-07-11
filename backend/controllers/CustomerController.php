@@ -74,7 +74,6 @@ class CustomerController {
             return;
         }
 
-      
         if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
             http_response_code(400);
             echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
@@ -141,7 +140,7 @@ class CustomerController {
             $verificationToken = bin2hex(random_bytes(32));
 
             $customerModel = new Customer($this->db);
-            
+
             $userData = [
                 'email' => $sanitizedEmail,
                 'password' => $passwordHash,
@@ -150,7 +149,7 @@ class CustomerController {
 
             $customerData = [
                 'name' => $name,
-                'contactNumber' => $sanitizedPhone,
+                'contactNumber' => $phone,
                 'address' => $address,
                 'profilePhoto' => $dbImagePath
             ];

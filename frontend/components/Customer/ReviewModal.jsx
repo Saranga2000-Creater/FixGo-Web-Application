@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faXmark, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
@@ -19,6 +19,17 @@ export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId,
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+
+    // Reset all modal state whenever it opens (or when the target request changes)
+    useEffect(() => {
+        if (isOpen) {
+            setRating(0);
+            setHoverRating(0);
+            setComment("");
+            setError("");
+            setSubmitting(false);
+        }
+    }, [isOpen, serviceRequestId]);
 
     if (!isOpen) return null;
 

@@ -383,7 +383,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       <div style={{ marginBottom: 28 }}>
         <h1
           style={{
-            fontSize: 28,
+            fontSize: 22,
             fontWeight: 700,
             color: COLORS.text,
             margin: 0,
