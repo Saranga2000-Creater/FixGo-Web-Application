@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faCalendarDays,
     faChevronDown,
-    faCommentDots,
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -75,14 +74,6 @@ function ReviewsRatings() {
     }, []);
 
     const totalReviews = reviews.length;
-    const avgRating = totalReviews
-        ? (reviews.reduce((sum, r) => sum + Number(r.rating), 0) / totalReviews).toFixed(1)
-        : "0.0";
-
-    const breakdown = [5, 4, 3, 2, 1].map((stars) => {
-        const count = reviews.filter((r) => Number(r.rating) === stars).length;
-        return { stars, count, pct: totalReviews ? Math.round((count / totalReviews) * 100) : 0 };
-    });
 
     if (loading) {
         return (
@@ -111,51 +102,6 @@ function ReviewsRatings() {
                     <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
                         See your reviews and ratings for past services.
                     </p>
-                </div>
-            </div>
-
-            {/* ── Summary card ── */}
-            <div style={{ ...T.card, padding: 24 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 32 }}>
-
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 140 }}>
-                        <p style={{ fontSize: 56, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>{avgRating}</p>
-                        <div style={{ marginTop: 8 }}><StarDisplay rating={Number(avgRating)} size="lg" /></div>
-                        <p style={{ fontSize: 13, color: T.slate500, marginTop: 6, marginBottom: 0 }}>Based on {totalReviews} reviews</p>
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
-                        {breakdown.map((row) => (
-                            <div key={row.stars} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <span style={{ width: 52, flexShrink: 0, fontSize: 13, color: T.slate500 }}>
-                                    {row.stars} {row.stars === 1 ? "Star" : "Stars"}
-                                </span>
-                                <div style={{
-                                    flex: 1, height: 8, borderRadius: 99,
-                                    background: T.slate100, overflow: "hidden",
-                                }}>
-                                    <div style={{
-                                        height: "100%", borderRadius: 99,
-                                        background: T.green, width: `${row.pct}%`,
-                                    }} />
-                                </div>
-                                <span style={{ width: 16, textAlign: "right", fontSize: 13, fontWeight: 600, color: T.slate900 }}>{row.count}</span>
-                                <span style={{ width: 44, textAlign: "right", fontSize: 13, color: T.slate400 }}>({row.pct}%)</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 120 }}>
-                        <div style={{
-                            width: 60, height: 60, borderRadius: "50%",
-                            background: T.violetBg,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                            <FontAwesomeIcon icon={faCommentDots} style={{ fontSize: 22, color: T.violet }} />
-                        </div>
-                        <p style={{ fontSize: 36, fontWeight: 700, color: T.slate900, margin: 0, lineHeight: 1 }}>{totalReviews}</p>
-                        <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>Total Reviews</p>
-                    </div>
                 </div>
             </div>
 

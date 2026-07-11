@@ -352,6 +352,25 @@ export default function Notification() {
         if (!id) return;
         setUserId(id);
     }, []);
+    useEffect(() => {
+    if (!userId) return;
+    const fetchReviewed = async () => {
+        try {
+            const token = localStorage.getItem("jwt_token");
+            const res = await fetch("http://localhost:8000/api/getCustomerReviews.php", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (data.success) {
+                const ids = (data.data || []).map(r => String(r.service_request_id));
+                setReviewedIds(ids);
+            }
+        } catch (err) {
+            console.error("Fetch reviewed ids error:", err);
+        }
+    };
+    fetchReviewed();
+}, [userId]);
 
     const fetchNotifs = useCallback(async () => {
         const token = localStorage.getItem("jwt_token");
