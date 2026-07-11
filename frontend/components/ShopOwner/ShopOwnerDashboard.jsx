@@ -283,7 +283,7 @@ useEffect(() => {
   reviewCount={reviewCount}
 />
 
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 ml-[240px]">
         {renderPage(
     activeNav,
     shopData,
@@ -299,3 +299,4 @@ useEffect(() => {
 }
 
 export default ShopOwnerDashboard;
+
