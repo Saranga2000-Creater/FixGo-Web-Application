@@ -29,20 +29,19 @@ class Review {
     }
 
     public function getByCustomer($customerId) {
-        $stmt = $this->db->prepare("
-            SELECT r.id, r.rating, r.comment, r.created_at,
-                   s.name AS shop_name,
-                   sr.vehicle_brand, sr.issue_category
-            FROM review r
-            JOIN shop s ON s.id = r.shop_id
-            LEFT JOIN servicerequest sr ON sr.id = r.service_request_id
-            WHERE r.customer_id = ?
-            ORDER BY r.created_at DESC
-        ");
-        $stmt->execute([$customerId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
+    $stmt = $this->db->prepare("
+        SELECT r.id, r.service_request_id, r.rating, r.comment, r.created_at,
+               s.name AS shop_name,
+               sr.vehicle_brand, sr.issue_category
+        FROM review r
+        JOIN shop s ON s.id = r.shop_id
+        LEFT JOIN servicerequest sr ON sr.id = r.service_request_id
+        WHERE r.customer_id = ?
+        ORDER BY r.created_at DESC
+    ");
+    $stmt->execute([$customerId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
     public function getByShop($shopId) {
         $stmt = $this->db->prepare("
             SELECT r.id, r.rating, r.comment, r.created_at,

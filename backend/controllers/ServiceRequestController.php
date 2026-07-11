@@ -43,6 +43,44 @@ class ServiceRequestController {
         }
     }
 
+    private function notifyShop($shopId, $requestId, $type, $title)
+{
+    try {
+        error_log("notifyShop called");
+
+        $stmt = $this->db->prepare("
+            INSERT INTO notification
+            (
+                user_id,
+                service_request_id,
+                type,
+                title,
+                message,
+                isRead
+            )
+            VALUES
+            (
+                :user_id,
+                :request_id,
+                :type,
+                :title,
+                NULL,
+                0
+            )
+        ");
+
+        $stmt->execute([
+            "user_id"=>$shopId,
+            "request_id"=>$requestId,
+            "type"=>$type,
+            "title"=>$title
+        ]);
+
+    } catch(Throwable $e){
+        error_log($e->getMessage());
+    }
+}
+
     public function handleCreateRequest($requestData, $payload)
 {
     $requestData['customer_id'] = $payload['user_id'];
@@ -99,10 +137,17 @@ class ServiceRequestController {
         $insertId = $this->serviceRequestModel->create($requestData);
 
         if ($insertId) {
+            $this->notifyShop(
+    $requestData['shop_id'],
+    $insertId,
+    "NewRequest",
+    "New Service Request"
+);
             http_response_code(201);
             return json_encode([
                 "message"    => "Service request created successfully.",
                 "request_id" => $insertId
+                
             ]);
         } else {
             http_response_code(503);
@@ -158,7 +203,13 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
-                $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
+                $this->notifyShop(
+    $currentRequest['shop_id'],
+    $request_id,
+    " CustomerConfirmed",
+    "Customer confirmed booking"
+);
+             
 
                 http_response_code(200);
                 return json_encode(["message" => "Handshake Confirmed! Shop details unlocked."]);
@@ -177,6 +228,14 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->cancelRequest($request_id, 'Customer', $reason);
+                   $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
+
+                $this->notifyShop(
+    $currentRequest['shop_id'],
+    $request_id,
+    "CustomerCancelled",
+    "Customer cancelled booking"
+);
                 http_response_code(200);
                 return json_encode(["message" => "Request cancelled." . $penaltyMsg]);
             }
@@ -223,6 +282,7 @@ class ServiceRequestController {
 elseif ($new_status === 'Cancelled') {
     $reason = $requestData['reason'] ?? "Shop cancelled the request.";
     $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
+
 
     $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
 
@@ -409,18 +469,7 @@ public function updateTowTruckDetails($payload)
         ]);
     }
 
-    public function handleGetShopNotifications($payload)
-{
-    $shop_id = $payload['user_id'];
-    $notifications =
-        $this->serviceRequestModel
-             ->getShopNotifications($shop_id);
-     http_response_code(200);
-    return json_encode([
-        "success"=>true,
-        "data"=>$notifications
-    ]);
-}
+
 
 }
 ?>

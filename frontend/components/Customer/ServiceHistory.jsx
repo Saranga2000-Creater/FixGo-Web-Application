@@ -7,7 +7,7 @@ import {
     faHandshake, faFlag, faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+
 const T = {
     green:     "#16A34A",
     greenBg:   "#EDF9F0",
@@ -41,7 +41,7 @@ const T = {
     },
 };
 
-// ── Status config for modal ───────────────────────────────────────────────────
+
 const STATUS_CONFIG = {
     Pending:       { label: "Pending",     color: T.amber,   bg: T.amberBg,               icon: faClock       },
     Accepted:      { label: "Accepted",    color: T.blue,    bg: T.blueBg,                icon: faCircleCheck },
@@ -77,13 +77,12 @@ const formatDate = (d) =>
 const formatTime = (d) =>
     d ? new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "";
 
-// ── Format reference ID: REQ-2026-00021 ──────────────────────────────────────
 const formatRefId = (id, createdAt) => {
     const year = createdAt ? new Date(createdAt).getFullYear() : new Date().getFullYear();
     return `REQ-${year}-${String(id).padStart(5, "0")}`;
 };
 
-// ── Detail row inside modal ───────────────────────────────────────────────────
+
 function DetailRow({ label, value }) {
     return (
         <div style={{

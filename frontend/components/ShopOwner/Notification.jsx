@@ -5,40 +5,106 @@ import {
     faWrench,
     faComment,
     faCircleCheck,
+    faStar,
 } from "@fortawesome/free-solid-svg-icons";
+
+const API_BASE = "http://localhost:8000/api";
+
+// NOTE: adjust these keys if your actual `servicerequest.status` / `notification.type`
+// values differ (e.g. if you use "Confirmed" instead of "Accepted", etc).
+
+
+const NOTIFICATION_META = {
+
+    NewRequest: {
+        icon: faClipboard,
+        iconBg: "bg-blue-500",
+        badge: "bg-blue-100 text-blue-700",
+        cardBg: "bg-blue-50 border-blue-200",
+        actionText: "Review this request and decide whether to accept or decline it.",
+        buttonText: "View Service Requests",
+        targetNav: "requests",
+    },
+
+    CustomerConfirmed: {
+        icon: faCircleCheck,
+        iconBg: "bg-green-500",
+        badge: "bg-green-100 text-green-700",
+        cardBg: "bg-green-50 border-green-200",
+        actionText: "The customer confirmed the booking.",
+        buttonText: "Go to Active Repairs",
+        targetNav: "repairs",
+    },
+
+    CustomerCancelled: {
+        icon: faComment,
+        iconBg: "bg-red-500",
+        badge: "bg-red-100 text-red-700",
+        cardBg: "bg-red-50 border-red-200",
+        actionText: "The customer cancelled the booking.",
+        buttonText: "",
+        targetNav: null,
+    },
+
+    CustomerDeclined: {
+        icon: faComment,
+        iconBg: "bg-red-500",
+        badge: "bg-red-100 text-red-700",
+        cardBg: "bg-red-50 border-red-200",
+        actionText: "The customer declined the request.",
+        buttonText: "View Service Requests",
+        targetNav: "requests",
+    },
+
+    NewReview: {
+        icon: faStar,
+        iconBg: "bg-yellow-500",
+        badge: "bg-yellow-100 text-yellow-700",
+        cardBg: "bg-yellow-50 border-yellow-200",
+        actionText: "You received a new review.",
+        buttonText: "View Reviews",
+        targetNav: "reviews",
+    }
+};
+
+const DEFAULT_META = {
+    icon: faClipboard,
+    iconBg: "bg-gray-400",
+    badge: "bg-gray-100 text-gray-700",
+    cardBg: "bg-gray-50 border-gray-200",
+    actionText: "",
+    buttonText: "",
+    targetNav: null,
+};
+
+function getNotificationMeta(type) {
+    return NOTIFICATION_META[type] || DEFAULT_META;
+}
 
 function Notification({ setActiveNav }) {
 
     const [notifications, setNotifications] = useState([]);
     const [activeFilter, setActiveFilter] = useState("All");
 
-    const unreadCount = notifications.filter(
-        (notification) => notification.isUnread
-    ).length;
+    const unreadCount = notifications.filter((n) => n.isUnread).length;
 
-    const counts = {
-        all: notifications.length,
-        unread: notifications.filter((n) => n.isUnread).length,
-        pending: notifications.filter((n) => n.status === "Pending").length,
-        confirmed: notifications.filter((n) => n.status === "Confirmed").length,
-        cancelled: notifications.filter((n) => n.status === "Cancelled").length,
-    };
+    const filters = [
+        {
+            label: "All",
+            value: "All",
+            count: notifications.length,
+        },
+        {
+            label: "Unread",
+            value: "Unread",
+            count: unreadCount,
+        },
+    ];
 
     const filteredNotifications = notifications.filter((notification) => {
-
-        if (activeFilter === "All") return true;
-
-        if (activeFilter === "Unread")
+        if (activeFilter === "Unread") {
             return notification.isUnread;
-
-        if (activeFilter === "Service Requests")
-            return notification.status === "Pending";
-
-        if (activeFilter === "Confirmed")
-            return notification.status === "Confirmed";
-
-        if (activeFilter === "Cancelled")
-            return notification.status === "Cancelled";
+        }
 
         return true;
     });
@@ -60,94 +126,50 @@ function Notification({ setActiveNav }) {
 
         const token = localStorage.getItem("jwt_token");
 
-if (!token) return;
+        if (!token) return;
 
-fetch("http://localhost:8000/api/getShopNotifications.php", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-})
-.then((res) => {
-    if (res.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return null;
-    }
-    return res.json();
-})
-.then((data) => {
-    if (!data || !data.success) return;
-
-    setNotifications((prev) => {
-
-        const formatted = data.data.map((item) => {
-
-            let title = "";
-            let icon = faClipboard;
-            let iconBg = "bg-blue-500";
-
-            let actionText = "";
-            let buttonText = "";
-            let actionColor = "";
-
-            switch (item.status) {
-                case "Pending":
-                    title = `${item.customer_name} sent a new service request`;
-                    icon = faClipboard;
-                    iconBg = "bg-blue-500";
-                    actionText =
-                        "Review this request and decide whether to accept or decline it.";
-                    buttonText = "View Service Requests";
-                    actionColor = "bg-blue-50 border-blue-200";
-                    break;
-
-                case "Confirmed":
-                    title = `${item.customer_name} confirmed the booking`;
-                    icon = faWrench;
-                    iconBg = "bg-green-500";
-                    actionText =
-                        "The customer confirmed the booking. You can now begin the repair.";
-                    buttonText = "Go to Active Repairs";
-                    actionColor = "bg-green-50 border-green-200";
-                    break;
-
-                case "Cancelled":
-                    title = `${item.customer_name} cancelled the request`;
-                    icon = faComment;
-                    iconBg = "bg-red-500";
-                    actionText = "No further action is required.";
-                    buttonText = "";
-                    actionColor = "bg-red-50 border-red-200";
-                    break;
+        fetch(`${API_BASE}/getNotifications.php`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+        .then((res) => {
+            if (res.status === 401) {
+                alert("Your session has expired. Please log in again.");
+                return null;
             }
+            return res.json();
+        })
+        .then((data) => {
+            if (!data || !data.success) return;
 
-            const old = prev.find((n) => n.id === item.id);
+            const formatted = data.data.map((item) => {
 
-            return {
-                id: item.id,
-                title,
-                subtitle: item.description,
-                status: item.status,
-                timestamp:
-                    item.status === "Pending"
-                        ? item.created_at
-                        : item.status === "Confirmed"
-                        ? item.confirmed_at
-                        : item.cancelled_at,
-                icon,
-                iconBg,
-                actionText,
-                buttonText,
-                actionColor,
-                requestNumber: item.request_number || `REQ-${item.id}`,
-                vehicle: item.vehicle_brand || "",
-                isUnread: old ? old.isUnread : true,
-            };
-        });
+                const meta = getNotificationMeta(item.type);
 
-        return formatted;
-    });
-})
-.catch(console.error);
+                return {
+                    id: item.id,
+                    serviceRequestId: item.service_request_id,
+                    title: item.title,
+                    subtitle: item.message,
+                    status: item.type,
+                    timestamp: item.created_at,
+                    icon: meta.icon,
+                    iconBg: meta.iconBg,
+                    badgeClass: meta.badge,
+                    actionColor: meta.cardBg,
+                    actionText: meta.actionText,
+                    buttonText: meta.buttonText,
+                    targetNav: meta.targetNav,
+                    requestNumber: `REQ-${item.service_request_id || item.id}`,
+                    vehicle: item.vehicle_brand || "",
+                    isUnread: !item.isRead,
+                };
+            });
+
+            setNotifications(formatted);
+        })
+        .catch(console.error);
 
     };
 
@@ -163,6 +185,13 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
     const markAsRead = (id) => {
 
+        const token = localStorage.getItem("jwt_token");
+        if (!token) return;
+
+        const target = notifications.find((n) => n.id === id);
+        if (!target || !target.isUnread) return;
+
+        // Optimistic update
         setNotifications((prev) =>
             prev.map((notification) =>
                 notification.id === id
@@ -171,16 +200,52 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
             )
         );
 
+        fetch(`${API_BASE}/markNotificationRead.php`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ notification_id: id }),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (!data || !data.success) {
+                console.error("Failed to mark notification as read:", data);
+            }
+        })
+        .catch(console.error);
+
     };
 
     const markAllAsRead = () => {
 
+        const token = localStorage.getItem("jwt_token");
+        if (!token) return;
+
+        // Optimistic update
         setNotifications((prev) =>
             prev.map((notification) => ({
                 ...notification,
                 isUnread: false,
             }))
         );
+
+        fetch(`${API_BASE}/markNotificationRead.php`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ mark_all: true }),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (!data || !data.success) {
+                console.error("Failed to mark all notifications as read:", data);
+            }
+        })
+        .catch(console.error);
 
     };
 
@@ -191,7 +256,7 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
         <div className="mb-8">
 
-            <h1 className="text-4xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900">
                 Notifications
             </h1>
 
@@ -207,33 +272,7 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
             <div className="flex flex-wrap gap-3">
 
-                {[
-                    {
-                        label: "All",
-                        value: "All",
-                        count: counts.all,
-                    },
-                    {
-                        label: "Unread",
-                        value: "Unread",
-                        count: counts.unread,
-                    },
-                    {
-                        label: "Service Requests",
-                        value: "Service Requests",
-                        count: counts.pending,
-                    },
-                    {
-                        label: "Confirmed",
-                        value: "Confirmed",
-                        count: counts.confirmed,
-                    },
-                    {
-                        label: "Cancelled",
-                        value: "Cancelled",
-                        count: counts.cancelled,
-                    },
-                ].map((filter) => (
+                {filters.map((filter) => (
 
                     <button
                         key={filter.value}
@@ -285,7 +324,7 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
             {filteredNotifications.length === 0 ? (
 
-                <div className="rounded-xl border bg-white py-20 text-center">
+                <div className="rounded-xl border border-gray-200 bg-white py-20 text-center">
 
                     <p className="text-sm text-gray-500">
 
@@ -310,10 +349,10 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
                         ${
                             notification.isUnread
                                 ? "bg-green-50 border-green-200"
-                                : "bg-white"
+                                : "bg-white border-gray-200"
                         }
 
-                        hover:shadow-md`}
+                        hover:shadow-md hover:border-gray-300`}
 
                     >
 
@@ -353,15 +392,7 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
                                             <span
 
-                                                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold
-
-                                                ${
-                                                    notification.status === "Pending"
-                                                        ? "bg-blue-100 text-blue-700"
-                                                        : notification.status === "Confirmed"
-                                                        ? "bg-green-100 text-green-700"
-                                                        : "bg-red-100 text-red-700"
-                                                }`}
+                                                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${notification.badgeClass}`}
 
                                             >
 
@@ -419,77 +450,61 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
                                 {/* Action Box */}
 
-                                <div
+                                {notification.actionText && (
 
-                                    className={`mt-4 rounded-xl border p-4 ${notification.actionColor}`}
+                                    <div
 
-                                >
+                                        className={`mt-4 rounded-xl border p-4 ${notification.actionColor}`}
 
-                                    <div className="flex justify-between items-center gap-4">
+                                    >
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex justify-between items-center gap-4">
 
-                                            <FontAwesomeIcon
+                                            <div className="flex items-center gap-2">
 
-                                                icon={faCircleCheck}
+                                                <FontAwesomeIcon
 
-                                                className="text-green-600 text-sm"
+                                                    icon={faCircleCheck}
 
-                                            />
+                                                    className="text-green-600 text-sm"
 
-                                            <span className="text-[13px] text-gray-700">
+                                                />
 
-                                                {notification.actionText}
+                                                <span className="text-[13px] text-gray-700">
 
-                                            </span>
+                                                    {notification.actionText}
+
+                                                </span>
+
+                                            </div>
+
+                                            {notification.buttonText && notification.targetNav && (
+
+                                                <button
+
+                                                    onClick={(e) => {
+
+                                                        e.stopPropagation();
+
+                                                        setActiveNav(notification.targetNav);
+
+                                                    }}
+
+                                                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition"
+
+                                                >
+
+                                                    {notification.buttonText}
+
+                                                </button>
+
+                                            )}
 
                                         </div>
 
-                                        {notification.buttonText && (
-
-                                            <button
-
-                                                onClick={(e) => {
-
-                                                    e.stopPropagation();
-
-                                                    if (
-                                                        notification.status ===
-                                                        "Pending"
-                                                    ) {
-
-                                                        setActiveNav(
-                                                            "requests"
-                                                        );
-
-                                                    }
-
-                                                    if (
-                                                        notification.status ===
-                                                        "Confirmed"
-                                                    ) {
-
-                                                        setActiveNav(
-                                                            "repairs"
-                                                        );
-
-                                                    }
-
-                                                }}
-
-                                                className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition"
-
-                                            >
-
-                                                {notification.buttonText}
-
-                                            </button>
-
-                                        )}
-
                                     </div>
 
-                                </div>
+                                )}
 
                             </div>
 
@@ -501,9 +516,11 @@ fetch("http://localhost:8000/api/getShopNotifications.php", {
 
             )}
 
-        </div>  
+        </div>
             </div>
 );
 }
 
-export default Notification;                            
+export default Notification;
+
+

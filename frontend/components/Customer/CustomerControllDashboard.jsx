@@ -11,15 +11,15 @@ import CustomerSidebar from "./CustomerSidebar";
 
 
 function CustomerControllDashboard() {
-    // 1. Initialize hooks first (React requirement)
+    //  Initialize hooks first (React requirement)
     const location = useLocation();
     const navigate = useNavigate();
 
-    // 2. Combine both state variables
+    //  Combine both state variables
     const [currentPage, setCurrentPage] = useState(location.state?.targetPage || "dashboard");
     const [targetRequestId, setTargetRequestId] = useState(null);
 
-    // 3. Keep your existing variables
+    //  Keep your existing variables
     const unreadCount = useUnreadCount();
     
 
