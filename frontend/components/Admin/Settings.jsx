@@ -12,6 +12,7 @@ import {
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 
+// Shared color/font tokens, plus a base card style reused for each settings section
 const T = {
     green:    "#16A34A",
     greenBg:  "#EDF9F0",
@@ -35,6 +36,7 @@ const T = {
     },
 };
 
+// Page title + subtitle block
 function PageHeading({ title, sub }) {
     return (
         <div>
@@ -44,7 +46,10 @@ function PageHeading({ title, sub }) {
     );
 }
 
+// Main Settings page: renders a list of setting groups
+
 function Settings() {
+
     const sections = [
         {
             icon: faUser,
@@ -86,9 +91,12 @@ function Settings() {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <PageHeading title="Settings" sub="Manage system configuration and admin preferences." />
+
+            {/* One block per section, built from the `sections` array above */}
             {sections.map((sec) => (
                 <div key={sec.title} style={{ ...T.card, borderRadius: 14, overflow: "hidden", display: "flex" }}>
-                    {/* Left label */}
+
+                    {/* Left side: section icon, title, and description */}
                     <div style={{ width: 260, flexShrink: 0, borderRight: `1px solid ${T.slate100}`, display: "flex", alignItems: "center", gap: 16, padding: "24px 20px" }}>
                         <div style={{ width: 52, height: 52, borderRadius: 14, background: sec.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <FontAwesomeIcon icon={sec.icon} style={{ fontSize: 22, color: sec.iconColor }} />
@@ -98,7 +106,8 @@ function Settings() {
                             <div style={{ fontSize: 12, color: T.slate500, marginTop: 3 }}>{sec.subtitle}</div>
                         </div>
                     </div>
-                    {/* Rows */}
+
+                    {/* Right side: clickable rows for this section (not wired to routes yet) */}
                     <div style={{ flex: 1 }}>
                         {sec.rows.map((row) => (
                             <button key={row.label} style={{
@@ -106,6 +115,7 @@ function Settings() {
                                 padding: "16px 20px", background: "transparent", border: "none",
                                 borderBottom: `1px solid ${T.slate100}`, cursor: "pointer", fontFamily: T.font,
                             }}
+                                // Simple hover highlight since inline styles don't support :hover
                                 onMouseEnter={e => e.currentTarget.style.background = T.slate50}
                                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                             >
