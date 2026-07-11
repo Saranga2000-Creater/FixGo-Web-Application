@@ -94,8 +94,8 @@ class Shop {
                     ST_Y(s.location) as latitude, 
                     ST_X(s.location) as longitude,
                     ST_Distance_Sphere(s.location, POINT(:lng, :lat)) AS distance,
-                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
-                    COUNT(r.id) as review_count,
+                    COALESCE(ROUND(AVG(DISTINCT r.rating), 1), 0) as avg_rating,
+                    COUNT(DISTINCT r.id) as review_count,
                     (SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed,
                     (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
                      FROM serviceRequest sr 
