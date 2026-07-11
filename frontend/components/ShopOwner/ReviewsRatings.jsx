@@ -66,13 +66,17 @@ function timeAgo(dateString) {
 
 function Avatar({ initials, color, size = 36 }) {
   return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: color + "22", color,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 600, fontSize: size * 0.33, flexShrink: 0,
-      border: `1.5px solid ${color}44`
-    }}>
+    <div
+      className="flex items-center justify-center rounded-full font-semibold shrink-0 border"
+      style={{
+        width: size,
+        height: size,
+        background: color + "22",
+        color,
+        fontSize: size * 0.33,
+        borderColor: color + "44",
+      }}
+    >
       {initials}
     </div>
   );
@@ -80,9 +84,15 @@ function Avatar({ initials, color, size = 36 }) {
 
 function Stars({ count, max = 5, size = 14 }) {
   return (
-    <span style={{ display: "inline-flex", gap: 2 }}>
+    <span className="inline-flex gap-0.5">
       {Array.from({ length: max }).map((_, i) => (
-        <span key={i} style={{ color: i < count ? "#F59E0B" : "#D1D5DB", fontSize: size }}>★</span>
+        <span
+          key={i}
+          className={i < count ? "text-amber-500" : "text-gray-300"}
+          style={{ fontSize: size }}
+        >
+          ★
+        </span>
       ))}
     </span>
   );
@@ -143,54 +153,47 @@ function ReviewsRatings() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 m-0">
           Reviews & Ratings
         </h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>
+        <p className="text-gray-500 mt-1 text-sm">
           See what your customers are saying about your service.
         </p>
       </div>
 
       {/* Summary Card */}
-      <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        padding: 24, marginBottom: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        display: "flex", flexWrap: "wrap", alignItems: "center", gap: 32
-      }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 140 }}>
-          <p style={{ fontSize: 56, fontWeight: 700, color: "#111827", margin: 0, lineHeight: 1 }}>
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)] flex flex-wrap items-center gap-8">
+        <div className="flex flex-col items-center min-w-[140px]">
+          <p className="text-[56px] font-bold text-gray-900 m-0 leading-none">
             {totalReviews > 0 ? Number(averageRating).toFixed(1) : "0.0"}
           </p>
-          <div style={{ marginTop: 8 }}>
+          <div className="mt-2">
             <Stars count={Math.round(Number(averageRating))} size={22} />
           </div>
-          <p style={{ fontSize: 13, color: "#6B7280", marginTop: 6, marginBottom: 0 }}>
+          <p className="text-[13px] text-gray-500 mt-1.5 mb-0">
             Based on {totalReviews} reviews
           </p>
         </div>
 
-        <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="flex-1 min-w-[200px] flex flex-col gap-2.5">
           {starCounts.map((row) => {
             const pct = totalReviews > 0 ? Math.round((row.count / totalReviews) * 100) : 0;
             return (
-              <div key={row.star} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ width: 52, flexShrink: 0, fontSize: 13, color: "#6B7280" }}>
+              <div key={row.star} className="flex items-center gap-3">
+                <span className="w-[52px] shrink-0 text-[13px] text-gray-500">
                   {row.star} {row.star === 1 ? "Star" : "Stars"}
                 </span>
-                <div style={{
-                  flex: 1, height: 8, borderRadius: 99,
-                  background: "#F3F4F6", overflow: "hidden",
-                }}>
-                  <div style={{
-                    height: "100%", borderRadius: 99,
-                    background: "#16A34A", width: `${pct}%`,
-                  }} />
+                <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-green-600"
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
-                <span style={{ width: 16, textAlign: "right", fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                <span className="w-4 text-right text-[13px] font-semibold text-gray-900">
                   {row.count}
                 </span>
-                <span style={{ width: 48, textAlign: "right", fontSize: 13, color: "#9CA3AF" }}>
+                <span className="w-12 text-right text-[13px] text-gray-400">
                   ({pct}%)
                 </span>
               </div>
@@ -198,43 +201,30 @@ function ReviewsRatings() {
           })}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 120 }}>
-          <div style={{
-            width: 60, height: 60, borderRadius: "50%",
-            background: "#F5EDFF",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{ fontSize: 22 }}>💬</span>
+        <div className="flex flex-col items-center gap-2 min-w-[120px]">
+          <div className="w-[60px] h-[60px] rounded-full bg-[#F5EDFF] flex items-center justify-center">
+            <span className="text-xl">💬</span>
           </div>
-          <p style={{ fontSize: 36, fontWeight: 700, color: "#111827", margin: 0, lineHeight: 1 }}>
+          <p className="text-4xl font-bold text-gray-900 m-0 leading-none">
             {totalReviews}
           </p>
-          <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>Total Reviews</p>
+          <p className="text-[13px] text-gray-500 m-0">Total Reviews</p>
         </div>
       </div>
 
       {/* Reviews List */}
-      <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-      }}>
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
         {/* Tabs */}
-        <div style={{
-          padding: "14px 20px", borderBottom: "1px solid #F3F4F6",
-          display: "flex", gap: 6, flexWrap: "wrap"
-        }}>
+        <div className="px-5 py-3.5 border-b border-gray-100 flex gap-1.5 flex-wrap">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              style={{
-                padding: "6px 14px", borderRadius: 20, border: "none",
-                background: activeTab === tab.value ? "#FFF7ED" : "transparent",
-                color: activeTab === tab.value ? "#16A34A" : "#6B7280",
-                fontWeight: activeTab === tab.value ? 700 : 400,
-                fontSize: 13, cursor: "pointer",
-                borderBottom: activeTab === tab.value ? "2px solid #16A34A" : "none"
-              }}
+              className={`py-1.5 px-3.5 rounded-full border-none text-[13px] cursor-pointer ${
+                activeTab === tab.value
+                  ? "bg-orange-50 text-green-600 font-bold border-b-2 border-green-600"
+                  : "bg-transparent text-gray-500 font-normal"
+              }`}
             >
               {tab.label}
             </button>
@@ -243,15 +233,15 @@ function ReviewsRatings() {
 
         {/* Review Items */}
         {loading ? (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "#6B7280", fontSize: 14 }}>
+          <div className="py-10 px-5 text-center text-gray-500 text-sm">
             Loading reviews...
           </div>
         ) : error ? (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "#DC2626", fontSize: 14 }}>
+          <div className="py-10 px-5 text-center text-red-600 text-sm">
             {error}
           </div>
         ) : filteredReviews.length === 0 ? (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "#6B7280", fontSize: 14 }}>
+          <div className="py-10 px-5 text-center text-gray-500 text-sm">
             No reviews to show.
           </div>
         ) : (
@@ -260,24 +250,23 @@ function ReviewsRatings() {
             const color = getColorForName(r.customer_name);
 
             return (
-              <div key={r.id} style={{
-                padding: "18px 20px",
-                borderBottom: i < filteredReviews.length - 1 ? "1px solid #F9FAFB" : "none"
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div
+                key={r.id}
+                className={`py-4.5 px-5 ${
+                  i < filteredReviews.length - 1 ? "border-b border-gray-50" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
                   <Avatar initials={initials} color={color} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      marginBottom: 6, flexWrap: "wrap"
-                    }}>
-                      <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.customer_name}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                      <span className="font-semibold text-sm text-gray-900">{r.customer_name}</span>
                       <Stars count={r.rating} />
-                      <span style={{ fontSize: 13, color: "#9CA3AF" }}>{r.rating}.0</span>
-                      <span style={{ fontSize: 13, color: "#9CA3AF" }}>· {timeAgo(r.created_at)}</span>
+                      <span className="text-[13px] text-gray-400">{r.rating}.0</span>
+                      <span className="text-[13px] text-gray-400">· {timeAgo(r.created_at)}</span>
                     </div>
                     {r.comment && (
-                      <p style={{ fontSize: 14, color: "#374151", margin: 0 }}>{r.comment}</p>
+                      <p className="text-sm text-gray-700 m-0">{r.comment}</p>
                     )}
                   </div>
                 </div>
@@ -291,4 +280,5 @@ function ReviewsRatings() {
 }
 
 export default ReviewsRatings;
+
 

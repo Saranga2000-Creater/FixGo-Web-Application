@@ -7,18 +7,6 @@ import {
     faGear,
 } from "@fortawesome/free-solid-svg-icons";
 
-const T = {
-    green:      "#16A34A",
-    greenLight: "#F0FDF4",
-    slate900:   "#111827",
-    slate700:   "#374151",
-    slate500:   "#6B7280",
-    slate100:   "#F3F4F6",
-    white:      "#FFFFFF",
-    font:       "'Segoe UI', system-ui, sans-serif",
-};
-
-
 const NAV_ITEMS = [
     { key: "dashboard",    icon: faChartLine,     label: "Dashboard" },
     { key: "verification", icon: faShieldHalved,  label: "Verification Queue", badge: undefined },
@@ -31,33 +19,21 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
     return (
         <button
             onClick={onClick}
-            style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "none",
-                cursor: "pointer",
-                background: active ? T.greenLight : "transparent",
-                color: active ? T.green : T.slate700,
-                fontWeight: active ? 700 : 500,
-                fontSize: 14,
-                textAlign: "left",
-                fontFamily: T.font,
-                borderLeft: active ? `4px solid ${T.green}` : "4px solid transparent",
-                transition: "all 0.15s ease",
-            }}
+            className={`w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer text-sm text-left font-sans border-l-4 transition-all duration-150 ease-in-out ${
+                active
+                    ? "bg-[#F0FDF4] text-green-600 font-bold border-l-green-600"
+                    : "bg-transparent text-gray-700 font-medium border-l-transparent"
+            }`}
         >
-            <FontAwesomeIcon icon={icon} style={{ color: active ? T.green : T.slate500, fontSize: 16 }} />
-            <span style={{ flex: 1 }}>{label}</span>
+            <FontAwesomeIcon
+                icon={icon}
+                className={`text-base ${active ? "text-green-600" : "text-gray-500"}`}
+            />
+            <span className="flex-1">{label}</span>
             {badge != null && (
-                <span style={{
-                    background: T.green, color: T.white,
-                    borderRadius: 99, fontSize: 11, fontWeight: 700,
-                    padding: "2px 7px", minWidth: 20, textAlign: "center",
-                }}>{badge}</span>
+                <span className="bg-green-600 text-white rounded-full text-[11px] font-bold py-0.5 px-[7px] min-w-[20px] text-center">
+                    {badge}
+                </span>
             )}
         </button>
     );
@@ -65,55 +41,26 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
 
 function AdminSidebar({ currentPage, setCurrentPage }) {
     return (
-        <aside style={{
-            width: 240,
-            display: "flex",
-            flexDirection: "column",
-            background: T.white,
-            borderRight: `1px solid ${T.slate100}`,
-            boxShadow: "4px 0 24px rgba(0,0,0,0.08)",
-            height: "calc(100vh - 65px)",
-            position: "fixed",
-            top: 65,
-            left: 0,
-            zIndex: 50,
-            overflowY: "auto",
-        }}>
+        <aside className="w-[240px] flex flex-col bg-white border-r border-gray-100 shadow-[4px_0_24px_rgba(0,0,0,0.08)] h-[calc(100vh-65px)] fixed top-[65px] left-0 z-50 overflow-y-auto">
             {/* Profile block */}
-            <div style={{
-                padding: "20px 16px 16px",
-                borderBottom: `1px solid ${T.slate100}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-            }}>
-                <div style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: T.slate900,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: T.white,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    flexShrink: 0,
-                }}>FA</div>
-                <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: T.slate900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gray-900 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    FA
+                </div>
+                <div className="min-w-0">
+                    <div className="font-bold text-sm text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
                         FixGo Admin
                     </div>
-                    <div style={{ fontSize: 12, color: T.slate500 }}>Automotive Management</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green }} />
-                        <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>Active</span>
+                    <div className="text-xs text-gray-500">Automotive Management</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-[7px] h-[7px] rounded-full bg-green-600" />
+                        <span className="text-[11px] text-green-600 font-semibold">Active</span>
                     </div>
                 </div>
             </div>
 
             {/* Nav */}
-            <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
+            <nav className="flex-1 py-3 px-2 overflow-y-auto">
                 {NAV_ITEMS.map((item) => (
                     <AdminSidebarLink
                         key={item.key}

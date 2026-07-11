@@ -16,181 +16,88 @@ const NAV_ITEMS = [
 function Badge({ count }) {
   if (!count) return null;
   return (
-    <span
-      style={{
-        background: "#16A34A",
-        color: "#fff",
-        borderRadius: 99,
-        fontSize: 11,
-        fontWeight: 700,
-        padding: "2px 7px",
-        minWidth: 20,
-        textAlign: "center",
-        lineHeight: 1.5,
-      }}
-    >
+    <span className="bg-green-600 text-white rounded-full text-[11px] font-bold py-0.5 px-[7px] min-w-[20px] text-center leading-[1.5]">
       {count}
     </span>
   );
 }
 
-function Sidebar({ activeNav, setActiveNav,shopData,requestCount, activeRepairCount, notificationCount, reviewCount }) {
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
 
   return (
-    <div
-  style={{
-    width: "240px",
-    minHeight: "100vh",
-    background: "#fff",
-    borderRight: "1px solid #F3F4F6",
-    display: "flex",
-    flexDirection: "column",
-    flexShrink: 0,
-    boxShadow: "4px 0 24px rgba(0,0,0,0.10)",
-    position: "sticky",
-    top: 0,
-    alignSelf: "flex-start",
-  }}
->
+    <div className="w-[240px] min-h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.10)] sticky top-0 self-start">
       {/* Shop Header */}
-      <div
-        style={{
-    padding: "20px 16px 16px",
-    borderBottom: "1px solid #F3F4F6",
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  }}
-      >
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            background: "#1F2937",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 22,
-            flexShrink: 0,
-          }}
-        >
+      <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-gray-800 flex items-center justify-center text-[22px] shrink-0 overflow-hidden">
           <img
-    src={
-      shopData?.profileImageURL
-        ? `http://localhost:8000/${shopData.profileImageURL}`
-        : "/default-shop.png"
-    }
-    alt="Shop"
-    style={{
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    }}
-  />
+            src={
+              shopData?.profileImageURL
+                ? `http://localhost:8000/${shopData.profileImageURL}`
+                : "/default-shop.png"
+            }
+            alt="Shop"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 14,
-              color: "#111827",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-           {shopData?.name || "Shop"} 
+        <div className="min-w-0">
+          <div className="font-bold text-sm text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
+            {shopData?.name || "Shop"}
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-             {shopData?.categories || "No Category"}
+          <div className="text-xs text-gray-500">
+            {shopData?.categories || "No Category"}
           </div>
         </div>
       </div>
 
       {/* Nav Items */}
-      <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleNav(item.id)}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "none",
-              cursor: "pointer",
-              background:
-                activeNav === item.id ? "#F0FDF4" : "transparent",
-              color:
-                activeNav === item.id ? "#16A34A" : "#374151",
-              fontWeight: activeNav === item.id ? 700 : 500,
-              fontSize: 14,
-              textAlign: "left",
-              
-            }}
-          >
-            <span
-  style={{
-    fontSize: 18,
-    display: "flex",
-    alignItems: "center",
-    color: activeNav === item.id ? "#16A34A" : "#6B7280",
-  }}
->
-  {item.icon}
-</span>
-            <span style={{ flex: 1 }}>{item.label}</span>
-<Badge
-    count={
-        item.id === "requests"
-            ? requestCount
-            : item.id === "repairs"
-            ? activeRepairCount
-            : item.id === "reviews"
-            ? reviewCount
-            : item.id === "notifications"
-            ? notificationCount
-            : 0
-    }
-/>
-
-          </button>
-        ))}
+      <nav className="flex-1 py-3 px-2 overflow-y-auto">
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeNav === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.id)}
+              className={`w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer text-sm text-left ${
+                isActive
+                  ? "bg-[#F0FDF4] text-green-600 font-bold"
+                  : "bg-transparent text-gray-700 font-medium"
+              }`}
+            >
+              <span
+                className={`text-lg flex items-center ${
+                  isActive ? "text-green-600" : "text-gray-500"
+                }`}
+              >
+                {item.icon}
+              </span>
+              <span className="flex-1">{item.label}</span>
+              <Badge
+                count={
+                  item.id === "requests"
+                    ? requestCount
+                    : item.id === "repairs"
+                    ? activeRepairCount
+                    : item.id === "reviews"
+                    ? reviewCount
+                    : item.id === "notifications"
+                    ? notificationCount
+                    : 0
+                }
+              />
+            </button>
+          );
+        })}
       </nav>
 
       {/* Logout */}
-      <div
-        style={{
-          padding: "12px 8px",
-          borderTop: "1px solid #F3F4F6",
-        }}
-      >
-        <button
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "none",
-            cursor: "pointer",
-            background: "transparent",
-            color: "#6B7280",
-            fontWeight: 500,
-            fontSize: 14,
-          }}
-        >
-          
-          <FiLogOut size={18} />Log Out
+      <div className="py-3 px-2 border-t border-gray-100">
+        <button className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer bg-transparent text-gray-500 font-medium text-sm">
+          <FiLogOut size={18} />
+          Log Out
         </button>
       </div>
     </div>

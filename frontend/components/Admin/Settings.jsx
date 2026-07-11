@@ -12,49 +12,24 @@ import {
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-// Shared color/font tokens, plus a base card style reused for each settings section
-const T = {
-    green:    "#16A34A",
-    greenBg:  "#EDF9F0",
-    blue:     "#2563EB",
-    blueBg:   "#EDF3FF",
-    orange:   "#FF6B1A",
-    orangeBg: "#FFF4EE",
-    slate900: "#111827",
-    slate700: "#374151",
-    slate500: "#6B7280",
-    slate400: "#9CA3AF",
-    slate100: "#F3F4F6",
-    slate50:  "#F9FAFB",
-    white:    "#FFFFFF",
-    font:     "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
-
 // Page title + subtitle block
 function PageHeading({ title, sub }) {
     return (
         <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</h1>
-            {sub && <p style={{ color: T.slate500, marginTop: 6, fontSize: 14, marginBottom: 0 }}>{sub}</p>}
+            <h1 className="text-2xl font-bold text-gray-900 m-0">{title}</h1>
+            {sub && <p className="text-gray-500 mt-1.5 text-sm mb-0">{sub}</p>}
         </div>
     );
 }
 
 // Main Settings page: renders a list of setting groups
-
 function Settings() {
 
     const sections = [
         {
             icon: faUser,
-            iconBg: T.greenBg,
-            iconColor: T.green,
+            iconBg: "bg-green-50",
+            iconColor: "text-green-600",
             title: "Admin Account",
             subtitle: "Manage admin profile and access.",
             rows: [
@@ -65,8 +40,8 @@ function Settings() {
         },
         {
             icon: faGear,
-            iconBg: T.blueBg,
-            iconColor: T.blue,
+            iconBg: "bg-[#EDF3FF]",
+            iconColor: "text-blue-600",
             title: "System Settings",
             subtitle: "Platform-level configuration.",
             rows: [
@@ -77,8 +52,8 @@ function Settings() {
         },
         {
             icon: faBell,
-            iconBg: T.orangeBg,
-            iconColor: T.orange,
+            iconBg: "bg-[#FFF4EE]",
+            iconColor: "text-[#FF6B1A]",
             title: "Notifications",
             subtitle: "Alert and notification preferences.",
             rows: [
@@ -89,41 +64,39 @@ function Settings() {
     ];
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="flex flex-col gap-5">
             <PageHeading title="Settings" sub="Manage system configuration and admin preferences." />
 
             {/* One block per section, built from the `sections` array above */}
             {sections.map((sec) => (
-                <div key={sec.title} style={{ ...T.card, borderRadius: 14, overflow: "hidden", display: "flex" }}>
+                <div
+                    key={sec.title}
+                    className="bg-white border border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] rounded-2xl overflow-hidden flex"
+                >
 
                     {/* Left side: section icon, title, and description */}
-                    <div style={{ width: 260, flexShrink: 0, borderRight: `1px solid ${T.slate100}`, display: "flex", alignItems: "center", gap: 16, padding: "24px 20px" }}>
-                        <div style={{ width: 52, height: 52, borderRadius: 14, background: sec.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <FontAwesomeIcon icon={sec.icon} style={{ fontSize: 22, color: sec.iconColor }} />
+                    <div className="w-[260px] shrink-0 border-r border-gray-100 flex items-center gap-4 py-6 px-5">
+                        <div className={`w-[52px] h-[52px] rounded-2xl flex items-center justify-center shrink-0 ${sec.iconBg}`}>
+                            <FontAwesomeIcon icon={sec.icon} className={`text-2xl ${sec.iconColor}`} />
                         </div>
                         <div>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: T.slate900 }}>{sec.title}</div>
-                            <div style={{ fontSize: 12, color: T.slate500, marginTop: 3 }}>{sec.subtitle}</div>
+                            <div className="text-[15px] font-bold text-gray-900">{sec.title}</div>
+                            <div className="text-xs text-gray-500 mt-1">{sec.subtitle}</div>
                         </div>
                     </div>
 
                     {/* Right side: clickable rows for this section (not wired to routes yet) */}
-                    <div style={{ flex: 1 }}>
+                    <div className="flex-1">
                         {sec.rows.map((row) => (
-                            <button key={row.label} style={{
-                                width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                                padding: "16px 20px", background: "transparent", border: "none",
-                                borderBottom: `1px solid ${T.slate100}`, cursor: "pointer", fontFamily: T.font,
-                            }}
-                                // Simple hover highlight since inline styles don't support :hover
-                                onMouseEnter={e => e.currentTarget.style.background = T.slate50}
-                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            <button
+                                key={row.label}
+                                className="w-full flex items-center justify-between py-4 px-5 bg-transparent border-none border-b border-gray-100 cursor-pointer font-sans hover:bg-gray-50"
                             >
-                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                    <FontAwesomeIcon icon={row.icon} style={{ color: T.slate400, width: 16 }} />
-                                    <span style={{ fontSize: 14, color: T.slate700 }}>{row.label}</span>
+                                <div className="flex items-center gap-3">
+                                    <FontAwesomeIcon icon={row.icon} className="text-gray-400 w-4" />
+                                    <span className="text-sm text-gray-700">{row.label}</span>
                                 </div>
-                                <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 11, color: T.slate400 }} />
+                                <FontAwesomeIcon icon={faChevronRight} className="text-[11px] text-gray-400" />
                             </button>
                         ))}
                     </div>

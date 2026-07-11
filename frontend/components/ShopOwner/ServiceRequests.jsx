@@ -1,57 +1,27 @@
 import { useEffect, useState } from "react";
 
-const COLORS = {
-  primary: "#15803D",
-  primaryLight: "#16A34A",
-  primarySoft: "#ECFDF3",
-  primaryBorder: "#BBF7D0",
-  danger: "#DC2626",
-  dangerSoft: "#FEF2F2",
-  dangerBorder: "#FECACA",
-  text: "#0F172A",
-  textMuted: "#64748B",
-  textFaint: "#94A3B8",
-  border: "#E5E9F0",
-  surface: "#FFFFFF",
-  page: "#F8FAFC",
-};
-
 function Avatar({ initials, color, size = 40 }) {
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: "50%",
         background: color + "1A",
         color,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: 700,
         fontSize: size * 0.34,
-        flexShrink: 0,
-        border: `1.5px solid ${color}33`,
-        letterSpacing: 0.2,
+        borderColor: color + "33",
       }}
+      className="rounded-full flex items-center justify-center font-bold shrink-0 border-[1.5px] tracking-[0.2px]"
     >
       {initials}
     </div>
   );
 }
 
-function TowField({ label, value, onChange, type = "text", placeholder, disabled , min}) {
+function TowField({ label, value, onChange, type = "text", placeholder, disabled, min }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span
-        style={{
-          fontSize: 12.5,
-          fontWeight: 600,
-          color: COLORS.textMuted,
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
-        }}
-      >
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[12.5px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
         {label}
       </span>
       <input
@@ -61,17 +31,7 @@ function TowField({ label, value, onChange, type = "text", placeholder, disabled
         onChange={onChange}
         disabled={disabled}
         min={min}
-        style={{
-          padding: "11px 14px",
-          borderRadius: 10,
-          border: `1px solid ${COLORS.border}`,
-          fontSize: 15,
-          color: COLORS.text,
-          outline: "none",
-          background: COLORS.page,
-        }}
-        onFocus={(e) => (e.target.style.borderColor = "#2563EB")}
-        onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
+        className="py-2.5 px-3.5 rounded-[10px] border border-[#E5E9F0] text-[15px] text-slate-900 outline-none bg-slate-50 focus:border-blue-600"
       />
     </label>
   );
@@ -207,9 +167,9 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   const handleAcceptClick = (r) => {
     if (Number(r.requires_tow) === 1) {
       // THE FIX: Use the new dedicated state, NOT setSelectedRequest
-      setRequestPendingTow(r); 
+      setRequestPendingTow(r);
       setIsAcceptFlow(true);
-      openTowTruckModal(r, true); 
+      openTowTruckModal(r, true);
     } else {
       updateStatus(r.id, "Accepted");
     }
@@ -256,15 +216,15 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       // 3. SILENTLY FETCH ETA FROM GOOGLE
       // THE FIX: Use 'isAccepting' and add optional chaining (?.) to shopCoordinates
       if (isAccepting && shopCoordinates?.lat && requestData.customer_lat && requestData.customer_lng) {
-        setIsCalculatingEta(true); 
+        setIsCalculatingEta(true);
 
         try {
           const googleRes = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-Goog-Api-Key": import.meta.env.VITE_GOOGLE_MAPS_API_KEY, 
-              "X-Goog-FieldMask": "routes.duration", 
+              "X-Goog-Api-Key": import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+              "X-Goog-FieldMask": "routes.duration",
             },
             body: JSON.stringify({
               origin: { location: { latLng: { latitude: shopCoordinates.lat, longitude: shopCoordinates.lng } } },
@@ -285,7 +245,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
         } catch (error) {
           console.error("Failed to calculate ETA via Google:", error);
         } finally {
-          setIsCalculatingEta(false); 
+          setIsCalculatingEta(false);
         }
       }
     }
@@ -378,34 +338,19 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   const visibleRequests = activeTab === "new" ? requests : declinedRequests;
 
   return (
-    <div style={{ width: "100%", fontFamily: "inherit" }}>
+    <div className="w-full font-[inherit]">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: COLORS.text,
-            margin: 0,
-            letterSpacing: -0.3,
-          }}
-        >
+      <div className="mb-7">
+        <h1 className="text-[22px] font-bold text-slate-900 m-0 tracking-[-0.3px]">
           Service Requests
         </h1>
-        <p
-          style={{
-            color: COLORS.textMuted,
-            marginTop: 6,
-            fontSize: 15.5,
-            lineHeight: 1.5,
-          }}
-        >
+        <p className="text-slate-500 mt-1.5 text-[15.5px] leading-normal">
           Review and respond to incoming service requests.
         </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div className="flex gap-2 mb-5">
         {[
           { key: "new", label: "Service Requests" },
           { key: "declined", label: "Declined Requests" },
@@ -415,17 +360,11 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              style={{
-                padding: "10px 20px",
-                borderRadius: 10,
-                border: `1.5px solid ${isActive ? COLORS.primary : COLORS.border}`,
-                background: isActive ? COLORS.primarySoft : COLORS.surface,
-                color: isActive ? COLORS.primary : COLORS.textMuted,
-                fontWeight: 600,
-                fontSize: 14.5,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
+              className={`py-2.5 px-5 rounded-[10px] border-[1.5px] font-semibold text-[14.5px] cursor-pointer transition-all duration-150 ease-in-out ${
+                isActive
+                  ? "border-green-700 bg-[#ECFDF3] text-green-700"
+                  : "border-[#E5E9F0] bg-white text-slate-500"
+              }`}
             >
               {tab.label}
             </button>
@@ -434,72 +373,26 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       </div>
 
       {/* Search + Filter */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginBottom: 24,
-        }}
-      >
+      <div className="flex gap-3 mb-6">
         <input
           placeholder="Search customer, vehicle, or service..."
-          style={{
-            flex: 1,
-            padding: "13px 18px",
-            borderRadius: 12,
-            border: `1px solid ${COLORS.border}`,
-            background: COLORS.surface,
-            fontSize: 15,
-            color: COLORS.text,
-            outline: "none",
-            transition: "border-color 0.15s ease",
-          }}
-          onFocus={(e) => (e.target.style.borderColor = COLORS.primaryLight)}
-          onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
+          className="flex-1 py-3 px-4.5 rounded-xl border border-[#E5E9F0] bg-white text-[15px] text-slate-900 outline-none transition-colors duration-150 ease-in-out focus:border-green-600"
         />
 
-        <button
-          style={{
-            background: COLORS.primary,
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: 12,
-            padding: "0 24px",
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: "pointer",
-            transition: "background 0.15s ease",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
-        >
+        <button className="bg-green-700 text-white border-none rounded-xl px-6 font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]">
           Filter
         </button>
       </div>
 
       {/* Table card */}
-      <div
-        style={{
-          background: COLORS.surface,
-          borderRadius: 18,
-          border: `1px solid ${COLORS.border}`,
-          overflow: "hidden",
-          boxShadow: "0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)",
-        }}
-      >
+      <div className="bg-white rounded-[18px] border border-[#E5E9F0] overflow-hidden shadow-[0_1px_3px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         {/* Table Header */}
         <div
-          style={{
-            padding: "16px 24px",
-            borderBottom: `1px solid ${COLORS.border}`,
-            background: COLORS.page,
-            display: "grid",
-            gridTemplateColumns:
-              activeTab === "new"
-                ? "2.2fr 1.5fr 1fr 1fr 1.5fr"
-                : "2.2fr 1.5fr 1fr 2fr",
-            gap: 8,
-          }}
+          className={`py-4 px-6 border-b border-[#E5E9F0] bg-slate-50 grid gap-2 ${
+            activeTab === "new"
+              ? "[grid-template-columns:2.2fr_1.5fr_1fr_1fr_1.5fr]"
+              : "[grid-template-columns:2.2fr_1.5fr_1fr_2fr]"
+          }`}
         >
           {(activeTab === "new"
             ? ["Customer & Vehicle", "Service", "Urgency", "Details", "Action"]
@@ -507,13 +400,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
           ).map((h) => (
             <span
               key={h}
-              style={{
-                fontSize: 12.5,
-                fontWeight: 700,
-                color: COLORS.textMuted,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
+              className="text-[12.5px] font-bold text-slate-500 uppercase tracking-[0.5px]"
             >
               {h}
             </span>
@@ -522,14 +409,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
         {/* Rows */}
         {visibleRequests.length === 0 ? (
-          <div
-            style={{
-              padding: "48px 20px",
-              textAlign: "center",
-              color: COLORS.textFaint,
-              fontSize: 15,
-            }}
-          >
+          <div className="py-12 px-5 text-center text-slate-400 text-[15px]">
             {activeTab === "new" ? "No service requests found" : "No declined requests"}
           </div>
         ) : (
@@ -538,50 +418,34 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               key={r.id}
               onMouseEnter={() => setHoveredRow(r.id)}
               onMouseLeave={() => setHoveredRow(null)}
-              style={{
-                padding: "18px 24px",
-                borderBottom:
-                  i < visibleRequests.length - 1 ? `1px solid ${COLORS.border}` : "none",
-                display: "grid",
-                gridTemplateColumns:
-                  activeTab === "new"
-                    ? "2.2fr 1.5fr 1fr 1fr 1.5fr"
-                    : "2.2fr 1.5fr 1fr 2fr",
-                gap: 8,
-                alignItems: "center",
-                background: hoveredRow === r.id ? COLORS.page : "transparent",
-                transition: "background 0.15s ease",
-              }}
+              className={`py-4.5 px-6 grid gap-2 items-center transition-colors duration-150 ease-in-out ${
+                i < visibleRequests.length - 1 ? "border-b border-[#E5E9F0]" : ""
+              } ${
+                activeTab === "new"
+                  ? "[grid-template-columns:2.2fr_1.5fr_1fr_1fr_1.5fr]"
+                  : "[grid-template-columns:2.2fr_1.5fr_1fr_2fr]"
+              } ${hoveredRow === r.id ? "bg-slate-50" : "bg-transparent"}`}
             >
               {/* Customer & Vehicle */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="flex items-center gap-3.5">
                 <Avatar
                   initials={r.customer_name?.substring(0, 2).toUpperCase()}
-                  color={activeTab === "new" ? COLORS.primary : COLORS.textFaint}
+                  color={activeTab === "new" ? "#15803D" : "#94A3B8"}
                 />
 
                 <div>
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      fontSize: 16,
-                      color: COLORS.text,
-                    }}
-                  >
+                  <div className="font-semibold text-base text-slate-900">
                     {r.customer_name}
                   </div>
 
-                  <div style={{ fontSize: 14, color: COLORS.textMuted, marginTop: 2 }}>
+                  <div className="text-sm text-slate-500 mt-0.5">
                     🚗 {r.vehicle_brand}
                   </div>
 
                   <div
-                    style={{
-                      fontSize: 13,
-                      color: activeTab === "new" ? COLORS.primary : COLORS.textFaint,
-                      fontWeight: 600,
-                      marginTop: 1,
-                    }}
+                    className={`text-[13px] font-semibold mt-px ${
+                      activeTab === "new" ? "text-green-700" : "text-slate-400"
+                    }`}
                   >
                     🎨 {r.vehicle_color}
                   </div>
@@ -590,42 +454,18 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
               {/* Service */}
               <div>
-                <div
-                  style={{
-                    fontSize: 15.5,
-                    color: COLORS.text,
-                    fontWeight: 500,
-                  }}
-                >
+                <div className="text-[15.5px] text-slate-900 font-medium">
                   {r.issue_category}
                 </div>
 
                 {activeTab === "new" && Number(r.requires_tow) === 1 && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      display: "inline-block",
-                      padding: "4px 9px",
-                      borderRadius: 8,
-                      background: COLORS.dangerSoft,
-                      border: `1px solid ${COLORS.dangerBorder}`,
-                      color: COLORS.danger,
-                      fontSize: 12,
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="mt-2 inline-block py-1 px-2.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
                     🚚 Tow Truck Required
                   </div>
                 )}
 
                 {activeTab === "new" && r.pickup_landmark && Number(r.requires_tow) === 1 && (
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 12.5,
-                      color: COLORS.textFaint,
-                    }}
-                  >
+                  <div className="mt-1.5 text-[12.5px] text-slate-400">
                     📍 {r.pickup_landmark}
                   </div>
                 )}
@@ -634,17 +474,11 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               {/* Urgency */}
               <div>
                 <span
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: 20,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    background: r.urgency_level === "Urgent" ? COLORS.dangerSoft : COLORS.primarySoft,
-                    border: `1px solid ${
-                      r.urgency_level === "Urgent" ? COLORS.dangerBorder : COLORS.primaryBorder
-                    }`,
-                    color: r.urgency_level === "Urgent" ? COLORS.danger : COLORS.primary,
-                  }}
+                  className={`py-1.5 px-3 rounded-full text-[13px] font-semibold border ${
+                    r.urgency_level === "Urgent"
+                      ? "bg-red-50 border-red-200 text-red-600"
+                      : "bg-[#ECFDF3] border-[#BBF7D0] text-green-700"
+                  }`}
                 >
                   {r.urgency_level}
                 </span>
@@ -656,90 +490,36 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                   <div>
                     <button
                       onClick={() => setSelectedRequest(r)}
-                      style={{
-                        padding: "9px 14px",
-                        borderRadius: 9,
-                        border: `1px solid ${COLORS.primary}`,
-                        background: COLORS.surface,
-                        color: COLORS.primary,
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: "pointer",
-                        transition: "background 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.primarySoft)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                      className="py-2 px-3.5 rounded-[9px] border border-green-700 bg-white text-green-700 font-semibold text-sm cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#ECFDF3]"
                     >
                       View Details
                     </button>
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className="flex gap-2">
                     {r.status === "Pending" ? (
                       <>
                         <button
-                          style={{
-                            padding: "9px 18px",
-                            borderRadius: 10,
-                            border: "none",
-                            background: COLORS.primary,
-                            color: "#FFFFFF",
-                            fontWeight: 600,
-                            fontSize: 14,
-                            cursor: "pointer",
-                            transition: "background 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                          className="py-2 px-4.5 rounded-[10px] border-none bg-green-700 text-white font-semibold text-sm cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]"
                           onClick={() => handleAcceptClick(r)}
                         >
                           Accept
                         </button>
 
                         <button
-                          style={{
-                            padding: "9px 18px",
-                            borderRadius: 10,
-                            border: `1px solid ${COLORS.dangerBorder}`,
-                            color: COLORS.danger,
-                            background: COLORS.surface,
-                            fontWeight: 600,
-                            fontSize: 14,
-                            cursor: "pointer",
-                            transition: "background 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.dangerSoft)}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                          className="py-2 px-4.5 rounded-[10px] border border-red-200 text-red-600 bg-white font-semibold text-sm cursor-pointer transition-colors duration-150 ease-in-out hover:bg-red-50"
                           onClick={() => handleDeclineClick(r)}
                         >
                           Decline
                         </button>
                       </>
                     ) : r.status === "Accepted" ? (
-                      <span
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: "999px",
-                          background: "#FEF3C7",
-                          color: "#92400E",
-                          fontWeight: 600,
-                          fontSize: 13,
-                        }}
-                      >
+                      <span className="py-2 px-3.5 rounded-full bg-amber-100 text-amber-800 font-semibold text-[13px]">
                         Waiting for customer confirmation
                       </span>
                     ) : (
-                      <span
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: "999px",
-                          background: "#FEE2E2",
-                          color: "#DC2626",
-                          fontWeight: 600,
-                          fontSize: 13,
-                        }}
-                      >
+                      <span className="py-2 px-3.5 rounded-full bg-red-100 text-red-600 font-semibold text-[13px]">
                         {r.status}
                       </span>
                     )}
@@ -747,7 +527,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                 </>
               ) : (
                 /* Declined tab — show reason instead of action buttons */
-                <div style={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.5 }}>
+                <div className="text-sm text-slate-500 leading-normal">
                   {r.cancellation_reason || "No reason provided"}
                 </div>
               )}
@@ -756,22 +536,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
         )}
 
         {/* Footer */}
-        <div style={{ padding: "16px 24px", textAlign: "center", borderTop: `1px solid ${COLORS.border}` }}>
-          <button
-            style={{
-              padding: "11px 36px",
-              borderRadius: 10,
-              border: `1.5px solid ${COLORS.primary}`,
-              color: COLORS.primary,
-              background: "transparent",
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: "pointer",
-              transition: "background 0.15s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.primarySoft)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
+        <div className="py-4 px-6 text-center border-t border-[#E5E9F0]">
+          <button className="py-2.5 px-9 rounded-[10px] border-[1.5px] border-green-700 text-green-700 bg-transparent font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#ECFDF3]">
             View all requests
           </button>
         </div>
@@ -779,82 +545,38 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
       {/* Service Request Details Modal */}
       {selectedRequest && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.55)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 999,
-            padding: 20,
-          }}
-        >
-          <div
-            style={{
-              background: COLORS.surface,
-              width: 600,
-              maxWidth: "100%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-              borderRadius: 20,
-              padding: 28,
-              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
-            }}
-          >
-            <h2
-              style={{
-                margin: 0,
-                marginBottom: 20,
-                fontSize: 21,
-                fontWeight: 700,
-                color: COLORS.text,
-              }}
-            >
+        <div className="fixed inset-0 bg-slate-900/55 flex justify-center items-center z-[999] p-5">
+          <div className="bg-white w-[600px] max-w-full max-h-[85vh] overflow-y-auto rounded-[20px] p-7 shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
+            <h2 className="m-0 mb-5 text-xl font-bold text-slate-900">
               Service Request Details
             </h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+            <div className="flex flex-col gap-3 mb-4">
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
                   Customer
                 </div>
-                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+                <div className="text-[16.5px] text-slate-900 mt-0.5">
                   {selectedRequest.customer_name}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
                   Issue
                 </div>
-                <div style={{ fontSize: 16.5, color: COLORS.text, marginTop: 2 }}>
+                <div className="text-[16.5px] text-slate-900 mt-0.5">
                   {selectedRequest.issue_category}
                 </div>
               </div>
 
               {shopCategory === "Service Centers" && (
                 <div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: COLORS.textMuted,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.4,
-                    }}
-                  >
+                  <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
                     Appointment
                   </div>
 
-                  <div
-                    style={{
-                      fontSize: 16.5,
-                      color: COLORS.text,
-                      marginTop: 2,
-                    }}
-                  >
+                  <div className="text-[16.5px] text-slate-900 mt-0.5">
                     {selectedRequest.preferred_date
                       ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
                       : "Not specified"}
@@ -863,20 +585,10 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               )}
 
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px] mb-1.5">
                   Description
                 </div>
-                <div
-                  style={{
-                    background: COLORS.page,
-                    border: `1px solid ${COLORS.border}`,
-                    padding: 14,
-                    borderRadius: 10,
-                    fontSize: 15,
-                    color: COLORS.text,
-                    lineHeight: 1.6,
-                  }}
-                >
+                <div className="bg-slate-50 border border-[#E5E9F0] p-3.5 rounded-[10px] text-[15px] text-slate-900 leading-relaxed">
                   {selectedRequest.description}
                 </div>
               </div>
@@ -886,31 +598,14 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               <img
                 src={`http://localhost:8000/${selectedRequest.photo}`}
                 alt="Problem"
-                style={{
-                  width: "100%",
-                  borderRadius: 12,
-                  marginTop: 6,
-                  border: `1px solid ${COLORS.border}`,
-                }}
+                className="w-full rounded-xl mt-1.5 border border-[#E5E9F0]"
               />
             )}
 
-            <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+            <div className="flex gap-2.5 mt-6">
               <button
                 onClick={() => setSelectedRequest(null)}
-                style={{
-                  padding: "11px 24px",
-                  background: COLORS.primary,
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  fontSize: 15,
-                  cursor: "pointer",
-                  transition: "background 0.15s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                className="py-2.5 px-6 bg-green-700 text-white border-none rounded-[10px] font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]"
               >
                 Close
               </button>
@@ -921,58 +616,18 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
       {/* Decline Confirmation Modal */}
       {requestPendingDecline && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.55)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            padding: 20,
-          }}
-        >
-          <div
-            style={{
-              background: COLORS.surface,
-              width: 420,
-              maxWidth: "100%",
-              borderRadius: 18,
-              overflow: "hidden",
-              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
-            }}
-          >
+        <div className="fixed inset-0 bg-slate-900/55 flex justify-center items-center z-[1000] p-5">
+          <div className="bg-white w-[420px] max-w-full rounded-2xl overflow-hidden shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
             {/* Header */}
-            <div
-              style={{
-                padding: "22px 26px 4px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 14,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: COLORS.dangerSoft,
-                  border: `1px solid ${COLORS.dangerBorder}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 19,
-                  flexShrink: 0,
-                }}
-              >
+            <div className="pt-5.5 px-6.5 pb-1 flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-[10px] bg-red-50 border border-red-200 flex items-center justify-center text-[19px] shrink-0">
                 ⚠️
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: 17.5, fontWeight: 700, color: COLORS.text }}>
+                <h2 className="m-0 text-[17.5px] font-bold text-slate-900">
                   Decline this request?
                 </h2>
-                <p style={{ margin: 0, marginTop: 6, fontSize: 14, color: COLORS.textMuted, lineHeight: 1.5 }}>
+                <p className="m-0 mt-1.5 text-sm text-slate-500 leading-normal">
                   {requestPendingDecline.customer_name
                     ? `${requestPendingDecline.customer_name}'s request will be moved to Declined and they'll be notified. This action can't be undone.`
                     : "This request will be moved to Declined and the customer will be notified. This action can't be undone."}
@@ -981,29 +636,13 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             </div>
 
             {/* Footer */}
-            <div
-              style={{
-                padding: "20px 26px 24px",
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 10,
-              }}
-            >
+            <div className="pt-5 px-6.5 pb-6 flex justify-end gap-2.5">
               <button
                 onClick={() => setRequestPendingDecline(null)}
                 disabled={isDeclining}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 10,
-                  border: `1px solid ${COLORS.border}`,
-                  background: COLORS.surface,
-                  color: COLORS.textMuted,
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: isDeclining ? "not-allowed" : "pointer",
-                }}
-                onMouseEnter={(e) => !isDeclining && (e.currentTarget.style.background = COLORS.page)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                className={`py-2.5 px-5 rounded-[10px] border border-[#E5E9F0] bg-white text-slate-500 font-semibold text-[14.5px] hover:bg-slate-50 ${
+                  isDeclining ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
                 Cancel
               </button>
@@ -1011,19 +650,9 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               <button
                 onClick={confirmDecline}
                 disabled={isDeclining}
-                style={{
-                  padding: "10px 22px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: COLORS.danger,
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: isDeclining ? "not-allowed" : "pointer",
-                  opacity: isDeclining ? 0.7 : 1,
-                }}
-                onMouseEnter={(e) => !isDeclining && (e.currentTarget.style.background = "#B91C1C")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.danger)}
+                className={`py-2.5 px-5.5 rounded-[10px] border-none bg-red-600 text-white font-semibold text-[14.5px] hover:bg-[#B91C1C] ${
+                  isDeclining ? "cursor-not-allowed opacity-70" : "cursor-pointer opacity-100"
+                }`}
               >
                 {isDeclining ? "Declining..." : "Yes, Decline"}
               </button>
@@ -1034,58 +663,18 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
       {/* Tow Truck Details Modal */}
       {showTowModal && towTruck && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.55)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            padding: 20,
-          }}
-        >
-          <div
-            style={{
-              background: COLORS.surface,
-              width: 480,
-              maxWidth: "100%",
-              borderRadius: 18,
-              overflow: "hidden",
-              boxShadow: "0 24px 48px rgba(15,23,42,0.25)",
-            }}
-          >
+        <div className="fixed inset-0 bg-slate-900/55 flex justify-center items-center z-[1000] p-5">
+          <div className="bg-white w-[480px] max-w-full rounded-2xl overflow-hidden shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
             {/* Header */}
-            <div
-              style={{
-                padding: "20px 28px",
-                borderBottom: `1px solid ${COLORS.border}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 10,
-                  background: "#DBEAFE",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                  flexShrink: 0,
-                }}
-              >
+            <div className="py-5 px-7 border-b border-[#E5E9F0] flex items-center gap-3">
+              <div className="w-[38px] h-[38px] rounded-[10px] bg-blue-100 flex items-center justify-center text-lg shrink-0">
                 🚚
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: COLORS.text }}>
+                <h2 className="m-0 text-lg font-bold text-slate-900">
                   Tow Truck Details
                 </h2>
-                <p style={{ margin: 0, fontSize: 13.5, color: COLORS.textMuted, marginTop: 2 }}>
+                <p className="m-0 text-[13.5px] text-slate-500 mt-0.5">
                   {isAcceptFlow
                     ? "Confirm dispatch info to accept this request"
                     : "Dispatch info for this pickup"}
@@ -1094,8 +683,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             </div>
 
             {/* Fields */}
-            <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="py-6 px-7 flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <TowField
                   label="Driver Name"
                   value={towTruck.default_driver_name}
@@ -1112,7 +701,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="grid grid-cols-2 gap-3.5">
                 <TowField
                   label="Truck Brand"
                   value={towTruck.default_truck_brand}
@@ -1148,63 +737,28 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                 onChange={(e) => {
                   setTowTruck({ ...towTruck, promised_eta: e.target.value });
                   // THE FIX 3: Clear the error the moment they start typing again
-                  if (etaError) setEtaError(""); 
+                  if (etaError) setEtaError("");
                 }}
               />
             </div>
-            
+
             {/* THE FIX 4: The Inline Warning Box */}
             {etaError && (
-              <div
-                style={{
-                  margin: "0 28px 20px 28px",
-                  padding: "12px 16px",
-                  background: COLORS.dangerSoft,
-                  border: `1px solid ${COLORS.dangerBorder}`,
-                  borderRadius: 10,
-                  color: COLORS.danger,
-                  fontSize: 14.5,
-                  fontWeight: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  animation: "fadeIn 0.2s ease", // Gives it a nice pop
-                }}
-              >
-                <span style={{ fontSize: 18 }}>⚠️</span>
+              <div className="mx-7 mb-5 py-3 px-4 bg-red-50 border border-red-200 rounded-[10px] text-red-600 text-[14.5px] font-medium flex items-center gap-2.5 animate-[fadeIn_0.2s_ease]">
+                <span className="text-lg">⚠️</span>
                 {etaError}
               </div>
             )}
 
             {/* Footer */}
-            <div
-              style={{
-                padding: "16px 28px",
-                borderTop: `1px solid ${COLORS.border}`,
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 10,
-                background: COLORS.page,
-              }}
-            >
+            <div className="py-4 px-7 border-t border-[#E5E9F0] flex justify-end gap-2.5 bg-slate-50">
               <button
                 onClick={() => {
                   setShowTowModal(false);
                   setIsAcceptFlow(false);
                   setEtaError("");
                 }}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 10,
-                  border: `1px solid ${COLORS.border}`,
-                  background: COLORS.surface,
-                  color: COLORS.textMuted,
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.page)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.surface)}
+                className="py-2.5 px-5 rounded-[10px] border border-[#E5E9F0] bg-white text-slate-500 font-semibold text-[14.5px] cursor-pointer hover:bg-slate-50"
               >
                 Cancel
               </button>
@@ -1212,36 +766,14 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
               {isAcceptFlow ? (
                 <button
                   onClick={confirmTowAndAccept}
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: COLORS.primary,
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: 14.5,
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#116530")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.primary)}
+                  className="py-2.5 px-5.5 rounded-[10px] border-none bg-green-700 text-white font-semibold text-[14.5px] cursor-pointer hover:bg-[#116530]"
                 >
                   Confirm
                 </button>
               ) : (
                 <button
                   onClick={saveTowTruckDetails}
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "#2563EB",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: 14.5,
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
+                  className="py-2.5 px-5.5 rounded-[10px] border-none bg-blue-600 text-white font-semibold text-[14.5px] cursor-pointer hover:bg-blue-700"
                 >
                   Save Changes
                 </button>
@@ -1255,5 +787,6 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 }
 
 export default ServiceRequests;
+
 
 

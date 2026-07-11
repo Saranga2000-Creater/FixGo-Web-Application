@@ -8,52 +8,41 @@ import {
 
 const API_BASE = "http://localhost:8000/api";
 
+// Colors kept as JS constants because notification metadata below
+// references them dynamically (gradient, iconColor, accent, etc. are
+// data-driven per notification type, not static Tailwind classes).
 const T = {
     green:      "#16A34A",
     greenDark:  "#0F7A38",
-    greenLight: "#F0FDF4",
-    greenMuted: "rgba(22,163,74,0.08)",
-    blue:       "#2563EB",
-    blueDark:   "#1D4ED8",
-    blueBg:     "#EDF3FF",
-    amber:      "#D97706",
-    amberBg:    "rgba(217,119,6,0.10)",
     red:        "#DC2626",
     redDark:    "#B91C1C",
-    redBg:      "#FEF2F2",
-    redMuted:   "rgba(220,38,38,0.08)",
-    slate900:   "#111827",
+    amber:      "#D97706",
     slate700:   "#374151",
     slate500:   "#6B7280",
     slate400:   "#9CA3AF",
     slate200:   "#E5E7EB",
     slate100:   "#F3F4F6",
-    slate50:    "#F9FAFB",
     white:      "#FFFFFF",
-    font:       "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background:   "#FFFFFF",
-        border:       "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow:    "0 1px 4px rgba(0,0,0,0.06)",
-    },
+    greenMuted: "rgba(22,163,74,0.08)",
+    redBg:      "#FEF2F2",
+    amberBg:    "rgba(217,119,6,0.10)",
 };
 
 const NOTIFICATION_META = {
-   NewRequest: {
-    icon: faClipboardList,
-    gradient: "linear-gradient(135deg, #D8F4DF 0%, #F0FDF4 100%)",
-    iconColor: T.green,
-    accent: T.green,
-    badgeBg: T.greenMuted,
-    badgeColor: T.green,
-    label: "New Request",
-    actionText: "Review this request and decide whether to accept or decline it.",
-    buttonText: "View Service Requests",
-    buttonColor: T.green,
-    buttonColorDark: T.greenDark,
-    targetNav: "requests",
-},
+    NewRequest: {
+        icon: faClipboardList,
+        gradient: "linear-gradient(135deg, #D8F4DF 0%, #F0FDF4 100%)",
+        iconColor: T.green,
+        accent: T.green,
+        badgeBg: T.greenMuted,
+        badgeColor: T.green,
+        label: "New Request",
+        actionText: "Review this request and decide whether to accept or decline it.",
+        buttonText: "View Service Requests",
+        buttonColor: T.green,
+        buttonColorDark: T.greenDark,
+        targetNav: "requests",
+    },
     CustomerConfirmed: {
         icon: faCircleCheck,
         gradient: "linear-gradient(135deg, #D8F4DF 0%, #F0FDF4 100%)",
@@ -257,99 +246,62 @@ function Notification({ setActiveNav }) {
 
     if (loading) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-                <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading notifications…</p>
+            <div className="flex justify-center py-20">
+                <p className="text-[13px] text-gray-500 font-sans">Loading notifications…</p>
             </div>
         );
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5 font-sans">
 
             {/* ── Header ── */}
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18, padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                flexWrap: "wrap", gap: 12,
-            }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{
-                        width: 48, height: 48, borderRadius: 14,
-                        background: "linear-gradient(135deg, #16A34A, #0F7A38)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 4px 10px rgba(22,163,74,0.28)", flexShrink: 0,
-                    }}>
-                        <FontAwesomeIcon icon={faBell} style={{ fontSize: 19, color: T.white }} />
-                    </div>
-                    <div>
-                        <h1 style={{ fontSize: 28, fontWeight: 800, color: T.slate900, margin: 0, letterSpacing: "-0.02em" }}>Notifications</h1>
-                        <p style={{ color: T.slate500, marginTop: 4, marginBottom: 0, fontSize: 14 }}>
-                            Stay updated with your latest service requests and repair activities.
-                        </p>
-                    </div>
-                </div>
-                {unreadCount > 0 && (
-                    <span style={{
-                        background: "linear-gradient(135deg, #16A34A, #0F7A38)", color: T.white,
-                        borderRadius: 99, padding: "6px 16px", fontSize: 12, fontWeight: 700,
-                        boxShadow: "0 3px 8px rgba(22,163,74,0.3)", display: "flex", alignItems: "center", gap: 6,
-                    }}>
-                        <span style={{
-                            width: 7, height: 7, borderRadius: "50%", background: T.white,
-                            animation: "notifPulse 1.6s ease-in-out infinite",
-                        }} />
-                        {unreadCount} unread
-                    </span>
-                )}
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 m-0">
+                    Notifications
+                </h1>
+                <p className="text-gray-500 mt-1 text-sm">
+                    Stay updated with your latest service requests and repair activities.
+                </p>
             </div>
 
             {/* ── Tab Bar ── */}
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
                     {TABS.map((tab) => {
                         const active = activeTab === tab.key;
                         return (
-                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-                                borderRadius: 99,
-                                border: `1px solid ${active ? T.green : T.slate200}`,
-                                background: active ? "linear-gradient(135deg, rgba(22,163,74,0.12), rgba(22,163,74,0.06))" : T.white,
-                                color: active ? T.green : T.slate700,
-                                padding: "7px 16px", fontSize: 13, fontWeight: 600,
-                                fontFamily: T.font, cursor: "pointer", transition: "all 0.15s",
-                                boxShadow: active ? "0 2px 6px rgba(22,163,74,0.15)" : "none",
-                            }}>
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`rounded-full py-1.5 px-4 text-[13px] font-semibold font-sans cursor-pointer transition-all duration-150 border ${
+                                    active
+                                        ? "border-green-600 bg-gradient-to-br from-green-600/[0.12] to-green-600/[0.06] text-green-600 shadow-[0_2px_6px_rgba(22,163,74,0.15)]"
+                                        : "border-gray-200 bg-white text-gray-700 shadow-none"
+                                }`}
+                            >
                                 {tab.label} ({tabCount(tab.key)})
                             </button>
                         );
                     })}
                 </div>
                 {unreadCount > 0 && (
-                    <button onClick={markAllAsRead} style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        border: `1px solid ${T.slate200}`, background: T.white,
-                        borderRadius: 10, padding: "8px 16px",
-                        fontSize: 13, fontWeight: 600, color: T.slate700,
-                        cursor: "pointer", fontFamily: T.font,
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.15s",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = T.green; e.currentTarget.style.color = T.green; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.slate200; e.currentTarget.style.color = T.slate700; }}
+                    <button
+                        onClick={markAllAsRead}
+                        className="flex items-center gap-1.5 border border-gray-200 bg-white rounded-[10px] py-2 px-4 text-[13px] font-semibold text-gray-700 cursor-pointer font-sans shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all duration-150 hover:border-green-600 hover:text-green-600"
                     >
-                        <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11, color: T.green }} />
+                        <FontAwesomeIcon icon={faCheck} className="text-[11px] text-green-600" />
                         Mark all as read
                     </button>
                 )}
             </div>
 
             {/* ── Notification List ── */}
-            <div style={{ ...T.card, overflow: "hidden" }}>
+            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
                 {filteredNotifications.length === 0 ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "64px 24px", textAlign: "center" }}>
-                        <FontAwesomeIcon icon={faBell} style={{ fontSize: 36, color: T.slate200 }} />
-                        <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>No notifications in this category.</p>
+                    <div className="flex flex-col items-center gap-3 py-16 px-6 text-center">
+                        <FontAwesomeIcon icon={faBell} className="text-4xl text-gray-200" />
+                        <p className="text-[13px] text-gray-400 m-0">No notifications in this category.</p>
                     </div>
                 ) : (
                     filteredNotifications.map((notification, idx) => {
@@ -360,82 +312,66 @@ function Notification({ setActiveNav }) {
                             <div
                                 key={notification.id}
                                 onClick={() => markAsRead(notification.id)}
+                                className={`flex items-start gap-4 py-5 pr-6 pl-5 cursor-pointer transition-all duration-[180ms] ease-in-out hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] ${
+                                    isLast ? "" : "border-b border-gray-100"
+                                } ${
+                                    notification.isUnread
+                                        ? "bg-[#F7FCF8] hover:bg-[#F0FDF4]"
+                                        : "bg-white hover:bg-gray-50"
+                                }`}
                                 style={{
-                                    display: "flex", alignItems: "flex-start", gap: 16,
-                                    padding: "20px 24px 20px 20px",
                                     borderLeft: `4px solid ${notification.isUnread ? meta.accent : "transparent"}`,
-                                    borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
-                                    background: notification.isUnread ? "#F7FCF8" : T.white,
-                                    cursor: "pointer", transition: "all 0.18s ease",
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.background = notification.isUnread ? "#F0FDF4" : T.slate50;
-                                    e.currentTarget.style.boxShadow = "inset 0 0 0 1px rgba(0,0,0,0.02)";
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.background = notification.isUnread ? "#F7FCF8" : T.white;
-                                    e.currentTarget.style.boxShadow = "none";
                                 }}
                             >
                                 {/* Status Icon */}
-                                <div style={{
-                                    width: 48, height: 48, borderRadius: "50%",
-                                    background: meta.gradient, flexShrink: 0,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    boxShadow: notification.isUnread ? `0 0 0 3px ${meta.iconColor}22` : "none",
-                                    transition: "box-shadow 0.18s ease",
-                                }}>
+                                <div
+                                    className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center transition-shadow duration-[180ms] ease-in-out"
+                                    style={{
+                                        background: meta.gradient,
+                                        boxShadow: notification.isUnread ? `0 0 0 3px ${meta.iconColor}22` : "none",
+                                    }}
+                                >
                                     <FontAwesomeIcon icon={meta.icon} style={{ fontSize: 18, color: meta.iconColor }} />
                                 </div>
 
                                 {/* Body */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="flex-1 min-w-0">
 
                                     {/* Title + Badge */}
-                                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                                        <p style={{ fontSize: 14.5, fontWeight: 700, color: T.slate900, margin: 0, letterSpacing: "-0.01em" }}>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="text-[14.5px] font-bold text-gray-900 m-0 tracking-[-0.01em]">
                                             {notification.title}
                                         </p>
-                                        <span style={{
-                                            background: meta.badgeBg, color: meta.badgeColor,
-                                            borderRadius: 99, padding: "3px 11px 3px 8px", fontSize: 11, fontWeight: 700,
-                                            display: "inline-flex", alignItems: "center", gap: 5,
-                                            border: `1px solid ${meta.badgeColor}22`,
-                                        }}>
+                                        <span
+                                            className="rounded-full py-[3px] pr-[11px] pl-2 text-[11px] font-bold inline-flex items-center gap-1.5"
+                                            style={{
+                                                background: meta.badgeBg,
+                                                color: meta.badgeColor,
+                                                border: `1px solid ${meta.badgeColor}22`,
+                                            }}
+                                        >
                                             <FontAwesomeIcon icon={meta.icon} style={{ fontSize: 9 }} />
                                             {meta.label}
                                         </span>
                                         {notification.isUnread && (
-                                            <span style={{
-                                                fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em",
-                                                color: T.white, background: T.green,
-                                                borderRadius: 99, padding: "2.5px 8px",
-                                            }}>
+                                            <span className="text-[9.5px] font-extrabold tracking-[0.06em] text-white bg-green-600 rounded-full py-[2.5px] px-2">
                                                 NEW
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Message */}
-                                    <p style={{ fontSize: 13, color: T.slate500, margin: "6px 0 10px", lineHeight: 1.55 }}>
+                                    <p className="text-[13px] text-gray-500 mt-1.5 mb-2.5 leading-[1.55]">
                                         {notification.subtitle}
                                     </p>
 
                                     {/* Ref pill(s) */}
-                                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                        <span style={{
-                                            display: "inline-flex", alignItems: "center", gap: 6,
-                                            background: T.slate100, color: T.slate700,
-                                            borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 600,
-                                        }}>
+                                    <div className="flex gap-2 flex-wrap">
+                                        <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded-lg py-1 px-3 text-xs font-semibold">
                                             🔧 {notification.requestNumber}
                                         </span>
                                         {notification.vehicle && (
-                                            <span style={{
-                                                display: "inline-flex", alignItems: "center", gap: 6,
-                                                background: T.slate100, color: T.slate700,
-                                                borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 600,
-                                            }}>
+                                            <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded-lg py-1 px-3 text-xs font-semibold">
                                                 🚗 {notification.vehicle}
                                             </span>
                                         )}
@@ -443,16 +379,17 @@ function Notification({ setActiveNav }) {
 
                                     {/* Action box */}
                                     {meta.actionText && (
-                                        <div style={{
-                                            marginTop: 14,
-                                            background: meta.gradient,
-                                            border: `1px solid ${meta.accent}33`,
-                                            borderRadius: 14, padding: "14px 18px",
-                                        }}>
-                                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <div
+                                            className="mt-3.5 rounded-2xl py-3.5 px-[18px]"
+                                            style={{
+                                                background: meta.gradient,
+                                                border: `1px solid ${meta.accent}33`,
+                                            }}
+                                        >
+                                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2">
                                                     <FontAwesomeIcon icon={faCircleExclamation} style={{ fontSize: 13, color: meta.badgeColor }} />
-                                                    <span style={{ fontSize: 13, color: T.slate700, fontWeight: 500 }}>{meta.actionText}</span>
+                                                    <span className="text-[13px] text-gray-700 font-medium">{meta.actionText}</span>
                                                 </div>
                                                 {meta.buttonText && meta.targetNav && (
                                                     <button
@@ -460,23 +397,13 @@ function Notification({ setActiveNav }) {
                                                             e.stopPropagation();
                                                             setActiveNav(meta.targetNav);
                                                         }}
+                                                        className="flex items-center gap-1.5 text-white border-none rounded-[10px] py-2.5 px-4 text-[13px] font-bold cursor-pointer font-sans shrink-0 transition-transform duration-[120ms] ease-in-out hover:-translate-y-px group"
                                                         style={{
-                                                            display: "flex", alignItems: "center", gap: 6,
-                                                            background: meta.buttonColor, color: T.white,
-                                                            border: "none", borderRadius: 10, padding: "9px 16px",
-                                                            fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                                            fontFamily: T.font, flexShrink: 0,
+                                                            background: meta.buttonColor,
                                                             boxShadow: `0 3px 8px ${meta.buttonColor}44`,
-                                                            transition: "transform 0.12s ease, box-shadow 0.12s ease",
                                                         }}
-                                                        onMouseEnter={e => {
-                                                            e.currentTarget.style.background = meta.buttonColorDark;
-                                                            e.currentTarget.style.transform = "translateY(-1px)";
-                                                        }}
-                                                        onMouseLeave={e => {
-                                                            e.currentTarget.style.background = meta.buttonColor;
-                                                            e.currentTarget.style.transform = "translateY(0)";
-                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.background = meta.buttonColorDark; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.background = meta.buttonColor; }}
                                                     >
                                                         {meta.buttonText}
                                                         <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 11 }} />
@@ -488,14 +415,15 @@ function Notification({ setActiveNav }) {
                                 </div>
 
                                 {/* Timestamp + dot */}
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
-                                    <span style={{ fontSize: 11, color: T.slate400, whiteSpace: "nowrap" }}>{formatTime(notification.timestamp)}</span>
-                                    <span style={{
-                                        width: 9, height: 9, borderRadius: "50%",
-                                        background: notification.isUnread ? meta.accent : T.slate200,
-                                        display: "inline-block",
-                                        boxShadow: notification.isUnread ? `0 0 0 4px ${meta.accent}22` : "none",
-                                    }} />
+                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                    <span className="text-[11px] text-gray-400 whitespace-nowrap">{formatTime(notification.timestamp)}</span>
+                                    <span
+                                        className="w-[9px] h-[9px] rounded-full inline-block"
+                                        style={{
+                                            background: notification.isUnread ? meta.accent : T.slate200,
+                                            boxShadow: notification.isUnread ? `0 0 0 4px ${meta.accent}22` : "none",
+                                        }}
+                                    />
                                 </div>
                             </div>
                         );
@@ -514,3 +442,4 @@ function Notification({ setActiveNav }) {
 }
 
 export default Notification;
+

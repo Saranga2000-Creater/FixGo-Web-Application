@@ -24,185 +24,72 @@ const NAV_ITEMS = [
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
 function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
   const stats = [
-    {label: "New Requests",value: requestCount,sub: "Pending requests",subColor: "#16A34A",icon: "📋"},
-    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "#059669", icon: "🔧" },
-    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "#059669", icon: "✅" },
-    { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "#6B7280", icon: "⭐" },
+    { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
+    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-emerald-600", icon: "🔧" },
+    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-emerald-600", icon: "✅" },
+    { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "text-gray-500", icon: "⭐" },
   ];
   const quickActions = [
-  {
-    label: "Add New Service",
-    icon: "➕",
-    bg: "#FFFFFF",
-    iconBg: "#16A34A",
-  },
-  {
-    label: "Update Availability",
-    icon: "📅",
-    bg: "#FFFFFF",
-    iconBg: "#16A34A",
-  },
-  {
-    label: "View Calendar",
-    icon: "🗓️",
-    bg: "#FFFFFF",
-    iconBg: "#16A34A",
-  },
-];
+    { label: "Add New Service", icon: "➕" },
+    { label: "Update Availability", icon: "📅" },
+    { label: "View Calendar", icon: "🗓️" },
+  ];
 
-const currentDate = new Date().toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div style={{ width: "100%", display: "block" }}>
-  <div
-  style={{
-    background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-    borderRadius: 18,
-    padding: "24px",
-    marginBottom: 24,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-  }}
->
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 4,
-    }}
-  >
-    <h1
-      style={{
-        fontSize: 28,
-        fontWeight: 700,
-        color: "#111827",
-        margin: 0,
-      }}
-    >
-     Hello, {shopData?.name || "Shop"}! 👋
-    </h1>
+    <div className="w-full block">
+      <div className="bg-gradient-to-b from-[#EEF7F0] to-white rounded-[18px] p-6 mb-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+        <div className="flex justify-between items-center mb-1">
+          <h1 className="text-[28px] font-bold text-gray-900 m-0">
+            Hello, {shopData?.name || "Shop"}! 👋
+          </h1>
 
-   <span
-  style={{
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#374151",
-    background: "#FFFFFF",
-    padding: "10px 16px",
-    borderRadius: 12,
-    border: "1px solid #E5E7EB",
-  }}
->
-  {currentDate}
-</span>
-  </div>
+          <span className="text-sm font-semibold text-gray-700 bg-white py-2.5 px-4 rounded-xl border border-gray-200">
+            {currentDate}
+          </span>
+        </div>
 
-  <p
-    style={{
-      color: "#6B7280",
-      marginTop: 8,
-      marginBottom: 0,
-      fontSize: 15,
-    }}
-  >
-    Here's what's happening at your shop today.
-  </p>
-</div>
+        <p className="text-gray-500 mt-2 mb-0 text-[15px]">
+          Here's what's happening at your shop today.
+        </p>
+      </div>
 
       {/* Stat Cards Layout - Using custom grids designed to dynamically span your monitor size */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", // Expanded width bounds
-        gap: 20, 
-        marginBottom: 32,
-        width: "100%"
-      }}>
+      <div className="grid gap-5 mb-8 w-full [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {stats.map((s) => (
-           <div
-    key={s.label}
-    style={{
-      background: "#FFFFFF",
-      borderRadius: 18,
-      border: "1px solid #E7EFE8",
-      padding: "20px 24px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-      transition: "all 0.25s ease",
-      cursor: "pointer",
-    }}
-    onMouseEnter={(e) => {
-  e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
-  e.currentTarget.style.boxShadow =
-    "0 10px 24px rgba(0,0,0,0.08)";
-}}
-
-onMouseLeave={(e) => {
-  e.currentTarget.style.transform = "translateY(0) scale(1)";
-  e.currentTarget.style.boxShadow =
-    "0 4px 12px rgba(0,0,0,0.05)";
-}}
-  >
-            <div style={{ fontSize: 26, marginBottom: 8 }}>{s.icon}</div>
-            <div style={{ color: "#6B7280", fontSize: 13, marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: "#111827", lineHeight: 1 }}>{s.value}</div>
-            <div style={{ color: s.subColor, fontSize: 13, marginTop: 6 }}>{s.sub}</div>
+          <div
+            key={s.label}
+            className="bg-white rounded-[18px] border border-[#E7EFE8] py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+          >
+            <div className="text-2xl mb-2">{s.icon}</div>
+            <div className="text-gray-500 text-[13px] mb-1">{s.label}</div>
+            <div className="text-[32px] font-bold text-gray-900 leading-none">{s.value}</div>
+            <div className={`text-[13px] mt-1.5 ${s.subColor}`}>{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
       <div>
-        <div
-  style={{
-    width: 60,
-    height: 4,
-    background: "#16A34A",
-    borderRadius: 999,
-    marginBottom: 12,
-  }}
-/>
-        <h2
-  style={{
-    fontSize: 24,
-    fontWeight: 800,
-    color: "#111827",
-    marginBottom: 18,
-  }}
->
-  Quick Actions
-</h2>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-          width: "100%"
-        }}>
+        <div className="w-[60px] h-1 bg-green-600 rounded-full mb-3" />
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-4.5">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-3 gap-4 w-full">
           {quickActions.map((a) => (
             <div
               key={a.label}
-              style={{
-  background: a.bg,
-  borderRadius: 18,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-  padding: "32px 24px",
-  textAlign: "center",
-  cursor: "pointer",
-  border: "1px solid #E5E7EB",
-  transition: "all 0.2s ease",
-}}
-              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+              className="bg-white rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] py-8 px-6 text-center cursor-pointer border border-gray-200 transition-transform duration-200 ease-in-out hover:-translate-y-0.5"
             >
-              <div style={{
-                width: 48, height: 48,borderRadius: 18,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)", background: a.iconBg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, margin: "0 auto 12px"
-              }}>{a.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{a.label}</div>
+              <div className="w-12 h-12 rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] bg-green-600 flex items-center justify-center text-[22px] mx-auto mb-3">
+                {a.icon}
+              </div>
+              <div className="font-semibold text-sm text-gray-900">{a.label}</div>
             </div>
           ))}
         </div>
@@ -385,13 +272,7 @@ useEffect(() => {
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        background: "#F8FAFC",
-      }}
-    >
+    <div className="flex min-h-screen bg-slate-50">
      <Sidebar
   activeNav={activeNav}
   setActiveNav={setActiveNav}
@@ -402,12 +283,7 @@ useEffect(() => {
   reviewCount={reviewCount}
 />
 
-      <main
-        style={{
-          flex: 1,
-          padding: "24px",
-        }}
-      >
+      <main className="flex-1 p-6">
         {renderPage(
     activeNav,
     shopData,

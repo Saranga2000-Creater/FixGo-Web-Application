@@ -15,9 +15,14 @@ const SERVICES = [
 
 function Stars({ count, max = 5 }) {
   return (
-    <span style={{ display: "inline-flex", gap: 2 }}>
+    <span className="inline-flex gap-0.5">
       {Array.from({ length: max }).map((_, i) => (
-        <span key={i} style={{ color: i < count ? "#F59E0B" : "#D1D5DB", fontSize: 14 }}>★</span>
+        <span
+          key={i}
+          className={`text-sm ${i < count ? "text-amber-500" : "text-gray-300"}`}
+        >
+          ★
+        </span>
       ))}
     </span>
   );
@@ -169,133 +174,87 @@ useEffect(() => {
 ];
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 m-0">
           Shop Profile
         </h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>
+        <p className="text-gray-500 mt-1 text-sm">
           Manage your shop information and preferences.
         </p>
       </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-        gap: 20
-      }}>
+      <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
         {/* Shop Info Card */}
-        <div style={{
-          background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-          padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
-          <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h3 className="font-bold text-base text-gray-900 mb-4">
             Shop Information
           </h3>
-          <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-            <div style={{
-              width: 80, height: 80, borderRadius: 12, background: "#1F2937",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32
-            }}>
+          <div className="flex gap-4 mb-4">
+            <div className="w-20 h-20 rounded-xl bg-gray-800 flex items-center justify-center text-3xl overflow-hidden">
               <img
-    src={
-      shopData?.profileImageURL
-        ? `http://localhost:8000/${shopData.profileImageURL}`
-        : "/default-shop.png"
-    }
-    alt="Shop"
-    style={{
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    }}
-  />
+                src={
+                  shopData?.profileImageURL
+                    ? `http://localhost:8000/${shopData.profileImageURL}`
+                    : "/default-shop.png"
+                }
+                alt="Shop"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 18, color: "#111827" }}>
-  {shopData.name}
-</div>
-              <span style={{
-                background: "#DCFCE7", color: "#15803D", borderRadius: 20,
-                padding: "3px 12px", fontSize: 12, fontWeight: 600
-              }}>✓ Verified Shop</span>
-              <div style={{ fontSize: 13, color: "#6B7280", marginTop: 6 }}>
-              📍 {shopData.address}
+              <div className="font-bold text-lg text-gray-900">
+                {shopData.name}
               </div>
-              <div style={{ marginTop: 6 }}>
+              <span className="bg-green-100 text-green-700 rounded-full py-0.5 px-3 text-xs font-semibold">
+                ✓ Verified Shop
+              </span>
+              <div className="text-[13px] text-gray-500 mt-1.5">
+                📍 {shopData.address}
+              </div>
+              <div className="mt-1.5">
                 <Stars count={5} />
-                <span style={{ fontSize: 13, color: "#374151", marginLeft: 6 }}>
+                <span className="text-[13px] text-gray-700 ml-1.5">
                   4.8 (128 Reviews)
                 </span>
               </div>
             </div>
           </div>
-          <p style={{ fontSize: 14, color: "#374151", margin: 0 }}>
-           {shopData.description} 
+          <p className="text-sm text-gray-700 m-0">
+            {shopData.description}
           </p>
 
           {/* Shop Gallery — condensed strip */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              marginBottom: 12
-            }}>
-              <h4 style={{ fontWeight: 700, fontSize: 13.5, color: "#111827", margin: 0 }}>
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-bold text-[13.5px] text-gray-900 m-0">
                 Shop Gallery
               </h4>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div className="flex gap-1.5">
                 <button
                   title="Add Images"
-                  style={{
-                    width: 28, height: 28, borderRadius: 8, border: "none",
-                    background: "#16A34A", color: "#fff", fontWeight: 700,
-                    fontSize: 15, cursor: "pointer", display: "flex",
-                    alignItems: "center", justifyContent: "center", lineHeight: 1
-                  }}
+                  className="w-7 h-7 rounded-lg border-none bg-green-600 text-white font-bold text-[15px] cursor-pointer flex items-center justify-center leading-none"
                 >
                   +
                 </button>
                 <button
                   title="Remove Images"
-                  style={{
-                    width: 28, height: 28, borderRadius: 8,
-                    border: "1px solid #DC2626", background: "#fff",
-                    color: "#DC2626", fontWeight: 700, fontSize: 13,
-                    cursor: "pointer", display: "flex",
-                    alignItems: "center", justifyContent: "center", lineHeight: 1
-                  }}
+                  className="w-7 h-7 rounded-lg border border-red-600 bg-white text-red-600 font-bold text-sm cursor-pointer flex items-center justify-center leading-none"
                 >
                   −
                 </button>
               </div>
             </div>
 
-            <div style={{
-              display: "flex",
-              gap: 8,
-              overflowX: "auto",
-              paddingBottom: 4,
-            }}>
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {[1, 2, 3, 4].map((img) => (
                 <div
                   key={img}
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    border: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
-                    flexShrink: 0,
-                  }}
+                  className="w-16 h-16 rounded-[10px] overflow-hidden border border-gray-200 bg-gray-50 shrink-0"
                 >
                   <img
                     src={`/gallery/image${img}.jpg`}
                     alt="Gallery"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               ))}
@@ -305,190 +264,162 @@ useEffect(() => {
           {/* Go to my Shop */}
           <button
             onClick={handleGoToShop}
-            style={{
-              marginTop: 20, width: "100%", padding: "11px",
-              borderRadius: 10, border: "none",
-              background: "#16A34A", color: "#fff",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-            }}
+            className="mt-5 w-full py-2.5 rounded-[10px] border-none bg-green-600 text-white font-semibold text-sm cursor-pointer flex items-center justify-center gap-1.5"
           >
             🔗 Go to my Shop
           </button>
         </div>
 
         {/* Business Info Card */}
-        <div style={{
-          background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-          padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
-          <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h3 className="font-bold text-base text-gray-900 mb-4">
             Business Information
           </h3>
           {BUSINESS_INFO.map(([k, v]) => (
-            <div key={k} style={{
-              display: "flex", justifyContent: "space-between",
-              padding: "8px 0", borderBottom: "1px solid #F9FAFB", fontSize: 13
-            }}>
-              <span style={{ color: "#6B7280" }}>{k}</span>
-              <span style={{ color: "#111827", fontWeight: 500, textAlign: "right", maxWidth: "55%" }}>{v}</span>
+            <div
+              key={k}
+              className="flex justify-between py-2 border-b border-gray-50 text-[13px]"
+            >
+              <span className="text-gray-500">{k}</span>
+              <span className="text-gray-900 font-medium text-right max-w-[55%]">{v}</span>
             </div>
           ))}
         </div>
 
         {/* Services Offered */}
-        <div style={{
-          background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-          padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
-          <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h3 className="font-bold text-base text-gray-900 mb-4">
             Services Offered
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {SERVICES.map(s => (
-              <div key={s} style={{
-                display: "flex", alignItems: "center", gap: 8,
-                fontSize: 13, color: "#374151"
-              }}>
-                <span style={{ color: "#059669", fontSize: 16 }}>✓</span>
+          <div className="grid grid-cols-2 gap-2.5">
+            {SERVICES.map((s) => (
+              <div key={s} className="flex items-center gap-2 text-[13px] text-gray-700">
+                <span className="text-emerald-600 text-base">✓</span>
                 {s}
               </div>
             ))}
           </div>
-          <button style={{
-            marginTop: 16, width: "100%", padding: "10px",
-            borderRadius: 10, border: "1.5px solid #16A34A",
-            color: "#16A34A", background: "transparent",
-            fontWeight: 600, fontSize: 14, cursor: "pointer"
-          }}>+ Add / Remove Services</button>
+          <button className="mt-4 w-full py-2.5 rounded-[10px] border-[1.5px] border-green-600 text-green-600 bg-transparent font-semibold text-sm cursor-pointer">
+            + Add / Remove Services
+          </button>
         </div>
 
         {/* Additional Info */}
-        <div style={{
-          background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-          padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
-          <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h3 className="font-bold text-base text-gray-900 mb-4">
             Additional Information
           </h3>
           {[
-            ["✅ Verified Shop",        "Your shop is verified and visible to all customers."],
-            ["📅 Member Since",         "Joined on March 15, 2024"],
+            ["✅ Verified Shop", "Your shop is verified and visible to all customers."],
+            ["📅 Member Since", "Joined on March 15, 2024"],
             ["📊 Total Completed Jobs", "156 Jobs Completed"],
           ].map(([title, desc]) => (
-            <div key={title} style={{ padding: "10px 0", borderBottom: "1px solid #F9FAFB" }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{title}</div>
-              <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>{desc}</div>
+            <div key={title} className="py-2.5 border-b border-gray-50">
+              <div className="font-semibold text-[13px] text-gray-900">{title}</div>
+              <div className="text-[13px] text-gray-500 mt-0.5">{desc}</div>
             </div>
           ))}
         </div>
 
-{isGarage && (
-  <div style={{
-    background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-    padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-  }}>
-    <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
-      Tow Truck Details
-    </h3>
+        {isGarage && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+            <h3 className="font-bold text-base text-gray-900 mb-4">
+              Tow Truck Details
+            </h3>
 
-    {!hasTowService && !showTowForm && (
-      <div>
-        <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 14 }}>
-          Do you provide tow truck / vehicle carriage services?
-        </p>
-        <button onClick={() => setShowTowForm(true)} style={{
-          padding: "10px 16px", borderRadius: 10, border: "none",
-          background: "#16A34A", color: "#fff", fontWeight: 600,
-          fontSize: 14, cursor: "pointer"
-        }}>
-          Yes, I provide this service
-        </button>
-      </div>
-    )}
-
-    {hasTowService && !showTowForm && (
-      <div>
-        {towLoading ? (
-          <p style={{ fontSize: 13, color: "#6B7280" }}>Loading tow truck details...</p>
-        ) : towDetails ? (
-          <>
-            {[
-              ["Driver Name", towDetails.default_driver_name],
-              ["Driver Phone", towDetails.default_driver_phone],
-              ["Truck Brand", towDetails.default_truck_brand],
-              ["Truck Color", towDetails.default_truck_color],
-              ["Plate Number", towDetails.tow_truck_plate],
-            ].map(([k, v]) => (
-              <div key={k} style={{
-                display: "flex", justifyContent: "space-between",
-                padding: "8px 0", borderBottom: "1px solid #F9FAFB", fontSize: 13
-              }}>
-                <span style={{ color: "#6B7280" }}>{k}</span>
-                <span style={{ color: "#111827", fontWeight: 500 }}>{v || "—"}</span>
+            {!hasTowService && !showTowForm && (
+              <div>
+                <p className="text-[13px] text-gray-500 mb-3.5">
+                  Do you provide tow truck / vehicle carriage services?
+                </p>
+                <button
+                  onClick={() => setShowTowForm(true)}
+                  className="py-2.5 px-4 rounded-[10px] border-none bg-green-600 text-white font-semibold text-sm cursor-pointer"
+                >
+                  Yes, I provide this service
+                </button>
               </div>
-            ))}
-            <button onClick={() => setShowTowForm(true)} style={{
-              marginTop: 16, width: "100%", padding: "10px",
-              borderRadius: 10, border: "1.5px solid #16A34A",
-              color: "#16A34A", background: "transparent",
-              fontWeight: 600, fontSize: 14, cursor: "pointer"
-            }}>
-              Edit Tow Truck Details
-            </button>
-          </>
-        ) : (
-          <p style={{ fontSize: 13, color: "#6B7280" }}>No tow truck details found.</p>
-        )}
-      </div>
-    )}
+            )}
 
-    {showTowForm && (
-      <div>
-        {[
-          ["driverName", "Driver Name", "e.g. John Doe"],
-          ["driverPhone", "Driver Phone", "e.g. +94 77 123 4567"],
-          ["truckBrand", "Truck Brand", "e.g. Isuzu, Toyota"],
-          ["truckColor", "Truck Color", "e.g. White, Blue"],
-          ["truckPlate", "Plate Number", "e.g. WP GA-1234"],
-        ].map(([name, label, placeholder]) => (
-          <div key={name} style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>{label}</label>
-            <input
-              type="text" name={name} value={towForm[name]}
-              onChange={handleTowFormChange} placeholder={placeholder}
-              style={{
-                width: "100%", padding: "8px 10px", marginTop: 4,
-                borderRadius: 8, border: "1px solid #D1D5DB", fontSize: 13,
-                boxSizing: "border-box"
-              }}
-            />
+            {hasTowService && !showTowForm && (
+              <div>
+                {towLoading ? (
+                  <p className="text-[13px] text-gray-500">Loading tow truck details...</p>
+                ) : towDetails ? (
+                  <>
+                    {[
+                      ["Driver Name", towDetails.default_driver_name],
+                      ["Driver Phone", towDetails.default_driver_phone],
+                      ["Truck Brand", towDetails.default_truck_brand],
+                      ["Truck Color", towDetails.default_truck_color],
+                      ["Plate Number", towDetails.tow_truck_plate],
+                    ].map(([k, v]) => (
+                      <div
+                        key={k}
+                        className="flex justify-between py-2 border-b border-gray-50 text-[13px]"
+                      >
+                        <span className="text-gray-500">{k}</span>
+                        <span className="text-gray-900 font-medium">{v || "—"}</span>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setShowTowForm(true)}
+                      className="mt-4 w-full py-2.5 rounded-[10px] border-[1.5px] border-green-600 text-green-600 bg-transparent font-semibold text-sm cursor-pointer"
+                    >
+                      Edit Tow Truck Details
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-[13px] text-gray-500">No tow truck details found.</p>
+                )}
+              </div>
+            )}
+
+            {showTowForm && (
+              <div>
+                {[
+                  ["driverName", "Driver Name", "e.g. John Doe"],
+                  ["driverPhone", "Driver Phone", "e.g. +94 77 123 4567"],
+                  ["truckBrand", "Truck Brand", "e.g. Isuzu, Toyota"],
+                  ["truckColor", "Truck Color", "e.g. White, Blue"],
+                  ["truckPlate", "Plate Number", "e.g. WP GA-1234"],
+                ].map(([name, label, placeholder]) => (
+                  <div key={name} className="mb-2.5">
+                    <label className="text-xs text-gray-500 font-semibold">{label}</label>
+                    <input
+                      type="text"
+                      name={name}
+                      value={towForm[name]}
+                      onChange={handleTowFormChange}
+                      placeholder={placeholder}
+                      className="w-full py-2 px-2.5 mt-1 rounded-lg border border-gray-300 text-[13px] box-border"
+                    />
+                  </div>
+                ))}
+
+                {towError && <p className="text-red-600 text-xs mb-2.5">{towError}</p>}
+
+                <div className="flex gap-2.5 mt-2.5">
+                  <button
+                    onClick={handleTowSave}
+                    disabled={towSaving}
+                    className={`flex-1 py-2.5 rounded-[10px] border-none bg-green-600 text-white font-semibold text-sm ${
+                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer opacity-100"
+                    }`}
+                  >
+                    {towSaving ? "Saving..." : "Save Details"}
+                  </button>
+                  <button
+                    onClick={() => { setShowTowForm(false); setTowError(""); }}
+                    className="flex-1 py-2.5 rounded-[10px] border border-gray-300 bg-white text-gray-700 font-semibold text-sm cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        ))}
-
-        {towError && <p style={{ color: "#DC2626", fontSize: 12, marginBottom: 10 }}>{towError}</p>}
-
-        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-          <button onClick={handleTowSave} disabled={towSaving} style={{
-            flex: 1, padding: "10px", borderRadius: 10, border: "none",
-            background: "#16A34A", color: "#fff", fontWeight: 600,
-            fontSize: 14, cursor: towSaving ? "not-allowed" : "pointer",
-            opacity: towSaving ? 0.7 : 1
-          }}>
-            {towSaving ? "Saving..." : "Save Details"}
-          </button>
-          <button onClick={() => { setShowTowForm(false); setTowError(""); }} style={{
-            flex: 1, padding: "10px", borderRadius: 10,
-            border: "1px solid #D1D5DB", background: "#fff",
-            color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer"
-          }}>
-            Cancel
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-)}
+        )}
       </div>
     </div>
   );

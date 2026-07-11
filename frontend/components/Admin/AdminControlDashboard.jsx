@@ -6,29 +6,17 @@ import Moderation from "./Moderation";
 import Revenue from "./Revenue";
 import Settings from "./Settings";
 
-const T = {
-    green:      "#16A34A",
-    slate900:   "#111827",
-    pageBg:     "#F4F8F5",
-    font:       "'Segoe UI', system-ui, sans-serif",
-};
-
 function AdminControlDashboard() {
     const [currentPage, setCurrentPage] = useState("dashboard");
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            background: T.pageBg,
-            color: T.slate900,
-            fontFamily: T.font,
-        }}>
+        <div className="min-h-screen bg-[#F4F8F5] text-gray-900 font-sans">
             {/* ── SIDEBAR ── fixed, always visible ── */}
             <AdminSidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
 
             {/* ── MAIN CONTENT ── offset by sidebar width and navbar height ── */}
-            <main style={{ marginLeft: 240, minHeight: "calc(100vh - 65px)", padding: "24px", boxSizing: "border-box" }}>
-                <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+            <main className="ml-[240px] min-h-[calc(100vh-65px)] p-6 box-border">
+                <div className="max-w-[1180px] mx-auto">
                     {currentPage === "dashboard"    && <Dashboard />}
                     {currentPage === "verification" && <VerificationQueue />}
                     {currentPage === "moderation"   && <Moderation />}

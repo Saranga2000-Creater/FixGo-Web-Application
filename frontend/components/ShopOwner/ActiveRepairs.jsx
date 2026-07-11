@@ -3,13 +3,17 @@ import { FaWhatsapp, FaMapMarkerAlt } from "react-icons/fa";
 
 function Avatar({ initials, color, size = 36 }) {
   return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: color + "22", color,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 600, fontSize: size * 0.33, flexShrink: 0,
-      border: `1.5px solid ${color}44`
-    }}>
+    <div
+      className="flex items-center justify-center rounded-full font-semibold shrink-0 border"
+      style={{
+        width: size,
+        height: size,
+        background: color + "22",
+        color,
+        fontSize: size * 0.33,
+        borderColor: color + "44",
+      }}
+    >
       {initials}
     </div>
   );
@@ -17,9 +21,9 @@ function Avatar({ initials, color, size = 36 }) {
 
 // Maps each status to a badge color and to the next status in the lifecycle
 const STATUS_STYLES = {
-  "Confirmed":   { bg: "#DBEAFE", color: "#2563EB" },
-  "In Progress": { bg: "#FEF3C7", color: "#D97706" },
-  "Completed":   { bg: "#DCFCE7", color: "#16A34A" },
+  "Confirmed":   { bg: "bg-blue-100", text: "text-blue-600", dot: "bg-blue-600" },
+  "In Progress": { bg: "bg-amber-100", text: "text-amber-600", dot: "bg-amber-600" },
+  "Completed":   { bg: "bg-green-100", text: "text-green-600", dot: "bg-green-600" },
 };
 
 const NEXT_STATUS = {
@@ -49,7 +53,7 @@ function generateMapsUrl(lat, lng) {
 function generateWhatsAppLink(repair) {
   // 1. Clean the driver's phone number (remove +, spaces, hyphens)
   const cleanPhone = repair.dispatched_driver_phone?.replace(/[^0-9]/g, "") || "";
-  
+
   if (!cleanPhone) {
     alert("No driver phone number saved for this dispatch.");
     return "#";
@@ -57,17 +61,17 @@ function generateWhatsAppLink(repair) {
 
   // 2. Generate the Maps URL
   const mapsUrl = generateMapsUrl(repair.customer_lat, repair.customer_lng);
-  
+
   // 3. Build the Ticket string
   let message = `🚨 *TOW DISPATCH*\n\n`;
   message += `*Customer:* ${repair.customer_name}\n`;
   message += `*Phone:* ${repair.customer_phone}\n`;
   message += `*Vehicle:* ${repair.vehicle_brand} (${repair.vehicle_color})\n\n`;
-  
+
   if (repair.pickup_landmark) {
     message += `*Landmark:* ${repair.pickup_landmark}\n`;
   }
-  
+
   message += `📍 *Navigate to Customer:*\n${mapsUrl}`;
 
   // 4. URL-Encode the message and build the final wa.me link
@@ -78,46 +82,47 @@ function ActiveRepairs() {
   const [activeRepairs, setActiveRepairs] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
 
-useEffect(() => {
-  const token = localStorage.getItem("jwt_token");
+  useEffect(() => {
+    const token = localStorage.getItem("jwt_token");
 
-  fetch("http://localhost:8000/api/getActiveRepairs.php", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("API DATA:", data);
-
-      if (data.success) {
-        setActiveRepairs(data.data);
-      }
+    fetch("http://localhost:8000/api/getActiveRepairs.php", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-    .catch(console.error);
-}, []);
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("API DATA:", data);
+
+        if (data.success) {
+          setActiveRepairs(data.data);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const handleChangeStatus = async (requestId, currentStatus) => {
     const nextStatus = NEXT_STATUS[currentStatus];
     if (!nextStatus) return;
     setUpdatingId(requestId);
 
     try {
- const token = localStorage.getItem("jwt_token");
+      const token = localStorage.getItem("jwt_token");
 
-const res = await fetch(
-  "http://localhost:8000/api/updateStatus.php",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      request_id: requestId,
-      new_status: nextStatus,
-    }),
-  }
-);
+      const res = await fetch(
+        "http://localhost:8000/api/updateStatus.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            request_id: requestId,
+            new_status: nextStatus,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -144,93 +149,63 @@ const res = await fetch(
   };
 
   return (
-    <div style={{ width: "100%" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>
+    <div className="w-full">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 m-0">
           Active Repairs
         </h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>
+        <p className="text-gray-500 mt-1 text-sm">
           Track all ongoing repair jobs.
         </p>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginBottom: 24,
-        }}
-      >
+      <div className="flex gap-3 mb-6">
         <input
           placeholder="Search customer, vehicle, or repair..."
-          style={{
-            flex: 1,
-            padding: "14px 20px",
-            borderRadius: 14,
-            border: "1px solid #E5E7EB",
-            background: "#FFFFFF",
-            fontSize: 15,
-            outline: "none",
-          }}
+          className="flex-1 px-5 py-3.5 rounded-2xl border border-gray-200 bg-white text-[15px] outline-none"
         />
 
-        <button
-          style={{
-            background: "#16A34A",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: 14,
-            padding: "0 24px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
+        <button className="bg-green-600 text-white border-none rounded-2xl px-6 font-semibold cursor-pointer">
           Filter
         </button>
       </div>
 
-      <div style={{
-        background: "#FFFFFF",
-        borderRadius: 18,
-        border: "1px solid #E7EFE8",
-        overflow: "hidden",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
-      }}>
+      <div className="bg-white rounded-[18px] border border-[#E7EFE8] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
 
-        {/* Header - Updated grid columns to give Action column more space */}
-        <div style={{
-          padding: "14px 20px", borderBottom: "1px solid #F3F4F6",
-          display: "grid",
-          gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.5fr",
-          gap: 12
-        }}>
-          {["Customer", "Vehicle", "Service", "Status", "Action"].map(h => (
-            <span key={h} style={{ fontSize: 12, fontWeight: 600, color: "#6B7280" }}>{h}</span>
+        {/* Header */}
+        <div className="px-5 py-3.5 border-b border-gray-100 grid gap-3 [grid-template-columns:2.3fr_2fr_2fr_1.5fr_1.5fr]">
+          {["Customer", "Vehicle", "Service", "Status", "Action"].map((h) => (
+            <span key={h} className="text-xs font-semibold text-gray-500">
+              {h}
+            </span>
           ))}
         </div>
 
         {/* Rows */}
         {activeRepairs.map((r, i) => {
-          const statusStyle = STATUS_STYLES[r.status] || { bg: "#F3F4F6", color: "#6B7280" };
+          const statusStyle = STATUS_STYLES[r.status] || {
+            bg: "bg-gray-100",
+            text: "text-gray-500",
+            dot: "bg-gray-500",
+          };
           const nextLabel = NEXT_STATUS_LABEL[r.status];
           const isUpdating = updatingId === r.id;
 
           return (
-            <div key={r.id} style={{
-              padding: "16px 20px",
-              borderBottom: i < activeRepairs.length - 1 ? "1px solid #F9FAFB" : "none",
-              display: "grid",
-              gridTemplateColumns: "2.3fr 2fr 2fr 1.5fr 1.5fr", // Matching header grid columns
-              gap: 12, alignItems: "center"
-            }}>
+            <div
+              key={r.id}
+              className={`px-5 py-4 grid gap-3 items-center [grid-template-columns:2.3fr_2fr_2fr_1.5fr_1.5fr] ${
+                i < activeRepairs.length - 1 ? "border-b border-gray-50" : ""
+              }`}
+            >
               {/* Customer */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="flex items-center gap-2.5">
                 <Avatar initials={getInitials(r.customer_name)} color="#16A34A" />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>
+                  <div className="font-semibold text-sm text-gray-900">
                     {r.customer_name}
                   </div>
-                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                  <div className="text-xs text-gray-500">
                     {r.customer_phone}
                   </div>
                 </div>
@@ -238,104 +213,58 @@ const res = await fetch(
 
               {/* Vehicle */}
               <div>
-                <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle_brand}</div>
-                <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>{r.vehicle_color}</div>
+                <div className="text-sm text-gray-700">{r.vehicle_brand}</div>
+                <div className="text-xs text-green-600 font-semibold">
+                  {r.vehicle_color}
+                </div>
               </div>
 
               {/* Service */}
               <div>
-                <div style={{ fontSize: 14, color: "#374151" }}>{r.issue_category}</div>
+                <div className="text-sm text-gray-700">{r.issue_category}</div>
               </div>
 
               {/* Status Badge */}
               <span
-                style={{
-                  background: statusStyle.bg,
-                  color: statusStyle.color,
-                  borderRadius: 999,
-                  padding: "6px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  textAlign: "center",
-                  gap: 6,
-                  width: "130px",
-                }}
+                className={`${statusStyle.bg} ${statusStyle.text} rounded-full px-3.5 py-1.5 text-xs font-bold inline-flex justify-center items-center text-center gap-1.5 w-[130px]`}
               >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: statusStyle.color,
-                  }}
-                />
+                <span className={`w-2 h-2 rounded-full ${statusStyle.dot}`} />
                 {r.status}
               </span>
 
-              {/* Action Column - Wrapped completely in a Flex Column */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
-                
+              {/* Action Column */}
+              <div className="flex flex-col gap-2 items-start">
+
                 {/* 1. Main Action Button */}
                 {nextLabel ? (
                   <button
                     disabled={isUpdating}
                     onClick={() => handleChangeStatus(r.id, r.status)}
-                    style={{
-                      padding: "10px 18px",
-                      borderRadius: 10,
-                      border: "1px solid #D1D5DB",
-                      background: isUpdating ? "#F3F4F6" : "#FFFFFF",
-                      color: "#374151",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      cursor: isUpdating ? "not-allowed" : "pointer",
-                      width: "100%", // Forces it to span the column neatly
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (isUpdating) return;
-                      e.currentTarget.style.background = "#16A34A";
-                      e.currentTarget.style.color = "#FFFFFF";
-                      e.currentTarget.style.borderColor = "#16A34A";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (isUpdating) return;
-                      e.currentTarget.style.background = "#FFFFFF";
-                      e.currentTarget.style.color = "#374151";
-                      e.currentTarget.style.borderColor = "#D1D5DB";
-                    }}
+                    className={`w-full px-4.5 py-2.5 rounded-[10px] border border-gray-300 font-semibold text-[13px] transition-all duration-200 ${
+                      isUpdating
+                        ? "bg-gray-100 text-gray-700 cursor-not-allowed"
+                        : "bg-white text-gray-700 cursor-pointer hover:bg-green-600 hover:text-white hover:border-green-600"
+                    }`}
                   >
                     {isUpdating ? "Updating..." : nextLabel}
                   </button>
                 ) : (
-                  <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600, padding: "10px 0" }}>
+                  <span className="text-[13px] text-gray-400 font-semibold py-2.5">
                     Completed
                   </span>
                 )}
 
-                {/* 2. Dispatch Utilities (Stacked neatly under the main button) */}
+                {/* 2. Dispatch Utilities */}
                 {r.requires_tow == 1 && r.status === "Confirmed" && (
-                  <div style={{ display: "flex", gap: 6, width: "100%" }}>
-                    
+                  <div className="flex gap-1.5 w-full">
+
                     {/* Map Button */}
                     <a
                       href={generateMapsUrl(r.customer_lat, r.customer_lng)}
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Navigate to Customer"
-                      style={{
-                        flex: 1, 
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        padding: "6px 0", borderRadius: 8,
-                        background: "#E0F2FE", color: "#0369A1", 
-                        textDecoration: "none", fontSize: 12, fontWeight: 600,
-                        transition: "background 0.2s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "#BAE6FD"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = "#E0F2FE"}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-sky-100 text-sky-700 no-underline text-xs font-semibold transition-colors duration-200 hover:bg-sky-200"
                     >
                       <FaMapMarkerAlt size={14} /> Map
                     </a>
@@ -346,16 +275,7 @@ const res = await fetch(
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Text Driver Details"
-                      style={{
-                        flex: 1, 
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        padding: "6px 0", borderRadius: 8,
-                        background: "#DCFCE7", color: "#15803D",
-                        textDecoration: "none", fontSize: 12, fontWeight: 600,
-                        transition: "background 0.2s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "#BBF7D0"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = "#DCFCE7"}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-green-100 text-green-700 no-underline text-xs font-semibold transition-colors duration-200 hover:bg-green-200"
                     >
                       <FaWhatsapp size={16} /> Driver
                     </a>
@@ -368,12 +288,10 @@ const res = await fetch(
         })}
 
         {/* Footer */}
-        <div style={{ padding: "14px 20px", textAlign: "center" }}>
-          <button style={{
-            padding: "10px 32px", borderRadius: 10,
-            border: "1.5px solid #16A34A", color: "#16A34A",
-            background: "transparent", fontWeight: 600, fontSize: 14, cursor: "pointer"
-          }}>View all active repairs</button>
+        <div className="px-5 py-3.5 text-center">
+          <button className="px-8 py-2.5 rounded-[10px] border-[1.5px] border-green-600 text-green-600 bg-transparent font-semibold text-sm cursor-pointer">
+            View all active repairs
+          </button>
         </div>
       </div>
     </div>
@@ -381,5 +299,3 @@ const res = await fetch(
 }
 
 export default ActiveRepairs;
-
-

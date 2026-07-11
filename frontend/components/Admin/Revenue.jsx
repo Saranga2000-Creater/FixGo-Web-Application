@@ -2,25 +2,6 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays, faMoneyBillWave, faChartLine, faStore, faDownload, faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";
 
-// Shared color/font tokens used across this page
-const T = {
-    green:    "#16A34A",
-    greenBg:  "#EDF9F0",
-    orange:   "#FF6B1A",
-    orangeBg: "#FFF4EE",
-    blue:     "#2563EB",
-    blueBg:   "#EDF3FF",
-    slate900: "#111827",
-    slate700: "#374151",
-    slate500: "#6B7280",
-    slate400: "#9CA3AF",
-    slate200: "#E5E7EB",
-    slate100: "#F3F4F6",
-    slate50:  "#F9FAFB",
-    white:    "#FFFFFF",
-    font:     "'Segoe UI', system-ui, sans-serif",
-};
-
 // Sample per-shop revenue data (would normally come from the backend API)
 const REVENUE_ROWS = [
     { id: "#SHP-9021", initials: "KM", shop: "Kandy Motors Ltd.",   bookings: 124, revenue: "LKR 248,000", commission: "LKR 37,200", status: "Paid"    },
@@ -31,26 +12,28 @@ const REVENUE_ROWS = [
     { id: "#SHP-7201", initials: "EA", shop: "Elite Auto Care",     bookings:  58, revenue: "LKR 116,000", commission: "LKR 17,400", status: "Pending" },
 ];
 
+// Maps each accent name to its matching background/icon/text Tailwind classes
+const ACCENT_STYLES = {
+    green:  { iconBg: "bg-green-50",  iconColor: "text-green-600", metaColor: "text-green-600" },
+    blue:   { iconBg: "bg-[#EDF3FF]", iconColor: "text-blue-600",  metaColor: "text-blue-600" },
+    orange: { iconBg: "bg-[#FFF4EE]", iconColor: "text-[#FF6B1A]", metaColor: "text-[#FF6B1A]" },
+};
+
 // Reusable top summary card (Gross Revenue / Total Commission / Active Billing)
 function AdminSummaryCard({ accent, icon, title, count, meta }) {
-    const styles = {
-        green:  { iconBg: T.greenBg,  iconColor: T.green,  metaColor: T.green  },
-        blue:   { iconBg: T.blueBg,   iconColor: T.blue,   metaColor: T.blue   },
-        orange: { iconBg: T.orangeBg, iconColor: T.orange, metaColor: T.orange },
-    };
-    const s = styles[accent];
+    const s = ACCENT_STYLES[accent];
     return (
-        <div style={{ background: T.white, borderRadius: 18, border: `1px solid ${T.slate200}`, padding: "20px 24px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                <div style={{ width: 52, height: 52, borderRadius: "50%", background: s.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <FontAwesomeIcon icon={icon} style={{ fontSize: 20, color: s.iconColor }} />
+        <div className="bg-white rounded-[18px] border border-gray-200 py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+            <div className="flex items-start gap-4">
+                <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center shrink-0 ${s.iconBg}`}>
+                    <FontAwesomeIcon icon={icon} className={`text-xl ${s.iconColor}`} />
                 </div>
                 <div>
-                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{title}</p>
-                    <p style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: "4px 0" }}>{count}</p>
+                    <p className="text-[13px] text-gray-500 m-0">{title}</p>
+                    <p className="text-[28px] font-bold text-gray-900 my-1">{count}</p>
                     {meta && (
-                        <p style={{ fontSize: 12, fontWeight: 600, color: s.metaColor, margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                            <FontAwesomeIcon icon={faArrowTrendUp} style={{ fontSize: 10 }} />
+                        <p className={`text-xs font-semibold m-0 flex items-center gap-1 ${s.metaColor}`}>
+                            <FontAwesomeIcon icon={faArrowTrendUp} className="text-[10px]" />
                             {meta}
                         </p>
                     )}
@@ -63,10 +46,10 @@ function AdminSummaryCard({ accent, icon, title, count, meta }) {
 // Generic white card wrapper with optional title and header action (e.g. a button)
 function PageCard({ title, action, children }) {
     return (
-        <div style={{ background: T.white, borderRadius: 18, border: `1px solid ${T.slate200}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+        <div className="bg-white rounded-[18px] border border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
             {(title || action) && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: `1px solid ${T.slate100}` }}>
-                    {title && <h2 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</h2>}
+                <div className="flex items-center justify-between py-4 px-6 border-b border-gray-100">
+                    {title && <h2 className="text-[15px] font-bold text-gray-900 m-0">{title}</h2>}
                     {action && <div>{action}</div>}
                 </div>
             )}
@@ -79,8 +62,8 @@ function PageCard({ title, action, children }) {
 function PageHeading({ title, sub }) {
     return (
         <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</h1>
-            {sub && <p style={{ color: T.slate500, marginTop: 6, fontSize: 14, marginBottom: 0 }}>{sub}</p>}
+            <h1 className="text-2xl font-bold text-gray-900 m-0">{title}</h1>
+            {sub && <p className="text-gray-500 mt-1.5 text-sm mb-0">{sub}</p>}
         </div>
     );
 }
@@ -88,41 +71,45 @@ function PageHeading({ title, sub }) {
 // Column headers for the revenue table
 function TableHeader({ cols }) {
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 16, padding: "10px 24px", background: T.slate50, borderBottom: `1px solid ${T.slate100}`, fontSize: 11, fontWeight: 700, color: T.slate500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {cols.map(c => <span key={c}>{c}</span>)}
+        <div className="grid gap-4 py-2.5 px-6 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-[0.05em] [grid-template-columns:2fr_1fr_1fr_1fr_1fr]">
+            {cols.map((c) => <span key={c}>{c}</span>)}
         </div>
     );
 }
+
+// Maps each status to badge Tailwind classes (green=Paid, orange=Pending, red=Overdue)
+const STATUS_STYLES = {
+    Paid:    "bg-green-50 text-green-600",
+    Pending: "bg-[#FFF4EE] text-[#FF6B1A]",
+    Overdue: "bg-red-100 text-red-600",
+};
 
 // One row in the revenue table: shop info, bookings, revenue, commission, and payment status
 function RevenueRow({ row, isLast }) {
-    // Color-codes the status badge (green=Paid, orange=Pending, red=Overdue)
-    const statusStyle = {
-        Paid:    { bg: T.greenBg,  color: T.green  },
-        Pending: { bg: T.orangeBg, color: T.orange },
-        Overdue: { bg: "#FEE2E2",  color: "#DC2626" },
-    };
-    const ss = statusStyle[row.status] || {};
+    const statusClass = STATUS_STYLES[row.status] || "";
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 16, alignItems: "center", padding: "14px 24px", borderBottom: !isLast ? `1px solid ${T.slate100}` : "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.green, flexShrink: 0 }}>{row.initials}</div>
+        <div
+            className={`grid gap-4 items-center py-3.5 px-6 [grid-template-columns:2fr_1fr_1fr_1fr_1fr] ${
+                !isLast ? "border-b border-gray-100" : ""
+            }`}
+        >
+            <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-[11px] font-bold text-green-600 shrink-0">
+                    {row.initials}
+                </div>
                 <div>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>{row.shop}</p>
-                    <p style={{ fontSize: 11, color: T.slate400, margin: 0 }}>{row.id}</p>
+                    <p className="text-[13px] font-bold text-gray-900 m-0">{row.shop}</p>
+                    <p className="text-[11px] text-gray-400 m-0">{row.id}</p>
                 </div>
             </div>
-            <p style={{ fontSize: 13, color: T.slate700, margin: 0 }}>{row.bookings}</p>
-            <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>{row.revenue}</p>
-            <p style={{ fontSize: 13, color: T.slate700, margin: 0 }}>{row.commission}</p>
-            <span style={{ display: "inline-block", borderRadius: 99, padding: "4px 12px", fontSize: 12, fontWeight: 600, background: ss.bg, color: ss.color }}>{row.status}</span>
+            <p className="text-[13px] text-gray-700 m-0">{row.bookings}</p>
+            <p className="text-[13px] font-bold text-gray-900 m-0">{row.revenue}</p>
+            <p className="text-[13px] text-gray-700 m-0">{row.commission}</p>
+            <span className={`inline-block rounded-full py-1 px-3 text-xs font-semibold ${statusClass}`}>
+                {row.status}
+            </span>
         </div>
     );
-}
-
-// Style object for the dark "Export CSV" button
-function darkBtn() {
-    return { display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: "none", background: T.slate900, fontSize: 13, fontWeight: 600, color: T.white, cursor: "pointer", fontFamily: T.font };
 }
 
 // Main Revenue & Ledger page: period filter, 3 summary cards, and a per-shop revenue table
@@ -131,13 +118,17 @@ function Revenue() {
     const [filter, setFilter] = useState("This Month");
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="flex flex-col gap-5">
             {/* Heading + period dropdown */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+            <div className="flex justify-between items-start flex-wrap gap-3">
                 <PageHeading title="Revenue & Ledger" sub="Monthly billing and commission tracking across all shops." />
-                <div style={{ display: "flex", alignItems: "center", gap: 8, background: T.white, border: `1px solid ${T.slate200}`, borderRadius: 12, padding: "10px 16px", fontSize: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
-                    <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ border: "none", outline: "none", fontSize: 14, color: T.slate700, background: "transparent", fontFamily: T.font, cursor: "pointer" }}>
+                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+                    <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400" />
+                    <select
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="border-none outline-none text-sm text-gray-700 bg-transparent font-sans cursor-pointer"
+                    >
                         <option>This Month</option>
                         <option>Last Month</option>
                         <option>Last 3 Months</option>
@@ -147,7 +138,7 @@ function Revenue() {
             </div>
 
             {/* Top summary stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
                 <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"    count="LKR 42,000" meta="+18% vs last month" />
                 <AdminSummaryCard accent="blue"   icon={faChartLine}     title="Total Commission" count="LKR 6,300" meta="15% avg rate"       />
                 <AdminSummaryCard accent="orange" icon={faStore}         title="Active Billing"   count="10"    meta="Shops billed"       />
@@ -156,7 +147,11 @@ function Revenue() {
             {/* Per-shop revenue table with CSV export */}
             <PageCard
                 title="Shop Revenue Breakdown"
-                action={<button style={darkBtn()}><FontAwesomeIcon icon={faDownload} style={{ fontSize: 11 }} /> Export CSV</button>}
+                action={
+                    <button className="flex items-center gap-1.5 py-2 px-3.5 rounded-[10px] border-none bg-gray-900 text-sm font-semibold text-white cursor-pointer font-sans">
+                        <FontAwesomeIcon icon={faDownload} className="text-[11px]" /> Export CSV
+                    </button>
+                }
             >
                 <TableHeader cols={["Shop", "Bookings", "Revenue", "Commission", "Status"]} />
                 {REVENUE_ROWS.map((row, idx) => (
