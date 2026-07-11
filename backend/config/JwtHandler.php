@@ -3,7 +3,14 @@ class JwtHandler {
     private $secretKey;
 
     public function __construct() {
-        $this->secretKey = $_ENV['JWT_SECRET'] ?? 'fallback_secret_key_123456';
+        $secretKey = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET');
+        $secretKey = is_string($secretKey) ? trim($secretKey) : '';
+
+        if ($secretKey === '') {
+            throw new RuntimeException('JWT_SECRET environment variable is required.');
+        }
+
+        $this->secretKey = $secretKey;
     }
 
     // Base64Url Encoding helper

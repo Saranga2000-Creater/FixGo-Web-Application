@@ -138,7 +138,7 @@ class CustomerController {
 
         try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $verificationToken = bin2hex(random_bytes(32));
+            $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
             $customerModel = new Customer($this->db);
             
@@ -150,7 +150,7 @@ class CustomerController {
 
             $customerData = [
                 'name' => $name,
-                'contactNumber' => $sanitizedPhone,
+                'contactNumber' => $phone,
                 'address' => $address,
                 'profilePhoto' => $dbImagePath
             ];
