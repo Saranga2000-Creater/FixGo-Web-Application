@@ -28,7 +28,11 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
   };
 
   return (
-    <div className="w-[240px] min-h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.10)] sticky top-0 self-start">
+    // NOTE: top-[72px] and h-[calc(100vh-72px)] assume the site navbar above
+    // this component is 72px tall. If the sidebar still overlaps the navbar
+    // or leaves a gap, adjust the "72px" value(s) below to match the navbar's
+    // actual height.
+    <div className="w-[240px] h-[calc(100vh-72px)] bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.10)] fixed left-0 top-[72px] overflow-y-auto z-40">
       {/* Shop Header */}
       <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl bg-gray-800 flex items-center justify-center text-[22px] shrink-0 overflow-hidden">
@@ -105,3 +109,5 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
 }
 
 export default Sidebar;
+
+
