@@ -1,47 +1,55 @@
 <?php
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
 class EmailSender {
     /**
      * Sends a verification email to the user.
-     * Also logs the email details to a local text file for developer testing/debugging.
      *
      * @param string $email The recipient email.
      * @param string $token The verification token.
      * @return bool True if mail was sent, false otherwise.
      */
     public static function sendVerificationEmail($email, $token) {
-        $frontendUrl = getenv('FRONTEND_URL') ?: 'http://localhost:5173';
-        $verificationLink = $frontendUrl . '/verify-email?token=' . $token;
-
         $subject = "FixGo - Verify Your Email Address";
         
-        $message = "Hello,\n\n";
-        $message .= "Thank you for registering with FixGo! Please verify your email address to activate your account by clicking the link below:\n\n";
-        $message .= $verificationLink . "\n\n";
-        $message .= "If you did not create an account, no further action is required.\n\n";
-        $message .= "Best regards,\n";
+        $message = "Hello,<br><br>";
+        $message .= "Thank you for registering with FixGo! Please verify your email address to activate your account. Your One-Time Password (OTP) is:<br><br>";
+        $message .= "<strong style='font-size: 24px; letter-spacing: 2px; color: #059669;'>" . htmlspecialchars($token) . "</strong><br><br>";
+        $message .= "This OTP is valid for 1 hour. Please enter it on the verification page.<br><br>";
+        $message .= "If you did not create an account, no further action is required.<br><br>";
+        $message .= "Best regards,<br>";
         $message .= "The FixGo Team";
 
-        $headers = "From: no-reply@fixgo.com\r\n";
-        $headers .= "Reply-To: no-reply@fixgo.com\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+        $mail = new PHPMailer(true);
+        try {
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = getenv('SMTP_USER');
+            $mail->Password   = getenv('SMTP_PASS');
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = getenv('SMTP_PORT') ?: 587;
 
-        // 1. Log the email to backend/email_logs.txt for local testing/development
-        $logPath = __DIR__ . '/../email_logs.txt';
-        $timestamp = date('Y-m-d H:i:s');
-        $logEntry = "==================================================\n";
-        $logEntry .= "Timestamp: $timestamp\n";
-        $logEntry .= "To: $email\n";
-        $logEntry .= "Subject: $subject\n";
-        $logEntry .= "Link: $verificationLink\n";
-        $logEntry .= "Headers:\n$headers\n";
-        $logEntry .= "Message:\n$message\n";
-        $logEntry .= "==================================================\n\n";
+            // Recipients
+            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Team');
+            $mail->addAddress($email);
 
-        file_put_contents($logPath, $logEntry, FILE_APPEND);
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br><br>'], ["\n", "\n\n"], $message));
 
-        // 2. Attempt standard PHP mail()
-        // We suppress errors with @ in case mail server is not configured in php.ini
-        return @mail($email, $subject, $message, $headers);
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("SMTP Send Error: {$mail->ErrorInfo}");
+            return false;
+        }
     }
 }

@@ -11,6 +11,7 @@ class User {
     public $isActive;
     public $is_email_verified;
     public $verification_token;
+    public $token_expiry;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -56,6 +57,7 @@ class User {
             $this->isActive = $row['isActive'];
             $this->is_email_verified = $row['is_email_verified'] ?? 0;
             $this->verification_token = $row['verification_token'] ?? null;
+            $this->token_expiry = $row['token_expiry'] ?? null;
 
             return true;
         }

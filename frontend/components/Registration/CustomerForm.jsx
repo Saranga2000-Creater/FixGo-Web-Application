@@ -77,7 +77,8 @@ export default function CustomerForm() {
         payload.append("profilePic", profilePic);
 
         try {
-            const response = await fetch("http://localhost:8000/api/registerCustomer.php", {
+            const host = window.location.hostname;
+            const response = await fetch(`http://${host}:8000/api/registerCustomer.php`, {
                 method: "POST",
                 body: payload,
             });
@@ -87,8 +88,8 @@ export default function CustomerForm() {
             if (response.ok) {
                 setSuccess(true);
                 setTimeout(() => {
-                    navigate("/login");
-                }, 8000);
+                    navigate("/verify-email");
+                }, 4000);
             } else {
                 setError(data.message || "Something went wrong. Please try again.");
             }
@@ -109,15 +110,15 @@ export default function CustomerForm() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Verification Email Sent!</h3>
                 <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                    Thank you for registering! We've sent a verification link to <strong className="text-gray-800">{formData.email}</strong>. 
-                    Please check your inbox and verify your email to activate your account.
+                    Thank you for registering! We've sent a 6-digit OTP to <strong className="text-gray-800">{formData.email}</strong>. 
+                    Please check your inbox and enter the OTP to activate your account.
                 </p>
                 <button
                     type="button"
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate("/verify-email")}
                     className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all duration-200"
                 >
-                    Go to Login
+                    Enter OTP Now
                 </button>
             </div>
         );
