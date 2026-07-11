@@ -83,9 +83,22 @@ function Profile() {
         </div>
     );
 
-    const avatarSrc = customer.profilePhoto
-        ? customer.profilePhoto
-        : DEFAULT_AVATAR + encodeURIComponent(customer.name);
+    // Strip out quotes and old IPs
+    const cleanProfilePhoto = customer.profilePhoto ? customer.profilePhoto.replace(/['"]/g, '') : null;
+    let avatarSrc = DEFAULT_AVATAR + encodeURIComponent(customer.name);
+
+    if (cleanProfilePhoto) {
+        if (cleanProfilePhoto.startsWith("http")) {
+            try {
+                const urlObj = new URL(cleanProfilePhoto);
+                avatarSrc = `http://localhost:8000${urlObj.pathname}`;
+            } catch (error) {
+                avatarSrc = cleanProfilePhoto;
+            }
+        } else {
+            avatarSrc = `http://localhost:8000/${cleanProfilePhoto.replace(/^\//, '')}`;
+        }
+    }
 
     return (
         <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
