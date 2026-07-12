@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays, faMoneyBillWave, faChartLine, faStore, faDownload, faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";
 
+// Shared color/font tokens used across this page
 const T = {
     green:    "#16A34A",
     greenBg:  "#EDF9F0",
@@ -20,6 +21,7 @@ const T = {
     font:     "'Segoe UI', system-ui, sans-serif",
 };
 
+// Sample per-shop revenue data (would normally come from the backend API)
 const REVENUE_ROWS = [
     { id: "#SHP-9021", initials: "KM", shop: "Kandy Motors Ltd.",   bookings: 124, revenue: "LKR 248,000", commission: "LKR 37,200", status: "Paid"    },
     { id: "#SHP-8842", initials: "GR", shop: "Galle Road Repairs",  bookings:  87, revenue: "LKR 174,000", commission: "LKR 26,100", status: "Pending" },
@@ -29,6 +31,7 @@ const REVENUE_ROWS = [
     { id: "#SHP-7201", initials: "EA", shop: "Elite Auto Care",     bookings:  58, revenue: "LKR 116,000", commission: "LKR 17,400", status: "Pending" },
 ];
 
+// Reusable top summary card (Gross Revenue / Total Commission / Active Billing)
 function AdminSummaryCard({ accent, icon, title, count, meta }) {
     const styles = {
         green:  { iconBg: T.greenBg,  iconColor: T.green,  metaColor: T.green  },
@@ -57,6 +60,7 @@ function AdminSummaryCard({ accent, icon, title, count, meta }) {
     );
 }
 
+// Generic white card wrapper with optional title and header action (e.g. a button)
 function PageCard({ title, action, children }) {
     return (
         <div style={{ background: T.white, borderRadius: 18, border: `1px solid ${T.slate200}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
@@ -71,6 +75,7 @@ function PageCard({ title, action, children }) {
     );
 }
 
+// Page title + subtitle block
 function PageHeading({ title, sub }) {
     return (
         <div>
@@ -80,6 +85,7 @@ function PageHeading({ title, sub }) {
     );
 }
 
+// Column headers for the revenue table
 function TableHeader({ cols }) {
     return (
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 16, padding: "10px 24px", background: T.slate50, borderBottom: `1px solid ${T.slate100}`, fontSize: 11, fontWeight: 700, color: T.slate500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -88,7 +94,9 @@ function TableHeader({ cols }) {
     );
 }
 
+// One row in the revenue table: shop info, bookings, revenue, commission, and payment status
 function RevenueRow({ row, isLast }) {
+    // Color-codes the status badge (green=Paid, orange=Pending, red=Overdue)
     const statusStyle = {
         Paid:    { bg: T.greenBg,  color: T.green  },
         Pending: { bg: T.orangeBg, color: T.orange },
@@ -112,14 +120,19 @@ function RevenueRow({ row, isLast }) {
     );
 }
 
+// Style object for the dark "Export CSV" button
 function darkBtn() {
     return { display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: "none", background: T.slate900, fontSize: 13, fontWeight: 600, color: T.white, cursor: "pointer", fontFamily: T.font };
 }
 
+// Main Revenue & Ledger page: period filter, 3 summary cards, and a per-shop revenue table
 function Revenue() {
+    // Currently selected time period for the report (not wired to real filtering yet)
     const [filter, setFilter] = useState("This Month");
+
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Heading + period dropdown */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                 <PageHeading title="Revenue & Ledger" sub="Monthly billing and commission tracking across all shops." />
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: T.white, border: `1px solid ${T.slate200}`, borderRadius: 12, padding: "10px 16px", fontSize: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -132,11 +145,15 @@ function Revenue() {
                     </select>
                 </div>
             </div>
+
+            {/* Top summary stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-                <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"    count="LKR 4.2M" meta="+18% vs last month" />
-                <AdminSummaryCard accent="blue"   icon={faChartLine}     title="Total Commission" count="LKR 630K" meta="15% avg rate"       />
-                <AdminSummaryCard accent="orange" icon={faStore}         title="Active Billing"   count="1,248"    meta="Shops billed"       />
+                <AdminSummaryCard accent="green"  icon={faMoneyBillWave} title="Gross Revenue"    count="LKR 42,000" meta="+18% vs last month" />
+                <AdminSummaryCard accent="blue"   icon={faChartLine}     title="Total Commission" count="LKR 6,300" meta="15% avg rate"       />
+                <AdminSummaryCard accent="orange" icon={faStore}         title="Active Billing"   count="10"    meta="Shops billed"       />
             </div>
+
+            {/* Per-shop revenue table with CSV export */}
             <PageCard
                 title="Shop Revenue Breakdown"
                 action={<button style={darkBtn()}><FontAwesomeIcon icon={faDownload} style={{ fontSize: 11 }} /> Export CSV</button>}
