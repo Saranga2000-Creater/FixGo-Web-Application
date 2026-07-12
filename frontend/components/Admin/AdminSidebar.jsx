@@ -18,10 +18,7 @@ const T = {
     font:       "'Segoe UI', system-ui, sans-serif",
 };
 
-// badge is left undefined for now — wire this up to real counts
-// (e.g. verification queue count, unread moderation flags) once the
-// backend endpoints exist. Just set item.badge = someNumber to bring
-// the pill back for that nav item.
+
 const NAV_ITEMS = [
     { key: "dashboard",    icon: faChartLine,     label: "Dashboard" },
     { key: "verification", icon: faShieldHalved,  label: "Verification Queue", badge: undefined },
