@@ -11,52 +11,21 @@ import {
     faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
-
-const T = {
-    green:      "#16A34A",
-    greenMuted: "rgba(22,163,74,0.08)",
-    blue:       "#2563EB",
-    blueBg:     "rgba(37,99,235,0.10)",
-    amber:      "#D97706",
-    amberBg:    "rgba(217,119,6,0.10)",
-    slate900:   "#111827",
-    slate700:   "#374151",
-    slate500:   "#6B7280",
-    slate400:   "#9CA3AF",
-    slate200:   "#E5E7EB",
-    slate100:   "#F3F4F6",
-    white:      "#FFFFFF",
-    font:       "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background:   "#FFFFFF",
-        border:       "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow:    "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
 function SettingsRow({ icon, label, meta }) {
     return (
         <button
-            style={{
-                display: "flex", width: "100%",
-                alignItems: "center", justifyContent: "space-between",
-                padding: "16px 24px",
-                background: "none", border: "none",
-                cursor: "pointer", textAlign: "left",
-                fontFamily: T.font,
-                transition: "background 0.15s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = T.greenMuted}
-            onMouseLeave={e => e.currentTarget.style.background = "none"}
+            className="flex w-full items-center justify-between py-4 px-6 bg-transparent border-none cursor-pointer text-left transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)]"
+            style={{ fontFamily: FONT }}
         >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <FontAwesomeIcon icon={icon} style={{ width: 16, color: `${T.green}80` }} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.slate700 }}>{label}</span>
+            <div className="flex items-center gap-3">
+                <FontAwesomeIcon icon={icon} className="w-4" style={{ color: "#16A34A80" }} />
+                <span className="text-[13px] font-semibold text-gray-700">{label}</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {meta && <span style={{ fontSize: 13, color: T.slate400 }}>{meta}</span>}
-                <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 11, color: `${T.green}66` }} />
+            <div className="flex items-center gap-2.5">
+                {meta && <span className="text-[13px] text-gray-400">{meta}</span>}
+                <FontAwesomeIcon icon={faChevronRight} className="text-[11px]" style={{ color: "#16A34A66" }} />
             </div>
         </button>
     );
@@ -64,36 +33,23 @@ function SettingsRow({ icon, label, meta }) {
 
 function SettingsSection({ iconBg, iconColor, icon, title, description, children }) {
     return (
-        <div style={{
-            ...T.card,
-            overflow: "hidden",
-            display: "flex",
-            flexWrap: "wrap",
-        }}>
+        <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden flex flex-wrap">
             {/* Left panel */}
-            <div style={{
-                display: "flex", alignItems: "center", gap: 20,
-                padding: "24px",
-                borderRight: `1px solid ${T.slate100}`,
-                width: 260,
-                flexShrink: 0,
-                boxSizing: "border-box",
-            }}>
-                <div style={{
-                    width: 56, height: 56, borderRadius: 16, flexShrink: 0,
-                    background: iconBg,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                    <FontAwesomeIcon icon={icon} style={{ fontSize: 22, color: iconColor }} />
+            <div className="flex items-center gap-5 p-6 border-r border-gray-100 w-[260px] flex-shrink-0 box-border">
+                <div
+                    className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center"
+                    style={{ background: iconBg }}
+                >
+                    <FontAwesomeIcon icon={icon} className="text-[22px]" style={{ color: iconColor }} />
                 </div>
                 <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>{title}</p>
-                    <p style={{ fontSize: 12, color: T.slate500, marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>{description}</p>
+                    <p className="text-sm font-bold text-gray-900 m-0">{title}</p>
+                    <p className="text-xs text-gray-500 mt-1 mb-0 leading-relaxed">{description}</p>
                 </div>
             </div>
 
             {/* Right rows */}
-            <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column" }}>
+            <div className="flex-1 min-w-[200px] flex flex-col">
                 {children}
             </div>
         </div>
@@ -102,18 +58,15 @@ function SettingsSection({ iconBg, iconColor, icon, title, description, children
 
 function Settings() {
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
             {/* ── Page heading ── */}
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18,
-                padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-            }}>
-                <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Settings</h1>
-                <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+            <div
+                className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+            >
+                <h1 className="text-[28px] font-bold text-gray-900 m-0">Settings</h1>
+                <p className="text-gray-500 mt-1.5 mb-0 text-sm">
                     Manage your account, preferences and app settings.
                 </p>
             </div>
@@ -121,16 +74,16 @@ function Settings() {
             {/* ── Account Settings ── */}
             <SettingsSection
                 icon={faUser}
-                iconBg={T.greenMuted}
-                iconColor={T.green}
+                iconBg="rgba(22,163,74,0.08)"
+                iconColor="#16A34A"
                 title="Account Settings"
                 description="Manage your personal information and account details."
             >
                 <SettingsRow icon={faUser}   label="Edit Profile" />
-                <div style={{ borderTop: `1px solid ${T.slate100}` }}>
+                <div className="border-t border-gray-100">
                     <SettingsRow icon={faMapPin} label="Addresses" />
                 </div>
-                <div style={{ borderTop: `1px solid ${T.slate100}` }}>
+                <div className="border-t border-gray-100">
                     <SettingsRow icon={faLock}   label="Change Password" />
                 </div>
             </SettingsSection>
@@ -138,8 +91,8 @@ function Settings() {
             {/* ── Security ── */}
             <SettingsSection
                 icon={faShieldHalved}
-                iconBg={T.blueBg}
-                iconColor={T.blue}
+                iconBg="rgba(37,99,235,0.10)"
+                iconColor="#2563EB"
                 title="Security"
                 description="Manage your account security and login settings."
             >
@@ -149,16 +102,16 @@ function Settings() {
             {/* ── App Settings ── */}
             <SettingsSection
                 icon={faMobile}
-                iconBg={T.amberBg}
-                iconColor={T.amber}
+                iconBg="rgba(217,119,6,0.10)"
+                iconColor="#D97706"
                 title="App Settings"
                 description="Manage app behavior and data."
             >
                 <SettingsRow icon={faShield}     label="Privacy Policy" />
-                <div style={{ borderTop: `1px solid ${T.slate100}` }}>
+                <div className="border-t border-gray-100">
                     <SettingsRow icon={faFileLines}  label="Terms & Conditions" />
                 </div>
-                <div style={{ borderTop: `1px solid ${T.slate100}` }}>
+                <div className="border-t border-gray-100">
                     <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" />
                 </div>
             </SettingsSection>

@@ -10,34 +10,7 @@ import {
     faStore, faXmark, faExternalLinkAlt, faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 
-const T = {
-    green:      "#16A34A",
-    greenLight: "#F0FDF4",
-    greenBg:    "#EDF9F0",
-    greenMuted: "rgba(22,163,74,0.08)",
-    teal:       "#0D9488",
-    blue:       "#2563EB",
-    blueBg:     "#EDF3FF",
-    amber:      "#D97706",
-    red:        "#DC2626",
-    redBg:      "#FEF2F2",
-    redMuted:   "rgba(220,38,38,0.08)",
-    slate900:   "#111827",
-    slate700:   "#374151",
-    slate500:   "#6B7280",
-    slate400:   "#9CA3AF",
-    slate200:   "#E5E7EB",
-    slate100:   "#F3F4F6",
-    slate50:    "#F9FAFB",
-    white:      "#FFFFFF",
-    font:       "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background:   "#FFFFFF",
-        border:       "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow:    "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
 const STATUS_META = {
     Pending:         { icon: faClock,        iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
@@ -75,7 +48,6 @@ const getUserIdFromToken = () => {
 };
 
 const getMessage = (req) => {
-    // Prefer the DB-stored message if present, otherwise derive from status
     if (req.message) return req.message;
     const shop = req.shop_name || "the shop";
     switch (req.status) {
@@ -112,73 +84,47 @@ const formatRefId = (id, createdAt) => {
 
 // ── Decline Confirm Modal ─────────────────────────────────────────────────────
 const DeclineModal = ({ shopName, refId, onConfirm, onCancel, isLoading }) => (
-    <div style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(0,0,0,0.45)",
-        backdropFilter: "blur(4px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 20,
-        animation: "fadeIn 0.15s ease",
-    }}>
-        <div style={{
-            background: T.white,
-            borderRadius: 20,
-            padding: "32px 28px",
-            maxWidth: 420, width: "100%",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
-            animation: "slideUp 0.2s ease",
-        }}>
-            <div style={{
-                width: 56, height: 56, borderRadius: "50%",
-                background: T.redBg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-                <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 24, color: T.red }} />
+    <div
+        className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-5"
+        style={{ backdropFilter: "blur(4px)", animation: "fadeIn 0.15s ease" }}
+    >
+        <div
+            className="bg-white rounded-[20px] py-8 px-7 max-w-[420px] w-full flex flex-col items-center gap-4"
+            style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.18)", animation: "slideUp 0.2s ease" }}
+        >
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+                <FontAwesomeIcon icon={faTriangleExclamation} className="text-2xl text-red-600" />
             </div>
 
-            <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: 17, fontWeight: 700, color: T.slate900, margin: "0 0 8px" }}>
+            <div className="text-center">
+                <p className="text-[17px] font-bold text-gray-900 mb-2 mt-0">
                     Decline this booking?
                 </p>
-                <p style={{ fontSize: 13, color: T.slate500, margin: 0, lineHeight: 1.6 }}>
+                <p className="text-[13px] text-gray-500 m-0 leading-relaxed">
                     You're about to decline the booking from{" "}
-                    <strong style={{ color: T.slate700 }}>{shopName || "this shop"}</strong>
+                    <strong className="text-gray-700">{shopName || "this shop"}</strong>
                     {refId && <> ({refId})</>}.
                     <br />This action cannot be undone.
                 </p>
             </div>
 
-            <div style={{ width: "100%", height: 1, background: T.slate200 }} />
+            <div className="w-full h-px bg-gray-200" />
 
-            <div style={{ display: "flex", gap: 10, width: "100%" }}>
+            <div className="flex gap-2.5 w-full">
                 <button
                     onClick={onCancel}
                     disabled={isLoading}
-                    style={{
-                        flex: 1, padding: "11px 0",
-                        borderRadius: 12, border: `1.5px solid ${T.slate200}`,
-                        background: T.white, color: T.slate700,
-                        fontSize: 14, fontWeight: 600,
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                        fontFamily: T.font, transition: "all 0.15s",
-                    }}
+                    className={`flex-1 py-[11px] rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 text-sm font-semibold transition-all duration-150 ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    style={{ fontFamily: FONT }}
                 >
                     Keep Booking
                 </button>
                 <button
                     onClick={onConfirm}
                     disabled={isLoading}
-                    style={{
-                        flex: 1, padding: "11px 0",
-                        borderRadius: 12, border: "none",
-                        background: isLoading ? T.slate200 : T.red,
-                        color: isLoading ? T.slate400 : T.white,
-                        fontSize: 14, fontWeight: 700,
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                        fontFamily: T.font, transition: "all 0.15s",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    }}
+                    className={`flex-1 py-[11px] rounded-xl border-none text-sm font-bold transition-all duration-150 flex items-center justify-center gap-2
+                        ${isLoading ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-red-600 text-white cursor-pointer"}`}
+                    style={{ fontFamily: FONT }}
                 >
                     {isLoading
                         ? <><FontAwesomeIcon icon={faSpinner} spin /> Declining…</>
@@ -202,54 +148,51 @@ const TowTruckCard = ({ notif }) => {
     const hasDetails = !!(notif.dispatched_driver_name || notif.dispatched_truck_brand || notif.dispatched_truck_plate);
 
     return (
-        <div style={{
-            marginTop: 14,
-            background: "linear-gradient(135deg, rgba(13,148,136,0.06) 0%, rgba(22,163,74,0.06) 100%)",
-            border: "1px solid rgba(13,148,136,0.25)",
-            borderRadius: 14, padding: "16px 18px",
-            display: "flex", flexDirection: "column", gap: 12,
-        }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                    width: 32, height: 32, borderRadius: "50%",
-                    background: "rgba(13,148,136,0.12)",
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>
-                    <FontAwesomeIcon icon={faTruckPickup} style={{ fontSize: 14, color: T.teal }} />
+        <div
+            className="mt-3.5 border rounded-2xl py-4 px-[18px] flex flex-col gap-3"
+            style={{
+                background: "linear-gradient(135deg, rgba(13,148,136,0.06) 0%, rgba(22,163,74,0.06) 100%)",
+                borderColor: "rgba(13,148,136,0.25)",
+            }}
+        >
+            <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(13,148,136,0.12)" }}>
+                    <FontAwesomeIcon icon={faTruckPickup} className="text-sm" style={{ color: "#0D9488" }} />
                 </div>
                 <div>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: T.teal, margin: 0 }}>
+                    <p className="text-[13px] font-bold m-0" style={{ color: "#0D9488" }}>
                         Tow Truck Service Included
                     </p>
-                    <p style={{ fontSize: 11, color: T.slate500, margin: 0 }}>
+                    <p className="text-[11px] text-gray-500 m-0">
                         {hasDetails
                             ? "The shop has assigned a tow truck for pickup"
                             : "The shop will arrange a tow truck to pick up your vehicle"}
                     </p>
                 </div>
-                <span style={{
-                    marginLeft: "auto",
-                    background: hasDetails ? "rgba(13,148,136,0.12)" : "rgba(217,119,6,0.10)",
-                    color: hasDetails ? T.teal : T.amber,
-                    borderRadius: 99, padding: "3px 10px", fontSize: 10, fontWeight: 700, flexShrink: 0,
-                }}>
+                <span
+                    className="ml-auto rounded-full py-0.5 px-2.5 text-[10px] font-bold flex-shrink-0"
+                    style={{
+                        background: hasDetails ? "rgba(13,148,136,0.12)" : "rgba(217,119,6,0.10)",
+                        color: hasDetails ? "#0D9488" : "#D97706",
+                    }}
+                >
                     {hasDetails ? "En Route" : "Arranging"}
                 </span>
             </div>
 
             {hasDetails && (
                 <>
-                    <div style={{ height: 1, background: "rgba(13,148,136,0.15)" }} />
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
+                    <div className="h-px" style={{ background: "rgba(13,148,136,0.15)" }} />
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                         {notif.dispatched_driver_name  && <DetailRow icon={faUser}        label="Driver"    value={notif.dispatched_driver_name} />}
                         {notif.dispatched_driver_phone && <DetailRow icon={faPhone}       label="Contact"   value={notif.dispatched_driver_phone} isPhone />}
                         {notif.dispatched_truck_brand  && <DetailRow icon={faTruckPickup} label="Truck"     value={`${notif.dispatched_truck_brand}${notif.dispatched_truck_color ? ` · ${notif.dispatched_truck_color}` : ""}`} />}
                         {notif.dispatched_truck_plate  && <DetailRow icon={faIdCard}      label="Plate No." value={notif.dispatched_truck_plate} isMono />}
                     </div>
                     {notif.promised_eta && notif.promised_eta > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.08)", borderRadius: 10, padding: "8px 12px" }}>
-                            <FontAwesomeIcon icon={faClock} style={{ fontSize: 12, color: T.teal }} />
-                            <span style={{ fontSize: 12, color: T.teal, fontWeight: 600 }}>
+                        <div className="flex items-center gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(13,148,136,0.08)" }}>
+                            <FontAwesomeIcon icon={faClock} className="text-xs" style={{ color: "#0D9488" }} />
+                            <span className="text-xs font-semibold" style={{ color: "#0D9488" }}>
                                 Estimated arrival: <strong>{notif.promised_eta} minutes</strong>
                             </span>
                         </div>
@@ -258,23 +201,21 @@ const TowTruckCard = ({ notif }) => {
             )}
 
             {!hasDetails && (
-                <div style={{
-                    background: "rgba(217,119,6,0.06)",
-                    border: "1px solid rgba(217,119,6,0.2)",
-                    borderRadius: 10, padding: "10px 14px",
-                    display: "flex", alignItems: "center", gap: 8,
-                }}>
-                    <FontAwesomeIcon icon={faClock} style={{ fontSize: 12, color: T.amber }} />
-                    <p style={{ fontSize: 12, color: T.amber, margin: 0, fontWeight: 600 }}>
+                <div
+                    className="border rounded-[10px] py-2.5 px-3.5 flex items-center gap-2"
+                    style={{ background: "rgba(217,119,6,0.06)", borderColor: "rgba(217,119,6,0.2)" }}
+                >
+                    <FontAwesomeIcon icon={faClock} className="text-xs" style={{ color: "#D97706" }} />
+                    <p className="text-xs m-0 font-semibold" style={{ color: "#D97706" }}>
                         Tow truck details will appear here once the shop confirms the arrangement.
                     </p>
                 </div>
             )}
 
             {notif.pickup_landmark && (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, background: "rgba(13,148,136,0.05)", borderRadius: 10, padding: "8px 12px" }}>
-                    <span style={{ fontSize: 11, color: T.slate500, fontWeight: 600 }}>📍 Pickup:</span>
-                    <span style={{ fontSize: 11, color: T.slate700 }}>{notif.pickup_landmark}</span>
+                <div className="flex items-start gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(13,148,136,0.05)" }}>
+                    <span className="text-[11px] text-gray-500 font-semibold">📍 Pickup:</span>
+                    <span className="text-[11px] text-gray-700">{notif.pickup_landmark}</span>
                 </div>
             )}
         </div>
@@ -282,26 +223,27 @@ const TowTruckCard = ({ notif }) => {
 };
 
 const DetailRow = ({ icon, label, value, isPhone, isMono }) => (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-        <div style={{
-            width: 24, height: 24, borderRadius: 6, background: "rgba(13,148,136,0.1)",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1,
-        }}>
-            <FontAwesomeIcon icon={icon} style={{ fontSize: 10, color: T.teal }} />
+    <div className="flex items-start gap-2">
+        <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-px" style={{ background: "rgba(13,148,136,0.1)" }}>
+            <FontAwesomeIcon icon={icon} className="text-[10px]" style={{ color: "#0D9488" }} />
         </div>
         <div>
-            <p style={{ fontSize: 10, color: T.slate400, margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</p>
+            <p className="text-[10px] text-gray-400 m-0 font-semibold uppercase tracking-[0.04em]">{label}</p>
             {isPhone ? (
-                <a href={`tel:${value}`} style={{ fontSize: 12, color: T.teal, fontWeight: 700, textDecoration: "none" }}>{value}</a>
+                <a href={`tel:${value}`} className="text-xs font-bold no-underline" style={{ color: "#0D9488" }}>{value}</a>
             ) : (
-                <p style={{ fontSize: 12, color: T.slate700, fontWeight: 700, margin: 0, fontFamily: isMono ? "'Courier New', monospace" : "inherit", letterSpacing: isMono ? "0.08em" : "normal" }}>{value}</p>
+                <p
+                    className="text-xs text-gray-700 font-bold m-0"
+                    style={{ fontFamily: isMono ? "'Courier New', monospace" : "inherit", letterSpacing: isMono ? "0.08em" : "normal" }}
+                >
+                    {value}
+                </p>
             )}
         </div>
     </div>
 );
 
-// ── Shared sync signal: tells useUnreadCount() to refetch immediately
-// instead of waiting for its own independent 30s poll to catch up.
+// ── Shared sync signal ──────────────────────────────────────────────────────
 const notifyUnreadChanged = () => {
     window.dispatchEvent(new Event("fixgo_unread_changed"));
 };
@@ -333,8 +275,6 @@ export function useUnreadCount() {
 
         fetchAndCount();
         const interval = setInterval(fetchAndCount, 15000);
-        // Instant refresh whenever Notification.jsx reports a change
-        // (mark read, mark all read, or a fresh poll turning up new items).
         window.addEventListener("fixgo_unread_changed", fetchAndCount);
         return () => {
             clearInterval(interval);
@@ -358,8 +298,8 @@ export default function Notification() {
     const [localDeclined, setLocalDeclined]   = useState([]);
     const [declineModal, setDeclineModal]     = useState(null);
     const [userId, setUserId]                 = useState(null);
-    const [reviewModal, setReviewModal]       = useState(null);   
-    const [reviewedIds, setReviewedIds]       = useState([]);     
+    const [reviewModal, setReviewModal]       = useState(null);
+    const [reviewedIds, setReviewedIds]       = useState([]);
 
     useEffect(() => {
         const id = getUserIdFromToken();
@@ -417,7 +357,6 @@ export default function Notification() {
     const unreadCount = notifications.filter(n => Number(n.isRead) === 0).length;
 
     const markRead = async (notificationId) => {
-        // optimistic update
         setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: 1 } : n));
         try {
             const token = localStorage.getItem("jwt_token");
@@ -473,10 +412,6 @@ export default function Notification() {
                 await fetchNotifs();
             } else {
                 alert(data.message || "Could not confirm booking. Please try again.");
-                // The request may already be Confirmed (or moved further) on the
-                // server even though this card still shows the action buttons —
-                // refresh so current_status catches up and the UI stops offering
-                // an action that's no longer valid.
                 await fetchNotifs();
             }
         } catch (err) {
@@ -554,14 +489,14 @@ export default function Notification() {
 
     if (loading) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-                <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading notifications…</p>
+            <div className="flex justify-center py-20">
+                <p className="text-[13px] text-gray-500" style={{ fontFamily: FONT }}>Loading notifications…</p>
             </div>
         );
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
             {declineModal && (
                 <DeclineModal
@@ -584,66 +519,59 @@ export default function Notification() {
             )}
 
             {/* ── Header ── */}
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18, padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
+            <div
+                className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)] flex justify-between items-center"
+                style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+            >
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Notifications</h1>
-                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                    <h1 className="text-[28px] font-bold text-gray-900 m-0">Notifications</h1>
+                    <p className="text-gray-500 mt-1.5 mb-0 text-sm">
                         Stay updated with the latest repair updates and alerts.
                     </p>
                 </div>
                 {unreadCount > 0 && (
-                    <span style={{ background: T.green, color: T.white, borderRadius: 99, padding: "4px 14px", fontSize: 12, fontWeight: 700 }}>
+                    <span className="bg-green-600 text-white rounded-full py-1 px-3.5 text-xs font-bold">
                         {unreadCount} unread
                     </span>
                 )}
             </div>
 
             {/* ── Tab Bar ── */}
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
                     {TABS.map(tab => {
                         const active = activeTab === tab.key;
                         return (
-                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-                                borderRadius: 99,
-                                border: `1px solid ${active ? T.green : T.slate200}`,
-                                background: active ? T.greenMuted : T.white,
-                                color: active ? T.green : T.slate700,
-                                padding: "6px 16px", fontSize: 13, fontWeight: 600,
-                                fontFamily: T.font, cursor: "pointer", transition: "all 0.15s",
-                            }}>
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`rounded-full border py-1.5 px-4 text-[13px] font-semibold cursor-pointer transition-all duration-150
+                                    ${active ? "border-green-600 text-green-600" : "border-gray-200 bg-white text-gray-700"}`}
+                                style={{ background: active ? "rgba(22,163,74,0.08)" : undefined, fontFamily: FONT }}
+                            >
                                 {tab.label} ({tabCount(tab.key)})
                             </button>
                         );
                     })}
                 </div>
                 {unreadCount > 0 && (
-                    <button onClick={markAllRead} style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        border: `1px solid ${T.slate200}`, background: T.white,
-                        borderRadius: 10, padding: "8px 16px",
-                        fontSize: 13, fontWeight: 600, color: T.slate700,
-                        cursor: "pointer", fontFamily: T.font,
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                    }}>
-                        <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11, color: T.green }} />
+                    <button
+                        onClick={markAllRead}
+                        className="flex items-center gap-1.5 border border-gray-200 bg-white rounded-[10px] py-2 px-4 text-[13px] font-semibold text-gray-700 cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
+                        style={{ fontFamily: FONT }}
+                    >
+                        <FontAwesomeIcon icon={faCheck} className="text-[11px] text-green-600" />
                         Mark all as read
                     </button>
                 )}
             </div>
 
             {/* ── Notification List ── */}
-            <div style={{ ...T.card, overflow: "hidden" }}>
+            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
                 {filtered.length === 0 ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "64px 24px", textAlign: "center" }}>
-                        <FontAwesomeIcon icon={faBell} style={{ fontSize: 36, color: T.slate200 }} />
-                        <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>No notifications in this category.</p>
+                    <div className="flex flex-col items-center gap-3 py-16 px-6 text-center">
+                        <FontAwesomeIcon icon={faBell} className="text-4xl text-gray-200" />
+                        <p className="text-[13px] text-gray-400 m-0">No notifications in this category.</p>
                     </div>
                 ) : (
                     filtered.map((notif, idx) => {
@@ -653,15 +581,6 @@ export default function Notification() {
                         const isConfirming = confirming === notif.id;
                         const isDeclining  = declining  === notif.service_request_id;
 
-                        // isConfirmed/isDeclined are driven primarily by the LIVE
-                        // service request status (notif.current_status), not the
-                        // notification's own type. The notification row for an
-                        // "Accepted" event never changes after creation, so relying
-                        // on notif.status alone would keep showing Confirm/Decline
-                        // buttons forever, even after the booking is genuinely
-                        // confirmed elsewhere. localConfirmed/localDeclined only
-                        // provide instant feedback right after clicking, before the
-                        // refetch completes.
                         const isConfirmed  = localConfirmed.includes(String(notif.service_request_id))
                             || ["Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed"].includes(notif.current_status);
                         const isDeclined   = localDeclined.includes(String(notif.service_request_id))
@@ -671,31 +590,25 @@ export default function Notification() {
                             <div
                                 key={notif.id}
                                 onClick={() => !isRead && markRead(notif.id)}
-                                style={{
-                                    display: "flex", alignItems: "flex-start", gap: 16,
-                                    padding: "20px 24px",
-                                    borderBottom: isLast ? "none" : `1px solid ${T.slate100}`,
-                                    background: !isRead ? "#F0FDF4" : T.white,
-                                    cursor: "pointer", transition: "background 0.15s",
-                                }}
-                                onMouseEnter={e => { if (isRead) e.currentTarget.style.background = T.slate50; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = !isRead ? "#F0FDF4" : T.white; }}
+                                className={`flex items-start gap-4 py-5 px-6 cursor-pointer transition-colors duration-150
+                                    ${isLast ? "border-b-0" : "border-b border-gray-100"}
+                                    ${!isRead ? "hover:bg-[#F0FDF4]" : "hover:bg-gray-50"}`}
+                                style={{ background: !isRead ? "#F0FDF4" : "#FFFFFF" }}
                             >
                                 {/* Status Icon */}
-                                <div style={{
-                                    width: 48, height: 48, borderRadius: "50%",
-                                    background: meta.iconBg, flexShrink: 0,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>
-                                    <FontAwesomeIcon icon={meta.icon} style={{ fontSize: 18, color: meta.iconColor }} />
+                                <div
+                                    className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+                                    style={{ background: meta.iconBg }}
+                                >
+                                    <FontAwesomeIcon icon={meta.icon} className="text-lg" style={{ color: meta.iconColor }} />
                                 </div>
 
                                 {/* Body */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="flex-1 min-w-0">
 
                                     {/* Title + Badge */}
-                                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                                        <p style={{ fontSize: 14, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="text-sm font-bold text-gray-900 m-0">
                                             {notif.title || (
                                                 notif.status === "Completed" ? "Repair completed"  :
                                                 notif.status === "Accepted"  ? "Request accepted"  :
@@ -704,126 +617,105 @@ export default function Notification() {
                                                 "Repair status updated"
                                             )}
                                         </p>
-                                        <span style={{
-                                            background: isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
-                                            color:      isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeColor : meta.badgeColor,
-                                            borderRadius: 99, padding: "3px 12px", fontSize: 11, fontWeight: 700,
-                                        }}>
+                                        <span
+                                            className="rounded-full py-0.5 px-3 text-[11px] font-bold"
+                                            style={{
+                                                background: isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeBg : meta.badgeBg,
+                                                color:      isConfirmed && notif.status === "Accepted" ? STATUS_META["Confirmed"].badgeColor : meta.badgeColor,
+                                            }}
+                                        >
                                             {isConfirmed && notif.status === "Accepted" ? "Confirmed" : meta.label}
                                         </span>
                                     </div>
 
                                     {/* Message */}
-                                    <p style={{ fontSize: 13, color: T.slate500, margin: "6px 0 8px", lineHeight: 1.5 }}>
+                                    <p className="text-[13px] text-gray-500 mt-1.5 mb-2 leading-relaxed">
                                         {getMessage(notif)}
                                     </p>
 
                                     {/* Ref pill */}
-                                    <span style={{
-                                        display: "inline-block", background: T.slate100, color: T.slate700,
-                                        borderRadius: 8, padding: "4px 12px", fontSize: 12, fontWeight: 600,
-                                    }}>
+                                    <span className="inline-block bg-gray-100 text-gray-700 rounded-lg py-1 px-3 text-xs font-semibold">
                                         {notif.vehicle_brand || "Vehicle"} · {formatRefId(notif.service_request_id, notif.created_at)}
                                     </span>
 
                                     {/* ── ACCEPTED: Action card ── */}
                                     {notif.status === "Accepted" && (
-                                        <div style={{
-                                            marginTop: 14,
-                                            background: isConfirmed ? T.greenMuted : isDeclined ? T.redMuted : T.blueBg,
-                                            border: `1px solid ${isConfirmed ? T.green : isDeclined ? T.red : "rgba(37,99,235,0.2)"}`,
-                                            borderRadius: 14, padding: "16px 18px", transition: "all 0.3s",
-                                        }}>
+                                        <div
+                                            className="mt-3.5 border rounded-2xl py-4 px-[18px] transition-all duration-300"
+                                            style={{
+                                                background: isConfirmed ? "rgba(22,163,74,0.08)" : isDeclined ? "rgba(220,38,38,0.08)" : "#EDF3FF",
+                                                borderColor: isConfirmed ? "#16A34A" : isDeclined ? "#DC2626" : "rgba(37,99,235,0.2)",
+                                            }}
+                                        >
                                             {isConfirmed && (
-                                                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                                                <div className="flex flex-wrap items-center justify-between gap-3">
                                                     <div>
-                                                        <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: T.green }}>✅ Booking confirmed!</p>
-                                                        <p style={{ fontSize: 12, color: T.slate500, margin: "4px 0 0" }}>Head to the Repair Status tab to track your vehicle's progress.</p>
+                                                        <p className="text-[13px] font-bold m-0 text-green-600">✅ Booking confirmed!</p>
+                                                        <p className="text-xs text-gray-500 mt-1 mb-0">Head to the Repair Status tab to track your vehicle's progress.</p>
                                                     </div>
-                                                    <span style={{ display: "flex", alignItems: "center", gap: 6, background: T.white, color: T.green, border: `1px solid ${T.green}`, borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                                                        <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11 }} /> Confirmed
+                                                    <span className="flex items-center gap-1.5 bg-white text-green-600 border border-green-600 rounded-[10px] py-2 px-4 text-[13px] font-bold flex-shrink-0">
+                                                        <FontAwesomeIcon icon={faCheck} className="text-[11px]" /> Confirmed
                                                     </span>
                                                 </div>
                                             )}
 
                                             {isDeclined && !isConfirmed && (
-                                                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                                                <div className="flex flex-wrap items-center justify-between gap-3">
                                                     <div>
-                                                        <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: T.red }}>❌ Booking declined</p>
-                                                        <p style={{ fontSize: 12, color: T.slate500, margin: "4px 0 0" }}>You declined this booking. You can still search for another shop.</p>
+                                                        <p className="text-[13px] font-bold m-0 text-red-600">❌ Booking declined</p>
+                                                        <p className="text-xs text-gray-500 mt-1 mb-0">You declined this booking. You can still search for another shop.</p>
                                                     </div>
-                                                    <span style={{ display: "flex", alignItems: "center", gap: 6, background: T.white, color: T.red, border: `1px solid ${T.red}`, borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                                                        <FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} /> Declined
+                                                    <span className="flex items-center gap-1.5 bg-white text-red-600 border border-red-600 rounded-[10px] py-2 px-4 text-[13px] font-bold flex-shrink-0">
+                                                        <FontAwesomeIcon icon={faXmark} className="text-[11px]" /> Declined
                                                     </span>
                                                 </div>
                                             )}
 
                                             {!isConfirmed && !isDeclined && (
                                                 <>
-                                                    <div style={{ marginBottom: 14 }}>
-                                                        <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: T.blue }}>
+                                                    <div className="mb-3.5">
+                                                        <p className="text-[13px] font-bold m-0 text-blue-600">
                                                             Action required — confirm or decline your booking
                                                         </p>
-                                                        <p style={{ fontSize: 12, color: T.slate500, margin: "4px 0 0" }}>
+                                                        <p className="text-xs text-gray-500 mt-1 mb-0">
                                                             Confirming locks in your appointment and lets the shop know you're coming.
                                                         </p>
                                                     </div>
 
                                                     {hasTow && <TowTruckCard notif={notif} />}
 
-                                                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: hasTow ? 14 : 0 }}>
+                                                    <div className={`flex gap-2.5 flex-wrap ${hasTow ? "mt-3.5" : "mt-0"}`}>
                                                         <button
                                                             onClick={(e) => openDeclineModal(e, notif)}
                                                             disabled={isDeclining || isConfirming}
-                                                            style={{
-                                                                display: "flex", alignItems: "center", gap: 8,
-                                                                background: T.white, color: T.red,
-                                                                border: `1.5px solid ${T.red}`,
-                                                                borderRadius: 10, padding: "10px 18px",
-                                                                fontSize: 13, fontWeight: 700,
-                                                                cursor: isDeclining ? "not-allowed" : "pointer",
-                                                                fontFamily: T.font, flexShrink: 0, transition: "all 0.15s",
-                                                            }}
+                                                            className={`flex items-center gap-2 bg-white text-red-600 border-[1.5px] border-red-600 rounded-[10px] py-2.5 px-[18px] text-[13px] font-bold flex-shrink-0 transition-all duration-150 ${isDeclining ? "cursor-not-allowed" : "cursor-pointer"}`}
+                                                            style={{ fontFamily: FONT }}
                                                         >
-                                                            <FontAwesomeIcon icon={faXmark} style={{ fontSize: 13 }} /> Decline
+                                                            <FontAwesomeIcon icon={faXmark} className="text-[13px]" /> Decline
                                                         </button>
 
                                                         <button
                                                             onClick={(e) => handleConfirm(e, notif)}
                                                             disabled={isConfirming || isDeclining}
-                                                            style={{
-                                                                display: "flex", alignItems: "center", gap: 8,
-                                                                background: isConfirming ? T.slate200 : T.blue,
-                                                                color: isConfirming ? T.slate500 : T.white,
-                                                                border: "none", borderRadius: 10, padding: "10px 18px",
-                                                                fontSize: 13, fontWeight: 700,
-                                                                cursor: isConfirming ? "not-allowed" : "pointer",
-                                                                fontFamily: T.font, flexShrink: 0, transition: "background 0.15s",
-                                                            }}
+                                                            className={`flex items-center gap-2 border-none rounded-[10px] py-2.5 px-[18px] text-[13px] font-bold flex-shrink-0 transition-colors duration-150
+                                                                ${isConfirming ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white cursor-pointer"}`}
+                                                            style={{ fontFamily: FONT }}
                                                         >
                                                             {isConfirming
-                                                                ? <><FontAwesomeIcon icon={faSpinner} spin style={{ fontSize: 12 }} /> Confirming…</>
-                                                                : <><FontAwesomeIcon icon={faHandshake} style={{ fontSize: 13 }} /> Confirm Booking <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} /></>
+                                                                ? <><FontAwesomeIcon icon={faSpinner} spin className="text-xs" /> Confirming…</>
+                                                                : <><FontAwesomeIcon icon={faHandshake} className="text-[13px]" /> Confirm Booking <FontAwesomeIcon icon={faArrowRight} className="text-[11px]" /></>
                                                             }
                                                         </button>
 
                                                         {notif.shop_id && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); navigate(`/shop/${notif.shop_id}`); }}
-                                                                style={{
-                                                                    display: "flex", alignItems: "center", gap: 6,
-                                                                    background: T.white, color: T.slate700,
-                                                                    border: `1.5px solid ${T.slate200}`,
-                                                                    borderRadius: 10, padding: "10px 14px",
-                                                                    fontSize: 13, fontWeight: 600,
-                                                                    cursor: "pointer", fontFamily: T.font, flexShrink: 0, transition: "all 0.15s",
-                                                                }}
-                                                                onMouseEnter={e => { e.currentTarget.style.borderColor = T.green; e.currentTarget.style.color = T.green; }}
-                                                                onMouseLeave={e => { e.currentTarget.style.borderColor = T.slate200; e.currentTarget.style.color = T.slate700; }}
+                                                                className="flex items-center gap-1.5 bg-white text-gray-700 border-[1.5px] border-gray-200 rounded-[10px] py-2.5 px-3.5 text-[13px] font-semibold cursor-pointer flex-shrink-0 transition-all duration-150 hover:border-green-600 hover:text-green-600"
+                                                                style={{ fontFamily: FONT }}
                                                             >
-                                                                <FontAwesomeIcon icon={faStore} style={{ fontSize: 12 }} />
+                                                                <FontAwesomeIcon icon={faStore} className="text-xs" />
                                                                 View Shop & Take Direction
-                                                                <FontAwesomeIcon icon={faExternalLinkAlt} style={{ fontSize: 10 }} />
+                                                                <FontAwesomeIcon icon={faExternalLinkAlt} className="text-[10px]" />
                                                             </button>
                                                         )}
                                                     </div>
@@ -836,8 +728,8 @@ export default function Notification() {
                                     {notif.status === "Confirmed" && (
                                         <>
                                             {hasTow && <TowTruckCard notif={notif} />}
-                                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: hasTow ? 10 : 0 }}>
-                                                <p style={{ fontSize: 12, color: T.teal, margin: 0 }}>
+                                            <div className={`flex flex-wrap items-center justify-between gap-2.5 ${hasTow ? "mt-2.5" : "mt-0"}`}>
+                                                <p className="text-xs m-0" style={{ color: "#0D9488" }}>
                                                     {hasTow
                                                         ? <>🚛 Your tow truck is on the way! Track progress in the <strong>Repair Status</strong> tab.</>
                                                         : <>🏪 Please bring your vehicle to the shop. Track progress in the <strong>Repair Status</strong> tab.</>
@@ -846,20 +738,12 @@ export default function Notification() {
                                                 {!hasTow && notif.shop_id && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); navigate(`/shop/${notif.shop_id}`); }}
-                                                        style={{
-                                                            display: "flex", alignItems: "center", gap: 6,
-                                                            background: T.white, color: T.slate700,
-                                                            border: `1.5px solid ${T.slate200}`,
-                                                            borderRadius: 10, padding: "8px 14px",
-                                                            fontSize: 13, fontWeight: 600,
-                                                            cursor: "pointer", fontFamily: T.font, flexShrink: 0, transition: "all 0.15s",
-                                                        }}
-                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.green; e.currentTarget.style.color = T.green; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.slate200; e.currentTarget.style.color = T.slate700; }}
+                                                        className="flex items-center gap-1.5 bg-white text-gray-700 border-[1.5px] border-gray-200 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold cursor-pointer flex-shrink-0 transition-all duration-150 hover:border-green-600 hover:text-green-600"
+                                                        style={{ fontFamily: FONT }}
                                                     >
-                                                        <FontAwesomeIcon icon={faStore} style={{ fontSize: 12 }} />
+                                                        <FontAwesomeIcon icon={faStore} className="text-xs" />
                                                         View Shop & Take Directions
-                                                        <FontAwesomeIcon icon={faExternalLinkAlt} style={{ fontSize: 10 }} />
+                                                        <FontAwesomeIcon icon={faExternalLinkAlt} className="text-[10px]" />
                                                     </button>
                                                 )}
                                             </div>
@@ -868,48 +752,44 @@ export default function Notification() {
 
                                     {/* ── DECLINED: Simple heads-up, encourage trying another shop ── */}
                                     {notif.status === "Declined" && (
-                                        <div style={{
-                                            marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between",
-                                            background: T.redMuted, border: `1px solid ${T.red}33`,
-                                            borderRadius: 12, padding: "12px 16px", gap: 12,
-                                        }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                <FontAwesomeIcon icon={faXmark} style={{ color: T.red }} />
+                                        <div
+                                            className="mt-3 flex items-center justify-between rounded-xl py-3 px-4 gap-3"
+                                            style={{ background: "rgba(220,38,38,0.08)", border: "1px solid #DC262633" }}
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <FontAwesomeIcon icon={faXmark} className="text-red-600" />
                                                 <div>
-                                                    <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>This shop couldn't take your request</p>
-                                                    <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Browse other nearby shops to get your vehicle sorted.</p>
+                                                    <p className="text-[13px] font-bold text-gray-900 m-0">This shop couldn't take your request</p>
+                                                    <p className="text-xs text-gray-500 m-0">Browse other nearby shops to get your vehicle sorted.</p>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); navigate("/shops"); }}
-                                                style={{
-                                                    display: "flex", alignItems: "center", gap: 6,
-                                                    background: T.white, color: T.slate700,
-                                                    border: `1.5px solid ${T.slate200}`,
-                                                    borderRadius: 10, padding: "8px 14px",
-                                                    fontSize: 13, fontWeight: 600,
-                                                    cursor: "pointer", fontFamily: T.font, flexShrink: 0,
-                                                }}
+                                                className="flex items-center gap-1.5 bg-white text-gray-700 border-[1.5px] border-gray-200 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold cursor-pointer flex-shrink-0"
+                                                style={{ fontFamily: FONT }}
                                             >
                                                 Find Another Shop
-                                                <FontAwesomeIcon icon={faExternalLinkAlt} style={{ fontSize: 10 }} />
+                                                <FontAwesomeIcon icon={faExternalLinkAlt} className="text-[10px]" />
                                             </button>
                                         </div>
                                     )}
 
                                     {/* ── COMPLETED: Review prompt ── */}
                                     {notif.status === "Completed" && (
-    <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", background: T.greenMuted, border: `1px solid ${T.slate200}`, borderRadius: 12, padding: "12px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <FontAwesomeIcon icon={faStar} style={{ color: T.green }} />
+    <div
+        className="mt-3 flex items-center justify-between border border-gray-200 rounded-xl py-3 px-4"
+        style={{ background: "rgba(22,163,74,0.08)" }}
+    >
+        <div className="flex items-center gap-2.5">
+            <FontAwesomeIcon icon={faStar} className="text-green-600" />
             <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>We'd love to hear about your experience!</p>
-                <p style={{ fontSize: 12, color: T.slate500, margin: 0 }}>Your feedback helps others find great workshops.</p>
+                <p className="text-[13px] font-bold text-gray-900 m-0">We'd love to hear about your experience!</p>
+                <p className="text-xs text-gray-500 m-0">Your feedback helps others find great workshops.</p>
             </div>
         </div>
 
         {reviewedIds.includes(String(notif.service_request_id)) ? (
-            <span style={{ display: "flex", alignItems: "center", gap: 6, color: T.green, fontSize: 13, fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>
+            <span className="flex items-center gap-1.5 text-green-600 text-[13px] font-bold flex-shrink-0 ml-3">
                 <FontAwesomeIcon icon={faCheck} /> Reviewed
             </span>
         ) : (
@@ -922,11 +802,12 @@ export default function Notification() {
                         shopName: notif.shop_name,
                     });
                 }}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: T.green, color: T.white, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: T.font, flexShrink: 0, marginLeft: 12 }}
+                className="flex items-center gap-1.5 bg-green-600 text-white border-none rounded-[10px] py-2 px-3.5 text-[13px] font-bold cursor-pointer flex-shrink-0 ml-3"
+                style={{ fontFamily: FONT }}
             >
-                <FontAwesomeIcon icon={faStar} style={{ fontSize: 11 }} />
+                <FontAwesomeIcon icon={faStar} className="text-[11px]" />
                 Review & Rate
-                <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+                <FontAwesomeIcon icon={faArrowRight} className="text-[11px]" />
             </button>
         )}
     </div>
@@ -934,9 +815,12 @@ export default function Notification() {
                                 </div>
 
                                 {/* Timestamp + dot */}
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
-                                    <span style={{ fontSize: 11, color: T.slate400, whiteSpace: "nowrap" }}>{formatTime(notif.created_at)}</span>
-                                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: !isRead ? T.green : T.slate200, display: "inline-block" }} />
+                                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <span className="text-[11px] text-gray-400 whitespace-nowrap">{formatTime(notif.created_at)}</span>
+                                    <span
+                                        className="w-2.5 h-2.5 rounded-full inline-block"
+                                        style={{ background: !isRead ? "#16A34A" : "#E5E7EB" }}
+                                    />
                                 </div>
                             </div>
                         );

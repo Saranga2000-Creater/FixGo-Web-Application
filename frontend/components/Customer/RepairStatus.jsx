@@ -6,40 +6,12 @@ import {
     faClock, faCircleCheck, faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
-const T = {
-    green:     "#16A34A",
-    greenLight:"#F0FDF4",
-    greenBg:   "#EDF9F0",
-    greenMuted:"rgba(22,163,74,0.08)",
-    teal:      "#0D9488",
-    tealBg:    "rgba(13,148,136,0.10)",
-    blue:      "#2563EB",
-    blueBg:    "#EDF3FF",
-    amber:     "#D97706",
-    amberBg:   "rgba(217,119,6,0.10)",
-    red:       "#DC2626",
-    redBg:     "#FEF2F2",
-    slate900:  "#111827",
-    slate700:  "#374151",
-    slate500:  "#6B7280",
-    slate400:  "#9CA3AF",
-    slate200:  "#E5E7EB",
-    slate100:  "#F3F4F6",
-    slate50:   "#F9FAFB",
-    white:     "#FFFFFF",
-    font:      "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background:   "#FFFFFF",
-        border:       "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow:    "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
 const STATUS_CONFIG = {
-    Pending:       { label: "Pending",     color: T.amber,    bg: T.amberBg,               icon: faClock,        desc: "Your request has been sent. Waiting for the shop to accept." },
-    Accepted:      { label: "Accepted",    color: T.blue,     bg: T.blueBg,                icon: faCircleCheck,  desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
-    Confirmed:     { label: "Confirmed",   color: T.teal,     bg: T.tealBg,                icon: faHandshake,    desc: "" },
+    Pending:       { label: "Pending",     color: "#D97706",  bg: "rgba(217,119,6,0.10)",  icon: faClock,        desc: "Your request has been sent. Waiting for the shop to accept." },
+    Accepted:      { label: "Accepted",    color: "#2563EB",  bg: "#EDF3FF",               icon: faCircleCheck,  desc: "The shop accepted your request! Go to Notifications to confirm your booking." },
+    Confirmed:     { label: "Confirmed",   color: "#0D9488",  bg: "rgba(13,148,136,0.10)", icon: faHandshake,    desc: "" },
     "In Progress": { label: "In Progress", color: "#A855F7",  bg: "rgba(168,85,247,0.10)", icon: faWrench,       desc: "Your vehicle is currently being repaired." },
 };
 
@@ -70,12 +42,9 @@ const formatRefId = (id, createdAt) => {
 
 function InfoRow({ label, value }) {
     return (
-        <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            paddingBottom: 14, borderBottom: `1px solid ${T.slate100}`,
-        }}>
-            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value || "—"}</p>
+        <div className="flex justify-between items-center pb-3.5 border-b border-gray-100">
+            <p className="text-[13px] text-gray-500 m-0">{label}</p>
+            <p className="text-[13px] font-semibold text-gray-900 m-0">{value || "—"}</p>
         </div>
     );
 }
@@ -122,47 +91,39 @@ export default function RepairStatus({targetRequestId }) {
 
     if (loading) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 256 }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                    <FontAwesomeIcon icon={faWrench} style={{ fontSize: 36, color: T.green, opacity: 0.3 }} />
-                    <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading repair status…</p>
+            <div className="flex justify-center items-center h-64">
+                <div className="flex flex-col items-center gap-3">
+                    <FontAwesomeIcon icon={faWrench} className="text-4xl text-green-600 opacity-30" />
+                    <p className="text-[13px] text-gray-500" style={{ fontFamily: FONT }}>Loading repair status…</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18, padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
+            <div
+                className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)] flex justify-between items-center"
+                style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+            >
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Repair Status</h1>
-                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                    <h1 className="text-[28px] font-bold text-gray-900 m-0">Repair Status</h1>
+                    <p className="text-gray-500 mt-1.5 mb-0 text-sm">
                         Track the progress of your active service requests.
                     </p>
                 </div>
-                <div style={{
-                    fontSize: 14, fontWeight: 600, color: T.slate700,
-                    background: T.white, padding: "10px 16px",
-                    borderRadius: 12, border: `1px solid ${T.slate200}`,
-                    display: "flex", alignItems: "center", gap: 8,
-                }}>
+                <div className="text-sm font-semibold text-gray-700 bg-white py-2.5 px-4 rounded-xl border border-gray-200 flex items-center gap-2">
                     {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                    <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
+                    <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400" />
                 </div>
             </div>
 
             {requests.length === 0 ? (
-                <div style={{ ...T.card, padding: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
-                    <FontAwesomeIcon icon={faCar} style={{ fontSize: 48, color: T.slate200 }} />
-                    <p style={{ fontSize: 15, fontWeight: 600, color: T.slate900, margin: 0 }}>No active repairs</p>
-                    <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>
+                <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-12 flex flex-col items-center gap-3 text-center">
+                    <FontAwesomeIcon icon={faCar} className="text-5xl text-gray-200" />
+                    <p className="text-[15px] font-semibold text-gray-900 m-0">No active repairs</p>
+                    <p className="text-[13px] text-gray-500 m-0">
                         You have no ongoing repairs right now. Completed repairs can be found in Service History.
                     </p>
                 </div>
@@ -175,117 +136,97 @@ export default function RepairStatus({targetRequestId }) {
                     const hasTow      = req.requires_tow == 1;
 
                     return (
-                        <div key={req.id} style={{ ...T.card, overflow: "hidden" }}>
+                        <div key={req.id} className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
 
-                            <div style={{
-                                padding: "20px 24px",
-                                borderBottom: `1px solid ${T.slate100}`,
-                                display: "flex", flexWrap: "wrap",
-                                alignItems: "center", justifyContent: "space-between", gap: 16,
-                            }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                                    <div style={{
-                                        width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
-                                        background: cfg.bg,
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                    }}>
-                                        <FontAwesomeIcon icon={cfg.icon} style={{ fontSize: 22, color: cfg.color }} />
+                            <div className="py-5 px-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center"
+                                        style={{ background: cfg.bg }}
+                                    >
+                                        <FontAwesomeIcon icon={cfg.icon} className="text-[22px]" style={{ color: cfg.color }} />
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                        <p className="text-[15px] font-bold text-gray-900 m-0">
                                             {req.vehicle_brand || "Your Vehicle"}
                                             {req.vehicle_color ? ` · ${req.vehicle_color}` : ""}
                                         </p>
-                                        <p style={{ fontSize: 13, color: T.slate500, margin: "4px 0 0" }}>
-                                            Shop: <span style={{ fontWeight: 600, color: T.slate700 }}>{req.shop_name || "—"}</span>
+                                        <p className="text-[13px] text-gray-500 mt-1 mb-0">
+                                            Shop: <span className="font-semibold text-gray-700">{req.shop_name || "—"}</span>
                                         </p>
-                                        <p style={{ fontSize: 13, color: T.slate500, margin: "2px 0 0" }}>
-                                            <span style={{ fontWeight: 600, color: T.slate700 }}>{formatRefId(req.id, req.created_at)}</span>
+                                        <p className="text-[13px] text-gray-500 mt-0.5 mb-0">
+                                            <span className="font-semibold text-gray-700">{formatRefId(req.id, req.created_at)}</span>
                                         </p>
                                     </div>
                                 </div>
 
-                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                    <span style={{
-                                        borderRadius: 99, background: cfg.bg,
-                                        padding: "4px 14px", fontSize: 12,
-                                        fontWeight: 700, color: cfg.color,
-                                    }}>
+                                <div className="flex items-center gap-2.5">
+                                    <span
+                                        className="rounded-full py-1 px-3.5 text-xs font-bold"
+                                        style={{ background: cfg.bg, color: cfg.color }}
+                                    >
                                         {cfg.label}
                                     </span>
                                     <button
                                         onClick={() => setExpanded(isOpen ? null : req.id)}
-                                        style={{
-                                            width: 36, height: 36, borderRadius: "50%",
-                                            border: `1px solid ${T.slate200}`,
-                                            background: T.white,
-                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                            cursor: "pointer", color: T.slate400,
-                                            transition: "background 0.15s",
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = T.greenMuted}
-                                        onMouseLeave={e => e.currentTarget.style.background = T.white}
+                                        className="w-9 h-9 rounded-full border border-gray-200 bg-white flex items-center justify-center cursor-pointer text-gray-400 transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)]"
                                     >
-                                        <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} style={{ fontSize: 12 }} />
+                                        <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} className="text-xs" />
                                     </button>
                                 </div>
                             </div>
 
                             {isOpen && (
-                                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
+                                <div className="p-6 flex flex-col gap-5">
 
                                     {/* ── TOW TRUCK BANNER (Confirmed + requires_tow) ── */}
                                     {hasTow && req.status === "Confirmed" && (
-                                        <div style={{
-                                            display: "flex", alignItems: "center", gap: 14,
-                                            background: "linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(22,163,74,0.06) 100%)",
-                                            border: "1px solid rgba(13,148,136,0.30)",
-                                            borderRadius: 14, padding: "16px 20px",
-                                        }}>
-                                            <div style={{
-                                                width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                                                background: "rgba(13,148,136,0.12)",
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                            }}>
-                                                <span style={{ fontSize: 22 }}>🚛</span>
+                                        <div
+                                            className="flex items-center gap-3.5 border rounded-2xl py-4 px-5"
+                                            style={{
+                                                background: "linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(22,163,74,0.06) 100%)",
+                                                borderColor: "rgba(13,148,136,0.30)",
+                                            }}
+                                        >
+                                            <div
+                                                className="w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center"
+                                                style={{ background: "rgba(13,148,136,0.12)" }}
+                                            >
+                                                <span className="text-[22px]">🚛</span>
                                             </div>
                                             <div>
-                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.teal, margin: 0 }}>
+                                                <p className="text-[13px] font-bold m-0" style={{ color: "#0D9488" }}>
                                                     Your tow truck is on the way!
                                                 </p>
-                                                <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>
+                                                <p className="text-xs text-gray-500 mt-0.5 mb-0">
                                                     Sit tight — the driver will arrive at your location shortly to pick up your vehicle.
                                                 </p>
                                             </div>
-                                            <span style={{
-                                                marginLeft: "auto", flexShrink: 0,
-                                                background: "rgba(13,148,136,0.12)",
-                                                color: T.teal, borderRadius: 99,
-                                                padding: "4px 12px", fontSize: 11, fontWeight: 700,
-                                            }}>
+                                            <span
+                                                className="ml-auto flex-shrink-0 rounded-full py-1 px-3 text-[11px] font-bold"
+                                                style={{ background: "rgba(13,148,136,0.12)", color: "#0D9488" }}
+                                            >
                                                 En Route
                                             </span>
                                         </div>
                                     )}
 
                                     {!showStepper && (
-                                        <div style={{
-                                            display: "flex", alignItems: "center", gap: 16,
-                                            borderRadius: 14, border: `1px solid ${cfg.color}33`,
-                                            background: cfg.bg, padding: "16px 20px",
-                                        }}>
-                                            <div style={{
-                                                width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                                                background: `${cfg.color}18`,
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                            }}>
-                                                <FontAwesomeIcon icon={cfg.icon} style={{ fontSize: 18, color: cfg.color }} />
+                                        <div
+                                            className="flex items-center gap-4 rounded-2xl py-4 px-5"
+                                            style={{ background: cfg.bg, border: `1px solid ${cfg.color}33` }}
+                                        >
+                                            <div
+                                                className="w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center"
+                                                style={{ background: `${cfg.color}18` }}
+                                            >
+                                                <FontAwesomeIcon icon={cfg.icon} className="text-lg" style={{ color: cfg.color }} />
                                             </div>
                                             <div>
-                                                <p style={{ fontSize: 13, fontWeight: 700, color: cfg.color, margin: 0 }}>
+                                                <p className="text-[13px] font-bold m-0" style={{ color: cfg.color }}>
                                                     {cfg.label}
                                                 </p>
-                                                <p style={{ fontSize: 13, color: T.slate500, margin: "3px 0 0" }}>
+                                                <p className="text-[13px] text-gray-500 mt-0.5 mb-0">
                                                     {cfg.desc}
                                                 </p>
                                             </div>
@@ -294,22 +235,16 @@ export default function RepairStatus({targetRequestId }) {
 
                                     {/* ── STEPPER ── */}
                                     {showStepper && (
-                                        <div style={{
-                                            display: "grid",
-                                            gridTemplateColumns: "1fr 40px 1fr 40px 1fr",
-                                            alignItems: "center",
-                                            gap: 0,
-                                            padding: "24px 16px",
-                                            background: T.slate50,
-                                            borderRadius: 16,
-                                            border: `1px solid ${T.slate200}`,
-                                        }}>
+                                        <div
+                                            className="grid items-center bg-gray-50 rounded-2xl border border-gray-200"
+                                            style={{ gridTemplateColumns: "1fr 40px 1fr 40px 1fr", gap: 0, padding: "24px 16px" }}
+                                        >
                                             {STEPS.map((step, idx) => {
                                                 const done         = idx < currentIdx;
                                                 const active       = idx === currentIdx;
-                                                const iconColor    = done ? T.green : active ? T.teal : T.slate300;
-                                                const circleBg     = done ? T.greenMuted : active ? T.tealBg : T.white;
-                                                const circleBorder = done ? T.green : active ? T.teal : T.slate200;
+                                                const iconColor    = done ? "#16A34A" : active ? "#0D9488" : "#CBD5E1";
+                                                const circleBg     = done ? "rgba(22,163,74,0.08)" : active ? "rgba(13,148,136,0.10)" : "#FFFFFF";
+                                                const circleBorder = done ? "#16A34A" : active ? "#0D9488" : "#E5E7EB";
 
                                                 const stepDesc = active
                                                     ? (step.key === "Confirmed"
@@ -321,47 +256,42 @@ export default function RepairStatus({targetRequestId }) {
 
                                                 return (
                                                     <Fragment key={step.key}>
-                                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                                                            <div style={{
-                                                                width: 64, height: 64, borderRadius: "50%",
-                                                                background: circleBg,
-                                                                border: `2.5px solid ${circleBorder}`,
-                                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                                position: "relative",
-                                                                boxShadow: active ? `0 0 0 6px ${T.tealBg}` : "none",
-                                                            }}>
-                                                                <FontAwesomeIcon icon={step.icon} style={{ fontSize: 22, color: iconColor }} />
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <div
+                                                                className="w-16 h-16 rounded-full flex items-center justify-center relative"
+                                                                style={{
+                                                                    background: circleBg,
+                                                                    border: `2.5px solid ${circleBorder}`,
+                                                                    boxShadow: active ? "0 0 0 6px rgba(13,148,136,0.10)" : "none",
+                                                                }}
+                                                            >
+                                                                <FontAwesomeIcon icon={step.icon} className="text-[22px]" style={{ color: iconColor }} />
                                                                 {done && (
-                                                                    <span style={{
-                                                                        position: "absolute", bottom: -4, right: -4,
-                                                                        width: 20, height: 20, borderRadius: "50%",
-                                                                        background: T.green, color: T.white,
-                                                                        fontSize: 10, display: "flex",
-                                                                        alignItems: "center", justifyContent: "center",
-                                                                        fontWeight: 700,
-                                                                    }}>✓</span>
+                                                                    <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold">
+                                                                        ✓
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            <div style={{ textAlign: "center" }}>
-                                                                <p style={{
-                                                                    fontSize: 13, fontWeight: 700, margin: 0,
-                                                                    color: active ? T.teal : done ? T.green : T.slate400,
-                                                                }}>{step.label}</p>
-                                                                <p style={{
-                                                                    fontSize: 11, margin: "4px 0 0",
-                                                                    color: active ? T.slate500 : T.slate400,
-                                                                    lineHeight: 1.4,
-                                                                }}>
+                                                            <div className="text-center">
+                                                                <p
+                                                                    className="text-[13px] font-bold m-0"
+                                                                    style={{ color: active ? "#0D9488" : done ? "#16A34A" : "#9CA3AF" }}
+                                                                >
+                                                                    {step.label}
+                                                                </p>
+                                                                <p
+                                                                    className="text-[11px] mt-1 mb-0 leading-snug"
+                                                                    style={{ color: active ? "#6B7280" : "#9CA3AF" }}
+                                                                >
                                                                     {stepDesc}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                         {idx < STEPS.length - 1 && (
-                                                            <div style={{
-                                                                height: 3, borderRadius: 99,
-                                                                background: idx < currentIdx ? T.green : T.slate200,
-                                                                marginBottom: 36,
-                                                            }} />
+                                                            <div
+                                                                className="h-[3px] rounded-full mb-9"
+                                                                style={{ background: idx < currentIdx ? "#16A34A" : "#E5E7EB" }}
+                                                            />
                                                         )}
                                                     </Fragment>
                                                 );
@@ -370,35 +300,24 @@ export default function RepairStatus({targetRequestId }) {
                                     )}
 
                                     {showStepper && (
-                                        <div style={{
-                                            display: "flex", alignItems: "center", gap: 16,
-                                            borderRadius: 14, border: `1px solid ${T.slate200}`,
-                                            background: T.slate50, padding: "16px 20px",
-                                        }}>
-                                            <div style={{
-                                                width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                                                background: T.greenMuted,
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                            }}>
-                                                <FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 16, color: T.green }} />
+                                        <div className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-gray-50 py-4 px-5">
+                                            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(22,163,74,0.08)" }}>
+                                                <FontAwesomeIcon icon={faShieldHalved} className="text-base text-green-600" />
                                             </div>
                                             <div>
-                                                <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: 0 }}>Sit back and relax!</p>
-                                                <p style={{ fontSize: 13, color: T.slate500, marginTop: 3, marginBottom: 0 }}>
+                                                <p className="text-[13px] font-bold text-gray-900 m-0">Sit back and relax!</p>
+                                                <p className="text-[13px] text-gray-500 mt-0.5 mb-0">
                                                     We'll keep you updated at every step of the way.
                                                 </p>
                                             </div>
                                         </div>
                                     )}
 
-                                    <div style={{
-                                        background: T.white, borderRadius: 14,
-                                        border: `1px solid ${T.slate200}`, padding: 20,
-                                    }}>
-                                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: "0 0 16px" }}>
+                                    <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                                        <h3 className="text-[15px] font-bold text-gray-900 mb-4 mt-0">
                                             Request Details
                                         </h3>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                        <div className="flex flex-col gap-3.5">
                                             <InfoRow label="Reference ID"   value={formatRefId(req.id, req.created_at)} />
                                             <InfoRow label="Issue"          value={req.issue_category || req.description} />
                                             <InfoRow label="Workshop"       value={req.shop_name} />

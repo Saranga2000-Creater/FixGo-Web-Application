@@ -14,58 +14,18 @@ import {
     faUser,
 } from "@fortawesome/free-solid-svg-icons";
 
-
-const T = {
-    green:     "#16A34A",
-    greenLight:"#F0FDF4",
-    greenBg:   "#EDF9F0",
-    greenMuted:"rgba(22,163,74,0.08)",
-    teal:      "#0D9488",
-    tealBg:    "rgba(13,148,136,0.08)",
-    blue:      "#2563EB",
-    blueBg:    "#EDF3FF",
-    violet:    "#A855F7",
-    violetBg:  "#F5EDFF",
-    slate900:  "#111827",
-    slate700:  "#374151",
-    slate500:  "#6B7280",
-    slate400:  "#9CA3AF",
-    slate200:  "#E5E7EB",
-    slate100:  "#F3F4F6",
-    slate50:   "#F9FAFB",
-    white:     "#FFFFFF",
-    font:      "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
-
+const FONT = "'Segoe UI', system-ui, sans-serif";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=16a34a&color=fff&name=";
 
-function StatsCard({ icon, title, value, iconBg, iconColor, borderColor }) {
+function StatsCard({ icon, title, value, iconBg, iconColor }) {
     return (
-        <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            background: T.white,
-            border: `1px solid ${borderColor}`,
-            borderRadius: 12,
-            padding: "12px 14px",
-        }}>
-            <div style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: iconBg, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-                <FontAwesomeIcon icon={icon} style={{ fontSize: 15, color: iconColor }} />
+        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl py-3 px-3.5">
+            <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: iconBg }}>
+                <FontAwesomeIcon icon={icon} className="text-[15px]" style={{ color: iconColor }} />
             </div>
             <div>
-                <p style={{ fontSize: 11, color: T.slate500, fontFamily: "monospace", margin: 0 }}>{title}</p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: T.slate900, margin: 0 }}>{value}</p>
+                <p className="text-[11px] text-gray-500 font-mono m-0">{title}</p>
+                <p className="text-xl font-bold text-gray-900 m-0">{value}</p>
             </div>
         </div>
     );
@@ -73,32 +33,18 @@ function StatsCard({ icon, title, value, iconBg, iconColor, borderColor }) {
 
 function InfoRow({ label, value }) {
     return (
-        <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingBottom: 14,
-            borderBottom: `1px solid ${T.slate100}`,
-        }}>
-            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value}</p>
+        <div className="flex justify-between items-center pb-3.5 border-b border-gray-100">
+            <p className="text-[13px] text-gray-500 m-0">{label}</p>
+            <p className="text-[13px] font-semibold text-gray-900 m-0">{value}</p>
         </div>
     );
 }
 
 function SecurityRow({ label, value }) {
     return (
-        <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            background: T.slate50,
-            borderRadius: 10,
-            padding: "12px 16px",
-            border: `1px solid ${T.slate100}`,
-        }}>
-            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>{label}</p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: T.slate900, margin: 0 }}>{value}</p>
+        <div className="flex justify-between items-center bg-gray-50 rounded-[10px] py-3 px-4 border border-gray-100">
+            <p className="text-[13px] text-gray-500 m-0">{label}</p>
+            <p className="text-[13px] font-semibold text-gray-900 m-0">{value}</p>
         </div>
     );
 }
@@ -126,14 +72,14 @@ function Profile() {
     }, []);
 
     if (loading) return (
-        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-            <p style={{ fontSize: 13, color: T.slate500 }}>Loading profile...</p>
+        <div className="flex justify-center py-20">
+            <p className="text-[13px] text-gray-500">Loading profile...</p>
         </div>
     );
 
     if (error) return (
-        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-            <p style={{ fontSize: 13, color: "#DC2626" }}>{error}</p>
+        <div className="flex justify-center py-20">
+            <p className="text-[13px] text-red-600">{error}</p>
         </div>
     );
 
@@ -142,65 +88,51 @@ function Profile() {
         : DEFAULT_AVATAR + encodeURIComponent(customer.name);
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
             {/* ── Page heading — mirrors Admin DashboardView header ── */}
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18,
-                padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-            }}>
+            <div
+                className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)] flex justify-between items-center"
+                style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+            >
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>My Profile</h1>
-                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                    <h1 className="text-[28px] font-bold text-gray-900 m-0">My Profile</h1>
+                    <p className="text-gray-500 mt-1.5 mb-0 text-sm">
                         Manage your personal information, addresses and preferences.
                     </p>
                 </div>
             </div>
 
             {/* ── Profile hero card ── */}
-            <div style={{ ...T.card, padding: 24 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                <div className="flex flex-wrap gap-6 items-start">
 
                     {/* Avatar + contact details */}
-                    <div style={{ display: "flex", gap: 24, flex: 1, minWidth: 280, alignItems: "flex-start" }}>
+                    <div className="flex gap-6 flex-1 min-w-[280px] items-start">
                         <img
                             src={avatarSrc}
                             alt={customer.name}
-                            style={{
-                                width: 100, height: 100,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                flexShrink: 0,
-                                outline: `3px solid ${T.greenMuted}`,
-                                outlineOffset: 2,
-                            }}
+                            className="w-[100px] h-[100px] rounded-full object-cover flex-shrink-0"
+                            style={{ outline: "3px solid rgba(22,163,74,0.08)", outlineOffset: 2 }}
                         />
                         <div>
-                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-                                <h2 style={{ fontSize: 22, fontWeight: 700, color: T.slate900, margin: 0 }}>{customer.name}</h2>
-                                <span style={{
-                                    background: T.greenMuted, color: T.green,
-                                    borderRadius: 99, padding: "3px 12px",
-                                    fontSize: 11, fontWeight: 700,
-                                }}>Customer</span>
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                <h2 className="text-[22px] font-bold text-gray-900 m-0">{customer.name}</h2>
+                                <span className="rounded-full py-[3px] px-3 text-[11px] font-bold text-green-600" style={{ background: "rgba(22,163,74,0.08)" }}>
+                                    Customer
+                                </span>
                             </div>
-                            <p style={{ fontSize: 12, color: T.slate400, marginTop: 4, marginBottom: 12 }}>
+                            <p className="text-xs text-gray-400 mt-1 mb-3">
                                 Member since {customer.memberSince}
                             </p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                            <div className="flex flex-col gap-1.5">
                                 {[
                                     { icon: faEnvelope, val: customer.email },
                                     { icon: faPhone,    val: customer.contactNumber || "Not provided" },
                                     { icon: faMapPin,   val: customer.address       || "Not provided" },
                                 ].map(({ icon, val }) => (
-                                    <div key={val} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.slate500 }}>
-                                        <FontAwesomeIcon icon={icon} style={{ color: T.green, opacity: 0.6, width: 14 }} />
+                                    <div key={val} className="flex items-center gap-2 text-[13px] text-gray-500">
+                                        <FontAwesomeIcon icon={icon} className="text-green-600 opacity-60 w-3.5" />
                                         <span>{val}</span>
                                     </div>
                                 ))}
@@ -209,36 +141,28 @@ function Profile() {
                     </div>
 
                     {/* Account overview */}
-                    <div style={{
-                        background: T.slate50,
-                        border: `1px solid ${T.slate200}`,
-                        borderRadius: 18,
-                        padding: 20,
-                        minWidth: 280,
-                        width: 400,
-                        flexShrink: 0,
-                    }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: T.slate900, margin: "0 0 14px" }}>Account Overview</p>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                            <StatsCard icon={faCar}          title="Total Repairs"     value="0" iconBg={T.greenMuted} iconColor={T.green}  borderColor={T.slate200} />
-                            <StatsCard icon={faCircleCheck}  title="Completed"         value="0" iconBg={T.tealBg}    iconColor={T.teal}   borderColor={T.slate200} />
-                            <StatsCard icon={faCalendarDays} title="Appointments"      value="0" iconBg={T.blueBg}    iconColor={T.blue}   borderColor={T.slate200} />
-                            <StatsCard icon={faStar}         title="Reviews Given"     value="0" iconBg={T.violetBg}  iconColor={T.violet} borderColor={T.slate200} />
+                    <div className="bg-gray-50 border border-gray-200 rounded-[18px] p-5 min-w-[280px] w-[400px] flex-shrink-0">
+                        <p className="text-[13px] font-bold text-gray-900 mb-3.5 mt-0">Account Overview</p>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            <StatsCard icon={faCar}          title="Total Repairs"     value="0" iconBg="rgba(22,163,74,0.08)"  iconColor="#16A34A" />
+                            <StatsCard icon={faCircleCheck}  title="Completed"         value="0" iconBg="rgba(13,148,136,0.08)" iconColor="#0D9488" />
+                            <StatsCard icon={faCalendarDays} title="Appointments"      value="0" iconBg="#EDF3FF" iconColor="#2563EB" />
+                            <StatsCard icon={faStar}         title="Reviews Given"     value="0" iconBg="#F5EDFF" iconColor="#A855F7" />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* ── Personal info + Addresses ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
 
                 {/* Personal Info */}
-                <div style={{ ...T.card, padding: 24 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                        <FontAwesomeIcon icon={faUser} style={{ color: T.slate400 }} />
-                        <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Personal Information</h3>
+                <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                    <div className="flex items-center gap-2 mb-5">
+                        <FontAwesomeIcon icon={faUser} className="text-gray-400" />
+                        <h3 className="text-[15px] font-bold text-gray-900 m-0">Personal Information</h3>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <div className="flex flex-col gap-3.5">
                         <InfoRow label="Full Name"     value={customer.name} />
                         <InfoRow label="Email Address" value={customer.email} />
                         <InfoRow label="Phone Number"  value={customer.contactNumber || "Not provided"} />
@@ -248,70 +172,53 @@ function Profile() {
                 </div>
 
                 {/* Addresses */}
-                <div style={{ ...T.card, padding: 24 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <FontAwesomeIcon icon={faMapPin} style={{ color: T.slate400 }} />
-                            <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Addresses</h3>
+                <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                    <div className="flex items-center justify-between mb-5">
+                        <div className="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faMapPin} className="text-gray-400" />
+                            <h3 className="text-[15px] font-bold text-gray-900 m-0">Addresses</h3>
                         </div>
-                        <button style={{
-                            display: "flex", alignItems: "center", gap: 5,
-                            fontSize: 12, fontWeight: 700,
-                            color: T.green, background: "none", border: "none", cursor: "pointer", fontFamily: T.font,
-                        }}>
-                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} /> Add New
+                        <button
+                            className="flex items-center gap-[5px] text-xs font-bold text-green-600 bg-transparent border-none cursor-pointer"
+                            style={{ fontFamily: FONT }}
+                        >
+                            <FontAwesomeIcon icon={faPlus} className="text-[10px]" /> Add New
                         </button>
                     </div>
 
                     {customer.address ? (
-                        <div style={{
-                            background: T.slate50,
-                            borderRadius: 12,
-                            border: `1px solid ${T.slate200}`,
-                            padding: 16,
-                        }}>
-                            <span style={{
-                                background: T.greenMuted, color: T.green,
-                                borderRadius: 99, padding: "3px 12px",
-                                fontSize: 11, fontWeight: 700,
-                            }}>Default</span>
-                            <p style={{ fontSize: 13, color: T.slate700, marginTop: 10, marginBottom: 8 }}>
+                        <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                            <span className="rounded-full py-[3px] px-3 text-[11px] font-bold text-green-600" style={{ background: "rgba(22,163,74,0.08)" }}>
+                                Default
+                            </span>
+                            <p className="text-[13px] text-gray-700 mt-2.5 mb-2">
                                 {customer.address}
                             </p>
-                            <p style={{ fontSize: 13, color: T.slate500, margin: 0 }}>
-                                <FontAwesomeIcon icon={faPhone} style={{ marginRight: 8, color: T.green, opacity: 0.6 }} />
+                            <p className="text-[13px] text-gray-500 m-0">
+                                <FontAwesomeIcon icon={faPhone} className="mr-2 text-green-600 opacity-60" />
                                 {customer.contactNumber || "No number"}
                             </p>
                         </div>
                     ) : (
-                        <p style={{ fontSize: 13, color: T.slate400 }}>No address saved yet.</p>
+                        <p className="text-[13px] text-gray-400">No address saved yet.</p>
                     )}
 
                     <button
-                        style={{
-                            marginTop: 16, width: "100%",
-                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                            padding: "12px 0", borderRadius: 10,
-                            border: `1.5px dashed ${T.green}55`,
-                            background: "none",
-                            fontSize: 13, fontWeight: 700, color: T.green,
-                            cursor: "pointer", fontFamily: T.font,
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = T.greenMuted}
-                        onMouseLeave={e => e.currentTarget.style.background = "none"}
+                        className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-[10px] bg-transparent text-[13px] font-bold text-green-600 cursor-pointer transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)]"
+                        style={{ border: "1.5px dashed rgba(22,163,74,0.33)", fontFamily: FONT }}
                     >
-                        <FontAwesomeIcon icon={faPlus} style={{ fontSize: 11 }} /> Add New Address
+                        <FontAwesomeIcon icon={faPlus} className="text-[11px]" /> Add New Address
                     </button>
                 </div>
             </div>
 
             {/* ── Security ── */}
-            <div style={{ ...T.card, padding: 24 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                    <FontAwesomeIcon icon={faLock} style={{ color: T.slate400 }} />
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>Security</h3>
+            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                <div className="flex items-center gap-2 mb-5">
+                    <FontAwesomeIcon icon={faLock} className="text-gray-400" />
+                    <h3 className="text-[15px] font-bold text-gray-900 m-0">Security</h3>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="flex flex-col gap-2.5">
                     <SecurityRow label="Password"     value="••••••••••" />
                     <SecurityRow label="Member Since" value={customer.memberSince} />
                 </div>

@@ -50,25 +50,15 @@ function CustomerControllDashboard() {
     };
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            background: "#F4F8F5",
-            fontFamily: "'Segoe UI', system-ui, sans-serif",
-            color: "#111827",
-        }}>
+        <div className="min-h-screen bg-[#F4F8F5] text-[#111827]" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
             <CustomerSidebar
                 currentPage={currentPage}
                 setCurrentPage={handlePageChange}
                 unreadCount={unreadCount}
             />
 
-            <main style={{
-                marginLeft: 240,
-                minHeight: "calc(100vh - 65px)",
-                padding: "24px",
-                boxSizing: "border-box",
-            }}>
-                <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+            <main className="ml-[240px] min-h-[calc(100vh-65px)] p-6 box-border">
+                <div className="max-w-[1180px] mx-auto">
                     {currentPage === "dashboard" && (
                         <Dashboard onNavigate={handlePageChange} />
                     )}

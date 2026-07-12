@@ -6,44 +6,22 @@ import {
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-const T = {
-    green:     "#16A34A",
-    greenBg:   "#EDF9F0",
-    teal:      "#0D9488",
-    tealBg:    "rgba(13,148,136,0.10)",
-    blue:      "#2563EB",
-    blueBg:    "#EDF3FF",
-    violet:    "#A855F7",
-    violetBg:  "#F5EDFF",
-    yellow:    "#D97706",
-    yellowBg:  "rgba(217,119,6,0.10)",
-    amber:     "#F59E0B",
-    slate900:  "#111827",
-    slate700:  "#374151",
-    slate500:  "#6B7280",
-    slate400:  "#9CA3AF",
-    slate200:  "#E5E7EB",
-    slate100:  "#F3F4F6",
-    slate50:   "#F9FAFB",
-    white:     "#FFFFFF",
-    font:      "'Segoe UI', system-ui, sans-serif",
-    card: {
-        background: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: 18,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    },
-};
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
 function StarDisplay({ rating, size = "sm" }) {
     const fontSize = size === "lg" ? 22 : 15;
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
-                <span key={s} style={{
-                    fontSize,
-                    color: rating >= s || (rating >= s - 0.5 && rating < s) ? T.amber : T.slate200,
-                }}>★</span>
+                <span
+                    key={s}
+                    style={{
+                        fontSize,
+                        color: rating >= s || (rating >= s - 0.5 && rating < s) ? "#F59E0B" : "#E5E7EB",
+                    }}
+                >
+                    ★
+                </span>
             ))}
         </div>
     );
@@ -76,71 +54,53 @@ function ReviewsRatings() {
 
     if (loading) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-                <p style={{ fontSize: 13, color: T.slate500, fontFamily: T.font }}>Loading reviews…</p>
+            <div className="flex justify-center py-20">
+                <p className="text-[13px] text-gray-500" style={{ fontFamily: FONT }}>Loading reviews…</p>
             </div>
         );
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: T.font }}>
+        <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
             {/* ── Page heading ── */}
-            <div style={{
-                background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)",
-                borderRadius: 18,
-                padding: "24px",
-                border: `1px solid ${T.slate200}`,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-            }}>
+            <div
+                className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)] flex justify-between items-center"
+                style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+            >
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.slate900, margin: 0 }}>Reviews & Ratings</h1>
-                    <p style={{ color: T.slate500, marginTop: 6, marginBottom: 0, fontSize: 14 }}>
+                    <h1 className="text-[28px] font-bold text-gray-900 m-0">Reviews & Ratings</h1>
+                    <p className="text-gray-500 mt-1.5 mb-0 text-sm">
                         See your reviews and ratings for past services.
                     </p>
                 </div>
             </div>
 
             {/* ── My Reviews list ── */}
-            <div style={{ ...T.card, overflow: "hidden" }}>
+            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
 
-                <div style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "16px 24px",
-                    borderBottom: `1px solid ${T.slate100}`,
-                }}>
-                    <h2 style={{ fontSize: 15, fontWeight: 700, color: T.slate900, margin: 0 }}>My Reviews</h2>
-                    <div style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        background: T.slate50, border: `1px solid ${T.slate200}`,
-                        borderRadius: 10, padding: "8px 12px", fontSize: 13,
-                    }}>
-                        <FontAwesomeIcon icon={faCalendarDays} style={{ color: T.slate400 }} />
+                <div className="flex items-center justify-between py-4 px-6 border-b border-gray-100">
+                    <h2 className="text-[15px] font-bold text-gray-900 m-0">My Reviews</h2>
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-[10px] py-2 px-3 text-[13px]">
+                        <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400" />
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            style={{
-                                border: "none", outline: "none",
-                                fontSize: 13, color: T.slate700,
-                                background: "transparent",
-                                fontFamily: T.font, cursor: "pointer",
-                            }}
+                            className="border-none outline-none text-[13px] text-gray-700 bg-transparent cursor-pointer"
+                            style={{ fontFamily: FONT }}
                         >
                             <option>All Time</option>
                             <option>Last 3 Months</option>
                             <option>Last 6 Months</option>
                             <option>This Year</option>
                         </select>
-                        <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 11, color: T.slate400 }} />
+                        <FontAwesomeIcon icon={faChevronDown} className="text-[11px] text-gray-400" />
                     </div>
                 </div>
 
                 {totalReviews === 0 ? (
-                    <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                        <p style={{ fontSize: 13, color: T.slate400, margin: 0 }}>You haven't left any reviews yet.</p>
+                    <div className="py-12 px-6 text-center">
+                        <p className="text-[13px] text-gray-400 m-0">You haven't left any reviews yet.</p>
                     </div>
                 ) : (
                     reviews.map((review, idx) => {
@@ -148,56 +108,35 @@ function ReviewsRatings() {
                         return (
                             <div
                                 key={review.id}
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "auto 1fr auto 1fr",
-                                    alignItems: "start",
-                                    borderBottom: !isLast ? `1px solid ${T.slate100}` : "none",
-                                }}
+                                className={`grid items-start ${!isLast ? "border-b border-gray-100" : "border-b-0"}`}
+                                style={{ gridTemplateColumns: "auto 1fr auto 1fr" }}
                             >
-                                <div style={{ padding: "20px 20px 20px 24px", display: "flex", alignItems: "center" }}>
-                                    <div style={{
-                                        width: 52, height: 52, borderRadius: "50%",
-                                        background: T.greenBg,
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                    }}>
-                                        <FontAwesomeIcon icon={faWrench} style={{ fontSize: 20, color: T.green }} />
+                                <div className="py-5 pr-5 pl-6 flex items-center">
+                                    <div className="w-[52px] h-[52px] rounded-full bg-[#EDF9F0] flex items-center justify-center">
+                                        <FontAwesomeIcon icon={faWrench} className="text-xl text-green-600" />
                                     </div>
                                 </div>
 
-                                <div style={{
-                                    padding: "20px 20px 20px 0",
-                                    borderRight: `1px solid ${T.slate100}`,
-                                    display: "flex", flexDirection: "column", justifyContent: "center",
-                                }}>
-                                    <p style={{ fontSize: 14, fontWeight: 600, color: T.slate900, margin: 0 }}>
+                                <div className="py-5 pr-5 pl-0 border-r border-gray-100 flex flex-col justify-center">
+                                    <p className="text-sm font-semibold text-gray-900 m-0">
                                         {review.issue_category || review.vehicle_brand || "Service"}
                                     </p>
-                                    <p style={{ fontSize: 12, color: T.slate500, margin: "3px 0 0" }}>{review.shop_name}</p>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: T.slate400 }}>
-                                        <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} />
+                                    <p className="text-xs text-gray-500 mt-1 mb-0">{review.shop_name}</p>
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
+                                        <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
                                         <span>{new Date(review.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
                                     </div>
                                 </div>
 
-                                <div style={{
-                                    padding: "20px 24px",
-                                    borderRight: `1px solid ${T.slate100}`,
-                                    display: "flex", flexDirection: "column",
-                                    alignItems: "center", justifyContent: "center",
-                                }}>
-                                    <p style={{ fontSize: 24, fontWeight: 700, color: T.slate900, margin: 0 }}>
+                                <div className="py-5 px-6 border-r border-gray-100 flex flex-col items-center justify-center">
+                                    <p className="text-2xl font-bold text-gray-900 m-0">
                                         {Number(review.rating).toFixed(1)}
                                     </p>
-                                    <div style={{ marginTop: 4 }}><StarDisplay rating={Number(review.rating)} /></div>
+                                    <div className="mt-1"><StarDisplay rating={Number(review.rating)} /></div>
                                 </div>
 
-                                <div style={{ padding: "20px 24px", display: "flex", alignItems: "center" }}>
-                                    <p style={{
-                                        fontSize: 13, color: T.slate700,
-                                        lineHeight: 1.6, margin: 0,
-                                        whiteSpace: "pre-line",
-                                    }}>
+                                <div className="py-5 px-6 flex items-center">
+                                    <p className="text-[13px] text-gray-700 leading-relaxed m-0 whitespace-pre-line">
                                         {review.comment || "No comment left."}
                                     </p>
                                 </div>

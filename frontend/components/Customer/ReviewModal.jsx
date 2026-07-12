@@ -2,16 +2,7 @@ import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faXmark, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
-const T = {
-    green: "#16A34A",
-    amber: "#F59E0B",
-    slate900: "#111827",
-    slate700: "#374151",
-    slate500: "#6B7280",
-    slate200: "#E5E7EB",
-    white: "#FFFFFF",
-    font: "'Segoe UI', system-ui, sans-serif",
-};
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
 export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId, shopName, onSubmitted }) {
     const [rating, setRating] = useState(0);
@@ -70,30 +61,30 @@ export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId,
     };
 
     return (
-        <div style={{
-            position: "fixed", inset: 0, zIndex: 9999,
-            background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-        }}>
-            <div style={{
-                background: T.white, borderRadius: 20, padding: "28px 26px",
-                maxWidth: 440, width: "100%",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
-                fontFamily: T.font,
-            }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+            className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-5"
+            style={{ backdropFilter: "blur(4px)" }}
+        >
+            <div
+                className="bg-white rounded-[20px] py-7 px-[26px] max-w-[440px] w-full"
+                style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.18)", fontFamily: FONT }}
+            >
+                <div className="flex justify-between items-start">
                     <div>
-                        <p style={{ fontSize: 17, fontWeight: 700, color: T.slate900, margin: 0 }}>Rate your experience</p>
-                        <p style={{ fontSize: 13, color: T.slate500, margin: "4px 0 0" }}>
+                        <p className="text-[17px] font-bold text-gray-900 m-0">Rate your experience</p>
+                        <p className="text-[13px] text-gray-500 mt-1 mb-0">
                             {shopName ? `How was your service with ${shopName}?` : "How was your service?"}
                         </p>
                     </div>
-                    <button onClick={onClose} style={{ border: "none", background: "transparent", cursor: "pointer", color: T.slate500, fontSize: 16, padding: 4 }}>
+                    <button
+                        onClick={onClose}
+                        className="border-none bg-transparent cursor-pointer text-gray-500 text-base p-1"
+                    >
                         <FontAwesomeIcon icon={faXmark} />
                     </button>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "center", gap: 8, margin: "24px 0 8px" }}>
+                <div className="flex justify-center gap-2 mt-6 mb-2">
                     {[1, 2, 3, 4, 5].map((s) => (
                         <FontAwesomeIcon
                             key={s}
@@ -101,11 +92,8 @@ export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId,
                             onClick={() => setRating(s)}
                             onMouseEnter={() => setHoverRating(s)}
                             onMouseLeave={() => setHoverRating(0)}
-                            style={{
-                                fontSize: 32, cursor: "pointer",
-                                color: (hoverRating || rating) >= s ? T.amber : T.slate200,
-                                transition: "color 0.1s",
-                            }}
+                            className="text-[32px] cursor-pointer transition-colors duration-100"
+                            style={{ color: (hoverRating || rating) >= s ? "#F59E0B" : "#E5E7EB" }}
                         />
                     ))}
                 </div>
@@ -115,33 +103,28 @@ export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId,
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Tell others about your experience (optional)"
                     rows={4}
-                    style={{
-                        width: "100%", marginTop: 16, padding: 12,
-                        borderRadius: 12, border: `1px solid ${T.slate200}`,
-                        fontSize: 13, fontFamily: T.font, color: T.slate700,
-                        resize: "vertical", outline: "none", boxSizing: "border-box",
-                    }}
+                    className="w-full mt-4 p-3 rounded-xl border border-gray-200 text-[13px] text-gray-700 resize-y outline-none box-border"
+                    style={{ fontFamily: FONT }}
                 />
 
-                {error && <p style={{ color: "#DC2626", fontSize: 12, marginTop: 8 }}>{error}</p>}
+                {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
 
-                <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                    <button onClick={onClose} disabled={submitting} style={{
-                        flex: 1, padding: "11px 0", borderRadius: 12,
-                        border: `1.5px solid ${T.slate200}`, background: T.white,
-                        color: T.slate700, fontSize: 14, fontWeight: 600,
-                        cursor: submitting ? "not-allowed" : "pointer", fontFamily: T.font,
-                    }}>
+                <div className="flex gap-2.5 mt-5">
+                    <button
+                        onClick={onClose}
+                        disabled={submitting}
+                        className={`flex-1 py-[11px] rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-700 text-sm font-semibold ${submitting ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        style={{ fontFamily: FONT }}
+                    >
                         Cancel
                     </button>
-                    <button onClick={handleSubmit} disabled={submitting} style={{
-                        flex: 1, padding: "11px 0", borderRadius: 12, border: "none",
-                        background: submitting ? T.slate200 : T.green,
-                        color: submitting ? T.slate500 : T.white,
-                        fontSize: 14, fontWeight: 700,
-                        cursor: submitting ? "not-allowed" : "pointer", fontFamily: T.font,
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    }}>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className={`flex-1 py-[11px] rounded-xl border-none text-sm font-bold flex items-center justify-center gap-2
+                            ${submitting ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-green-600 text-white cursor-pointer"}`}
+                        style={{ fontFamily: FONT }}
+                    >
                         {submitting ? <><FontAwesomeIcon icon={faSpinner} spin /> Submitting…</> : "Submit Review"}
                     </button>
                 </div>
