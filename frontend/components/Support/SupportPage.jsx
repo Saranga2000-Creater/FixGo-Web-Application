@@ -4,10 +4,10 @@ import { FaPhoneAlt, FaEnvelope, FaClock, FaMapMarkerAlt, FaLinkedinIn, FaBook, 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 
-import nuwanImg from "../../src/assets/nuwan_perera.png";
-import sanduniImg from "../../src/assets/sanduni_fernando.png";
-import tharinduImg from "../../src/assets/tharindu_silva.png";
-import diliniImg from "../../src/assets/dilini_jayawardena.png";
+import sahanImg from "../../src/assets/sahan_kavinda.jpeg";
+import sanduniImg from "../../src/assets/sanduni_jayawardhana.jpeg";
+import sarangaImg from "../../src/assets/saranga_pradeep.jpeg";
+import irushiImg from "../../src/assets/irushi_prabodhya.jpeg";
 
 // ─── FAQ Data ────────────────────────────────────────────────────────────────
 const faqData = [
@@ -117,28 +117,28 @@ const helpResources = [
 // ─── Team Data ────────────────────────────────────────────────────────────────
 const teamData = [
   {
-    name: "Nuwan Perera",
-    role: "Co-Founder & CEO",
-    bio: "Leads FixGo with a vision to revolutionize vehicle care through technology.",
-    img: nuwanImg,
+    name: "Sahan Kavinda",
+    role: "Team Lead , Backend Developer",
+    bio: "Leads FixGo with a vision to revolutionize automoive industry.",
+    img: sahanImg,
   },
   {
-    name: "Sanduni Fernando",
-    role: "Head of Operations",
+    name: "Sanduni Jayawardena",
+    role: "Frontend & Backend Developer",
     bio: "Ensures smooth operations and excellent support for our customers.",
     img: sanduniImg,
   },
   {
-    name: "Tharindu Silva",
-    role: "Head of Technology",
+    name: "Saranga Pradeep",
+    role: "Frontend & Backend Developer",
     bio: "Driving innovation and building reliable solutions for FixGo.",
-    img: tharinduImg,
+    img: sarangaImg,
   },
   {
-    name: "Dilini Jayawardena",
-    role: "Customer Experience Lead",
+    name: "Irushi Prabodhya",
+    role: "Frontend & Backend Developer",
     bio: "Focused on delivering exceptional customer experiences.",
-    img: diliniImg,
+    img: irushiImg,
   },
 ];
 
