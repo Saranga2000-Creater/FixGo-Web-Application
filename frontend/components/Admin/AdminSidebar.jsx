@@ -18,10 +18,14 @@ const T = {
     font:       "'Segoe UI', system-ui, sans-serif",
 };
 
+// badge is left undefined for now — wire this up to real counts
+// (e.g. verification queue count, unread moderation flags) once the
+// backend endpoints exist. Just set item.badge = someNumber to bring
+// the pill back for that nav item.
 const NAV_ITEMS = [
     { key: "dashboard",    icon: faChartLine,     label: "Dashboard" },
-    { key: "verification", icon: faShieldHalved,  label: "Verification Queue" },
-    { key: "moderation",   icon: faFlag,          label: "Moderation" },
+    { key: "verification", icon: faShieldHalved,  label: "Verification Queue", badge: undefined },
+    { key: "moderation",   icon: faFlag,          label: "Moderation",         badge: undefined },
     { key: "revenue",      icon: faMoneyBillWave, label: "Revenue & Ledger" },
     { key: "settings",     icon: faGear,          label: "Settings" },
 ];
@@ -51,7 +55,7 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
         >
             <FontAwesomeIcon icon={icon} style={{ color: active ? T.green : T.slate500, fontSize: 16 }} />
             <span style={{ flex: 1 }}>{label}</span>
-            {badge && (
+            {badge != null && (
                 <span style={{
                     background: T.green, color: T.white,
                     borderRadius: 99, fontSize: 11, fontWeight: 700,
@@ -119,7 +123,7 @@ function AdminSidebar({ currentPage, setCurrentPage }) {
                         active={currentPage === item.key}
                         icon={item.icon}
                         label={item.label}
-                        badge={item.key === "verification" ? "42" : item.key === "moderation" ? "3" : undefined}
+                        badge={item.badge}
                         onClick={() => setCurrentPage(item.key)}
                     />
                 ))}
