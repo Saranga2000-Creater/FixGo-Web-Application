@@ -232,7 +232,7 @@ public function getDeclinedRequestsByShop($shop_id) {
                       cancellation_reason = :reason 
                   WHERE customer_id = :customer_id 
                   AND id            != :winning_id 
-                  AND status        = 'Pending'";
+                  AND status        IN ('Pending', 'Accepted')";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":by",          $by);

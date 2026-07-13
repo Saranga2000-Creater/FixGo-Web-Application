@@ -203,6 +203,7 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
+                $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
                 $this->notifyShop(
     $currentRequest['shop_id'],
     $request_id,
@@ -228,7 +229,7 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->cancelRequest($request_id, 'Customer', $reason);
-                   $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
+            
 
                 $this->notifyShop(
     $currentRequest['shop_id'],
