@@ -8,14 +8,25 @@ function Sign({ setShowSignIn }) {
 
     const navigate = useNavigate();
 
+    const handleClose = () => {
+        if (typeof setShowSignIn === 'function') {
+            setShowSignIn(false); // Used when it's a popup
+        } else {
+            navigate('/');        // Used when it's a standalone page
+        }
+    };
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
     const handleUserLogin = async (event) => {
         event.preventDefault();
+        setError("");
 
         try {
-            const response = await fetch('http://localhost:8000/api/login.php', {
+            const host = window.location.hostname;
+            const response = await fetch(`http://${host}:8000/api/login.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -26,25 +37,31 @@ function Sign({ setShowSignIn }) {
             const data = await response.json();
 
             if (response.ok) {
-                setShowSignIn(false);
-                sessionStorage.setItem("token", data.token);
-                sessionStorage.setItem("email", email);
-                sessionStorage.setItem("role", data.role);
+                if (typeof setShowSignIn === 'function') {
+                    setShowSignIn(false);
+                }
+                localStorage.setItem("jwt_token", data.token);
+                localStorage.setItem("email", email);
+                localStorage.setItem("role", data.role);
+                localStorage.setItem("shopId", data.id);
 
+                if (data.profileImage) {
+                    localStorage.setItem("profileImage", data.profileImage);
+                }
                 navigate("/services");
             } else {
-                alert(data.message || "Login failed. Please try again.");
+                setError(data.message || "Login failed. Please try again.");
             }
 
         } catch (error) {
             console.error("Login error:", error);
-            alert("An error occurred. Please try again.");
+            setError("An error occurred. Please try again.");
         }
 
     }
 
     const handleRegister = () => {
-        setShowSignIn(false)
+        handleClose(); // CHANGED: Replaced setShowSignIn(false)
         document.getElementById("register")?.scrollIntoView({
             behavior: "smooth"
         });
@@ -52,9 +69,10 @@ function Sign({ setShowSignIn }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* 1st Update: The Background Overlay */}
             <div
                 className="absolute inset-0 bg-black/50"
-                onClick={() => setShowSignIn(false)}
+                onClick={handleClose} 
                 aria-hidden="true"
             />
 
@@ -63,14 +81,29 @@ function Sign({ setShowSignIn }) {
                 aria-modal="true"
                 className="relative bg-white w-full max-w-md mx-4 rounded-lg shadow-xl p-6 z-10"
             >
+                {/* 2nd Update: The X Icon */}
                 <FontAwesomeIcon
                     icon={faXmark}
-                    className="absolute top-4 right-4 cursor-pointer text-xl text-gray-600"
-                    onClick={() => setShowSignIn(false)}
+                    className="absolute top-4 right-4 cursor-pointer text-xl text-gray-600 hover:text-gray-900 transition-colors"
+                    onClick={handleClose} 
                 />
 
                 <h2 className="text-2xl font-semibold mb-2">Sign in to FixGo</h2>
                 <p className="text-sm text-gray-500 mb-6">Welcome back — please sign in to continue.</p>
+
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md flex items-center justify-between">
+                        <span>{error}</span>
+                        <button 
+                            type="button" 
+                            className="text-red-400 hover:text-red-600 transition-colors ml-2 font-bold text-lg leading-none"
+                            onClick={() => setError("")}
+                            aria-label="Dismiss error"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                )}
 
                 <form
                     className="space-y-4"
@@ -85,7 +118,10 @@ function Sign({ setShowSignIn }) {
                             placeholder="you@example.com"
                             name="email"
                             value={email}
-                            onChange={(e)=>setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (error) setError("");
+                            }}
                         />
                     </div>
 
@@ -98,24 +134,24 @@ function Sign({ setShowSignIn }) {
                             placeholder="Enter your password"
                             name="password"
                             value={password}
-                            onChange={(e)=>setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (error) setError("");
+                            }}
                         />
                     </div>
 
                     <button
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
-                        
                         name="signin"
                     >
-
                         Sign in
-
                     </button>
                 </form>
 
                 <div className="mt-4 text-center text-sm text-gray-600">
-                    <button className="text-green-600 hover:underline" onClick={handleRegister} >Create an account</button>
+                    <button className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
                     <span className="mx-2">·</span>
                     <button className="text-green-600 hover:underline">Forgot password?</button>
                 </div>

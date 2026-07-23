@@ -7,10 +7,82 @@ class Shop {
         $this->conn = $db;
     }
 
-    // CHANGED: Added $searchName = null to the end of the parameters
-    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null) {
+    // ==========================================
+    // Dashboard Profile Retrieval
+    // ==========================================
+  public function getById($shopId) {
+
+  $query = "
+    SELECT
+        u.id,
+        u.email,
+        s.name,
+        s.owner,
+        s.address,
+        s.contactNumber,
+        s.description,
+        s.openTime,
+        s.closeTime,
+        s.isAvailable,
+        s.carriageService,
+        s.BRN,
+        s.profileImageURL,
+        ST_Y(s.location) AS latitude,
+        ST_X(s.location) AS longitude,
+
+        GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories,
+
+        GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ')
+            AS vehicleCategories
+
+    FROM users u
+
+    INNER JOIN shop s
+        ON u.id = s.id
+
+    LEFT JOIN shopCategoryMapping scm
+        ON scm.shop_id = s.id
+
+    LEFT JOIN shopCategory sc
+        ON sc.id = scm.shop_category_id
+
+    LEFT JOIN shopVehicleCategories svc
+        ON svc.shop_id = s.id
+
+    LEFT JOIN vehicleCategory vc
+        ON vc.id = svc.vehicle_category_id
+
+    WHERE u.id = :id
+
+    GROUP BY
+        u.id,
+        u.email,
+        s.name,
+        s.owner,
+        s.address,
+        s.contactNumber,
+        s.description,
+        s.openTime,
+        s.closeTime,
+        s.isAvailable,
+        s.carriageService,
+        s.BRN,
+        s.profileImageURL
+";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([':id' => $shopId]);
+
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+    // ==========================================
+    // Find Nearby Shops (Search UI)
+    // ==========================================
+    public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false', $quickFilter = 'all', $currentTime = null) {
         $radiusInMeters = $radiusInKm * 1000;
 
+        // CHANGED: Updated has_tow_service to carriageService to match DB changes
         $query = "SELECT 
                     s.id, 
                     s.name, 
@@ -18,29 +90,35 @@ class Shop {
                     s.openTime, 
                     s.closeTime, 
                     s.isAvailable,
+                    s.profileImageURL as thumbnail_url,
                     ST_Y(s.location) as latitude, 
                     ST_X(s.location) as longitude,
                     ST_Distance_Sphere(s.location, POINT(:lng, :lat)) AS distance,
-                    (SELECT url FROM shopImage WHERE shop_id = s.id LIMIT 1) as thumbnail_url,
-                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
-                    COUNT(r.id) as review_count,
+                    COALESCE(ROUND(AVG(DISTINCT r.rating), 1), 0) as avg_rating,
+                    COUNT(DISTINCT r.id) as review_count,
+                    (SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed,
+                    (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
+                     FROM serviceRequest sr 
+                     WHERE sr.shop_id = s.id AND sr.accepted_at IS NOT NULL) as response_time_minutes,
                     GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') as shop_tags,
-                    -- CHANGED: Added extraction of vehicle category names for the UI tags
                     GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') as vehicle_tags
                   FROM " . $this->table_name . " s
                   LEFT JOIN review r ON s.id = r.shop_id
                   LEFT JOIN shopCategoryMapping scm ON s.id = scm.shop_id
                   LEFT JOIN shopCategory sc ON scm.shop_category_id = sc.id
-                  -- CHANGED: Added LEFT JOINs to fetch all vehicle categories assigned to this shop
                   LEFT JOIN shopVehicleCategories svc_all ON s.id = svc_all.shop_id
                   LEFT JOIN vehicleCategory vc ON svc_all.vehicle_category_id = vc.id";
 
-        // Filter Logic: We use separate aliases (svc_filter) so the filter doesn't break the tag extraction above
         if ($vehicleCategoryId !== null) {
             $query .= " INNER JOIN shopVehicleCategories svc_filter ON s.id = svc_filter.shop_id ";
         }
 
         $query .= " WHERE ST_Distance_Sphere(s.location, POINT(:lng, :lat)) <= :radius ";
+
+        // CHANGED: Updated has_tow_service to carriageService
+        if ($needs_tow === 'true') {
+            $query .= " AND s.carriageService = 1 ";
+        }
 
         if ($vehicleCategoryId !== null) {
             $query .= " AND svc_filter.vehicle_category_id = :vehicle_category ";
@@ -48,14 +126,26 @@ class Shop {
         if ($shopCategoryId !== null) {
             $query .= " AND scm.shop_category_id = :shop_category ";
         }
-        // 3. ADDED: Dynamically inject the LIKE clause if a name was typed
         if ($searchName !== null && $searchName !== '') {
             $query .= " AND s.name LIKE :searchName ";
         }
 
+        // CHANGED: Updated has_tow_service to carriageService
+        if ($quickFilter === 'open') {
+            $query .= " AND s.isAvailable = 1 AND :currentTime BETWEEN s.openTime AND s.closeTime ";
+        } elseif ($quickFilter === 'roadside') {
+            $query .= " AND s.carriageService = 1 ";
+        }
+
         $query .= " GROUP BY s.id ";
 
-        if ($sortBy === 'rating') {
+        if ($quickFilter === 'top_rated') {
+            $query .= " HAVING avg_rating >= 4.0 ";
+        }
+
+        if ($quickFilter === 'nearest') {
+            $query .= " ORDER BY distance ASC"; 
+        } else if ($sortBy === 'rating') {
             $query .= " ORDER BY avg_rating DESC, distance ASC";
         } else {
             $query .= " ORDER BY distance ASC";
@@ -74,14 +164,317 @@ class Shop {
             $stmt->bindParam(':shop_category', $shopCategoryId, PDO::PARAM_INT);
         }
 
-        // 4. ADDED: Safely bind the search string with SQL wildcards (%)
         if ($searchName !== null && $searchName !== '') {
             $searchTerm = '%' . $searchName . '%';
             $stmt->bindParam(':searchName', $searchTerm, PDO::PARAM_STR);
         }
 
+        if ($quickFilter === 'open') {
+            $stmt->bindParam(':currentTime', $currentTime, PDO::PARAM_STR);
+        }
+
         $stmt->execute();
         return $stmt;
     }
+
+    // ==========================================
+    // Shop Description Page 
+    // ==========================================
+    public function getShopDetails($shopId, $customerId = null) {
+        $details = [];
+
+        // 1. Get Core Info
+        $query = "SELECT id, name, address, contactNumber as phone, description, 
+                         openTime, closeTime, isAvailable, carriageService, profileImageURL,
+                         ST_Y(shop.location) as lat, ST_X(shop.location) as lng
+                  FROM shop WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $shopId);
+        $stmt->execute();
+        $info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$info) return null;
+
+        // 2. PRIVACY CHECK: Has the 3-Way Handshake been completed?
+        $details['isHandshakeComplete'] = false; // Default to false
+        if ($customerId) {
+            $checkHandshake = "SELECT id FROM serviceRequest 
+                               WHERE customer_id = :cid AND shop_id = :sid 
+                               AND status IN ('Confirmed', 'In Progress', 'Diagnosis', 'Pending Parts') 
+                               LIMIT 1";
+            $handshakeStmt = $this->conn->prepare($checkHandshake);
+            $handshakeStmt->bindParam(':cid', $customerId);
+            $handshakeStmt->bindParam(':sid', $shopId);
+            $handshakeStmt->execute();
+            if ($handshakeStmt->fetchColumn()) {
+                $details['isHandshakeComplete'] = true;
+            }
+        }
+
+        // 3. GET SHOP CATEGORIES EARLY (Moved from bottom to here)
+        $catQuery = "SELECT sc.name 
+                     FROM shopCategoryMapping scm 
+                     JOIN shopCategory sc ON scm.shop_category_id = sc.id 
+                     WHERE scm.shop_id = :id";
+        $catStmt = $this->conn->prepare($catQuery);
+        $catStmt->bindParam(':id', $shopId);
+        $catStmt->execute();
+        $details['shopCategories'] = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // 4. SECURE DATA ROUTING & COORDINATE FUZZING
+        // A shop is fully unlocked if the handshake is complete OR if it's a retail Spare Parts shop
+        $isFullyUnlocked = $details['isHandshakeComplete'] || in_array('Spare Parts', $details['shopCategories']);
+
+        if ($isFullyUnlocked) {
+            // UNLOCKED: Give them the exact address, phone, and exact map coordinates
+            $info['location'] = $info['address'];
+            $info['mapQuery'] = ($info['lat'] && $info['lng']) ? $info['lat'] . ',' . $info['lng'] : $info['address'];
+        } else {
+            // LOCKED: Mask the phone number
+            $info['phone'] = 'Protected (Available after booking)';
+            
+            // Extract generalized area for text display
+            $addressParts = explode(',', $info['address']);
+            $generalizedArea = trim(end($addressParts)); 
+            if (count($addressParts) > 1) {
+                $generalizedArea = trim($addressParts[count($addressParts)-2]) . ', ' . $generalizedArea;
+            }
+            $info['location'] = $generalizedArea ;
+            
+            // THE MAGIC: COORDINATE FUZZING (Jitter)
+            if ($info['lat'] && $info['lng']) {
+                $offsetLat = (mt_rand(-50, 50) / 10000);
+                $offsetLng = (mt_rand(-50, 50) / 10000);
+                $safeLat = $info['lat'] + $offsetLat;
+                $safeLng = $info['lng'] + $offsetLng;
+                $info['mapQuery'] = $safeLat . ',' . $safeLng;
+            } else {
+                $info['mapQuery'] = $generalizedArea;
+            }
+        }
+
+        // Remove the raw exact data so it is never accidentally sent in the JSON payload
+        unset($info['address']);
+        unset($info['lat']);
+        unset($info['lng']);
+        
+        $details['info'] = $info;
+
+        // 5. Get Services
+        $svcQuery = "SELECT service_name as name, starting_price as price, duration 
+                     FROM shopServices WHERE shop_id = :id";
+        $svcStmt = $this->conn->prepare($svcQuery);
+        $svcStmt->bindParam(':id', $shopId);
+        $svcStmt->execute();
+        $details['services'] = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 6. Get Reviews
+        $revQuery = "SELECT r.rating, r.comment as summary, DATE_FORMAT(sr.created_at, '%b %d, %Y') as date, 
+                            c.name as name 
+                     FROM review r
+                     JOIN customer c ON r.customer_id = c.id
+                     JOIN serviceRequest sr ON r.service_request_id = sr.id
+                     WHERE r.shop_id = :id
+                     ORDER BY sr.created_at DESC";
+        $revStmt = $this->conn->prepare($revQuery);
+        $revStmt->bindParam(':id', $shopId);
+        $revStmt->execute();
+        $details['reviews'] = $revStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Calculate Aggregates for Reviews
+        $totalReviews = count($details['reviews']);
+        $totalStars = 0;
+        $recommendCount = 0;
+        foreach($details['reviews'] as $rev) {
+            $totalStars += $rev['rating'];
+            if($rev['rating'] >= 4) $recommendCount++;
+        }
+
+        // 7. Calculate True Completion Rate
+        $srQuery = "SELECT 
+                        COUNT(id) as total_requests,
+                        SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed_requests
+                    FROM serviceRequest 
+                    WHERE shop_id = :id";
+        $srStmt = $this->conn->prepare($srQuery);
+        $srStmt->bindParam(':id', $shopId);
+        $srStmt->execute();
+        $srData = $srStmt->fetch(PDO::FETCH_ASSOC);
+        
+        $completionRate = 0;
+        if ($srData['total_requests'] > 0) {
+            $completionRate = round(($srData['completed_requests'] / $srData['total_requests']) * 100);
+        }
+
+        // 8. Handle Real-World Experience Intelligently
+        $experience = "1+"; // Safe default
+        if (isset($details['info']['established_year']) && !empty($details['info']['established_year'])) {
+            $years = date('Y') - intval($details['info']['established_year']);
+            $experience = $years > 0 ? $years . "+" : "1st Year";
+        }
+
+        $details['stats'] = [
+            'jobsCompleted' => $srData['completed_requests'] ?? 0, 
+            'averageRating' => $totalReviews > 0 ? round($totalStars / $totalReviews, 1) : 0,
+            'yearsExperience' => $experience, 
+            'completionRate' => $completionRate . "%", 
+            'reviewCount' => $totalReviews,
+            'recommendPercentage' => $totalReviews > 0 ? round(($recommendCount / $totalReviews) * 100) : 0
+        ];
+
+        // 9. Get Gallery Images & Profile Image
+        $imgQuery = "SELECT url FROM shopImage WHERE shop_id = :id";
+        $imgStmt = $this->conn->prepare($imgQuery);
+        $imgStmt->bindParam(':id', $shopId);
+        $imgStmt->execute();
+        
+        $galleryImages = $imgStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        $details['gallery'] = [];
+        
+        $profileImg = $details['info']['profileImageURL'] ?? null;
+        if (!empty($profileImg)) {
+            $details['gallery'][] = $profileImg;
+        }
+        if (!empty($galleryImages)) {
+            $details['gallery'] = array_merge($details['gallery'], $galleryImages);
+        }
+        unset($details['info']['profileImageURL']);
+
+        // 10. Get Supported Vehicle Categories
+        $vehQuery = "SELECT vc.name 
+                     FROM shopVehicleCategories svc 
+                     JOIN vehicleCategory vc ON svc.vehicle_category_id = vc.id 
+                     WHERE svc.shop_id = :id";
+        $vehStmt = $this->conn->prepare($vehQuery);
+        $vehStmt->bindParam(':id', $shopId);
+        $vehStmt->execute();
+        $details['vehicleCategories'] = $vehStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        return $details;
+    }
+
+    /**
+     * Registers a new shop owner by inserting into 'users', 'shop', category mapping,
+     * and vehicle categories tables within a database transaction.
+     * 
+     * @param array $userData Contains email, password, verification_token
+     * @param array $shopData Contains shop metadata and location coordinates
+     * @param int $categoryId The category ID mapped
+     * @param array $vehicleIds Array of vehicle category IDs mapped
+     * @return int The newly created user/shop ID
+     * @throws Exception if registration fails
+     */
+    public function register($userData, $shopData, $categoryId, $vehicleIds) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Insert into users
+            $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified, token_expiry) 
+                          VALUES (:email, 'shop_owner', :password, 0, :token, 0, DATE_ADD(NOW(), INTERVAL 1 HOUR))";
+            $userStmt = $this->conn->prepare($userQuery);
+            $userStmt->execute([
+                ':email' => $userData['email'],
+                ':password' => $userData['password'],
+                ':token' => $userData['verification_token']
+            ]);
+            
+            $userId = $this->conn->lastInsertId();
+
+            // 2. Insert into shop
+            $shopQuery = "INSERT INTO shop (id, name, address, contactNumber, owner, location, description, openTime, closeTime, isAvailable, carriageService, BRN, profileImageURL, default_driver_name, default_driver_phone, default_truck_brand, default_truck_color, tow_truck_plate) 
+                          VALUES (:id, :name, :address, :contactNumber, :owner, ST_GeomFromText(:location_point), :description, :openTime, :closeTime, 1, :carriageService, :BRN, :profileImageURL, :driverName, :driverPhone, :truckBrand, :truckColor, :truckPlate)";
+            
+            $shopStmt = $this->conn->prepare($shopQuery);
+            $shopStmt->execute([
+                ':id' => $userId,
+                ':name' => $shopData['name'],
+                ':address' => $shopData['address'],
+                ':contactNumber' => $shopData['contactNumber'],
+                ':owner' => $shopData['owner'],
+                ':location_point' => "POINT(" . $shopData['longitude'] . " " . $shopData['latitude'] . ")",
+                ':description' => $shopData['description'],
+                ':openTime' => $shopData['openTime'],
+                ':closeTime' => $shopData['closeTime'],
+                ':carriageService' => $shopData['carriageService'],
+                ':BRN' => $shopData['BRN'],
+                ':profileImageURL' => $shopData['profileImageURL'],
+                ':driverName' => $shopData['driverName'],
+                ':driverPhone' => $shopData['driverPhone'],
+                ':truckBrand' => $shopData['truckBrand'],
+                ':truckColor' => $shopData['truckColor'],
+                ':truckPlate' => $shopData['truckPlate']
+            ]);
+
+            // 3. Insert into shopCategoryMapping
+            $mappingQuery = "INSERT INTO shopCategoryMapping (shop_id, shop_category_id) VALUES (:shop_id, :shop_category_id)";
+            $mappingStmt = $this->conn->prepare($mappingQuery);
+            $mappingStmt->execute([
+                ':shop_id' => $userId,
+                ':shop_category_id' => $categoryId
+            ]);
+
+            // 4. Insert into shopVehicleCategories
+            $vehicleQuery = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :vehicle_category_id)";
+            $vehicleStmt = $this->conn->prepare($vehicleQuery);
+            foreach ($vehicleIds as $vId) {
+                $vehicleStmt->execute([
+                    ':shop_id' => $userId,
+                    ':vehicle_category_id' => $vId
+                ]);
+            }
+
+            $this->conn->commit();
+            return $userId;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function getTowTruckDetails($shopId)
+{
+    $query="
+        SELECT
+            default_driver_name,
+            default_driver_phone,
+            default_truck_brand,
+            default_truck_color,
+            tow_truck_plate
+        FROM shop
+        WHERE id=:id
+    ";
+
+    $stmt=$this->conn->prepare($query);
+    $stmt->bindParam(":id",$shopId);
+    $stmt->execute();
+
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+public function updateShopTowTruckDetails($shopId, $data) {
+    $query = "UPDATE shop SET 
+                carriageService = 1,
+                default_driver_name = :driverName,
+                default_driver_phone = :driverPhone,
+                default_truck_brand = :truckBrand,
+                default_truck_color = :truckColor,
+                tow_truck_plate = :truckPlate
+              WHERE id = :id";
+
+    $stmt = $this->conn->prepare($query);
+
+    // Using execute()'s return value, not rowCount() — same fix as the
+    // earlier tow-truck false-failure bug (no-change updates report rowCount 0)
+    return $stmt->execute([
+        ':driverName'  => $data['driverName'],
+        ':driverPhone' => $data['driverPhone'],
+        ':truckBrand'  => $data['truckBrand'],
+        ':truckColor'  => $data['truckColor'],
+        ':truckPlate'  => $data['truckPlate'],
+        ':id'          => $shopId
+    ]);
+}
 }
 ?>

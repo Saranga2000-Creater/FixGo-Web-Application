@@ -1,110 +1,143 @@
-const HISTORY = [
-  {
-    id: 1, initials: "SJ", color: "#7C3AED", name: "Sanduni J.",
-    vehicle: "Toyota Prius", plate: "ABC-1234",
-    service: "Engine Diagnostic",
-    dateService: "May 20, 2026", dateComplete: "May 21, 2026",
-    assigned: "Nuwan Perera"
-  },
-  {
-    id: 2, initials: "NC", color: "#059669", name: "Nimal C.",
-    vehicle: "Suzuki Alto", plate: "CAB-5678",
-    service: "Brake Pad Replacement",
-    dateService: "May 15, 2026", dateComplete: "May 15, 2026",
-    assigned: "Ruwan Silva"
-  },
-  {
-    id: 3, initials: "KP", color: "#2563EB", name: "Kavindu P.",
-    vehicle: "Honda Fit", plate: "KX-7788",
-    service: "Oil Change",
-    dateService: "May 12, 2026", dateComplete: "May 12, 2026",
-    assigned: "Chamika Dias"
-  },
-  {
-    id: 4, initials: "MG", color: "#D97706", name: "Madushan G.",
-    vehicle: "Tata Lorry", plate: "WP-LM-8945",
-    service: "Clutch Repair",
-    dateService: "May 12, 2026", dateComplete: "May 12, 2026",
-    assigned: "Saman Abey."
-  },
-  {
-    id: 5, initials: "AS", color: "#EF4444", name: "Amila S.",
-    vehicle: "Nissan March", plate: "KU-3344",
-    service: "AC Not Cooling",
-    dateService: "May 10, 2026", dateComplete: "May 12, 2026",
-    assigned: "Nuwan Perera"
-  },
-];
+import { useEffect, useState } from "react";
 
 function Avatar({ initials, color, size = 32 }) {
   return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: color + "22", color,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 600, fontSize: size * 0.33, flexShrink: 0,
-      border: `1.5px solid ${color}44`
-    }}>
+    <div
+      className="flex items-center justify-center rounded-full font-semibold shrink-0 border"
+      style={{
+        width: size,
+        height: size,
+        background: color + "22",
+        color,
+        fontSize: size * 0.33,
+        borderColor: color + "44",
+      }}
+    >
       {initials}
     </div>
   );
 }
 
-function ServiceHistory() {
+const AVATAR_COLORS = ["#7C3AED", "#059669", "#2563EB", "#16A34A", "#EF4444", "#D97706"];
+
+function getInitials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
+
+function colorForId(id) {
+  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function ServiceHistory({ shopCategory }) {
+  const [history, setHistory] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwt_token");
+
+    if (!token) {
+      console.error("No JWT token found.");
+      return;
+    }
+
+    fetch("http://localhost:8000/api/getServiceHistory.php", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Session expired. Please log in again.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("API DATA:", data);
+
+        if (data.success) {
+          setHistory(data.data);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
+
+  console.log("History state:", history);
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 m-0">
           Service History
         </h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>
+        <p className="text-gray-500 mt-1 text-sm">
           All completed service records.
         </p>
       </div>
 
-      <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-      }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[700px]">
             <thead>
-              <tr style={{ background: "#F9FAFB" }}>
-                {["Customer", "Vehicle", "Service Provided", "Date of Service", "Completion Date", "Assigned To", "Action"].map(h => (
-                  <th key={h} style={{
-                    padding: "12px 16px", textAlign: "left",
-                    fontSize: 12, fontWeight: 600, color: "#6B7280",
-                    borderBottom: "1px solid #F3F4F6"
-                  }}>{h}</th>
+              <tr className="bg-gray-50">
+                {["Customer", "Vehicle", "Service Provided", "Confirmed On", "Completed On", "Action"].map((h) => (
+                  <th
+                    key={h}
+                    className="py-3 px-4 text-left text-xs font-semibold text-gray-500 border-b border-gray-100"
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {HISTORY.map((r, i) => (
-                <tr key={r.id} style={{
-                  borderBottom: i < HISTORY.length - 1 ? "1px solid #F9FAFB" : "none"
-                }}>
-                  <td style={{ padding: "14px 16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Avatar initials={r.initials} color={r.color} />
-                      <span style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{r.name}</span>
+              {history.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-6 px-4 text-center text-gray-400 text-sm">
+                    No completed services yet.
+                  </td>
+                </tr>
+              )}
+              {history.map((r, i) => (
+                <tr
+                  key={r.id}
+                  className={i < history.length - 1 ? "border-b border-gray-50" : ""}
+                >
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar initials={getInitials(r.customer_name)} color={colorForId(r.id)} />
+                      <div>
+                        <div className="font-semibold text-sm text-gray-900">{r.customer_name}</div>
+                        <div className="text-xs text-gray-500">{r.customer_phone}</div>
+                      </div>
                     </div>
                   </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <div style={{ fontSize: 14, color: "#374151" }}>{r.vehicle}</div>
-                    <div style={{ fontSize: 12, color: "#EA580C", fontWeight: 600 }}>{r.plate}</div>
+                  <td className="py-3.5 px-4">
+                    <div className="text-sm text-gray-700">{r.vehicle_brand}</div>
+                    <div className="text-xs text-green-600 font-semibold">{r.vehicle_color}</div>
                   </td>
-                  <td style={{ padding: "14px 16px", fontSize: 14, color: "#374151" }}>{r.service}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateService}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#6B7280" }}>{r.dateComplete}</td>
-                  <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{r.assigned}</td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <button style={{
-                      padding: "6px 14px", borderRadius: 8,
-                      border: "1.5px solid #E5E7EB", color: "#374151",
-                      background: "transparent", fontWeight: 600,
-                      fontSize: 12, cursor: "pointer"
-                    }}>View Details</button>
+                  <td className="py-3.5 px-4 text-sm text-gray-700">{r.issue_category}</td>
+                  <td className="py-3.5 px-4 text-[13px] text-gray-500">{formatDate(r.confirmed_at)}</td>
+                  <td className="py-3.5 px-4 text-[13px] text-gray-500">{formatDate(r.completed_at)}</td>
+                  <td className="py-3.5 px-4">
+                    <button
+                      onClick={() => setSelectedRequest(r)}
+                      className="py-2.5 px-4.5 rounded-[10px] border border-gray-300 bg-white text-gray-700 font-semibold text-[13px] cursor-pointer min-w-[120px] transition-all duration-200 ease-in-out hover:bg-green-600 hover:text-white hover:border-green-600 hover:-translate-y-0.5"
+                    >
+                      View Details
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -112,14 +145,83 @@ function ServiceHistory() {
           </table>
         </div>
 
-        <div style={{ padding: "14px 20px", textAlign: "center" }}>
-          <button style={{
-            padding: "10px 32px", borderRadius: 10,
-            border: "1.5px solid #EA580C", color: "#EA580C",
-            background: "transparent", fontWeight: 600, fontSize: 14, cursor: "pointer"
-          }}>View all past services</button>
+        <div className="py-3.5 px-5 text-center">
+          <button className="py-2.5 px-8 rounded-[10px] border-[1.5px] border-green-600 text-green-600 bg-transparent font-semibold text-sm cursor-pointer">
+            View all past services
+          </button>
         </div>
       </div>
+
+      {/* Service Request Details Modal — same as Service Requests page */}
+      {selectedRequest && (
+        <div className="fixed inset-0 bg-slate-900/55 flex justify-center items-center z-[999] p-5">
+          <div className="bg-white w-[600px] max-w-full max-h-[85vh] overflow-y-auto rounded-[20px] p-7 shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
+            <h2 className="m-0 mb-5 text-xl font-bold text-slate-900">
+              Service Request Details
+            </h2>
+
+            <div className="flex flex-col gap-3 mb-4">
+              <div>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
+                  Customer
+                </div>
+                <div className="text-[16.5px] text-slate-900 mt-0.5">
+                  {selectedRequest.customer_name}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
+                  Issue
+                </div>
+                <div className="text-[16.5px] text-slate-900 mt-0.5">
+                  {selectedRequest.issue_category}
+                </div>
+              </div>
+
+              {shopCategory === "Service Centers" && (
+                <div>
+                  <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px]">
+                    Appointment
+                  </div>
+
+                  <div className="text-[16.5px] text-slate-900 mt-0.5">
+                    {selectedRequest.preferred_date
+                      ? `${selectedRequest.preferred_date} • ${selectedRequest.preferred_time}`
+                      : "Not specified"}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="text-[13px] font-semibold text-slate-500 uppercase tracking-[0.4px] mb-1.5">
+                  Description
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-[10px] text-[15px] text-slate-900 leading-relaxed">
+                  {selectedRequest.description}
+                </div>
+              </div>
+            </div>
+
+            {selectedRequest.photo && (
+              <img
+                src={`http://localhost:8000/${selectedRequest.photo}`}
+                alt="Problem"
+                className="w-full rounded-xl mt-1.5 border border-slate-200"
+              />
+            )}
+
+            <div className="flex gap-2.5 mt-6">
+              <button
+                onClick={() => setSelectedRequest(null)}
+                className="py-2.5 px-6 bg-green-700 text-white border-none rounded-[10px] font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

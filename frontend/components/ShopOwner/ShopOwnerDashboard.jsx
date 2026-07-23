@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
 import ServiceHistory from "./ServiceHistory";
 import ReviewsRatings from "./ReviewsRatings";
 import ShopProfile from "./ShopProfile";
+import Notification from "./Notification";
 import Settings from "./Settings";
+
+
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠" },
@@ -19,79 +22,74 @@ const NAV_ITEMS = [
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView() {
+function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
   const stats = [
-    { label: "New Requests", value: 12, sub: "+4 today", subColor: "#EA580C", icon: "📋" },
-    { label: "Active Jobs", value: 8, sub: "View all", subColor: "#059669", icon: "🔧" },
-    { label: "Completed Jobs", value: 54, sub: "+6 this week", subColor: "#059669", icon: "✅" },
-    { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "#6B7280", icon: "⭐" },
+    { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
+    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-emerald-600", icon: "🔧" },
+    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-emerald-600", icon: "✅" },
+    { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "text-gray-500", icon: "⭐" },
   ];
   const quickActions = [
-    { label: "Add New Service", icon: "➕", bg: "#FFF7ED", iconBg: "#EA580C" },
-    { label: "Update Availability", icon: "📅", bg: "#EFF6FF", iconBg: "#2563EB" },
-    { label: "View Calendar", icon: "🗓️", bg: "#F0FDF4", iconBg: "#059669" },
-    { label: "Download Report", icon: "📄", bg: "#F5F3FF", iconBg: "#7C3AED" },
+    { label: "Add New Service", icon: "➕" },
+    { label: "Update Availability", icon: "📅" },
+    { label: "View Calendar", icon: "🗓️" },
   ];
+
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <div style={{ width: "100%", display: "block" }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: "#111827", margin: 0 }}>
-          Hello, Advanced Auto! 👋
-        </h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 15 }}>
+    <div className="w-full block">
+      <div className="bg-gradient-to-b from-[#EEF7F0] to-white rounded-[18px] p-6 mb-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+        <div className="flex justify-between items-center mb-1">
+          <h1 className="text-[28px] font-bold text-gray-900 m-0">
+            Hello, {shopData?.name || "Shop"}! 👋
+          </h1>
+
+          <span className="text-sm font-semibold text-gray-700 bg-white py-2.5 px-4 rounded-xl border border-gray-200">
+            {currentDate}
+          </span>
+        </div>
+
+        <p className="text-gray-500 mt-2 mb-0 text-[15px]">
           Here's what's happening at your shop today.
         </p>
       </div>
 
       {/* Stat Cards Layout - Using custom grids designed to dynamically span your monitor size */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", // Expanded width bounds
-        gap: 20, 
-        marginBottom: 32,
-        width: "100%"
-      }}>
+      <div className="grid gap-5 mb-8 w-full [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {stats.map((s) => (
-          <div key={s.label} style={{
-            background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-            padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-          }}>
-            <div style={{ fontSize: 26, marginBottom: 8 }}>{s.icon}</div>
-            <div style={{ color: "#6B7280", fontSize: 13, marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: "#111827", lineHeight: 1 }}>{s.value}</div>
-            <div style={{ color: s.subColor, fontSize: 13, marginTop: 6 }}>{s.sub}</div>
+          <div
+            key={s.label}
+            className="bg-white rounded-[18px] border border-[#E7EFE8] py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+          >
+            <div className="text-2xl mb-2">{s.icon}</div>
+            <div className="text-gray-500 text-[13px] mb-1">{s.label}</div>
+            <div className="text-[32px] font-bold text-gray-900 leading-none">{s.value}</div>
+            <div className={`text-[13px] mt-1.5 ${s.subColor}`}>{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 style={{ fontSize: 17, fontWeight: 600, color: "#111827", marginBottom: 14 }}>
+        <div className="w-[60px] h-1 bg-green-600 rounded-full mb-3" />
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-4.5">
           Quick Actions
         </h2>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", // Expanded action card min-width
-          gap: 16,
-          width: "100%"
-        }}>
+        <div className="grid grid-cols-3 gap-4 w-full">
           {quickActions.map((a) => (
             <div
               key={a.label}
-              style={{
-                background: a.bg, borderRadius: 14, padding: "26px 20px",
-                textAlign: "center", cursor: "pointer",
-                border: "1px solid transparent", transition: "transform 0.15s"
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+              className="bg-white rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] py-8 px-6 text-center cursor-pointer border border-gray-200 transition-transform duration-200 ease-in-out hover:-translate-y-0.5"
             >
-              <div style={{
-                width: 48, height: 48, borderRadius: 14, background: a.iconBg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, margin: "0 auto 12px"
-              }}>{a.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{a.label}</div>
+              <div className="w-12 h-12 rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] bg-green-600 flex items-center justify-center text-[22px] mx-auto mb-3">
+                {a.icon}
+              </div>
+              <div className="font-semibold text-sm text-gray-900">{a.label}</div>
             </div>
           ))}
         </div>
@@ -100,67 +98,37 @@ function DashboardView() {
   );
 }
 
-// ── Notifications View (Forced Full Width) ──────────────────────────────────
-function NotificationsView() {
-  const items = [
-    { icon: "📋", title: "New service request from Sanduni J.", desc: "Toyota Prius · Engine Overheating", time: "10 min ago", unread: true },
-    { icon: "🔧", title: "Repair completed for Kavindu P.", desc: "Honda Fit · Oil Change", time: "1 hr ago", unread: true },
-    { icon: "⭐", title: "New 5-star review from Sanduni Jayawardhana", desc: '"Excellent service!"', time: "2 hrs ago", unread: false },
-    { icon: "📋", title: "New service request from Nimal C.", desc: "Suzuki Alto · Brake Pad Replacement", time: "3 hrs ago", unread: false },
-    { icon: "💬", title: "Message from Madushan G.", desc: "Query about clutch repair estimate.", time: "5 hrs ago", unread: false },
-  ];
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>Notifications</h1>
-        <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>Stay updated with your shop activity.</p>
-      </div>
-      <div style={{
-        background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-        overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", width: "100%"
-      }}>
-        {items.map((item, i) => (
-          <div key={i} style={{
-            padding: "16px 20px",
-            borderBottom: i < items.length - 1 ? "1px solid #F9FAFB" : "none",
-            display: "flex", gap: 14, alignItems: "flex-start",
-            background: item.unread ? "#FFF7ED" : "transparent"
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: item.unread ? "#FDBA74" : "#F3F4F6",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 18, flexShrink: 0
-            }}>{item.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: item.unread ? 700 : 500, fontSize: 14, color: "#111827" }}>
-                {item.title}
-              </div>
-              <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>{item.desc}</div>
-            </div>
-            <div style={{ fontSize: 12, color: "#9CA3AF", whiteSpace: "nowrap" }}>{item.time}</div>
-            {item.unread && (
-              <div style={{
-                width: 8, height: 8, borderRadius: "50%",
-                background: "#EA580C", marginTop: 6, flexShrink: 0
-              }} />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-function renderPage(activeNav) {
+
+function renderPage(
+    activeNav,
+    shopData,
+    requestCount,
+    activeRepairCount,
+    completedJobCount,
+    setActiveNav,
+    fetchRequestCount
+)  {
   switch (activeNav) {
-    case "dashboard":     return <DashboardView />;
-    case "requests":      return <ServiceRequests />;
+       case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
+    case "requests":      return <ServiceRequests
+  shopCategory={shopData?.categories}
+  shopCoordinates={{
+    lat: shopData?.latitude,
+    lng: shopData?.longitude
+  }}
+  fetchRequestCount={fetchRequestCount}
+/>;
     case "repairs":       return <ActiveRepairs />;
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
     case "profile":       return <ShopProfile />;
-    case "notifications": return <NotificationsView />;
+    case "notifications":
+    return (
+        <Notification
+            setActiveNav={setActiveNav}
+        />
+    );
     case "settings":      return <Settings />;
     default:              return <DashboardView />;
   }
@@ -168,107 +136,167 @@ function renderPage(activeNav) {
 
 // ── Main Layout (Guaranteed Spanning Layout) ──────────────────────────────────
 function ShopOwnerDashboard() {
+  console.log("ShopOwnerDashboard rendered");
   const [activeNav, setActiveNav] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [shopData, setShopData] = useState(null);
+  const [requestCount, setRequestCount] = useState(0);
+  const [activeRepairCount, setActiveRepairCount] = useState(0);
+  const [completedJobCount, setCompletedJobCount] = useState(0); 
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
 
-  const currentLabel = NAV_ITEMS.find(n => n.id === activeNav)?.label || "Dashboard";
+const fetchRequestCount = () => {
+  const token = localStorage.getItem("jwt_token");
 
+  fetch("http://localhost:8000/api/getServiceRequests.php", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        const pendingCount = data.data.filter(
+    request => request.status === "Pending"
+).length;
+
+setRequestCount(pendingCount);
+      }
+    })
+    .catch((err) => console.error(err));
+};
+
+useEffect(() => {
+  fetchRequestCount();
+}, []);
+ 
+useEffect(() => {
+ const token = localStorage.getItem("jwt_token");
+
+fetch("http://localhost:8000/api/getServiceHistory.php", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setCompletedJobCount(data.data.length);
+      }
+    })
+    .catch((err) => console.error(err));
+}, []);
+
+useEffect(() => {
+
+    const loadNotificationCount = () => {
+
+        const token = localStorage.getItem("jwt_token");
+
+        if (!token) return;
+
+        fetch("http://localhost:8000/api/getNotifications.php", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.success) {
+
+                const unread = data.data.filter(
+                    n => Number(n.isRead) === 0
+                ).length;
+
+                setNotificationCount(unread);
+            }
+
+        })
+        .catch(console.error);
+
+    };
+
+    loadNotificationCount();
+
+    const interval = setInterval(loadNotificationCount,5000);
+
+    return () => clearInterval(interval);
+
+}, []);
+
+useEffect(() => {
+  const token = localStorage.getItem("jwt_token");
+
+  if (!token) {
+    console.error("Token not found");
+    return;
+  }
+
+  fetch("http://localhost:8000/api/getShopProfile.php", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+
+    
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setShopData(data.data);
+      } else {
+        console.error(data.message);
+      }
+    })
+    .catch((err) => console.error(err));
+}, []);
+useEffect(() => {
+    const token = localStorage.getItem("jwt_token");
+    const shopId = JSON.parse(atob(token.split(".")[1])).shop_id;
+
+    fetch(`http://localhost:8000/api/getShopReviews.php?shop_id=${shopId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                setReviewCount(data.total_reviews);
+            }
+        })
+        .catch(console.error);
+}, []);
+ 
+    const currentLabel =
+    NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
   return (
-    <div style={{
-      display: "flex", 
-      width: "100vw",               // Forces visual window track expansion
-      minHeight: "100vh", 
-      background: "#F9FAFB",
-      fontFamily: "'Segoe UI', system-ui, sans-serif", 
-      position: "relative",
-      boxSizing: "border-box"
-    }}>
-      {/* Sidebar */}
-      <Sidebar
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
+    <div className="flex min-h-screen bg-slate-50">
+     <Sidebar
+  activeNav={activeNav}
+  setActiveNav={setActiveNav}
+  shopData={shopData}
+  requestCount={requestCount}
+  activeRepairCount={activeRepairCount}
+  notificationCount={notificationCount}
+  reviewCount={reviewCount}
+/>
 
-      {/* Main Content Workspace Column */}
-      <div style={{ 
-        flex: 1, 
-        display: "flex", 
-        flexDirection: "column", 
-        minWidth: 0,
-        width: "100%" 
-      }}>
-
-        {/* Top Bar Navigation UI */}
-        <div style={{
-          background: "#fff", borderBottom: "1px solid #F3F4F6",
-          padding: "0 24px", height: 60,
-          display: "flex", alignItems: "center", gap: 16,
-          position: "sticky", top: 0, zIndex: 30,
-          width: "100%",
-          boxSizing: "border-box"
-        }}>
-          {/* Hamburger Icon */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              padding: "6px 8px", borderRadius: 8,
-              display: "flex", flexDirection: "column", gap: 5, flexShrink: 0
-            }}
-          >
-            <span style={{ display: "block", width: 22, height: 2, background: "#374151", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 22, height: 2, background: "#374151", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 22, height: 2, background: "#374151", borderRadius: 2 }} />
-          </button>
-
-          {/* Brand Logo Elements */}
-          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <span style={{ fontWeight: 800, fontSize: 20, color: "#EA580C", letterSpacing: "-0.5px" }}>Fix</span>
-            <span style={{ fontWeight: 800, fontSize: 20, color: "#111827", letterSpacing: "-0.5px" }}>Go</span>
-          </div>
-
-          {/* Breadcrumb Indicator */}
-          <div style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
-            <span>Dashboard</span>
-            {activeNav !== "dashboard" && (
-              <>
-                <span>›</span>
-                <span style={{ color: "#111827", fontWeight: 500 }}>{currentLabel}</span>
-              </>
-            )}
-          </div>
-
-          {/* Right side Metadata utilities */}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 14, color: "#6B7280" }}>May 25, 2026</span>
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: "#FFF7ED", border: "1.5px solid #FED7AA",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, cursor: "pointer"
-            }}>🔔</div>
-          </div>
-        </div>
-
-        {/* Outer Workspace Content Frame wrapper - Configured to force full width scaling */}
-        <div style={{ 
-          flex: 1, 
-          padding: "32px", 
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch", // Forces layout components to pull out to the left/right container edges
-          width: "100%",
-          boxSizing: "border-box"
-        }}>
-          {renderPage(activeNav)}
-        </div>
-      </div>
+      <main className="flex-1 p-6 ml-[240px]">
+        {renderPage(
+    activeNav,
+    shopData,
+    requestCount,
+    activeRepairCount,
+    completedJobCount,
+    setActiveNav,
+    fetchRequestCount
+)}
+      </main>
     </div>
   );
 }
 
 export default ShopOwnerDashboard;
+

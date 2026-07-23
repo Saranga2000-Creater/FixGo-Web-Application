@@ -1,139 +1,113 @@
 import { useNavigate } from "react-router-dom";
+import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut } from "react-icons/fi";
+import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "🏠", badge: null },
-  { id: "requests", label: "Service Requests", icon: "📋", badge: 12 },
-  { id: "repairs", label: "Active Repairs", icon: "🔧", badge: 8 },
-  { id: "history", label: "Service History", icon: "🕐", badge: null },
-  { id: "reviews", label: "Reviews & Ratings", icon: "⭐", badge: null },
-  { id: "profile", label: "Shop Profile", icon: "🏪", badge: null },
-  { id: "notifications", label: "Notifications", icon: "🔔", badge: 5 },
-  { id: "settings", label: "Settings", icon: "⚙️", badge: null },
+  { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
+  { id: "requests", label: "Service Requests", icon: <FiClipboard /> },
+  { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver /> },
+  { id: "history", label: "Service History", icon: <FiClock /> },
+  { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
+  { id: "profile", label: "Shop Profile", icon: <FiHome /> },
+  { id: "notifications", label: "Notifications", icon: <FiBell /> },
+  { id: "settings", label: "Settings", icon: <FiSettings /> },
 ];
 
 function Badge({ count }) {
   if (!count) return null;
   return (
-    <span style={{
-      background: "#EA580C", color: "#fff", borderRadius: 99,
-      fontSize: 11, fontWeight: 700, padding: "2px 7px", minWidth: 20,
-      textAlign: "center", lineHeight: 1.5
-    }}>{count}</span>
+    <span className="bg-green-600 text-white rounded-full text-[11px] font-bold py-0.5 px-[7px] min-w-[20px] text-center leading-[1.5]">
+      {count}
+    </span>
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, sidebarOpen, setSidebarOpen }) {
-  const navigate = useNavigate();
-
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
-    setSidebarOpen(false);
   };
 
   return (
-    <>
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,0.35)", zIndex: 40
-          }}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div style={{
-        position: "fixed", top: 0, left: 0, height: "100vh", width: 240,
-        background: "#fff", borderRight: "1px solid #F3F4F6",
-        display: "flex", flexDirection: "column",
-        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
-        transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)",
-        zIndex: 50,
-        boxShadow: sidebarOpen ? "4px 0 24px rgba(0,0,0,0.10)" : "none"
-      }}>
-        {/* Shop Header */}
-        <div style={{
-          padding: "20px 16px 16px", borderBottom: "1px solid #F3F4F6",
-          display: "flex", alignItems: "center", gap: 12
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: "#1F2937",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22, flexShrink: 0
-          }}>🚗</div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontWeight: 700, fontSize: 14, color: "#111827",
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
-            }}>Advanced Auto</div>
-            <div style={{ fontSize: 12, color: "#6B7280" }}>Service Center</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
-              <span style={{ color: "#F59E0B", fontSize: 12 }}>★</span>
-              <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>4.8</span>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>(128)</span>
-              <span style={{
-                background: "#DCFCE7", color: "#15803D", borderRadius: 20,
-                padding: "1px 7px", fontSize: 10, fontWeight: 700
-              }}>✓ Verified</span>
-            </div>
-          </div>
-          {/* Close Button */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              marginLeft: "auto", background: "none", border: "none",
-              fontSize: 20, cursor: "pointer", color: "#9CA3AF",
-              padding: 4, borderRadius: 6, flexShrink: 0
-            }}
-            aria-label="Close sidebar"
-          >✕</button>
+    // NOTE: top-[72px] and h-[calc(100vh-72px)] assume the site navbar above
+    // this component is 72px tall. If the sidebar still overlaps the navbar
+    // or leaves a gap, adjust the "72px" value(s) below to match the navbar's
+    // actual height.
+    <div className="w-[240px] h-[calc(100vh-72px)] bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.10)] fixed left-0 top-[72px] overflow-y-auto z-40">
+      {/* Shop Header */}
+      <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-gray-800 flex items-center justify-center text-[22px] shrink-0 overflow-hidden">
+          <img
+            src={
+              shopData?.profileImageURL
+                ? `http://localhost:8000/${shopData.profileImageURL}`
+                : "/default-shop.png"
+            }
+            alt="Shop"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        {/* Nav Items */}
-        <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
-          {NAV_ITEMS.map(item => (
+        <div className="min-w-0">
+          <div className="font-bold text-sm text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
+            {shopData?.name || "Shop"}
+          </div>
+          <div className="text-xs text-gray-500">
+            {shopData?.categories || "No Category"}
+          </div>
+        </div>
+      </div>
+
+      {/* Nav Items */}
+      <nav className="flex-1 py-3 px-2 overflow-y-auto">
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeNav === item.id;
+          return (
             <button
               key={item.id}
               onClick={() => handleNav(item.id)}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-                background: activeNav === item.id ? "#FFF7ED" : "transparent",
-                color: activeNav === item.id ? "#EA580C" : "#374151",
-                fontWeight: activeNav === item.id ? 700 : 500,
-                fontSize: 14, marginBottom: 2, textAlign: "left",
-                borderLeft: activeNav === item.id ? "3px solid #EA580C" : "3px solid transparent",
-                transition: "all 0.15s"
-              }}
+              className={`w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer text-sm text-left ${
+                isActive
+                  ? "bg-[#F0FDF4] text-green-600 font-bold"
+                  : "bg-transparent text-gray-700 font-medium"
+              }`}
             >
-              <span style={{ fontSize: 17 }}>{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
-              <Badge count={item.badge} />
+              <span
+                className={`text-lg flex items-center ${
+                  isActive ? "text-green-600" : "text-gray-500"
+                }`}
+              >
+                {item.icon}
+              </span>
+              <span className="flex-1">{item.label}</span>
+              <Badge
+                count={
+                  item.id === "requests"
+                    ? requestCount
+                    : item.id === "repairs"
+                    ? activeRepairCount
+                    : item.id === "reviews"
+                    ? reviewCount
+                    : item.id === "notifications"
+                    ? notificationCount
+                    : 0
+                }
+              />
             </button>
-          ))}
-        </nav>
+          );
+        })}
+      </nav>
 
-        {/* Logout */}
-        <div style={{ padding: "12px 8px", borderTop: "1px solid #F3F4F6" }}>
-          <button 
-            onClick={() => {
-              sessionStorage.clear();
-              navigate("/");
-            }}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-              background: "transparent", color: "#6B7280", fontWeight: 500, fontSize: 14
-            }}
-          >
-            <span style={{ fontSize: 17 }}>🚪</span> Logout
-          </button>
-        </div>
+      {/* Logout */}
+      <div className="py-3 px-2 border-t border-gray-100">
+        <button className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer bg-transparent text-gray-500 font-medium text-sm">
+          <FiLogOut size={18} />
+          Log Out
+        </button>
       </div>
-    </>
+    </div>
   );
 }
 
 export default Sidebar;
+
+

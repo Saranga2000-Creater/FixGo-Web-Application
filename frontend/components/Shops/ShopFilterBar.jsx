@@ -3,64 +3,62 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faSearch,
     faLocationDot,
-    faLocationCrosshairs,
-    faMapLocationDot
+    faLocationCrosshairs
 } from "@fortawesome/free-solid-svg-icons";
-
-const vehicleFilters = [
-    { id: 1, label: "3-Wheelers and Bikes" },
-    { id: 2, label: "4-Wheelers" },
-    { id: 3, label: "Commercial Vehicles" },
-];
-
-const serviceFilters = [
-    { id: 1, label: "Garages" },
-    { id: 2, label: "Service Centers" },
-    { id: 3, label: "Spare Parts" },
-];
 
 export const ShopFilterBar = ({
     initialLocationText,
-    onLocationChange, // Function to pass coordinates back to Shops.jsx
-    searchName,
-    setSearchName,
+    onLocationChange, 
     activeVehicle,
     setActiveVehicle,
     activeService,
     setActiveService,
-    sortBy,
-    setSortBy
+    needsTow,
+    setNeedsTow,
+    vehicleOptions = [],
+    serviceOptions = []
 }) => {
-    // UI State
-    const [activeTab, setActiveTab] = useState('explore');
+    
+    // --- 1. LOCAL DRAFT STATE ---
+    // We hold the selections here until the user clicks "Search Shops"
+    const [localVehicle, setLocalVehicle] = useState(activeVehicle || "");
+    const [localService, setLocalService] = useState(activeService || "");
+    const [localNeedsTow, setLocalNeedsTow] = useState(needsTow || false);
+    
+    // We also hold the coordinates locally until search is clicked
+    const [localLocation, setLocalLocation] = useState({ 
+        lat: null, 
+        lng: null, 
+        text: initialLocationText || "Current Location" 
+    });
+    
     const [locationInputText, setLocationInputText] = useState(initialLocationText || "Current Location");
     
+    // Sync props to local state (Useful if the user clicks "Clear Filters" in the parent component)
+    useEffect(() => { setLocalVehicle(activeVehicle); }, [activeVehicle]);
+    useEffect(() => { setLocalService(activeService); }, [activeService]);
+    useEffect(() => { setLocalNeedsTow(needsTow); }, [needsTow]);
+
     // Google Autocomplete State
     const [predictions, setPredictions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    // Sync input box if parent changes the location (e.g., GPS loads)
     useEffect(() => {
         if (initialLocationText) setLocationInputText(initialLocationText);
     }, [initialLocationText]);
 
-    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowDropdown(false);
-            }
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setShowDropdown(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Google API Call (Debounced)
     const handleLocationTyping = (text) => {
         setLocationInputText(text);
-
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
         if (text.length < 3 || text === "Current Location") {
@@ -91,7 +89,6 @@ export const ShopFilterBar = ({
         }, 500);
     };
 
-    // Handle user selecting a city from the dropdown
     const handleSelectPlace = async (placeId, description) => {
         setLocationInputText(description);
         setShowDropdown(false);
@@ -104,119 +101,145 @@ export const ShopFilterBar = ({
             const data = await response.json();
             
             if (data.location) {
-                // Pass the new coordinates back to the parent component!
-                onLocationChange(data.location.latitude, data.location.longitude, description);
+                // CHANGED: Save to LOCAL state. Do not update parent component yet!
+                setLocalLocation({ lat: data.location.latitude, lng: data.location.longitude, text: description });
             }
         } catch (error) {
             console.error("Error fetching location coordinates:", error);
         }
     };
 
-    const hasActiveFilters = activeVehicle !== "" || activeService !== "" || sortBy !== 'distance';
+    // --- 2. THE SUBMIT FUNCTION ---
+    // This fires ONLY when the green Search button is clicked
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        
+        // Push all local draft states up to the parent component
+        setActiveVehicle(localVehicle);
+        setActiveService(localService);
+        setNeedsTow(localNeedsTow);
+        
+        // Push location up if a new valid one was selected
+        if (localLocation.lat && localLocation.lng) {
+            onLocationChange(localLocation.lat, localLocation.lng, localLocation.text);
+        }
+        
+        // Scroll down to the results
+        window.scrollTo({ top: document.getElementById('shop-results')?.offsetTop || 400, behavior: 'smooth' });
+    };
 
     return (
-        
-                <div className="flex flex-col w-full rounded-2xl border border-[#d1e7d7] bg-white p-5 shadow-xl min-h-[180px]">
+        <div className="w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-sm flex flex-col md:flex-row items-center relative z-30">
+
+            <div className="flex flex-col md:flex-row w-full flex-1 md:divide-x divide-gray-100">
+                
+                {/* VEHICLE TYPE BLOCK */}
+                <div className="flex flex-col flex-1 px-4 py-2 border-b md:border-b-0 border-gray-100">
+                    <label className="text-[10px] font-bold text-gray-500 mb-1">Vehicle Type</label>
+                    <select
+                        value={localVehicle}
+                        onChange={(e) => setLocalVehicle(e.target.value)}
+                        // CHANGED: Added bg-gray-50 and border for clear visibility
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 font-bold text-gray-900 outline-none cursor-pointer text-sm focus:border-[#16a34a] focus:bg-white transition-colors"
+                    >
+                        <option value="">🚗 All Vehicles</option>
+                        {vehicleOptions.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                    </select>
+                </div>
+
+                {/* SERVICE TYPE BLOCK */}
+                <div className="flex flex-col flex-1 px-4 py-2 border-b md:border-b-0 border-gray-100">
                     
-                    {/* THE TAB BAR */}
-                    <div className="flex justify-center gap-2 mb-6 border-b border-[#d1e7d7]/50 pb-4">
-                        <button onClick={() => { setActiveTab('explore'); setSearchName(""); }} className={`px-6 py-2.5 rounded-full font-mono text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'explore' ? 'bg-[#16a34a] text-white shadow-sm' : 'bg-transparent text-black/50 hover:bg-[#16a34a]/10 hover:text-[#14532d]'}`}>
-                            <FontAwesomeIcon icon={faMapLocationDot} /> Explore Nearby
-                        </button>
-                        <button onClick={() => { setActiveTab('specific'); setActiveVehicle(""); setActiveService(""); }} className={`px-6 py-2.5 rounded-full font-mono text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'specific' ? 'bg-[#16a34a] text-white shadow-sm' : 'bg-transparent text-black/50 hover:bg-[#16a34a]/10 hover:text-[#14532d]'}`}>
-                            <FontAwesomeIcon icon={faSearch} /> Find Specific Shop
-                        </button>
+                    {/* CHANGED: We now use a flex-row to put the label and the checkbox on the exact same line! */}
+                    <div className="flex items-center justify-between mb-1 h-4">
+                        <label className="text-[10px] font-bold text-gray-500">Service Type</label>
+                        
+                        {/* The Tow Truck checkbox now appears cleanly right here when Garages is selected */}
+                        {localService === "1" && (
+                            <label className="flex items-center space-x-1.5 cursor-pointer animate-in fade-in">
+                                <input 
+                                    type="checkbox" 
+                                    checked={localNeedsTow} 
+                                    onChange={(e) => setLocalNeedsTow(e.target.checked)} 
+                                    className="accent-[#16a34a] w-3 h-3 cursor-pointer shrink-0" 
+                                />
+                                <span className="text-[10px] font-bold text-[#16a34a] leading-none mt-[1px]">Requires Tow Truck</span>
+                            </label>
+                        )}
                     </div>
 
-                    {/* STATE 1: EXPLORE NEARBY */}
-                    {activeTab === 'explore' && (
-                        <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                            {/* Unified Location Box */}
-                            <div className="relative w-full" ref={dropdownRef}>
-                                <FontAwesomeIcon icon={locationInputText === "Current Location" ? faLocationCrosshairs : faLocationDot} className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-20 text-sm transition-colors ${locationInputText === "Current Location" ? 'text-[#16a34a]' : 'text-black/40'}`} />
-                                <input 
-                                    type="text" value={locationInputText} onChange={(e) => handleLocationTyping(e.target.value)}
-                                    onFocus={() => { if (locationInputText === "Current Location") setLocationInputText(""); }}
-                                    onBlur={() => { 
-                                        if (locationInputText.trim() === "") {
-                                            setLocationInputText("Current Location");
-                                            if ("geolocation" in navigator) {
-                                                navigator.geolocation.getCurrentPosition((pos) => {
-                                                    onLocationChange(pos.coords.latitude, pos.coords.longitude, "Current Location");
-                                                });
-                                            }
-                                        } 
-                                    }}
-                                    placeholder="City or Area..." 
-                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border outline-none font-mono text-sm transition-all ${locationInputText === "Current Location" ? 'bg-[#16a34a]/5 border-[#16a34a]/30 text-[#16a34a] font-bold' : 'bg-[#f8f4f0] border-[#d1e7d7] text-black focus:border-[#16a34a] focus:bg-white'}`}
-                                />
-                                {/* Dropdown Menu */}
-                                {showDropdown && predictions.length > 0 && (
-                                    <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#d1e7d7] rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto font-mono text-sm">
-                                        {predictions.map((pred) => (
-                                            <li key={pred.placePrediction.placeId} onClick={() => handleSelectPlace(pred.placePrediction.placeId, pred.placePrediction.text.text)} className="px-4 py-3 hover:bg-[#16a34a]/10 cursor-pointer border-b border-[#d1e7d7]/50 last:border-0 text-black/80 flex items-center gap-2">
-                                                <FontAwesomeIcon icon={faLocationDot} className="text-[#16a34a]/50 w-3 shrink-0" /> {pred.placePrediction.text.text}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-
-                            <div className="h-px w-full bg-[#d1e7d7]/60 my-1"></div>
-
-                            {/* Filters */}
-                            <div className="flex flex-col md:flex-row items-end justify-between gap-4">
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Vehicle Category</label>
-                                    <select value={activeVehicle} onChange={(e) => setActiveVehicle(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeVehicle !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
-                                        <option value="">🚗 All Vehicles</option>
-                                        {vehicleFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Service Type</label>
-                                    <select value={activeService} onChange={(e) => setActiveService(e.target.value)} className={`w-full rounded-xl border px-4 py-3 font-mono text-sm font-bold outline-none transition-colors cursor-pointer ${activeService !== "" ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#14532d]' : 'border-[#d1e7d7] bg-[#f8f4f0] text-black/80 hover:bg-white'}`}>
-                                        <option value="">🔧 All Services</option>
-                                        {serviceFilters.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex w-full flex-1 flex-col">
-                                    <label className="mb-1 pl-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black/50">Sort Results By</label>
-                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-xl border border-[#d1e7d7] bg-[#f8f4f0] hover:bg-white px-4 py-3 font-mono text-sm font-bold text-black/80 outline-none cursor-pointer transition-colors">
-                                        <option value="distance">📍 Nearest first</option>
-                                        <option value="rating">⭐ Top rated</option>
-                                    </select>
-                                </div>
-                                {hasActiveFilters && (
-                                    <div className="flex shrink-0 items-center justify-center pb-[2px]">
-                                        <button onClick={() => { setActiveVehicle(""); setActiveService(""); setSortBy('distance'); }} className="rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200">
-                                            ✕ Clear filters
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* STATE 2: FIND SPECIFIC SHOP */}
-                    {activeTab === 'specific' && (
-                        <div className="flex flex-col gap-3 animate-in fade-in duration-300 h-full justify-center pb-4">
-                            <div className="relative w-full">
-                                <FontAwesomeIcon icon={faSearch} className="absolute left-5 top-1/2 -translate-y-1/2 text-black/40 text-lg" />
-                                <input 
-                                    type="text" value={searchName} onChange={(e) => setSearchName(e.target.value)}
-                                    placeholder="Enter the name of the shop..." 
-                                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-[#d1e7d7] bg-[#f8f4f0] focus:bg-white font-mono text-base font-bold outline-none focus:border-[#16a34a] transition-all shadow-inner"
-                                    autoFocus
-                                />
-                            </div>
-                            <p className="font-mono text-xs font-bold uppercase tracking-widest text-black/40 pl-2">
-                                Tip: We'll automatically show you the closest matching branches first.
-                            </p>
-                        </div>
-                    )}
-
+                    <select
+                        value={localService}
+                        onChange={(e) => {
+                            setLocalService(e.target.value);
+                            if (e.target.value !== "1") setLocalNeedsTow(false);
+                        }}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 font-bold text-gray-900 outline-none cursor-pointer text-sm focus:border-[#16a34a] focus:bg-white transition-colors"
+                    >
+                        <option value="">🔧 All Services</option>
+                        {serviceOptions.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                    </select>
                 </div>
+
+                {/* LOCATION BLOCK */}
+                <div className="flex flex-col flex-1 px-4 py-2 relative" ref={dropdownRef}>
+                    <label className="text-[10px] font-bold text-gray-500 mb-1">Location</label>
+                    <div className="flex items-center w-full relative">
+                        <FontAwesomeIcon 
+                            icon={locationInputText === "Current Location" ? faLocationCrosshairs : faLocationDot} 
+                            className={`absolute left-3 text-sm ${locationInputText === "Current Location" ? 'text-[#16a34a]' : 'text-gray-400'}`} 
+                        />
+                        <input
+                            type="text"
+                            value={locationInputText}
+                            onChange={(e) => handleLocationTyping(e.target.value)}
+                            onFocus={() => { if (locationInputText === "Current Location") setLocationInputText(""); }}
+                            onBlur={() => { 
+                                if (locationInputText.trim() === "") {
+                                    setLocationInputText("Current Location");
+                                    if ("geolocation" in navigator) {
+                                        navigator.geolocation.getCurrentPosition((pos) => {
+                                            // CHANGED: Save locally
+                                            setLocalLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, text: "Current Location" });
+                                        });
+                                    }
+                                } 
+                            }}
+                            placeholder="City or Area..."
+                            // CHANGED: Added bg-gray-50 and border
+                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none font-bold text-sm text-gray-900 truncate focus:border-[#16a34a] focus:bg-white transition-colors"
+                        />
+                    </div>
+                    
+                    {/* Google API Autocomplete Dropdown */}
+                    {showDropdown && predictions.length > 0 && (
+                        <ul className="absolute top-full left-0 right-0 mt-4 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto text-sm">
+                            {predictions.map((pred) => (
+                                <li 
+                                    key={pred.placePrediction.placeId} 
+                                    onClick={() => handleSelectPlace(pred.placePrediction.placeId, pred.placePrediction.text.text)} 
+                                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 text-gray-800 flex items-center gap-3 font-bold"
+                                >
+                                    <FontAwesomeIcon icon={faLocationDot} className="text-gray-400" /> 
+                                    {pred.placePrediction.text.text}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            </div>
+
+            {/* SEARCH BUTTON */}
+            <div className="px-2 w-full md:w-auto mt-2 md:mt-0 shrink-0">
+                <button
+                    onClick={handleSearchSubmit} // Trigger the bulk update
+                    className="w-full md:w-auto bg-[#16a34a] hover:bg-[#14532d] text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                    <FontAwesomeIcon icon={faSearch} />
+                    Search Shops
+                </button>
+            </div>
             
+        </div>
     );
 };

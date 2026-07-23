@@ -1,4 +1,6 @@
 <?php
+require_once '../config/JwtHandler.php';
+
 class SearchController {
     private $shopModel;
 
@@ -10,6 +12,7 @@ class SearchController {
     public function handleSearchRequest($requestData) {
         $lat = isset($requestData['lat']) ? (float) $requestData['lat'] : null;
         $lng = isset($requestData['lng']) ? (float) $requestData['lng'] : null;
+        $needs_tow = isset($requestData['needs_tow']) ? $requestData['needs_tow'] : 'false';
         $radius = isset($requestData['radius']) ? (float) $requestData['radius'] : 15;
         
         $vehicleCategory = isset($requestData['vehicle_category']) ? (int) $requestData['vehicle_category'] : null;
@@ -18,21 +21,21 @@ class SearchController {
 
         // 1. ADDED: Extract the new 'name' parameter from the GET request
         $searchName = isset($requestData['name']) ? trim($requestData['name']) : null;
+        $quickFilter = isset($requestData['quick_filter']) ? $requestData['quick_filter'] : 'all';
 
         if ($lat === null || $lng === null) {
             http_response_code(400);
             return json_encode(["message" => "Latitude and longitude parameters are required."]);
         }
+        $currentTime = date('H:i:s'); // Needed for the 'open_now' SQL calculation
 
         // 2. CHANGED: Pass $searchName as the 7th argument to the Model
-        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName);
+        $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName, $needs_tow, $quickFilter, $currentTime);
         $num = $stmt->rowCount();
         
         if ($num > 0) {
             $results = array();
             $results["data"] = array();
-            
-            $currentTime = date('H:i:s');
 
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 
@@ -64,6 +67,9 @@ class SearchController {
                     "review_count" => (int) $row['review_count'],
                     "is_open_now" => $isOpen,
                     "open_status_text" => $openStatusText,
+                    "opening_time" => date("g:i A", strtotime($row['openTime'])),
+                    "services_completed" => strval($row['services_completed']),
+                    "response_time" => $row['response_time_minutes'] . " mins",
                     "thumbnail_url" => $row['thumbnail_url'] ? $row['thumbnail_url'] : 'https://via.placeholder.com/300x200?text=No+Image',
                     "tags" => array_values($combinedTags),
                     

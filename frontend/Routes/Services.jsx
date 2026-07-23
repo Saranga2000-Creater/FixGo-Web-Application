@@ -1,12 +1,12 @@
 import React from "react";
 import { jwtDecode } from "jwt-decode";
 import { NavBar } from "../components/NavBar";
-import Customer from "../components/CustomerDashboard";
+import Customer from "../components/Customer/CustomerControllDashboard";
 import ShopOwner from "../components/ShopOwner/ShopOwnerDashboard";
-import Admin from "../components/AdminControlDashboard";
+import Admin from "../components/Admin/AdminControlDashboard";
 
 function Services() {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("jwt_token");
 
     // 1. Guard against completely unauthenticated guests
     if (!token) {
@@ -30,7 +30,7 @@ function Services() {
         // 3. SECURE TIME CHECK: Has the token expired?
         const currentTime = Date.now() / 1000;
         if (decoded.exp < currentTime) {
-            sessionStorage.clear();
+            localStorage.clear();
             return (
                 <>
                     <NavBar />
@@ -48,7 +48,7 @@ function Services() {
     } catch (error) {
         // Triggers if someone manually alters the token string characters
         console.error("Token manipulation or corruption detected.");
-        sessionStorage.clear();
+        localStorage.clear();
         return (
             <>
                 <NavBar />

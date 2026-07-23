@@ -21,19 +21,15 @@ function Toggle({ on, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      style={{
-        width: 44, height: 24, borderRadius: 12,
-        background: on ? "#EA580C" : "#D1D5DB",
-        cursor: "pointer", position: "relative",
-        transition: "background 0.2s", flexShrink: 0
-      }}
+      className={`w-11 h-6 rounded-xl cursor-pointer relative transition-colors duration-200 shrink-0 ${
+        on ? "bg-green-600" : "bg-gray-300"
+      }`}
     >
-      <div style={{
-        width: 18, height: 18, borderRadius: "50%", background: "#fff",
-        position: "absolute", top: 3,
-        left: on ? 23 : 3,
-        transition: "left 0.2s"
-      }} />
+      <div
+        className={`w-[18px] h-[18px] rounded-full bg-white absolute top-[3px] transition-[left] duration-200 ${
+          on ? "left-[23px]" : "left-[3px]"
+        }`}
+      />
     </div>
   );
 }
@@ -48,86 +44,62 @@ function Settings() {
   return (
     <div>
       {/* Header */}
-      <div style={{
-        display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12
-      }}>
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111827", margin: 0 }}>Settings</h1>
-          <p style={{ color: "#6B7280", marginTop: 4, fontSize: 14 }}>
+          <h1 className="text-2xl font-bold text-gray-900 m-0">Settings</h1>
+          <p className="text-gray-500 mt-1 text-sm">
             Manage your account, shop preferences and system settings.
           </p>
         </div>
-        <button style={{
-          padding: "10px 24px", borderRadius: 10, border: "none",
-          background: "#EA580C", color: "#fff",
-          fontWeight: 700, fontSize: 14, cursor: "pointer"
-        }}>💾 Save Changes</button>
+        <button className="py-2.5 px-6 rounded-[10px] border-none bg-green-600 text-white font-bold text-sm cursor-pointer">
+          Save Changes
+        </button>
       </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-        gap: 20
-      }}>
+      <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
         {/* Shop Information */}
-        <div style={{
-          background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-          padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
-          <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 20 }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h3 className="font-bold text-base text-gray-900 mb-5">
             Shop Information
           </h3>
           {SHOP_FIELDS.map(([label, val]) => (
-            <div key={label} style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>
+            <div key={label} className="mb-3.5">
+              <label className="text-xs text-gray-500 block mb-1">
                 {label}
               </label>
               <input
                 defaultValue={val}
-                style={{
-                  width: "100%", padding: "9px 12px", borderRadius: 8,
-                  border: "1px solid #E5E7EB", fontSize: 14, color: "#111827",
-                  boxSizing: "border-box", outline: "none"
-                }}
+                className="w-full py-2.5 px-3 rounded-lg border border-gray-200 text-sm text-gray-900 box-border outline-none"
               />
             </div>
           ))}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>
+          <div className="mb-3.5">
+            <label className="text-xs text-gray-500 block mb-1">
               Shop Description
             </label>
             <textarea
               defaultValue="We provide high quality vehicle repair and maintenance services with experienced technicians and modern equipment."
               rows={3}
-              style={{
-                width: "100%", padding: "9px 12px", borderRadius: 8,
-                border: "1px solid #E5E7EB", fontSize: 14, color: "#111827",
-                resize: "vertical", boxSizing: "border-box"
-              }}
+              className="w-full py-2.5 px-3 rounded-lg border border-gray-200 text-sm text-gray-900 resize-y box-border"
             />
           </div>
         </div>
 
         {/* Right Column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="flex flex-col gap-5">
           {/* Notification Settings */}
-          <div style={{
-            background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-            padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-          }}>
-            <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+            <h3 className="font-bold text-base text-gray-900 mb-4">
               Notification Settings
             </h3>
             {NOTIF_OPTIONS.map(([key, title, desc]) => (
-              <div key={key} style={{
-                display: "flex", justifyContent: "space-between",
-                alignItems: "center", padding: "12px 0",
-                borderBottom: "1px solid #F9FAFB"
-              }}>
+              <div
+                key={key}
+                className="flex justify-between items-center py-3 border-b border-gray-50"
+              >
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: "#111827" }}>{title}</div>
-                  <div style={{ fontSize: 12, color: "#9CA3AF" }}>{desc}</div>
+                  <div className="font-semibold text-sm text-gray-900">{title}</div>
+                  <div className="text-xs text-gray-400">{desc}</div>
                 </div>
                 <Toggle on={notifs[key]} onToggle={() => toggleNotif(key)} />
               </div>
@@ -135,34 +107,25 @@ function Settings() {
           </div>
 
           {/* Account & Security */}
-          <div style={{
-            background: "#fff", borderRadius: 14, border: "1px solid #F3F4F6",
-            padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-          }}>
-            <h3 style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 16 }}>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+            <h3 className="font-bold text-base text-gray-900 mb-4">
               Account & Security
             </h3>
-            {["Current Password", "New Password", "Confirm New Password"].map(label => (
-              <div key={label} style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>
+            {["Current Password", "New Password", "Confirm New Password"].map((label) => (
+              <div key={label} className="mb-3.5">
+                <label className="text-xs text-gray-500 block mb-1">
                   {label}
                 </label>
                 <input
                   type="password"
                   defaultValue="••••••••••"
-                  style={{
-                    width: "100%", padding: "9px 12px", borderRadius: 8,
-                    border: "1px solid #E5E7EB", fontSize: 14,
-                    boxSizing: "border-box", outline: "none"
-                  }}
+                  className="w-full py-2.5 px-3 rounded-lg border border-gray-200 text-sm box-border outline-none"
                 />
               </div>
             ))}
-            <button style={{
-              width: "100%", padding: "11px", borderRadius: 10,
-              border: "none", background: "#EA580C", color: "#fff",
-              fontWeight: 700, fontSize: 14, cursor: "pointer"
-            }}>Change Password</button>
+            <button className="w-full py-2.5 rounded-[10px] border-none bg-green-600 text-white font-bold text-sm cursor-pointer">
+              Change Password
+            </button>
           </div>
         </div>
       </div>
@@ -171,3 +134,4 @@ function Settings() {
 }
 
 export default Settings;
+
