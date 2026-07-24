@@ -9,6 +9,8 @@ import {
     faTruckPickup, faUser, faPhone, faIdCard,
     faStore, faXmark, faExternalLinkAlt, faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
@@ -261,11 +263,7 @@ export function useUnreadCount() {
 
         const fetchAndCount = async () => {
             try {
-                const token = localStorage.getItem("jwt_token");
-                const res = await fetch("http://localhost:8000/api/getNotifications.php", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = await res.json();
+                const data = await api.get("getNotifications.php");
                 if (data.success) {
                     const unread = (data.data || []).filter(n => Number(n.isRead) === 0).length;
                     setCount(unread);
@@ -310,11 +308,7 @@ export default function Notification() {
     if (!userId) return;
     const fetchReviewed = async () => {
         try {
-            const token = localStorage.getItem("jwt_token");
-            const res = await fetch("http://localhost:8000/api/getCustomerReviews.php", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
+            const data = await api.get("getCustomerReviews.php");
             if (data.success) {
                 const ids = (data.data || []).map(r => String(r.service_request_id));
                 setReviewedIds(ids);
@@ -327,12 +321,8 @@ export default function Notification() {
 }, [userId]);
 
     const fetchNotifs = useCallback(async () => {
-        const token = localStorage.getItem("jwt_token");
         try {
-            const res = await fetch("http://localhost:8000/api/getNotifications.php", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
+            const data = await api.get("getNotifications.php");
             if (data.success) {
                 const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
                 setNotifications(filtered);
@@ -359,12 +349,7 @@ export default function Notification() {
     const markRead = async (notificationId) => {
         setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: 1 } : n));
         try {
-            const token = localStorage.getItem("jwt_token");
-            await fetch("http://localhost:8000/api/markNotificationRead.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ notification_id: notificationId }),
-            });
+            await api.post("markNotificationRead.php", { notification_id: notificationId });
         } catch (err) {
             console.error("Mark read error:", err);
         } finally {
@@ -375,12 +360,7 @@ export default function Notification() {
     const markAllRead = async () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })));
         try {
-            const token = localStorage.getItem("jwt_token");
-            await fetch("http://localhost:8000/api/markNotificationRead.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ mark_all: true }),
-            });
+            await api.post("markNotificationRead.php", { mark_all: true });
         } catch (err) {
             console.error("Mark all read error:", err);
         } finally {
@@ -393,30 +373,17 @@ export default function Notification() {
         const requestId = notif.service_request_id;
         setConfirming(notif.id);
         try {
-            const token = localStorage.getItem("jwt_token");
-            const res = await fetch("http://localhost:8000/api/updateStatus.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    request_id: requestId,
-                    new_status: "Confirmed",
-                }),
+            const data = await api.post("updateStatus.php", {
+                request_id: requestId,
+                new_status: "Confirmed",
             });
-            const data = await res.json();
-            if (res.ok) {
-                setLocalConfirmed(prev => [...prev, String(requestId)]);
-                await markRead(notif.id);
-                await fetchNotifs();
-            } else {
-                alert(data.message || "Could not confirm booking. Please try again.");
-                await fetchNotifs();
-            }
+            setLocalConfirmed(prev => [...prev, String(requestId)]);
+            await markRead(notif.id);
+            await fetchNotifs();
         } catch (err) {
             console.error("Confirm error:", err);
-            alert("Network error. Please check your connection and try again.");
+            alert("Could not confirm booking. Please try again.");
+            await fetchNotifs();
         } finally {
             setConfirming(null);
         }
@@ -437,33 +404,19 @@ export default function Notification() {
         const { requestId, notifId } = declineModal;
         setDeclining(requestId);
         try {
-            const token = localStorage.getItem("jwt_token");
-            const res = await fetch("http://localhost:8000/api/updateStatus.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    request_id: requestId,
-                    new_status: "Cancelled",
-                    reason:     "Customer declined the booking.",
-                }),
+            await api.post("updateStatus.php", {
+                request_id: requestId,
+                new_status: "Cancelled",
+                reason: "Customer declined the booking.",
             });
-            const data = await res.json();
-            if (res.ok) {
-                setLocalDeclined(prev => [...prev, String(requestId)]);
-                await markRead(notifId);
-                setDeclineModal(null);
-                await fetchNotifs();
-            } else {
-                alert(data.message || "Could not decline booking. Please try again.");
-                setDeclineModal(null);
-                await fetchNotifs();
-            }
+            setLocalDeclined(prev => [...prev, String(requestId)]);
+            await markRead(notifId);
+            setDeclineModal(null);
+            await fetchNotifs();
         } catch (err) {
             console.error("Decline error:", err);
             alert("Network error. Please check your connection and try again.");
+            setDeclineModal(null);
         } finally {
             setDeclining(null);
         }

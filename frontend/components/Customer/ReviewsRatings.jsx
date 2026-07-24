@@ -5,6 +5,8 @@ import {
     faChevronDown,
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
@@ -35,11 +37,7 @@ function ReviewsRatings() {
     useEffect(() => {
         const fetchReviews = async () => {
             try {
-                const token = localStorage.getItem("jwt_token");
-                const res = await fetch("http://localhost:8000/api/getCustomerReviews.php", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = await res.json();
+                const data = await api.get("getCustomerReviews.php");
                 if (data.success) setReviews(data.data || []);
             } catch (err) {
                 console.error("Fetch reviews error:", err);
@@ -49,6 +47,7 @@ function ReviewsRatings() {
         };
         fetchReviews();
     }, []);
+
 
     const totalReviews = reviews.length;
 

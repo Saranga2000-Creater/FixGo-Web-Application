@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { api, UPLOADS_URL } from "../../src/services/api";
+
 
 function Avatar({ initials, color, size = 32 }) {
   return (
@@ -45,27 +47,8 @@ function ServiceHistory({ shopCategory }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt_token");
-
-    if (!token) {
-      console.error("No JWT token found.");
-      return;
-    }
-
-    fetch("http://localhost:8000/api/getServiceHistory.php", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          throw new Error("Session expired. Please log in again.");
-        }
-        return res.json();
-      })
+    api.get("getServiceHistory.php")
       .then((data) => {
-        console.log("API DATA:", data);
-
         if (data.success) {
           setHistory(data.data);
         }
@@ -205,7 +188,7 @@ function ServiceHistory({ shopCategory }) {
 
             {selectedRequest.photo && (
               <img
-                src={`http://localhost:8000/${selectedRequest.photo}`}
+                src={`${UPLOADS_URL}/${selectedRequest.photo}`}
                 alt="Problem"
                 className="w-full rounded-xl mt-1.5 border border-slate-200"
               />

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { api, UPLOADS_URL } from "../../src/services/api";
+
 
 function Avatar({ initials, color, size = 40 }) {
   return (
@@ -78,26 +80,10 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const updateStatus = async (requestId, status) => {
     try {
-      const token = localStorage.getItem("jwt_token");
-
-      const response = await fetch(
-        "http://localhost:8000/api/updateStatus.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            request_id: requestId,
-            new_status: status,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      console.log(data);
+      const data = await api.post("updateStatus.php", {
+        request_id: requestId,
+        new_status: status,
+      });
 
       // No popup for Accept or Decline — both have their own UI feedback
       if (status !== "Accepted" && status !== "Declined") {
@@ -107,7 +93,6 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       fetchRequests();
       fetchRequestCount();
 
-      // Keep the Declined tab fresh too, in case it's already been loaded
       if (status === "Declined" && declinedLoaded) {
         fetchDeclinedRequests();
       }
@@ -119,19 +104,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const fetchRequests = async () => {
     try {
-      const token = localStorage.getItem("jwt_token");
-
-      const response = await fetch(
-        "http://localhost:8000/api/getServiceRequests.php",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
+      const data = await api.get("getServiceRequests.php");
       if (data.success) {
         setRequests(data.data);
       }
@@ -142,19 +115,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const fetchDeclinedRequests = async () => {
     try {
-      const token = localStorage.getItem("jwt_token");
-
-      const response = await fetch(
-        "http://localhost:8000/api/getDeclinedRequests.php",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
+      const data = await api.get("getDeclinedRequests.php");
       if (data.success) {
         setDeclinedRequests(data.data);
         setDeclinedLoaded(true);
@@ -192,136 +153,93 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   // THE FIX: Accept 'isAccepting' as a parameter
   const openTowTruckModal = async (requestData, isAccepting = false) => {
-    const token = localStorage.getItem("jwt_token");
+    try {
+      const data = await api.get("getTowTruckDetails.php");
+      if (data.success) {
+        setTowTruck({
+          ...data.data,
+          promised_eta: requestData?.promised_eta || "",
+        });
+        setShowTowModal(true);
 
-    // 1. Fetch default Tow Truck info from YOUR backend
-    const res = await fetch("http://localhost:8000/api/getTowTruckDetails.php", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.message);
-      return;
-    }
-
-    if (data.success) {
-      // 2. Open the modal with whatever data we currently have
-      setTowTruck({
-        ...data.data,
-        promised_eta: requestData?.promised_eta || "",
-      });
-      setShowTowModal(true);
-
-      // 3. SILENTLY FETCH ETA FROM GOOGLE
-      // THE FIX: Use 'isAccepting' and add optional chaining (?.) to shopCoordinates
-      if (isAccepting && shopCoordinates?.lat && requestData.customer_lat && requestData.customer_lng) {
-        setIsCalculatingEta(true);
-
-        try {
-          const googleRes = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Goog-Api-Key": import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-              "X-Goog-FieldMask": "routes.duration",
-            },
-            body: JSON.stringify({
-              origin: { location: { latLng: { latitude: shopCoordinates.lat, longitude: shopCoordinates.lng } } },
-              destination: { location: { latLng: { latitude: requestData.customer_lat, longitude: requestData.customer_lng } } },
-              travelMode: "DRIVE",
-            }),
-          });
-
-          const googleData = await googleRes.json();
-
-          if (googleData.routes && googleData.routes.length > 0) {
-            const seconds = parseInt(googleData.routes[0].duration.replace("s", ""));
-            const calculatedMinutes = Math.ceil(seconds / 60);
-
-            setTowTruck((prev) => ({ ...prev, promised_eta: calculatedMinutes }));
-            setMinEta(calculatedMinutes);
+        if (isAccepting && shopCoordinates?.lat && requestData.customer_lat && requestData.customer_lng) {
+          setIsCalculatingEta(true);
+          try {
+            const googleRes = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+                "X-Goog-FieldMask": "routes.duration",
+              },
+              body: JSON.stringify({
+                origin: { location: { latLng: { latitude: shopCoordinates.lat, longitude: shopCoordinates.lng } } },
+                destination: { location: { latLng: { latitude: requestData.customer_lat, longitude: requestData.customer_lng } } },
+                travelMode: "DRIVE",
+              }),
+            });
+            const googleData = await googleRes.json();
+            if (googleData.routes && googleData.routes.length > 0) {
+              const seconds = parseInt(googleData.routes[0].duration.replace("s", ""));
+              const calculatedMinutes = Math.ceil(seconds / 60);
+              setTowTruck((prev) => ({ ...prev, promised_eta: calculatedMinutes }));
+              setMinEta(calculatedMinutes);
+            }
+          } catch (error) {
+            console.error("Failed to calculate ETA via Google:", error);
+          } finally {
+            setIsCalculatingEta(false);
           }
-        } catch (error) {
-          console.error("Failed to calculate ETA via Google:", error);
-        } finally {
-          setIsCalculatingEta(false);
         }
+      } else {
+        alert(data.message);
       }
+    } catch (err) {
+      alert("Could not load tow truck details.");
     }
   };
 
   const saveTowTruckDetails = async () => {
-
     if (parseInt(towTruck.promised_eta) < minEta) {
       setEtaError(`ETA cannot be less than the calculated drive time (${minEta} mins).`);
-      return; // Stop the function instantly
+      return;
     }
-    const token = localStorage.getItem("jwt_token");
-
-    const res = await fetch(
-      "http://localhost:8000/api/updateTowTruckDetails.php",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          request_id: requestPendingTow.id,
-
-          driver_name: towTruck.default_driver_name,
-          driver_phone: towTruck.default_driver_phone,
-          truck_brand: towTruck.default_truck_brand,
-          truck_color: towTruck.default_truck_color,
-          truck_plate: towTruck.tow_truck_plate,
-          promised_eta: towTruck.promised_eta,
-        }),
+    try {
+      const data = await api.post("updateTowTruckDetails.php", {
+        request_id: requestPendingTow.id,
+        driver_name: towTruck.default_driver_name,
+        driver_phone: towTruck.default_driver_phone,
+        truck_brand: towTruck.default_truck_brand,
+        truck_color: towTruck.default_truck_color,
+        truck_plate: towTruck.tow_truck_plate,
+        promised_eta: towTruck.promised_eta,
+      });
+      if (data.success) {
+        alert("Tow truck details updated.");
+        setShowTowModal(false);
+      } else {
+        alert(data.message);
       }
-    );
-
-    const data = await res.json();
-
-    if (data.success) {
-      alert("Tow truck details updated.");
-      setShowTowModal(false);
-    } else {
-      alert(data.message);
+    } catch (err) {
+      alert("Failed to save tow truck details.");
     }
   };
 
   const confirmTowAndAccept = async () => {
-
     if (parseInt(towTruck.promised_eta) < minEta) {
       setEtaError(`ETA cannot be less than the calculated drive time (${minEta} mins).`);
-      return; // Stop the function instantly
+      return;
     }
     try {
-      const token = localStorage.getItem("jwt_token");
-
-      const res = await fetch(
-        "http://localhost:8000/api/updateTowTruckDetails.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            request_id: requestPendingTow.id,
-
-            driver_name: towTruck.default_driver_name,
-            driver_phone: towTruck.default_driver_phone,
-            truck_brand: towTruck.default_truck_brand,
-            truck_color: towTruck.default_truck_color,
-            truck_plate: towTruck.tow_truck_plate,
-            promised_eta: towTruck.promised_eta,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
+      const data = await api.post("updateTowTruckDetails.php", {
+        request_id: requestPendingTow.id,
+        driver_name: towTruck.default_driver_name,
+        driver_phone: towTruck.default_driver_phone,
+        truck_brand: towTruck.default_truck_brand,
+        truck_color: towTruck.default_truck_color,
+        truck_plate: towTruck.tow_truck_plate,
+        promised_eta: towTruck.promised_eta,
+      });
       if (data.success) {
         await updateStatus(requestPendingTow.id, "Accepted");
         setShowTowModal(false);
@@ -596,7 +514,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
             {selectedRequest.photo && (
               <img
-                src={`http://localhost:8000/${selectedRequest.photo}`}
+                src={`${UPLOADS_URL}/${selectedRequest.photo}`}
                 alt="Problem"
                 className="w-full rounded-xl mt-1.5 border border-[#E5E9F0]"
               />

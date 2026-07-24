@@ -5,6 +5,8 @@ import { faTimes, faTruckPickup, faCar, faInfoCircle, faCamera,
     faCopy, faStar, faMapMarkerAlt, faBolt, faMotorcycle, faTruck, 
     faCogs, faBatteryFull, faLifeRing, faWrench, faQuestionCircle, 
     faPaperPlane, faShieldAlt, faLock, faCheck} from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNeedsTow = false, onTrackRequest }) => {
     // NEW: Wizard Step State (1: Form, 2: Review, 3: Success)
@@ -98,62 +100,45 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
 
         try {
             const token = localStorage.getItem("jwt_token");
-
-if (!token) {
-    setError("Please log in again.");
-    setIsSubmitting(false);
-    return;
-}
+            if (!token) {
+                setError("Please log in again.");
+                setIsSubmitting(false);
+                return;
+            }
             let base64Image = null;
             if (imageFile) {
                 base64Image = await convertToBase64(imageFile);
             }
-            
+
             const requestData = {
                 shop_id: shop.info.id,
-                vehicle_category_id: vehicleCategory, 
+                vehicle_category_id: vehicleCategory,
                 vehicle_brand: brand,
                 vehicle_color: color,
                 description: description,
                 requires_tow: requiresTow,
-                problem_image: base64Image, 
+                problem_image: base64Image,
                 lat: lat,
                 lng: lng,
-                // NEW: Send the upgraded DB fields
-                // If it's a Garage, send urgency. If not, send null.
                 urgency_level: shop.shopCategories?.includes('Garages') ? urgencyLevel : null,
                 preferred_date: !shop.shopCategories?.includes('Garages') ? preferredDate : null,
                 preferred_time: !shop.shopCategories?.includes('Garages') ? preferredTime : null,
                 issue_category: issueCategory,
-                pickup_landmark: requiresTow ? pickupLandmark : null 
+                pickup_landmark: requiresTow ? pickupLandmark : null
             };
 
-            const response = await fetch('http://localhost:8000/api/createServiceRequest.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`, 
-                },
-                body: JSON.stringify(requestData)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to submit request.');
-            }
-
-            // Success! Format the ID and move to step 3
+            const data = await api.post('createServiceRequest.php', requestData);
             setReferenceId(formatReferenceId(data.request_id));
             setStep(3);
 
         } catch (err) {
             setError(err.message);
-            setStep(1); // Go back to form if error
+            setStep(1);
         } finally {
             setIsSubmitting(false);
         }
     };
+
 
     // --- SUB-COMPONENTS FOR CLEANER CODE ---
     // 1. The Sticky Top Navigation (Does NOT scroll)
@@ -320,7 +305,6 @@ if (!token) {
                         {/* Option 2: Needs Tow */}
                         <button
                             type="button"
-                            onClick={() => setRequiresTow(true)}
                             onClick={handleTowSelection}
                             className={`p-3 rounded-xl border flex items-center gap-3 transition-all text-left ${
                                 requiresTow ? 'border-[#16a34a] bg-[#f0fdf4] shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'

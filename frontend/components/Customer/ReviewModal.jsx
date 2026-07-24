@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faXmark, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
@@ -32,22 +34,13 @@ export default function ReviewModal({ isOpen, onClose, serviceRequestId, shopId,
         setSubmitting(true);
         setError("");
         try {
-            const token = localStorage.getItem("jwt_token");
-            const res = await fetch("http://localhost:8000/api/submitReview.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    service_request_id: serviceRequestId,
-                    shop_id: shopId,
-                    rating,
-                    comment,
-                }),
+            const data = await api.post("submitReview.php", {
+                service_request_id: serviceRequestId,
+                shop_id: shopId,
+                rating,
+                comment,
             });
-            const data = await res.json();
-            if (res.ok && data.success) {
+            if (data.success) {
                 onSubmitted(serviceRequestId);
                 onClose();
             } else {

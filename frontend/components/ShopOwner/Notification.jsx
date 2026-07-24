@@ -5,8 +5,8 @@ import {
     faComment, faStar, faArrowRight, faXmark,
     faChevronRight, faCircleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
 
-const API_BASE = "http://localhost:8000/api";
 
 // Colors kept as JS constants because notification metadata below
 // references them dynamically (gradient, iconColor, accent, etc. are
@@ -159,19 +159,7 @@ function Notification({ setActiveNav }) {
     });
 
     const loadNotifications = useCallback(() => {
-        const token = localStorage.getItem("jwt_token");
-        if (!token) { setLoading(false); return; }
-
-        fetch(`${API_BASE}/getNotifications.php`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-            if (res.status === 401) {
-                alert("Your session has expired. Please log in again.");
-                return null;
-            }
-            return res.json();
-        })
+        api.get("getNotifications.php")
         .then((data) => {
             if (!data || !data.success) return;
 
@@ -204,9 +192,6 @@ function Notification({ setActiveNav }) {
     }, [loadNotifications]);
 
     const markAsRead = (id) => {
-        const token = localStorage.getItem("jwt_token");
-        if (!token) return;
-
         const target = notifications.find((n) => n.id === id);
         if (!target || !target.isUnread) return;
 
@@ -214,12 +199,7 @@ function Notification({ setActiveNav }) {
             prev.map((n) => (n.id === id ? { ...n, isUnread: false } : n))
         );
 
-        fetch(`${API_BASE}/markNotificationRead.php`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ notification_id: id }),
-        })
-        .then((res) => res.json())
+        api.post("markNotificationRead.php", { notification_id: id })
         .then((data) => {
             if (!data || !data.success) console.error("Failed to mark notification as read:", data);
         })
@@ -227,17 +207,9 @@ function Notification({ setActiveNav }) {
     };
 
     const markAllAsRead = () => {
-        const token = localStorage.getItem("jwt_token");
-        if (!token) return;
-
         setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
 
-        fetch(`${API_BASE}/markNotificationRead.php`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ mark_all: true }),
-        })
-        .then((res) => res.json())
+        api.post("markNotificationRead.php", { mark_all: true })
         .then((data) => {
             if (!data || !data.success) console.error("Failed to mark all notifications as read:", data);
         })

@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut } from "react-icons/fi";
 import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
+import { UPLOADS_URL } from "../../src/services/api";
+
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
@@ -39,7 +41,7 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
           <img
             src={
               shopData?.profileImageURL
-                ? `http://localhost:8000/${shopData.profileImageURL}`
+                ? `${UPLOADS_URL}/${shopData.profileImageURL}`
                 : "/default-shop.png"
             }
             alt="Shop"
