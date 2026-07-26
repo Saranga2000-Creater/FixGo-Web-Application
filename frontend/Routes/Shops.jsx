@@ -4,10 +4,9 @@ import { NavBar } from "../components/NavBar"
 import { Footer } from "../components/footer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ShopFilterBar } from "../components/Shops/ShopFilterBar"
-
-// IMPORT YOUR TWO NEW COMPONENTS
 import { ShopList } from "../components/Shops/ShopList"
 import { ShopMap } from "../components/Shops/ShopMap"
+import { api } from "../src/services/api"
 
 import {
     faClock,
@@ -20,6 +19,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 
 import { useLoadScript } from "@react-google-maps/api"
+
 
 function Shops() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -94,14 +94,12 @@ function Shops() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/getCategories.php');
-                const json = await response.json();
-                
-                if (response.ok && json.vehicles && json.services) {
+                const json = await api.getPublic('getCategories.php');
+                if (json.vehicles && json.services) {
                     setVehicleFilters(json.vehicles);
                     setServiceFilters(json.services);
                 } else {
-                    throw new Error(json.error || "Failed to fetch");
+                    throw new Error("Failed to fetch");
                 }
             } catch (error) {
                 console.warn("Backend categories not ready. Using fallbacks.", error);
@@ -119,6 +117,7 @@ function Shops() {
         };
         fetchCategories();
     }, []);
+
 
     useEffect(() => {
         sessionStorage.setItem('fixgo_activeVehicle', activeVehicle);
@@ -293,54 +292,45 @@ function Shops() {
 
     useEffect(() => {
         const fetchShops = async () => {
-            // 1. ADDED: Grab the token from storage
-            const token = localStorage.getItem("jwt_token"); // Adjust key if you saved it differently
-            // 1. Redirect if no token exists at all
+            const token = localStorage.getItem("jwt_token");
             if (!token) {
-                navigate('/login'); // <-- CHANGE THIS to your actual sign-in route (e.g., '/signin')
+                navigate('/login');
                 return;
             }
 
-            setIsLoading(true)
-            setError(null)
-            
+            setIsLoading(true);
+            setError(null);
+
             try {
-                let url = `http://localhost:8000/api/search.php?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=15&sort=${sortBy}&quick_filter=${quickFilter}`
-                
-                if (activeVehicle) url += `&vehicle_category=${activeVehicle}`
-                if (activeService) url += `&shop_category=${activeService}`
-                if (searchName) url += `&name=${encodeURIComponent(searchName)}`
-                if (needsTow) url += `&needs_tow=true`
+                const params = {
+                    lat: userLocation.lat,
+                    lng: userLocation.lng,
+                    radius: 15,
+                    sort: sortBy,
+                    quick_filter: quickFilter,
+                };
+                if (activeVehicle) params.vehicle_category = activeVehicle;
+                if (activeService) params.shop_category = activeService;
+                if (searchName) params.name = searchName;
+                if (needsTow) params.needs_tow = 'true';
 
-                // 2. CHANGED: Updated fetch to include the Authorization header
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-
-                if (response.status === 401) {
-                    localStorage.removeItem("jwt_token"); // clear the bad token
-                    navigate('/login'); // <-- CHANGE THIS to your actual sign-in route
+                const jsonResponse = await api.get('search.php', params);
+                setShopsList(jsonResponse.data);
+            } catch (err) {
+                if (err.status === 401) {
+                    localStorage.removeItem("jwt_token");
+                    navigate('/login');
                     return;
                 }
-                
-                const jsonResponse = await response.json()
-
-                if (!response.ok) throw new Error(jsonResponse.message || "Failed to fetch shops")
-
-                setShopsList(jsonResponse.data)
-            } catch (err) {
-                setError(err.message)
-                setShopsList([]) 
+                setError(err.message);
+                setShopsList([]);
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
-        }
-        fetchShops()
-    }, [activeVehicle, activeService, sortBy, userLocation, searchName, needsTow, quickFilter])
+        };
+        fetchShops();
+    }, [activeVehicle, activeService, sortBy, userLocation, searchName, needsTow, quickFilter]);
+
 
     return (
         <>

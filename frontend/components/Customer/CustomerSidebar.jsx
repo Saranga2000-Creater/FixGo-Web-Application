@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faBell, faCar, faCarSide, faClock, faGear, faStar, faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { api, UPLOADS_URL } from "../../src/services/api";
+
 
 function SidebarLink({ active = false, icon, label, badge, onClick }) {
     return (
@@ -30,14 +32,11 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
     const [customer, setCustomer] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem("jwt_token");
-        fetch("http://localhost:8000/api/getCustomerProfile.php", {
-            headers: { Authorization: "Bearer " + token },
-        })
-            .then(res => res.json())
+        api.get("getCustomerProfile.php")
             .then(data => { if (data.success) setCustomer(data); })
             .catch(() => {});
     }, []);
+
 
     // Strip out quotes and old IPs
     const cleanProfilePhoto = customer?.profilePhoto ? customer.profilePhoto.replace(/['"]/g, '') : null;
@@ -47,12 +46,12 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
         if (cleanProfilePhoto.startsWith("http")) {
             try {
                 const urlObj = new URL(cleanProfilePhoto);
-                avatarSrc = `http://localhost:8000${urlObj.pathname}`;
+                avatarSrc = `${UPLOADS_URL}${urlObj.pathname}`;
             } catch (error) {
                 avatarSrc = cleanProfilePhoto;
             }
         } else {
-            avatarSrc = `http://localhost:8000/${cleanProfilePhoto.replace(/^\//, '')}`;
+            avatarSrc = `${UPLOADS_URL}/${cleanProfilePhoto.replace(/^\//, '')}`;
         }
     }
 

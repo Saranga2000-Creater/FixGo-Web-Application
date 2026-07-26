@@ -7,6 +7,8 @@ import ReviewsRatings from "./ReviewsRatings";
 import ShopProfile from "./ShopProfile";
 import Notification from "./Notification";
 import Settings from "./Settings";
+import { api } from "../../src/services/api";
+
 
 
 
@@ -146,21 +148,13 @@ function ShopOwnerDashboard() {
   const [reviewCount, setReviewCount] = useState(0);
 
 const fetchRequestCount = () => {
-  const token = localStorage.getItem("jwt_token");
-
-  fetch("http://localhost:8000/api/getServiceRequests.php", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
+  api.get("getServiceRequests.php")
     .then((data) => {
       if (data.success) {
         const pendingCount = data.data.filter(
-    request => request.status === "Pending"
-).length;
-
-setRequestCount(pendingCount);
+          request => request.status === "Pending"
+        ).length;
+        setRequestCount(pendingCount);
       }
     })
     .catch((err) => console.error(err));
@@ -169,16 +163,9 @@ setRequestCount(pendingCount);
 useEffect(() => {
   fetchRequestCount();
 }, []);
- 
-useEffect(() => {
- const token = localStorage.getItem("jwt_token");
 
-fetch("http://localhost:8000/api/getServiceHistory.php", {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
-    .then((res) => res.json())
+useEffect(() => {
+  api.get("getServiceHistory.php")
     .then((data) => {
       if (data.success) {
         setCompletedJobCount(data.data.length);
@@ -188,60 +175,26 @@ fetch("http://localhost:8000/api/getServiceHistory.php", {
 }, []);
 
 useEffect(() => {
-
     const loadNotificationCount = () => {
-
-        const token = localStorage.getItem("jwt_token");
-
-        if (!token) return;
-
-        fetch("http://localhost:8000/api/getNotifications.php", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-        .then(res => res.json())
+        api.get("getNotifications.php")
         .then(data => {
-
             if (data.success) {
-
                 const unread = data.data.filter(
                     n => Number(n.isRead) === 0
                 ).length;
-
                 setNotificationCount(unread);
             }
-
         })
         .catch(console.error);
-
     };
 
     loadNotificationCount();
-
-    const interval = setInterval(loadNotificationCount,5000);
-
+    const interval = setInterval(loadNotificationCount, 5000);
     return () => clearInterval(interval);
-
 }, []);
 
 useEffect(() => {
-  const token = localStorage.getItem("jwt_token");
-
-  if (!token) {
-    console.error("Token not found");
-    return;
-  }
-
-  fetch("http://localhost:8000/api/getShopProfile.php", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-
-    
-  })
-    .then((res) => res.json())
+  api.get("getShopProfile.php")
     .then((data) => {
       if (data.success) {
         setShopData(data.data);
@@ -251,16 +204,11 @@ useEffect(() => {
     })
     .catch((err) => console.error(err));
 }, []);
+
 useEffect(() => {
     const token = localStorage.getItem("jwt_token");
     const shopId = JSON.parse(atob(token.split(".")[1])).shop_id;
-
-    fetch(`http://localhost:8000/api/getShopReviews.php?shop_id=${shopId}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    })
-        .then(res => res.json())
+    api.get(`getShopReviews.php?shop_id=${shopId}`)
         .then(data => {
             if (data.success) {
                 setReviewCount(data.total_reviews);
@@ -268,6 +216,7 @@ useEffect(() => {
         })
         .catch(console.error);
 }, []);
+
  
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";

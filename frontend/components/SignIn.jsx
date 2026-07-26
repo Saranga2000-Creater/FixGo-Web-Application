@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { api } from "../src/services/api";
 
 
 function Sign({ setShowSignIn }) {
@@ -25,37 +26,24 @@ function Sign({ setShowSignIn }) {
         setError("");
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/login.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+            const data = await api.postPublic('login.php', { email, password });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                if (typeof setShowSignIn === 'function') {
-                    setShowSignIn(false);
-                }
-                localStorage.setItem("jwt_token", data.token);
-                localStorage.setItem("email", email);
-                localStorage.setItem("role", data.role);
-                localStorage.setItem("shopId", data.id);
-
-                if (data.profileImage) {
-                    localStorage.setItem("profileImage", data.profileImage);
-                }
-                navigate("/services");
-            } else {
-                setError(data.message || "Login failed. Please try again.");
+            if (typeof setShowSignIn === 'function') {
+                setShowSignIn(false);
             }
+            localStorage.setItem("jwt_token", data.token);
+            localStorage.setItem("email", email);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("shopId", data.id);
 
-        } catch (error) {
-            console.error("Login error:", error);
-            setError("An error occurred. Please try again.");
+            if (data.profileImage) {
+                localStorage.setItem("profileImage", data.profileImage);
+            }
+            navigate("/services");
+
+        } catch (err) {
+            console.error("Login error:", err);
+            setError(err.message || "Login failed. Please try again.");
         }
 
     }

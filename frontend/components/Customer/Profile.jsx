@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { api, UPLOADS_URL } from "../../src/services/api";
+
 import {
     faCalendarDays,
     faCar,
@@ -55,11 +57,7 @@ function Profile() {
     const [error, setError]       = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem("jwt_token");
-        fetch("http://localhost:8000/api/getCustomerProfile.php", {
-            headers: { Authorization: "Bearer " + token },
-        })
-            .then((res) => res.json())
+        api.get("getCustomerProfile.php")
             .then((data) => {
                 if (data.success) setCustomer(data);
                 else setError(data.message || "Failed to load profile");
@@ -70,6 +68,7 @@ function Profile() {
                 setLoading(false);
             });
     }, []);
+
 
     if (loading) return (
         <div className="flex justify-center py-20">
@@ -91,12 +90,12 @@ function Profile() {
         if (cleanProfilePhoto.startsWith("http")) {
             try {
                 const urlObj = new URL(cleanProfilePhoto);
-                avatarSrc = `http://localhost:8000${urlObj.pathname}`;
+                avatarSrc = `${UPLOADS_URL}${urlObj.pathname}`;
             } catch (error) {
                 avatarSrc = cleanProfilePhoto;
             }
         } else {
-            avatarSrc = `http://localhost:8000/${cleanProfilePhoto.replace(/^\//, '')}`;
+            avatarSrc = `${UPLOADS_URL}/${cleanProfilePhoto.replace(/^\//, '')}`;
         }
     }
 

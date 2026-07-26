@@ -5,6 +5,8 @@ import {
     faCar, faChevronDown, faChevronUp, faCalendarDays,
     faClock, faCircleCheck, faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
@@ -57,13 +59,7 @@ export default function RepairStatus({targetRequestId }) {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const token = localStorage.getItem("jwt_token");
-                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-                const data = await res.json();
+                const data = await api.get("getCustomerRequest.php");
                 if (data.success) {
                     const ongoing = (data.data || []).filter(r =>
                         ONGOING_STATUSES.includes(r.status)

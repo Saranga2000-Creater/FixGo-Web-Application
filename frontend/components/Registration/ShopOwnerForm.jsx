@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoadScript, GoogleMap, Marker } from "@react-google-maps/api";
+import { api } from "../../src/services/api";
+
 
 export default function ShopForm() {
     const navigate = useNavigate();
@@ -178,24 +180,13 @@ export default function ShopForm() {
         payload.append("towTruckPlate", formData.towTruckPlate);
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/registerShop.php`, {
-                method: "POST",
-                body: payload,
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate("/verify-email");
-                }, 4000);
-            } else {
-                setError(data.message || "Something went wrong. Please try again.");
-            }
+            await api.postPublic('registerShop.php', payload);
+            setSuccess(true);
+            setTimeout(() => {
+                navigate("/verify-email");
+            }, 4000);
         } catch (err) {
-            setError("Network error. Please try again later.");
+            setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

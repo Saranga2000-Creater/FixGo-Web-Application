@@ -186,6 +186,9 @@ class Shop {
         // 1. Get Core Info
         $query = "SELECT id, name, address, contactNumber as phone, description, 
                          openTime, closeTime, isAvailable, carriageService, profileImageURL,
+                         (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
+                          FROM serviceRequest sr 
+                          WHERE sr.shop_id = shop.id AND sr.accepted_at IS NOT NULL) as response_time_minutes,
                          ST_Y(shop.location) as lat, ST_X(shop.location) as lng
                   FROM shop WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
@@ -258,6 +261,23 @@ class Shop {
         unset($info['lat']);
         unset($info['lng']);
         
+        // Calculate open status text
+        date_default_timezone_set('Asia/Colombo');
+        $currentTime = date('H:i:s');
+        $isOpen = false;
+        $openStatusText = "Temporarily Closed";
+
+        if ($info['isAvailable'] == 1) {
+            if ($currentTime >= $info['openTime'] && $currentTime <= $info['closeTime']) {
+                $isOpen = true;
+                $openStatusText = "Open Now";
+            } else {
+                $openStatusText = "Opens " . date("g:i A", strtotime($info['openTime']));
+            }
+        }
+        $info['is_open_now'] = $isOpen;
+        $info['open_status_text'] = $openStatusText;
+
         $details['info'] = $info;
 
         // 5. Get Services

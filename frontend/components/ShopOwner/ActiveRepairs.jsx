@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaWhatsapp, FaMapMarkerAlt } from "react-icons/fa";
+import { api } from "../../src/services/api";
+
 
 function Avatar({ initials, color, size = 36 }) {
   return (
@@ -90,17 +92,8 @@ function ActiveRepairs() {
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt_token");
-
-    fetch("http://localhost:8000/api/getActiveRepairs.php", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
+    api.get("getActiveRepairs.php")
       .then((data) => {
-        console.log("API DATA:", data);
-
         if (data.success) {
           setActiveRepairs(data.data);
         }
@@ -114,38 +107,19 @@ function ActiveRepairs() {
     setUpdatingId(requestId);
 
     try {
-      const token = localStorage.getItem("jwt_token");
+      const data = await api.post("updateStatus.php", {
+        request_id: requestId,
+        new_status: nextStatus,
+      });
 
-      const res = await fetch(
-        "http://localhost:8000/api/updateStatus.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            request_id: requestId,
-            new_status: nextStatus,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (res.ok) {
-        if (nextStatus === "Completed") {
-          // Completed jobs belong in Service History, not here — remove immediately
-          setActiveRepairs((prev) => prev.filter((r) => r.id !== requestId));
-        } else {
-          setActiveRepairs((prev) =>
-            prev.map((r) =>
-              r.id === requestId ? { ...r, status: nextStatus } : r
-            )
-          );
-        }
+      if (nextStatus === "Completed") {
+        setActiveRepairs((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        alert(data.message || "Failed to update status.");
+        setActiveRepairs((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, status: nextStatus } : r
+          )
+        );
       }
     } catch (err) {
       console.error(err);

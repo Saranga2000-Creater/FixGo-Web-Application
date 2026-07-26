@@ -11,6 +11,8 @@ import { FaWrench, FaStar, FaShieldAlt, FaSmile, FaClock, FaMapMarkerAlt, FaPhon
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { api, UPLOADS_URL } from "../src/services/api";
+
 
 // NEW: Upgraded SafeImage with Darker Backgrounds & Lightbox Support
 const SafeImage = ({ src, alt, className, isLightbox = false }) => {
@@ -77,27 +79,10 @@ function ShopDetails() {
     const fetchShopDetails = async () => {
       try {
         setLoading(true);
-        // Retrieve your JWT token from where you store it upon login
-        const token = localStorage.getItem('jwt_token'); 
-
-        const response = await fetch(`http://localhost:8000/api/getShopDetails.php?id=${id}`, {
-          method: 'GET',
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-            // Only attach the header if the user is actually logged in
-            ...(token && { 'Authorization': `Bearer ${token}` }) 
-          }
-        });
-        const json = await response.json();
-        
-        if (json.success) {
-          setShop(json.data);
-        } else {
-          setError(json.message || "Shop not found.");
-        }
+        const data = await api.getOptionalAuth('getShopDetails.php', { id });
+        setShop(data.data);
       } catch (err) {
-        setError("Failed to connect to the server.");
+        setError(err.message || "Shop not found.");
       } finally {
         setLoading(false);
       }
@@ -105,6 +90,7 @@ function ShopDetails() {
 
     fetchShopDetails();
   }, [id]);
+
 
   // NEW: Review Filtering & Sorting Engine
   const processedReviews = useMemo(() => {
@@ -232,7 +218,7 @@ function ShopDetails() {
                     {validGallery.map((imgUrl, index) => (
                       <SwiperSlide key={index}>
                         <div className="h-[240px] w-full">
-                          <SafeImage src={`http://localhost:8000/${imgUrl.replace(/\\/g, '/')}`} alt={`Gallery ${index}`} className="h-full w-full object-cover" />
+                          <SafeImage src={`${UPLOADS_URL}/${imgUrl.replace(/\\/g, '/')}`} alt={`Gallery ${index}`} className="h-full w-full object-cover" />
                         </div>
                       </SwiperSlide>
                     ))}
@@ -245,7 +231,7 @@ function ShopDetails() {
                   {/* Layout 1 Image */}
                   {validGallery.length === 1 && (
                     <div onClick={() => openLightbox(0)} className="w-full h-full cursor-pointer">
-                      <SafeImage src={`http://localhost:8000/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover rounded-xl transition-transform duration-500 hover:scale-[1.02]" />
+                      <SafeImage src={`${UPLOADS_URL}/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover rounded-xl transition-transform duration-500 hover:scale-[1.02]" />
                     </div>
                   )}
 
@@ -253,10 +239,10 @@ function ShopDetails() {
                   {validGallery.length === 2 && (
                     <div className="grid grid-cols-2 gap-3 h-full">
                       <div onClick={() => openLightbox(0)} className="h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                       <div onClick={() => openLightbox(1)} className="h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                     </div>
                   )}
@@ -265,14 +251,14 @@ function ShopDetails() {
                   {validGallery.length === 3 && (
                     <div className="grid grid-cols-3 gap-3 h-full">
                       <div onClick={() => openLightbox(0)} className="col-span-2 h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                       <div className="col-span-1 grid grid-rows-2 gap-3 h-full">
                         <div onClick={() => openLightbox(1)} className="h-full overflow-hidden rounded-xl cursor-pointer">
-                          <SafeImage src={`http://localhost:8000/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                          <SafeImage src={`${UPLOADS_URL}/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
                         <div onClick={() => openLightbox(2)} className="h-full overflow-hidden rounded-xl cursor-pointer">
-                          <SafeImage src={`http://localhost:8000/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                          <SafeImage src={`${UPLOADS_URL}/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
                       </div>
                     </div>
@@ -282,16 +268,16 @@ function ShopDetails() {
                   {validGallery.length === 4 && (
                     <div className="grid grid-cols-5 grid-rows-2 gap-3 h-full">
                       <div onClick={() => openLightbox(0)} className="col-span-3 row-span-2 h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[0].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                       <div onClick={() => openLightbox(1)} className="col-span-1 row-span-1 h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                       <div onClick={() => openLightbox(2)} className="col-span-1 row-span-1 h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                       <div onClick={() => openLightbox(3)} className="col-span-2 row-span-1 h-full overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[3].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[3].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                       </div>
                     </div>
                   )}
@@ -300,23 +286,23 @@ function ShopDetails() {
                   {validGallery.length >= 5 && (
                     <div className="grid grid-cols-5 grid-rows-2 gap-3 h-full">
                       <div onClick={() => openLightbox(0)} className="col-span-3 row-span-2 h-full relative group overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[0].replace(/\\/g, '/')}`} alt="Main Shop" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[0].replace(/\\/g, '/')}`} alt="Main Shop" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                       
                       <div onClick={() => openLightbox(1)} className="col-span-1 row-span-1 h-full relative group overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[1].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                       
                       <div onClick={() => openLightbox(2)} className="col-span-1 row-span-1 h-full relative group overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[2].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                       
                       <div onClick={() => openLightbox(3)} className="col-span-1 row-span-1 h-full relative group overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[3].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[3].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
 
                       <div onClick={() => openLightbox(4)} className="col-span-1 row-span-1 h-full relative group overflow-hidden rounded-xl cursor-pointer">
-                        <SafeImage src={`http://localhost:8000/${validGallery[4].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SafeImage src={`${UPLOADS_URL}/${validGallery[4].replace(/\\/g, '/')}`} alt="Shop View" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         {validGallery.length > 5 && (
                           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-colors group-hover:bg-black/60 backdrop-blur-[2px]">
                             <span className="text-2xl font-bold">+{validGallery.length - 5}</span>
@@ -699,7 +685,7 @@ function ShopDetails() {
               {validGallery.map((imgUrl, idx) => (
                 <SwiperSlide key={idx} className="flex items-center justify-center p-4 sm:p-12">
                   <SafeImage 
-                    src={`http://localhost:8000/${imgUrl.replace(/\\/g, '/')}`} 
+                    src={`${UPLOADS_URL}/${imgUrl.replace(/\\/g, '/')}`} 
                     alt={`Fullscreen Gallery ${idx}`} 
                     className="max-h-full max-w-full object-contain drop-shadow-2xl select-none rounded-xl"
                     isLightbox={true}
