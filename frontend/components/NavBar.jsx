@@ -4,6 +4,8 @@ import { faBell, faCircleQuestion, faRightFromBracket, faUser } from "@fortaweso
 import logo from '../src/assets/FixGo.png'
 import { useState } from "react";
 import Sign from "./SignIn";
+import { UPLOADS_URL } from "../src/services/api";
+
 
 export const NavBar = () => {
     const navigate = useNavigate();
@@ -99,7 +101,7 @@ export const NavBar = () => {
                             >
                                 {profileImage ? (
                                     <img
-                                        src={profileImage.startsWith("http") ? profileImage : `http://localhost:8000/${profileImage}`}
+                                        src={profileImage.startsWith("http") ? profileImage : `${UPLOADS_URL}/${profileImage}`}
                                         alt="Profile"
                                         className="w-full h-full object-cover"
                                     />

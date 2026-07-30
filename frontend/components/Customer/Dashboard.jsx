@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { api } from "../../src/services/api";
+
 import {
     faArrowRight,
     faArrowTrendUp,
@@ -75,14 +77,11 @@ function Dashboard({ onNavigate }) {
 
     // Fetch profile for greeting name
     useEffect(() => {
-        const token = localStorage.getItem("jwt_token");
-        fetch("http://localhost:8000/api/getCustomerProfile.php", {
-            headers: { Authorization: "Bearer " + token },
-        })
-            .then(res => res.json())
+        api.get("getCustomerProfile.php")
             .then(data => { if (data.success) setFirstName(data.name.split(" ")[0]); })
             .catch(() => {});
     }, []);
+
 
     // Fetch counts from service requests
     useEffect(() => {
@@ -90,12 +89,9 @@ function Dashboard({ onNavigate }) {
 
         const fetchCounts = async () => {
             try {
-                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-                const data = await res.json();
+                const token = localStorage.getItem("jwt_token");
+                const data = await api.get("getCustomerRequest.php");
+
                 if (!data.success) return;
 
                 const all = data.data || [];

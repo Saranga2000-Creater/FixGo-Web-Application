@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../src/services/api";
+
 
 export default function VerifyEmail() {
     const navigate = useNavigate();
@@ -18,29 +20,15 @@ export default function VerifyEmail() {
 
         setStatus("loading");
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/verifyEmail.php`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ token: otp })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setStatus("success");
-                setMessage(data.message || "Your email has been verified successfully!");
-            } else {
-                setStatus("error");
-                setMessage(data.message || "Failed to verify email. The OTP may be invalid or expired.");
-            }
+            const data = await api.postPublic('verifyEmail.php', { token: otp });
+            setStatus("success");
+            setMessage(data.message || "Your email has been verified successfully!");
         } catch (err) {
             setStatus("error");
-            setMessage("A network error occurred. Please try again later.");
+            setMessage(err.message || "Failed to verify email. The OTP may be invalid or expired.");
         }
     };
+
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

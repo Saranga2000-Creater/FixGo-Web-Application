@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { api } from "../../src/services/api";
 export default function CustomerForm() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -77,24 +77,13 @@ export default function CustomerForm() {
         payload.append("profilePic", profilePic);
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/registerCustomer.php`, {
-                method: "POST",
-                body: payload,
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate("/verify-email");
-                }, 4000);
-            } else {
-                setError(data.message || "Something went wrong. Please try again.");
-            }
+            await api.postPublic('registerCustomer.php', payload);
+            setSuccess(true);
+            setTimeout(() => {
+                navigate("/verify-email");
+            }, 4000);
         } catch (err) {
-            setError("Network error. Please try again later.");
+            setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
