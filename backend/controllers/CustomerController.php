@@ -171,4 +171,147 @@ class CustomerController {
             echo json_encode(["message" => "Database registration failed: " . $e->getMessage()]);
         }
     }
+
+    public function updateProfile($customerId) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $input = $_POST;
+        if (empty($input)) {
+            $jsonInput = json_decode(file_get_contents('php://input'), true);
+            if (is_array($jsonInput)) {
+                $input = $jsonInput;
+            }
+        }
+
+        $customerModel = new Customer($this->db);
+        $existingCustomer = $customerModel->getById($customerId);
+        if (!$existingCustomer) {
+            http_response_code(404);
+            echo json_encode(["message" => "Customer not found."]);
+            return;
+        }
+
+        $updateData = [];
+
+        // Validate Name
+        if (isset($input['name'])) {
+            $name = trim($input['name']);
+            if ($name === '') {
+                http_response_code(400);
+                echo json_encode(["message" => "Name cannot be empty."]);
+                return;
+            }
+            $updateData['name'] = $name;
+        }
+
+        // Validate Phone Number
+        $phone = isset($input['phone']) ? trim($input['phone']) : (isset($input['contactNumber']) ? trim($input['contactNumber']) : null);
+        if ($phone !== null) {
+            if ($phone === '') {
+                http_response_code(400);
+                echo json_encode(["message" => "Phone number cannot be empty."]);
+                return;
+            }
+            if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
+                return;
+            }
+            $updateData['contactNumber'] = $phone;
+        }
+
+        // Validate Address
+        if (isset($input['address'])) {
+            $address = trim($input['address']);
+            if ($address === '') {
+                http_response_code(400);
+                echo json_encode(["message" => "Address cannot be empty."]);
+                return;
+            }
+            $updateData['address'] = $address;
+        }
+
+        // Handle Profile Photo Upload
+        $fileKey = isset($_FILES['profilePic']) ? 'profilePic' : (isset($_FILES['profilePhoto']) ? 'profilePhoto' : null);
+        if ($fileKey && isset($_FILES[$fileKey]) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES[$fileKey];
+            $fileSize = $file['size'];
+            $fileTmp = $file['tmp_name'];
+            $fileName = $file['name'];
+
+            if ($fileSize > 5 * 1024 * 1024) {
+                http_response_code(400);
+                echo json_encode(["message" => "Profile photo must be under 5MB."]);
+                return;
+            }
+
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP."]);
+                return;
+            }
+
+            $targetDir = __DIR__ . '/../uploads/customers/';
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+
+            $uniqueFileName = uniqid('customer_', true) . '.' . $fileExtension;
+            $targetFilePath = $targetDir . $uniqueFileName;
+            $dbImagePath = 'uploads/customers/' . $uniqueFileName;
+
+            if (!move_uploaded_file($fileTmp, $targetFilePath)) {
+                http_response_code(500);
+                echo json_encode(["message" => "Failed to save uploaded photo."]);
+                return;
+            }
+
+            $updateData['profilePhoto'] = $dbImagePath;
+        }
+
+        // Handle Password Change
+        $newPassword = isset($input['newPassword']) ? $input['newPassword'] : (isset($input['password']) ? $input['password'] : null);
+        if ($newPassword !== null && trim($newPassword) !== '') {
+            $currentPassword = isset($input['currentPassword']) ? $input['currentPassword'] : null;
+            if (!$currentPassword || trim($currentPassword) === '') {
+                http_response_code(400);
+                echo json_encode(["message" => "Current password is required to change password."]);
+                return;
+            }
+
+            // Verify current password
+            $userStmt = $this->db->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
+            $userStmt->execute([':id' => $customerId]);
+            $userRow = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$userRow || !password_verify($currentPassword, $userRow['password'])) {
+                http_response_code(400);
+                echo json_encode(["message" => "Current password is incorrect."]);
+                return;
+            }
+
+            if (strlen($newPassword) < 6) {
+                http_response_code(400);
+                echo json_encode(["message" => "New password must be at least 6 characters long."]);
+                return;
+            }
+        } else {
+            $newPassword = null;
+        }
+
+        try {
+            $customerModel->updateProfile($customerId, $updateData, $newPassword);
+            $this->getProfile($customerId);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["message" => "Failed to update profile: " . $e->getMessage()]);
+        }
+    }
 }
