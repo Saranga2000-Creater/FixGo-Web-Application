@@ -18,10 +18,11 @@ function CustomerControllDashboard() {
     //  Combine both state variables
     const [currentPage, setCurrentPage] = useState(location.state?.targetPage || "dashboard");
     const [targetRequestId, setTargetRequestId] = useState(null);
+    const [profileModalState, setProfileModalState] = useState(null);
 
     //  Keep your existing variables
     const unreadCount = useUnreadCount();
-    
+
 
     useEffect(() => {
         if (location.state?.navigateTo === "repair") {
@@ -43,9 +44,14 @@ function CustomerControllDashboard() {
         return () => window.removeEventListener("fixgo_navigate", handler);
     }, []);
 
-    // When user manually clicks a sidebar link, clear the deep-link target
-    const handlePageChange = (page) => {
+    // When user manually clicks a sidebar link or navigates from settings
+    const handlePageChange = (page, options = {}) => {
         if (page !== "repair") setTargetRequestId(null);
+        if (page === "profile" && options?.action) {
+            setProfileModalState({ open: true, tab: options.action === "password" ? "password" : "info" });
+        } else if (page !== "profile") {
+            setProfileModalState(null);
+        }
         setCurrentPage(page);
     };
 
@@ -62,12 +68,17 @@ function CustomerControllDashboard() {
                     {currentPage === "dashboard" && (
                         <Dashboard onNavigate={handlePageChange} />
                     )}
-                    {currentPage === "profile"       && <Profile/>}
-                    {currentPage === "repair"        && <RepairStatus targetRequestId={targetRequestId} />}
-                    {currentPage === "history"       && <ServiceHistory/>}
-                    {currentPage === "reviews"       && <ReviewsRatings />}
-                    {currentPage === "notifications" && <Notification/>}
-                    {currentPage === "settings"      && <Settings/>}
+                    {currentPage === "profile" && (
+                        <Profile
+                            initialModalOpen={profileModalState?.open || false}
+                            initialTab={profileModalState?.tab || "info"}
+                        />
+                    )}
+                    {currentPage === "repair" && <RepairStatus targetRequestId={targetRequestId} />}
+                    {currentPage === "history" && <ServiceHistory />}
+                    {currentPage === "reviews" && <ReviewsRatings />}
+                    {currentPage === "notifications" && <Notification />}
+                    {currentPage === "settings" && <Settings onNavigate={handlePageChange} />}
                 </div>
             </main>
         </div>
