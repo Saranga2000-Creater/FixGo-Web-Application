@@ -255,6 +255,20 @@ class BillingController {
     }
 
     // ============================================================
+    // ADMIN: GET all invoices across all shops (global ledger)
+    // Optional GET params: shopId, status, year, month
+    // ============================================================
+
+    public function getAllInvoices(array $filters): void {
+        $model  = new ShopInvoice($this->db);
+        $data   = $model->getAllInvoices($filters);
+
+        http_response_code(200);
+        echo json_encode(["success" => true, "data" => $data, "count" => count($data)]);
+    }
+
+
+    // ============================================================
     // ADMIN: GET pending verification queue
     // ============================================================
 

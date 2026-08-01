@@ -7,6 +7,7 @@ import ReviewsRatings from "./ReviewsRatings";
 import ShopProfile from "./ShopProfile";
 import Notification from "./Notification";
 import Settings from "./Settings";
+import Billing from "./Billing";
 import { api } from "../../src/services/api";
 
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { id: "reviews", label: "Reviews & Ratings", icon: "⭐" },
   { id: "profile", label: "Shop Profile", icon: "🏪" },
   { id: "notifications", label: "Notifications", icon: "🔔" },
+  { id: "billing", label: "Billing", icon: "💳" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
@@ -132,6 +134,7 @@ function renderPage(
         />
     );
     case "settings":      return <Settings />;
+    case "billing":       return <Billing />;
     default:              return <DashboardView />;
   }
 }

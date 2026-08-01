@@ -151,6 +151,50 @@ class ShopInvoice {
     }
 
     // ============================================================
+    // Get ALL invoices across all shops (admin global ledger)
+    // Optional filters: shopId, status, year, month
+    // ============================================================
+
+    public function getAllInvoices(array $filters = []): array {
+        $where  = ['1=1'];
+        $params = [];
+
+        if (!empty($filters['shopId'])) {
+            $where[] = 'si.shopId = :shopId';
+            $params[':shopId'] = (int)$filters['shopId'];
+        }
+        if (!empty($filters['status'])) {
+            $where[] = 'si.invoiceStatus = :status';
+            $params[':status'] = $filters['status'];
+        }
+        if (!empty($filters['year'])) {
+            $where[] = 'si.billingPeriodYear = :y';
+            $params[':y'] = (int)$filters['year'];
+        }
+        if (!empty($filters['month'])) {
+            $where[] = 'si.billingPeriodMonth = :m';
+            $params[':m'] = (int)$filters['month'];
+        }
+
+        $sql = "SELECT si.*,
+                       s.name       AS shopName,
+                       u.email      AS shopEmail,
+                       sc.name      AS shopCategory
+                FROM {$this->table_name} si
+                JOIN shop s          ON si.shopId         = s.id
+                JOIN users u         ON si.shopId         = u.id
+                JOIN shopCategory sc ON si.shopCategoryId = sc.id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY si.billingPeriodYear DESC, si.billingPeriodMonth DESC, s.name ASC
+                LIMIT 200";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // ============================================================
     // Get all invoices in Verification Pending state (admin queue)
     // ============================================================
 
