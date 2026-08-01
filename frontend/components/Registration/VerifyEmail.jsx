@@ -57,17 +57,21 @@ export default function VerifyEmail() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Account Activated!</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                            {message.includes("pending admin approval") ? "Email Verified!" : "Account Activated!"}
+                        </h2>
                         <p className="mt-3 text-sm text-gray-500 px-2 leading-relaxed">{message}</p>
                         
-                        <div className="mt-8">
-                            <button
-                                onClick={() => navigate("/login")}
-                                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
-                            >
-                                Sign In Now
-                            </button>
-                        </div>
+                        {!message.includes("pending admin approval") && (
+                            <div className="mt-8">
+                                <button
+                                    onClick={() => navigate("/login")}
+                                    className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
+                                >
+                                    Sign In Now
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <form onSubmit={verifyToken} className="mt-8 space-y-6">

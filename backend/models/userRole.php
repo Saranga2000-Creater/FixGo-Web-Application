@@ -75,9 +75,17 @@ class User {
     public function verifyEmail($userId) {
         try {
             $this->conn->beginTransaction();
-            $query = "UPDATE " . $this->table_name . " 
-                      SET is_email_verified = 1, isActive = 1, verification_token = NULL 
-                      WHERE id = :id";
+            
+            if ($this->userRole === 'shop_owner') {
+                $query = "UPDATE " . $this->table_name . " 
+                          SET is_email_verified = 1, verification_token = NULL 
+                          WHERE id = :id";
+            } else {
+                $query = "UPDATE " . $this->table_name . " 
+                          SET is_email_verified = 1, isActive = 1, verification_token = NULL 
+                          WHERE id = :id";
+            }
+            
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
             $result = $stmt->execute();

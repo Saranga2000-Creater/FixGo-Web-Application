@@ -47,7 +47,11 @@ class AuthController{
             if(!$user->isActive){
 
                 http_response_code(403);
-                echo json_encode(["message"=>"Account is inactive. Please contact support."]);
+                if ($user->userRole === 'shop_owner') {
+                    echo json_encode(["message"=>"Your account is pending admin approval."]);
+                } else {
+                    echo json_encode(["message"=>"Account is inactive. Please contact support."]);
+                }
                 return;
             }
 
@@ -237,7 +241,11 @@ class AuthController{
             $user->verifyEmail($user->id);
 
             http_response_code(200);
-            echo json_encode(["message" => "Email verified successfully. You can now log in to your account."]);
+            if ($user->userRole === 'shop_owner') {
+                echo json_encode(["message" => "Email verified successfully. Your account is pending admin approval."]);
+            } else {
+                echo json_encode(["message" => "Email verified successfully. You can now log in to your account."]);
+            }
             return;
     
         } catch (Exception $e) {
