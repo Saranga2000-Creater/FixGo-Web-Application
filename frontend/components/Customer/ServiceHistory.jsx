@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { api } from "../../src/services/api";
+
 import {
     faArrowRight, faCalendarDays, faChevronDown,
     faClockRotateLeft, faMapPin, faWrench,
@@ -196,13 +198,7 @@ export default function ServiceHistory( ) {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const token = localStorage.getItem("jwt_token");
-                const res  = await fetch("http://localhost:8000/api/getCustomerRequest.php", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-                const data = await res.json();
+                const data = await api.get("getCustomerRequest.php");
                 if (data.success) {
                     const finished = (data.data || []).filter(r =>
                         ["Completed", "Cancelled"].includes(r.status)
@@ -217,6 +213,7 @@ export default function ServiceHistory( ) {
         };
         fetchHistory();
     }, []);
+
 
     const filtered = history.filter(r => isWithinFilter(r.created_at, filter));
 

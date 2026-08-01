@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { api, UPLOADS_URL } from "../../src/services/api";
+
 
 
 const SERVICES = [
@@ -45,17 +47,8 @@ const [towForm, setTowForm] = useState({
 
 useEffect(() => {
   if (!shopData) return;
-
-  const token = localStorage.getItem("jwt_token");
   setTowLoading(true);
-
-  fetch("http://localhost:8000/api/getTowTruckDetails.php", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then(res => res.json())
+  api.get("getTowTruckDetails.php")
     .then(data => {
       if (data.success) {
         setTowDetails(data.data);
@@ -70,7 +63,6 @@ useEffect(() => {
     })
     .catch(err => console.error(err))
     .finally(() => setTowLoading(false));
-
 }, [shopData, hasTowService]);
     
     
@@ -88,17 +80,8 @@ const handleTowSave = () => {
     }
   }
 
-  const token = localStorage.getItem("jwt_token");
   setTowSaving(true);
-
-  fetch("http://localhost:8000/api/updateShopTowTruckDetails.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({
-  ...towForm,
-}),
-  })
-    .then(res => res.json())
+  api.post("updateShopTowTruckDetails.php", { ...towForm })
     .then(data => {
       if (data.success) {
         setTowDetails({
@@ -128,26 +111,10 @@ const handleGoToShop = () => {
 };
 
 useEffect(() => {
-    const token = localStorage.getItem("jwt_token");
-
-    if (!token) {
-        console.error("Token not found");
-        return;
-    }
-
-    fetch("http://localhost:8000/api/getShopProfile.php", {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    })
-        .then(res => res.json())
+    api.get("getShopProfile.php")
         .then(data => {
-            console.log("Shop Data:", data);
-
             if (data.success) {
                 setShopData(data.data);
-                console.log(shopData);
             } else {
                 console.error(data.message);
             }
@@ -155,7 +122,6 @@ useEffect(() => {
         .catch(err => {
             console.error("Error loading shop profile:", err);
         });
-
 }, []);
   if (!shopData) {
     return <div>Loading shop profile...</div>;
@@ -194,7 +160,7 @@ useEffect(() => {
               <img
                 src={
                   shopData?.profileImageURL
-                    ? `http://localhost:8000/${shopData.profileImageURL}`
+                    ? `${UPLOADS_URL}/${shopData.profileImageURL}`
                     : "/default-shop.png"
                 }
                 alt="Shop"

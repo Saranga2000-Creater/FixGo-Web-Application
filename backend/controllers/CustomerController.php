@@ -62,6 +62,12 @@ class CustomerController {
         }
 
         $name = trim($_POST['name']);
+        if (mb_strlen($name) < 2 || preg_match('/^\d+$/', $name) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $name)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please enter a valid full name (letters only, at least 2 characters)."]);
+            return;
+        }
+
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone']);
         $address = trim($_POST['address']);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { api } from "../../src/services/api";
 
-const API_BASE = "http://localhost:8000/api";
 
 const AVATAR_COLORS = ["#7C3AED", "#059669", "#2563EB", "#D97706", "#F59E0B", "#DB2777", "#0891B2"];
 
@@ -108,7 +108,6 @@ function ReviewsRatings() {
 
   useEffect(() => {
     const shopId = getShopIdFromToken();
-    const token = localStorage.getItem("jwt_token");
 
     if (!shopId) {
       setError("Could not determine shop id.");
@@ -116,16 +115,12 @@ function ReviewsRatings() {
       return;
     }
 
-    fetch(`${API_BASE}/getShopReviews.php?shop_id=${shopId}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((res) => res.json())
+    api.get(`getShopReviews.php?shop_id=${shopId}`)
       .then((data) => {
         if (!data || !data.success) {
           setError(data?.message || "Failed to load reviews.");
           return;
         }
-
         setReviews(data.data || []);
         setAverageRating(data.average_rating || 0);
         setTotalReviews(data.total_reviews || 0);
@@ -133,6 +128,7 @@ function ReviewsRatings() {
       .catch(() => setError("Failed to load reviews."))
       .finally(() => setLoading(false));
   }, []);
+
 
   const starCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,

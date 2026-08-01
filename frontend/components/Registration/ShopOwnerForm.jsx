@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoadScript, GoogleMap, Marker } from "@react-google-maps/api";
+import { api } from "../../src/services/api";
+
 
 export default function ShopForm() {
     const navigate = useNavigate();
@@ -99,6 +101,20 @@ export default function ShopForm() {
         e.preventDefault();
         setError("");
 
+        const personNameRegex = /^[a-zA-Z\s\.\'-]{2,100}$/;
+
+        const trimOwnerName = formData.ownerName.trim();
+        if (!trimOwnerName || trimOwnerName.length < 2 || /^\d+$/.test(trimOwnerName) || !personNameRegex.test(trimOwnerName)) {
+            setError("Please enter a valid owner name (letters only, at least 2 characters).");
+            return;
+        }
+
+        const trimShopName = formData.shopName.trim();
+        if (!trimShopName || trimShopName.length < 2 || /^\d+$/.test(trimShopName) || !/[a-zA-Z]/.test(trimShopName)) {
+            setError("Please enter a valid shop name (must contain letters and be at least 2 characters).");
+            return;
+        }
+
         if (!formData.category) {
             setError("Please select a workshop category.");
             return;
@@ -125,8 +141,9 @@ export default function ShopForm() {
         }
 
         if (formData.providesCarriage) {
-            if (!formData.defaultDriverName.trim()) {
-                setError("Please provide the truck driver's name.");
+            const trimDriverName = formData.defaultDriverName.trim();
+            if (!trimDriverName || trimDriverName.length < 2 || /^\d+$/.test(trimDriverName) || !personNameRegex.test(trimDriverName)) {
+                setError("Please enter a valid truck driver name (letters only, at least 2 characters).");
                 return;
             }
             if (!formData.defaultDriverPhone.trim()) {
@@ -178,24 +195,13 @@ export default function ShopForm() {
         payload.append("towTruckPlate", formData.towTruckPlate);
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/registerShop.php`, {
-                method: "POST",
-                body: payload,
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate("/verify-email");
-                }, 4000);
-            } else {
-                setError(data.message || "Something went wrong. Please try again.");
-            }
+            await api.postPublic('registerShop.php', payload);
+            setSuccess(true);
+            setTimeout(() => {
+                navigate("/verify-email");
+            }, 4000);
         } catch (err) {
-            setError("Network error. Please try again later.");
+            setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

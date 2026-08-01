@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { api } from "../../src/services/api";
 export default function CustomerForm() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -44,6 +44,13 @@ export default function CustomerForm() {
         e.preventDefault();
         setError("");
 
+        const trimName = formData.name.trim();
+        const nameRegex = /^[a-zA-Z\s\.\'-]{2,100}$/;
+        if (!trimName || trimName.length < 2 || /^\d+$/.test(trimName) || !nameRegex.test(trimName)) {
+            setError("Please enter a valid full name (letters only, at least 2 characters).");
+            return;
+        }
+
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match.");
@@ -77,24 +84,13 @@ export default function CustomerForm() {
         payload.append("profilePic", profilePic);
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/registerCustomer.php`, {
-                method: "POST",
-                body: payload,
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate("/verify-email");
-                }, 4000);
-            } else {
-                setError(data.message || "Something went wrong. Please try again.");
-            }
+            await api.postPublic('registerCustomer.php', payload);
+            setSuccess(true);
+            setTimeout(() => {
+                navigate("/verify-email");
+            }, 4000);
         } catch (err) {
-            setError("Network error. Please try again later.");
+            setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

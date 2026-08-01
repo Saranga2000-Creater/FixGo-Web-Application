@@ -153,7 +153,19 @@ class ShopController {
         }
 
         $ownerName = trim($_POST['ownerName']);
+        if (mb_strlen($ownerName) < 2 || preg_match('/^\d+$/', $ownerName) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $ownerName)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please enter a valid owner name (letters only, at least 2 characters)."]);
+            return;
+        }
+
         $shopName = trim($_POST['shopName']);
+        if (mb_strlen($shopName) < 2 || preg_match('/^\d+$/', $shopName) || !preg_match('/[\p{L}a-zA-Z]/u', $shopName)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please enter a valid shop name (must contain letters and be at least 2 characters)."]);
+            return;
+        }
+
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone']);
         $address = trim($_POST['address']);
@@ -197,6 +209,11 @@ class ShopController {
                 }
             }
             $defaultDriverName = trim($_POST['defaultDriverName']);
+            if (mb_strlen($defaultDriverName) < 2 || preg_match('/^\d+$/', $defaultDriverName) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $defaultDriverName)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Please enter a valid driver name (letters only, at least 2 characters)."]);
+                return;
+            }
             $defaultDriverPhone = trim($_POST['defaultDriverPhone']);
             if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $defaultDriverPhone)) {
                 http_response_code(400);
