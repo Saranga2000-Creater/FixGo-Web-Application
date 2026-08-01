@@ -247,4 +247,127 @@ class AuthController{
         }
     }
 
+    public function forgotPassword() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $rawInput = file_get_contents("php://input");
+        $data = json_decode($rawInput);
+        $email = isset($data->email) ? trim($data->email) : '';
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(["message" => "A valid email address is required."]);
+            return;
+        }
+
+        $user = new User($this->db);
+        if (!$user->findByEmail($email)) {
+            http_response_code(404);
+            echo json_encode(["message" => "No account found with that email address."]);
+            return;
+        }
+
+        $otp = sprintf("%06d", random_int(0, 999999));
+
+        if (!$user->setResetOtp($email, $otp, 15)) {
+            http_response_code(500);
+            echo json_encode(["message" => "Failed to process request. Please try again."]);
+            return;
+        }
+
+        require_once __DIR__ . '/../config/EmailSender.php';
+        $emailSent = EmailSender::sendPasswordResetEmail($email, $otp);
+
+        http_response_code(200);
+        echo json_encode([
+            "message" => "Password reset OTP sent to your email address.",
+            "otp_sent" => $emailSent
+        ]);
+    }
+
+    public function verifyResetOtp() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $rawInput = file_get_contents("php://input");
+        $data = json_decode($rawInput);
+        $otp = isset($data->otp) ? trim($data->otp) : '';
+
+        if (empty($otp)) {
+            http_response_code(400);
+            echo json_encode(["message" => "OTP is required."]);
+            return;
+        }
+
+        $user = new User($this->db);
+        if (!$user->findByResetOtp($otp)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid OTP code."]);
+            return;
+        }
+
+        if ($user->reset_token_expiry && strtotime($user->reset_token_expiry) < time()) {
+            http_response_code(400);
+            echo json_encode(["message" => "OTP has expired. Please request a new one."]);
+            return;
+        }
+
+        http_response_code(200);
+        echo json_encode(["message" => "OTP verified successfully."]);
+    }
+
+    public function resetPassword() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $rawInput = file_get_contents("php://input");
+        $data = json_decode($rawInput);
+        $otp = isset($data->otp) ? trim($data->otp) : '';
+        $newPassword = isset($data->password) ? $data->password : '';
+
+        if (empty($otp) || empty($newPassword)) {
+            http_response_code(400);
+            echo json_encode(["message" => "OTP and new password are required."]);
+            return;
+        }
+
+        if (strlen($newPassword) < 6) {
+            http_response_code(400);
+            echo json_encode(["message" => "Password must be at least 6 characters long."]);
+            return;
+        }
+
+        $user = new User($this->db);
+        if (!$user->findByResetOtp($otp)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid OTP code."]);
+            return;
+        }
+
+        if ($user->reset_token_expiry && strtotime($user->reset_token_expiry) < time()) {
+            http_response_code(400);
+            echo json_encode(["message" => "OTP has expired. Please request a new password reset."]);
+            return;
+        }
+
+        $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+        if ($user->updatePassword($user->id, $hashedPassword)) {
+            http_response_code(200);
+            echo json_encode(["message" => "Password updated successfully! You can now log in."]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["message" => "Failed to update password. Please try again."]);
+        }
+    }
+
 }

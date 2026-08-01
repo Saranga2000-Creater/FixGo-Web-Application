@@ -6,5 +6,4 @@ require_once __DIR__ . '/../controllers/AuthController.php';
 $database = new Database();
 $db = $database->connect();
 $auth = new AuthController($db);
-$auth->resetPassword();
-
+$auth->verifyResetOtp();

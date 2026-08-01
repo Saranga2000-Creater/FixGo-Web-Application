@@ -101,6 +101,20 @@ export default function ShopForm() {
         e.preventDefault();
         setError("");
 
+        const personNameRegex = /^[a-zA-Z\s\.\'-]{2,100}$/;
+
+        const trimOwnerName = formData.ownerName.trim();
+        if (!trimOwnerName || trimOwnerName.length < 2 || /^\d+$/.test(trimOwnerName) || !personNameRegex.test(trimOwnerName)) {
+            setError("Please enter a valid owner name (letters only, at least 2 characters).");
+            return;
+        }
+
+        const trimShopName = formData.shopName.trim();
+        if (!trimShopName || trimShopName.length < 2 || /^\d+$/.test(trimShopName) || !/[a-zA-Z]/.test(trimShopName)) {
+            setError("Please enter a valid shop name (must contain letters and be at least 2 characters).");
+            return;
+        }
+
         if (!formData.category) {
             setError("Please select a workshop category.");
             return;
@@ -127,8 +141,9 @@ export default function ShopForm() {
         }
 
         if (formData.providesCarriage) {
-            if (!formData.defaultDriverName.trim()) {
-                setError("Please provide the truck driver's name.");
+            const trimDriverName = formData.defaultDriverName.trim();
+            if (!trimDriverName || trimDriverName.length < 2 || /^\d+$/.test(trimDriverName) || !personNameRegex.test(trimDriverName)) {
+                setError("Please enter a valid truck driver name (letters only, at least 2 characters).");
                 return;
             }
             if (!formData.defaultDriverPhone.trim()) {
