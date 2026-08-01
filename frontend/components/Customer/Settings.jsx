@@ -13,9 +13,10 @@ import {
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
-function SettingsRow({ icon, label, meta }) {
+function SettingsRow({ icon, label, meta, onClick }) {
     return (
         <button
+            onClick={onClick}
             className="flex w-full items-center justify-between py-4 px-6 bg-transparent border-none cursor-pointer text-left transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)]"
             style={{ fontFamily: FONT }}
         >
@@ -56,7 +57,7 @@ function SettingsSection({ iconBg, iconColor, icon, title, description, children
     );
 }
 
-function Settings() {
+function Settings({ onNavigate }) {
     return (
         <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
 
@@ -79,12 +80,12 @@ function Settings() {
                 title="Account Settings"
                 description="Manage your personal information and account details."
             >
-                <SettingsRow icon={faUser}   label="Edit Profile" />
+                <SettingsRow icon={faUser} label="Edit Profile" onClick={() => onNavigate && onNavigate("profile", { action: "edit" })} />
                 <div className="border-t border-gray-100">
-                    <SettingsRow icon={faMapPin} label="Addresses" />
+                    <SettingsRow icon={faMapPin} label="Addresses" onClick={() => onNavigate && onNavigate("profile", { action: "edit" })} />
                 </div>
                 <div className="border-t border-gray-100">
-                    <SettingsRow icon={faLock}   label="Change Password" />
+                    <SettingsRow icon={faLock} label="Change Password" onClick={() => onNavigate && onNavigate("profile", { action: "password" })} />
                 </div>
             </SettingsSection>
 
@@ -96,7 +97,7 @@ function Settings() {
                 title="Security"
                 description="Manage your account security and login settings."
             >
-                <SettingsRow icon={faLock} label="Password Update" />
+                <SettingsRow icon={faLock} label="Password Update" onClick={() => onNavigate && onNavigate("profile", { action: "password" })} />
             </SettingsSection>
 
             {/* ── App Settings ── */}
@@ -107,9 +108,9 @@ function Settings() {
                 title="App Settings"
                 description="Manage app behavior and data."
             >
-                <SettingsRow icon={faShield}     label="Privacy Policy" />
+                <SettingsRow icon={faShield} label="Privacy Policy" />
                 <div className="border-t border-gray-100">
-                    <SettingsRow icon={faFileLines}  label="Terms & Conditions" />
+                    <SettingsRow icon={faFileLines} label="Terms & Conditions" />
                 </div>
                 <div className="border-t border-gray-100">
                     <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" />
