@@ -55,6 +55,11 @@ function Sign({ setShowSignIn }) {
         });
     }
 
+    const handleForgotPassword = () => {
+        handleClose();
+        navigate('/forgot-password');
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* 1st Update: The Background Overlay */}
@@ -139,9 +144,9 @@ function Sign({ setShowSignIn }) {
                 </form>
 
                 <div className="mt-4 text-center text-sm text-gray-600">
-                    <button className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
+                    <button type="button" className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
                     <span className="mx-2">·</span>
-                    <button className="text-green-600 hover:underline">Forgot password?</button>
+                    <button type="button" className="text-green-600 hover:underline" onClick={handleForgotPassword}>Forgot password?</button>
                 </div>
             </div>
         </div>

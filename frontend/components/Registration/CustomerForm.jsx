@@ -44,6 +44,13 @@ export default function CustomerForm() {
         e.preventDefault();
         setError("");
 
+        const trimName = formData.name.trim();
+        const nameRegex = /^[a-zA-Z\s\.\'-]{2,100}$/;
+        if (!trimName || trimName.length < 2 || /^\d+$/.test(trimName) || !nameRegex.test(trimName)) {
+            setError("Please enter a valid full name (letters only, at least 2 characters).");
+            return;
+        }
+
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match.");
