@@ -225,7 +225,11 @@ class BillingController {
                     'totalAmount'        => $inv['totalAmount'],
                     'dueDate'            => date('Y-m-d', strtotime("+{$graceDays} days")),
                 ]);
-                if ($sent) $emailsSent++;
+                if ($sent) {
+                    $emailsSent++;
+                    // Add a 0.5 second delay to prevent triggering Google's Anti-Spam lock during batch dispatch
+                    usleep(500000); 
+                }
             }
         }
 
