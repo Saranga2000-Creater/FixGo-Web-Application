@@ -4,9 +4,15 @@ import {
   faCalendarDays, faMoneyBillWave, faChartLine, faStore,
   faDownload, faArrowTrendUp, faSpinner, faTriangleExclamation,
   faFileInvoiceDollar, faClock, faCheckCircle, faFilter, faRefresh,
+  faInfoCircle, faLock, faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 import toast from "react-hot-toast";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip as RechartTooltip,
+  PieChart, Pie, Cell, Area, AreaChart,
+} from "recharts";
 
 const ACCENT_STYLES = {
   green:  { iconBg: "bg-green-50",  iconColor: "text-green-600",  metaColor: "text-green-600" },
@@ -14,16 +20,27 @@ const ACCENT_STYLES = {
   orange: { iconBg: "bg-[#FFF4EE]", iconColor: "text-[#FF6B1A]",  metaColor: "text-[#FF6B1A]" },
 };
 
-function AdminSummaryCard({ accent, icon, title, count, meta }) {
+function AdminSummaryCard({ accent, icon, title, count, meta, tooltip }) {
   const s = ACCENT_STYLES[accent];
   return (
-    <div className="bg-white rounded-[18px] border border-gray-200 py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+    <div className="bg-white rounded-[18px] border border-gray-200 py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] cursor-default">
       <div className="flex items-start gap-4">
         <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center shrink-0 ${s.iconBg}`}>
           <FontAwesomeIcon icon={icon} className={`text-xl ${s.iconColor}`} />
         </div>
-        <div>
-          <p className="text-[13px] text-gray-500 m-0">{title}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="text-[13px] text-gray-500 m-0">{title}</p>
+            {tooltip && (
+              <div className="relative group">
+                <FontAwesomeIcon icon={faInfoCircle} className="text-[11px] text-gray-300 cursor-help" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-56 bg-gray-900 text-white text-[11px] rounded-lg px-3 py-2 shadow-xl leading-relaxed pointer-events-none">
+                  {tooltip}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                </div>
+              </div>
+            )}
+          </div>
           <p className="text-[28px] font-bold text-gray-900 my-1">{count}</p>
           {meta && (
             <p className={`text-xs font-semibold m-0 flex items-center gap-1 ${s.metaColor}`}>
@@ -32,6 +49,34 @@ function AdminSummaryCard({ accent, icon, title, count, meta }) {
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-[18px] border border-gray-200 py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] animate-pulse">
+      <div className="flex items-start gap-4">
+        <div className="w-[52px] h-[52px] rounded-full bg-gray-200 shrink-0" />
+        <div className="flex-1 pt-1">
+          <div className="h-3 bg-gray-200 rounded w-2/3 mb-3" />
+          <div className="h-7 bg-gray-200 rounded w-1/2 mb-2" />
+          <div className="h-2.5 bg-gray-100 rounded w-1/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonChart() {
+  return (
+    <div className="bg-white rounded-[18px] border border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden animate-pulse">
+      <div className="flex items-center justify-between py-4 px-6 border-b border-gray-100">
+        <div className="h-4 bg-gray-200 rounded w-48" />
+      </div>
+      <div className="px-6 py-6">
+        <div className="h-[220px] bg-gray-100 rounded-xl" />
       </div>
     </div>
   );
@@ -93,36 +138,79 @@ function InvoiceRow({ inv, isLast }) {
   );
 }
 
-// Simple bar chart using pure divs (no extra lib needed)
+const LINE_COLORS = { Garages: "#16a34a", "Service Centers": "#2563eb", "Spare Parts": "#f97316" };
+
+function fmtY(v) {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
+  return v;
+}
+
+function CustomLineTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const total = payload.reduce((s, p) => s + (p.value || 0), 0);
+  return (
+    <div className="bg-gray-900 text-white rounded-xl px-4 py-3 shadow-xl text-[12px] min-w-[170px]">
+      <p className="font-bold mb-2 text-gray-300">{label}</p>
+      {payload.map(p => (
+        <div key={p.name} className="flex items-center justify-between gap-4 mb-1">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full inline-block" style={{ background: p.stroke }} />
+            {p.name}
+          </span>
+          <span className="font-semibold">LKR {Number(p.value).toLocaleString()}</span>
+        </div>
+      ))}
+      <div className="border-t border-gray-700 mt-2 pt-2 flex justify-between font-bold">
+        <span>Total</span><span>LKR {Number(total).toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
+
 function RevenueBarChart({ data }) {
   if (!data || data.length === 0) return null;
-  const maxVal = Math.max(...data.map(d => (d.garages || 0) + (d.serviceCenters || 0) + (d.spareParts || 0)), 1);
-
+  const chartData = data.slice(-12).map(d => ({
+    monthLabel: MONTH_NAMES[Number(d.month)],
+    Garages: Number(d.garages || 0),
+    "Service Centers": Number(d.serviceCenters || 0),
+    "Spare Parts": Number(d.spareParts || 0),
+  }));
   return (
-    <div className="px-6 pt-4 pb-6">
-      <div className="flex items-end gap-2 h-[140px]">
-        {data.slice(-12).map((d, i) => {
-          const total = (d.garages || 0) + (d.serviceCenters || 0) + (d.spareParts || 0);
-          const pct = (total / maxVal) * 100;
-          return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full flex flex-col justify-end" style={{ height: "120px" }}>
-                <div
-                  className="w-full rounded-t-[4px] bg-gradient-to-t from-green-600 to-green-400 transition-all duration-500"
-                  style={{ height: `${pct}%`, minHeight: total > 0 ? "4px" : "0" }}
-                  title={`LKR ${total.toLocaleString()}`}
-                />
-              </div>
-              <span className="text-[9px] text-gray-400 font-medium">{MONTH_NAMES[Number(d.month)]}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-center gap-4 mt-3 justify-center flex-wrap">
-        {[["from-green-600 to-green-400", "Garages"], ["from-blue-600 to-blue-400", "Service Centers"], ["from-orange-500 to-orange-300", "Spare Parts"]].map(([g, l]) => (
-          <div key={l} className="flex items-center gap-1.5">
-            <div className={`w-3 h-3 rounded-sm bg-gradient-to-br ${g}`} />
-            <span className="text-[11px] text-gray-500">{l}</span>
+    <div className="px-6 pt-2 pb-4">
+      <ResponsiveContainer width="100%" height={300}>
+        <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <defs>
+            {Object.entries(LINE_COLORS).map(([key, color]) => (
+              <linearGradient key={key} id={`grad-${key.replace(/ /g, "-")}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+          <XAxis dataKey="monthLabel" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af" }} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af" }} tickFormatter={fmtY} width={45} />
+          <RechartTooltip content={<CustomLineTooltip />} cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }} />
+          {Object.entries(LINE_COLORS).map(([key, color]) => (
+            <Area
+              key={key}
+              type="monotone"
+              dataKey={key}
+              stroke={color}
+              strokeWidth={2.5}
+              fill={`url(#grad-${key.replace(/ /g, "-")})`}
+              dot={{ r: 3, fill: color, strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: color, strokeWidth: 2, stroke: "#fff" }}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+      <div className="flex items-center gap-5 justify-center flex-wrap mt-1">
+        {Object.entries(LINE_COLORS).map(([label, color]) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <span className="w-5 h-0.5 inline-block rounded-full" style={{ background: color }} />
+            <span className="text-[11px] text-gray-500">{label}</span>
           </div>
         ))}
       </div>
@@ -130,27 +218,142 @@ function RevenueBarChart({ data }) {
   );
 }
 
-// Collection Health Pill Row
+const HEALTH_CFG = [
+  { key: "Paid",                 label: "Paid",      fill: "#16a34a", text: "text-green-600",  bar: "bg-green-500",  pulse: false },
+  { key: "Dispatched",           label: "Dispatched",fill: "#2563eb", text: "text-blue-600",   bar: "bg-blue-500",   pulse: false },
+  { key: "Verification Pending", label: "Pending",   fill: "#d97706", text: "text-amber-600", bar: "bg-amber-400",  pulse: true  },
+  { key: "Overdue",              label: "Overdue",   fill: "#dc2626", text: "text-red-600",   bar: "bg-red-500",   pulse: true  },
+];
+
 function CollectionHealth({ health }) {
-  const items = [
-    { key: "Paid",                   label: "Paid",       color: "bg-green-100 text-green-700" },
-    { key: "Dispatched",             label: "Dispatched", color: "bg-blue-100 text-blue-700"  },
-    { key: "Verification Pending",   label: "Pending",    color: "bg-amber-100 text-amber-700" },
-    { key: "Overdue",                label: "Overdue",    color: "bg-red-100 text-red-700"    },
-  ];
+  const rows = HEALTH_CFG.map(cfg => ({
+    ...cfg,
+    count:  Number(health[cfg.key]?.count  || 0),
+    amount: Number(health[cfg.key]?.amount || 0),
+  }));
+  const total = rows.reduce((s, r) => s + r.count, 0);
+  const pieData = total === 0
+    ? [{ name: "Empty", value: 1, fill: "#e5e7eb" }]
+    : rows.map(r => ({ name: r.label, value: r.count, fill: r.fill }));
+
   return (
-    <div className="flex flex-wrap gap-3 px-6 py-4">
-      {items.map(({ key, label, color }) => {
-        const d = health[key];
-        if (!d) return null;
-        return (
-          <div key={key} className={`rounded-[10px] px-4 py-3 ${color}`}>
-            <p className="text-xs font-bold m-0">{label}</p>
-            <p className="text-lg font-extrabold m-0">{d.count}</p>
-            <p className="text-[11px] m-0 opacity-80">LKR {Number(d.amount).toLocaleString()}</p>
+    <div className="flex flex-col md:flex-row gap-6 px-6 py-5">
+      {/* Donut */}
+      <div className="flex items-center justify-center shrink-0">
+        <PieChart width={180} height={180}>
+          <Pie data={pieData} cx={90} cy={90} innerRadius={55} outerRadius={80}
+            paddingAngle={total === 0 ? 0 : 3} dataKey="value" stroke="none">
+            {pieData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+          </Pie>
+          <RechartTooltip
+            content={({ active, payload }) =>
+              active && payload?.length && total > 0 ? (
+                <div className="bg-gray-900 text-white rounded-lg px-3 py-2 text-xs shadow-xl">
+                  <span className="font-bold">{payload[0].name}</span>: {payload[0].value}
+                </div>
+              ) : null
+            }
+          />
+        </PieChart>
+      </div>
+      {/* 2×2 grid */}
+      <div className="flex-1 grid grid-cols-2 gap-3">
+        {rows.map(r => {
+          const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
+          const isUrgent = r.pulse && r.count > 0;
+          return (
+            <div key={r.key} className={`rounded-[12px] border p-3.5 ${
+              r.key === "Overdue" && r.count > 0 ? "border-red-100 bg-red-50/30" : "border-gray-100 bg-gray-50/40"
+            }`}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                  {isUrgent && (
+                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse inline-block`}
+                      style={{ background: r.fill }} />
+                  )}
+                  {r.label}
+                </span>
+                <span className={`text-xs font-bold ${r.text}`}>{pct}%</span>
+              </div>
+              <p className={`text-2xl font-extrabold m-0 ${r.text}`}>{r.count}</p>
+              <p className="text-[11px] text-gray-400 m-0 mb-2">LKR {r.amount.toLocaleString()}</p>
+              <div className="h-1 rounded-full bg-gray-200 overflow-hidden">
+                <div className={`h-1 rounded-full ${r.bar}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Modals ───────────────────────────────────────────────────────────────────
+
+function ConfirmModal({ count, onCancel, onConfirm, loading }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500" />
           </div>
-        );
-      })}
+          <h3 className="text-[17px] font-bold text-gray-900 m-0">Confirm Dispatch</h3>
+        </div>
+        <p className="text-sm text-gray-600 leading-relaxed mb-6">
+          You are about to dispatch <span className="font-bold text-gray-900">{count}</span> invoice(s).
+          Shop owners will receive email notifications and due dates will be locked in.
+          <span className="block mt-1 text-red-500 font-semibold">This cannot be undone.</span>
+        </p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={onCancel} className="py-2 px-5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-none cursor-pointer hover:bg-gray-200">Cancel</button>
+          <button onClick={onConfirm} disabled={loading}
+            className="py-2 px-5 rounded-xl bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+            {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faCheckCircle} />}
+            Confirm Dispatch
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DraftReviewModal({ drafts, onClose, onDispatch }) {
+  const total = drafts.reduce((s, d) => s + Number(d.totalAmount || 0), 0);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col" style={{ maxHeight: "80vh" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-[17px] font-bold text-gray-900 m-0">Review Drafts ({drafts.length})</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center border-none cursor-pointer hover:bg-gray-200">
+            <FontAwesomeIcon icon={faXmark} className="text-gray-500" />
+          </button>
+        </div>
+        <div className="px-6 py-3 bg-blue-50 border-b border-blue-100">
+          <p className="text-sm text-blue-800 m-0 font-semibold">
+            Total: LKR {total.toLocaleString("en-LK", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="overflow-y-auto flex-1">
+          <div className="grid gap-4 py-2.5 px-6 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-[0.05em] [grid-template-columns:2fr_1fr_1fr_1fr]">
+            {["Shop", "Category", "Requests", "Amount"].map(c => <span key={c}>{c}</span>)}
+          </div>
+          {drafts.map((d, idx) => (
+            <div key={d.id} className={`grid gap-4 items-center py-3 px-6 [grid-template-columns:2fr_1fr_1fr_1fr] ${idx < drafts.length - 1 ? "border-b border-gray-100" : ""}`}>
+              <p className="text-[13px] font-semibold text-gray-900 m-0 truncate">{d.shopName}</p>
+              <p className="text-[12px] text-gray-500 m-0">{d.shopCategory}</p>
+              <p className="text-[13px] text-gray-700 m-0">{d.completedRequests}</p>
+              <p className="text-[13px] font-bold text-gray-900 m-0">LKR {Number(d.totalAmount).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-3 justify-end px-6 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="py-2 px-5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-none cursor-pointer hover:bg-gray-200">Close</button>
+          <button onClick={onDispatch} className="py-2 px-5 rounded-xl bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 flex items-center gap-2">
+            <FontAwesomeIcon icon={faCheckCircle} /> Dispatch All
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -162,25 +365,8 @@ function BillingActions({ analytics }) {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [loading, setLoading] = useState("");
   const [drafts, setDrafts]   = useState([]);
-
-  const run = async (action) => {
-    setLoading(action);
-    try {
-      if (action === "generate") {
-        const res = await api.post("admin/generateDraftInvoices.php", { year, month });
-        toast.success(`${res.invoicesCreated} draft invoice(s) generated.`);
-        loadDrafts();
-      } else if (action === "dispatch") {
-        const res = await api.post("admin/dispatchInvoices.php", { year, month });
-        toast.success(`${res.dispatched} invoice(s) dispatched. ${res.emailsSent} email(s) sent.`);
-        loadDrafts();
-      }
-    } catch (err) {
-      toast.error(err.message || "Action failed.");
-    } finally {
-      setLoading("");
-    }
-  };
+  const [showReview,  setShowReview]  = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const loadDrafts = async () => {
     try {
@@ -191,96 +377,126 @@ function BillingActions({ analytics }) {
 
   useEffect(() => { loadDrafts(); }, [year, month]);
 
+  const doGenerate = async () => {
+    setLoading("generate");
+    try {
+      const res = await api.post("admin/generateDraftInvoices.php", { year, month });
+      toast.success(`${res.invoicesCreated} draft invoice(s) generated.`);
+      loadDrafts();
+    } catch (err) { toast.error(err.message || "Action failed."); }
+    finally { setLoading(""); }
+  };
+
+  const doDispatch = async () => {
+    setLoading("dispatch");
+    try {
+      const res = await api.post("admin/dispatchInvoices.php", { year, month });
+      toast.success(`${res.dispatched} invoice(s) dispatched. ${res.emailsSent} email(s) sent.`);
+      setShowConfirm(false); setShowReview(false);
+      loadDrafts();
+    } catch (err) { toast.error(err.message || "Action failed."); }
+    finally { setLoading(""); }
+  };
+
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const years  = [new Date().getFullYear() - 1, new Date().getFullYear()];
-
-  const hasDrafts    = drafts.some(d => d.invoiceStatus === "Draft");
+  const draftList     = drafts.filter(d => d.invoiceStatus === "Draft");
+  const hasDrafts     = draftList.length > 0;
   const hasDispatched = drafts.some(d => d.invoiceStatus !== "Draft");
 
+  // Stepper state: 1=done, 2=active|done, 3=locked|active
+  const step2Done   = hasDrafts || hasDispatched;
+  const step3Active = hasDrafts;
+
+  const StepDot = ({ n, done, active, locked }) => (
+    <div className="flex items-center gap-2">
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+        done   ? "bg-green-100 text-green-600" :
+        active ? "bg-blue-600 text-white" :
+        locked ? "bg-gray-100 text-gray-400" : "bg-gray-100 text-gray-400"
+      }`}>
+        {done ? <FontAwesomeIcon icon={faCheckCircle} /> : locked ? <FontAwesomeIcon icon={faLock} className="text-[10px]" /> : n}
+      </div>
+      <span className={`text-xs font-semibold ${
+        done ? "text-green-600" : active ? "text-blue-600" : "text-gray-400"
+      }`}>{n === 1 ? "Select Period" : n === 2 ? "Generate Drafts" : "Dispatch"}</span>
+    </div>
+  );
+
   return (
-    <PageCard title="Billing Cycle Actions">
-      <div className="px-6 py-4 flex flex-wrap items-end gap-4">
-        {/* Period selectors */}
-        <div className="flex gap-3">
-          <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Year</label>
-            <select
-              value={year}
-              onChange={e => setYear(Number(e.target.value))}
-              className="border border-gray-200 rounded-[10px] py-2.5 px-3 text-sm outline-none bg-white"
-            >
-              {years.map(y => <option key={y}>{y}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Month</label>
-            <select
-              value={month}
-              onChange={e => setMonth(Number(e.target.value))}
-              className="border border-gray-200 rounded-[10px] py-2.5 px-3 text-sm outline-none bg-white"
-            >
-              {months.map(m => <option key={m} value={m}>{MONTH_NAMES[m]}</option>)}
-            </select>
+    <>
+      {showConfirm && (
+        <ConfirmModal count={draftList.length} loading={loading === "dispatch"}
+          onCancel={() => setShowConfirm(false)} onConfirm={doDispatch} />
+      )}
+      {showReview && (
+        <DraftReviewModal drafts={draftList} onClose={() => setShowReview(false)}
+          onDispatch={() => { setShowReview(false); setShowConfirm(true); }} />
+      )}
+      <PageCard title="Billing Cycle Actions">
+        {/* Stepper */}
+        <div className="flex items-center gap-2 px-6 pt-4 pb-3 border-b border-gray-100">
+          <StepDot n={1} done />
+          <div className="flex-1 h-px bg-gray-200" />
+          <StepDot n={2} done={hasDispatched} active={!hasDispatched} />
+          <div className="flex-1 h-px bg-gray-200" />
+          <StepDot n={3} done={hasDispatched} active={step3Active && !hasDispatched} locked={!step3Active && !hasDispatched} />
+        </div>
+        <div className="px-6 py-5 bg-gradient-to-br from-slate-50 to-blue-50/40 border-b border-gray-100">
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Period selectors */}
+            <div className="flex gap-3">
+              <div>
+                <label className="block text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mb-2">Year</label>
+                <select value={year} onChange={e => setYear(Number(e.target.value))}
+                  className="border-2 border-gray-200 focus:border-blue-400 rounded-xl py-2.5 px-4 text-sm font-semibold text-gray-800 outline-none bg-white shadow-sm transition-colors cursor-pointer">
+                  {years.map(y => <option key={y}>{y}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mb-2">Month</label>
+                <select value={month} onChange={e => setMonth(Number(e.target.value))}
+                  className="border-2 border-gray-200 focus:border-blue-400 rounded-xl py-2.5 px-4 text-sm font-semibold text-gray-800 outline-none bg-white shadow-sm transition-colors cursor-pointer">
+                  {months.map(m => <option key={m} value={m}>{MONTH_NAMES[m]}</option>)}
+                </select>
+              </div>
+            </div>
+            {/* Divider */}
+            <div className="w-px h-9 bg-gray-200 self-center hidden sm:block" />
+            {/* Generate Drafts */}
+            <button disabled={!!loading || hasDispatched} onClick={doGenerate}
+              className="py-2.5 px-6 rounded-xl bg-blue-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_4px_14px_rgba(37,99,235,0.35)] transition-all duration-150">
+              {loading === "generate" ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faFileInvoiceDollar} />}
+              Generate Drafts
+            </button>
+            {/* Review Drafts */}
+            {hasDrafts && (
+              <button onClick={() => setShowReview(true)}
+                className="py-2.5 px-6 rounded-xl bg-white text-blue-700 text-sm font-bold border-2 border-blue-200 cursor-pointer hover:bg-blue-50 hover:border-blue-300 active:scale-95 flex items-center gap-2 shadow-sm transition-all duration-150">
+                <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-extrabold">{draftList.length}</span>
+                Review Drafts
+              </button>
+            )}
+            {/* Dispatch */}
+            <button disabled={!!loading || !hasDrafts} onClick={() => setShowConfirm(true)}
+              className="py-2.5 px-6 rounded-xl bg-emerald-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-emerald-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_4px_14px_rgba(5,150,105,0.35)] transition-all duration-150">
+              <FontAwesomeIcon icon={faCheckCircle} /> Dispatch Invoices
+            </button>
           </div>
         </div>
-
-        {/* Generate Drafts */}
-        <button
-          disabled={!!loading || hasDispatched}
-          onClick={() => run("generate")}
-          className="py-2.5 px-5 rounded-[10px] bg-blue-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {loading === "generate" ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faFileInvoiceDollar} />}
-          Generate Drafts
-        </button>
-
-        {/* Preview drafts count */}
-        {hasDrafts && (
-          <div className="text-sm text-blue-600 font-semibold">
-            {drafts.filter(d => d.invoiceStatus === "Draft").length} draft(s) ready to dispatch
-          </div>
-        )}
-
-        {/* Dispatch */}
-        <button
-          disabled={!!loading || !hasDrafts}
-          onClick={() => run("dispatch")}
-          className="py-2.5 px-5 rounded-[10px] bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {loading === "dispatch" ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faCheckCircle} />}
-          Dispatch Invoices
-        </button>
-      </div>
-
-      {/* Draft preview table */}
-      {drafts.length > 0 && (
-        <>
-          <div className="border-t border-gray-100">
-            <div className="grid gap-4 py-2.5 px-6 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-[0.05em] [grid-template-columns:2fr_1fr_1fr_1fr]">
-              {["Shop", "Category", "Requests", "Amount"].map(c => <span key={c}>{c}</span>)}
-            </div>
-            {drafts.map((d, idx) => (
-              <div key={d.id} className={`grid gap-4 items-center py-3 px-6 [grid-template-columns:2fr_1fr_1fr_1fr] ${idx < drafts.length - 1 ? "border-b border-gray-100" : ""}`}>
-                <p className="text-[13px] font-semibold text-gray-900 m-0">{d.shopName}</p>
-                <p className="text-[12px] text-gray-500 m-0">{d.shopCategory}</p>
-                <p className="text-[13px] text-gray-700 m-0">{d.completedRequests}</p>
-                <p className="text-[13px] font-bold text-gray-900 m-0">
-                  LKR {Number(d.totalAmount).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </PageCard>
+      </PageCard>
+    </>
   );
 }
 
 // ── Invoice Ledger Table ──────────────────────────────────────────────────
 
+const PAGE_SIZE = 10;
+
 function InvoiceLedgerTable() {
   const [invoices, setInvoices] = useState([]);
   const [loading,  setLoading]  = useState(false);
+  const [page, setPage] = useState(1);
 
   // Filters
   const thisYear  = new Date().getFullYear();
@@ -304,7 +520,7 @@ function InvoiceLedgerTable() {
     }
   };
 
-  useEffect(() => { load(); }, [filterStatus, filterYear, filterMonth]);
+  useEffect(() => { load(); setPage(1); }, [filterStatus, filterYear, filterMonth]);
 
   // CSV export
   const exportCSV = () => {
@@ -349,43 +565,62 @@ function InvoiceLedgerTable() {
       }
     >
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase">
-          <FontAwesomeIcon icon={faFilter} /> Filters
-        </div>
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="border border-gray-200 rounded-[8px] py-1.5 px-3 text-sm outline-none bg-white text-gray-700"
-        >
-          <option value="">All Statuses</option>
-          {statuses.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select
-          value={filterYear}
-          onChange={e => setFilterYear(e.target.value)}
-          className="border border-gray-200 rounded-[8px] py-1.5 px-3 text-sm outline-none bg-white text-gray-700"
-        >
-          <option value="">All Years</option>
-          {years.filter(Boolean).map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <select
-          value={filterMonth}
-          onChange={e => setFilterMonth(e.target.value)}
-          className="border border-gray-200 rounded-[8px] py-1.5 px-3 text-sm outline-none bg-white text-gray-700"
-        >
-          <option value="">All Months</option>
-          {months.filter(Boolean).map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-        </select>
-        {(filterStatus || filterYear || filterMonth) && (
-          <button
-            onClick={() => { setFilterStatus(""); setFilterYear(""); setFilterMonth(""); }}
-            className="text-xs text-gray-500 underline cursor-pointer border-none bg-transparent"
+      <div className="flex flex-wrap items-end gap-4 px-6 py-5 border-b border-gray-100 bg-gradient-to-br from-slate-50 to-gray-50/60">
+        <div>
+          <label className="block text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mb-2">Status</label>
+          <select
+            value={filterStatus}
+            onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
+            className={`border-2 rounded-xl py-2.5 px-4 text-sm font-semibold outline-none cursor-pointer shadow-sm transition-colors ${
+              filterStatus ? "border-blue-400 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-800"
+            }`}
           >
-            Clear
-          </button>
+            <option value="">All Statuses</option>
+            {statuses.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mb-2">Year</label>
+          <select
+            value={filterYear}
+            onChange={e => { setFilterYear(e.target.value); setPage(1); }}
+            className={`border-2 rounded-xl py-2.5 px-4 text-sm font-semibold outline-none cursor-pointer shadow-sm transition-colors ${
+              filterYear ? "border-blue-400 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-800"
+            }`}
+          >
+            <option value="">All Years</option>
+            {years.filter(Boolean).map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mb-2">Month</label>
+          <select
+            value={filterMonth}
+            onChange={e => { setFilterMonth(e.target.value); setPage(1); }}
+            className={`border-2 rounded-xl py-2.5 px-4 text-sm font-semibold outline-none cursor-pointer shadow-sm transition-colors ${
+              filterMonth ? "border-blue-400 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-800"
+            }`}
+          >
+            <option value="">All Months</option>
+            {months.filter(Boolean).map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+        </div>
+        {(filterStatus || filterYear || filterMonth) && (
+          <div className="self-end">
+            <button
+              onClick={() => { setFilterStatus(""); setFilterYear(""); setFilterMonth(""); setPage(1); }}
+              className="py-2.5 px-5 rounded-xl border-2 border-red-200 bg-white text-red-500 text-sm font-bold cursor-pointer hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all duration-150 shadow-sm"
+            >
+              ✕ Clear
+            </button>
+          </div>
         )}
-        <span className="ml-auto text-xs text-gray-400">{invoices.length} record(s)</span>
+        <div className="ml-auto self-end">
+          <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-[12px] font-bold rounded-full px-3.5 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block" />
+            {invoices.length} records
+          </span>
+        </div>
       </div>
 
       {/* Table header */}
@@ -404,38 +639,66 @@ function InvoiceLedgerTable() {
           <p className="text-sm">No invoices found for the selected filters.</p>
         </div>
       ) : (
-        invoices.map((inv, idx) => {
-          const initials = (inv.shopName || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-          return (
-            <div
-              key={inv.id}
-              className={`grid gap-3 items-center py-3.5 px-6 [grid-template-columns:2.5fr_1fr_1fr_1fr_1fr_1fr] ${
-                idx < invoices.length - 1 ? "border-b border-gray-100" : ""
-              } hover:bg-gray-50/60 transition-colors`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-[11px] font-bold text-green-600 shrink-0">
-                  {initials}
+        <>
+          {invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((inv, idx, arr) => {
+            const initials = (inv.shopName || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+            const isUrgentStatus = inv.invoiceStatus === "Overdue" || inv.invoiceStatus === "Verification Pending";
+            return (
+              <div
+                key={inv.id}
+                className={`grid gap-3 items-center py-3.5 px-6 [grid-template-columns:2.5fr_1fr_1fr_1fr_1fr_1fr] ${
+                  idx < arr.length - 1 ? "border-b border-gray-100" : ""
+                } hover:bg-gray-50/60 transition-colors`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-[11px] font-bold text-green-600 shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold text-gray-900 m-0 truncate">{inv.shopName}</p>
+                    <p className="text-[11px] text-gray-400 m-0 font-mono">{inv.invoiceReference}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-gray-900 m-0 truncate">{inv.shopName}</p>
-                  <p className="text-[11px] text-gray-400 m-0 font-mono">{inv.invoiceReference}</p>
-                </div>
+                <p className="text-[13px] text-gray-700 m-0">
+                  {MONTH_NAMES[Number(inv.billingPeriodMonth)]} {inv.billingPeriodYear}
+                </p>
+                <p className="text-[12px] text-gray-500 m-0">{inv.shopCategory}</p>
+                <p className="text-[13px] text-gray-700 m-0">{inv.completedRequests}</p>
+                <p className="text-[13px] font-bold text-gray-900 m-0">
+                  LKR {Number(inv.totalAmount).toLocaleString("en-LK", { minimumFractionDigits: 2 })}
+                </p>
+                <span className={`inline-flex items-center gap-1.5 rounded-full py-1 px-2.5 text-xs font-semibold ${STATUS_STYLES[inv.invoiceStatus] || ""}` }>
+                  {isUrgentStatus && (
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block"
+                      style={{ background: inv.invoiceStatus === "Overdue" ? "#dc2626" : "#d97706" }} />
+                  )}
+                  {inv.invoiceStatus}
+                </span>
               </div>
-              <p className="text-[13px] text-gray-700 m-0">
-                {MONTH_NAMES[Number(inv.billingPeriodMonth)]} {inv.billingPeriodYear}
-              </p>
-              <p className="text-[12px] text-gray-500 m-0">{inv.shopCategory}</p>
-              <p className="text-[13px] text-gray-700 m-0">{inv.completedRequests}</p>
-              <p className="text-[13px] font-bold text-gray-900 m-0">
-                LKR {Number(inv.totalAmount).toLocaleString("en-LK", { minimumFractionDigits: 2 })}
-              </p>
-              <span className={`inline-block rounded-full py-1 px-2.5 text-xs font-semibold ${STATUS_STYLES[inv.invoiceStatus] || ""}` }>
-                {inv.invoiceStatus}
+            );
+          })}
+          {/* Pagination */}
+          {invoices.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50/40">
+              <span className="text-xs text-gray-400">
+                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, invoices.length)} of {invoices.length} records
               </span>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className="py-1.5 px-3 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 bg-white cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >Previous</button>
+                <span className="text-xs text-gray-500 font-medium">Page {page} of {Math.ceil(invoices.length / PAGE_SIZE)}</span>
+                <button
+                  disabled={page >= Math.ceil(invoices.length / PAGE_SIZE)}
+                  onClick={() => setPage(p => p + 1)}
+                  className="py-1.5 px-3 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 bg-white cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >Next</button>
+              </div>
             </div>
-          );
-        })
+          )}
+        </>
       )}
     </PageCard>
   );
@@ -476,9 +739,13 @@ function Revenue() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16 text-gray-400">
-          <FontAwesomeIcon icon={faSpinner} spin className="text-3xl" />
-        </div>
+        <>
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+            <SkeletonCard /><SkeletonCard /><SkeletonCard />
+          </div>
+          <SkeletonChart />
+          <SkeletonChart />
+        </>
       ) : (
         <>
           {/* KPI cards */}
@@ -487,19 +754,23 @@ function Revenue() {
               accent="green" icon={faMoneyBillWave}
               title="Projected Revenue (This Month)"
               count={`LKR ${Number(kpis.projectedRevenue || 0).toLocaleString()}`}
+              tooltip="Based on completed requests this month × active category rates"
             />
             <AdminSummaryCard
               accent="blue" icon={faChartLine}
               title="Monthly Recurring Revenue (MRR)"
               count={`LKR ${Number(kpis.mrr || 0).toLocaleString()}`}
               meta="Spare parts shops flat fee"
+              tooltip="Flat subscription fees from active Spare Part shops only"
             />
             <AdminSummaryCard
               accent="orange" icon={faStore}
               title="Active Shops"
               count={kpis.activeShops || 0}
               meta="Billed this cycle"
+              tooltip="Verified shops currently listed on the platform"
             />
+
           </div>
 
           {/* Revenue bar chart */}
