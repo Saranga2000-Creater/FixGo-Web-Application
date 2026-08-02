@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarDays, faMoneyBillWave, faChartLine, faStore,
@@ -113,6 +113,7 @@ const STATUS_STYLES = {
   "Verification Pending": "bg-amber-50 text-amber-600",
   Overdue:                "bg-red-100 text-red-600",
   Draft:                  "bg-gray-100 text-gray-500",
+  Ignored:                "bg-slate-100 text-slate-500",
 };
 
 function InvoiceRow({ inv, isLast }) {
@@ -225,11 +226,19 @@ const HEALTH_CFG = [
   { key: "Overdue",              label: "Overdue",   fill: "#dc2626", text: "text-red-600",   bar: "bg-red-500",   pulse: true  },
 ];
 
-function CollectionHealth({ health }) {
+function CollectionHealth({ health, selectedMonth }) {
+  const currentData = useMemo(() => {
+     if (selectedMonth === "all") return health?.all_time || {};
+     if (selectedMonth === "latest" && health?.months?.length > 0) return health.months[0].data;
+     if (selectedMonth === "latest") return health?.all_time || {}; // fallback
+     const m = health?.months?.find(m => m.label.startsWith(selectedMonth));
+     return m ? m.data : {};
+  }, [selectedMonth, health]);
+
   const rows = HEALTH_CFG.map(cfg => ({
     ...cfg,
-    count:  Number(health[cfg.key]?.count  || 0),
-    amount: Number(health[cfg.key]?.amount || 0),
+    count:  Number(currentData[cfg.key]?.count  || 0),
+    amount: Number(currentData[cfg.key]?.amount || 0),
   }));
   const total = rows.reduce((s, r) => s + r.count, 0);
   const pieData = total === 0
@@ -341,7 +350,7 @@ function DraftReviewModal({ drafts, onClose, onDispatch }) {
           {drafts.map((d, idx) => (
             <div key={d.id} className={`grid gap-4 items-center py-3 px-6 [grid-template-columns:2fr_1fr_1fr_1fr] ${idx < drafts.length - 1 ? "border-b border-gray-100" : ""}`}>
               <p className="text-[13px] font-semibold text-gray-900 m-0 truncate">{d.shopName}</p>
-              <p className="text-[12px] text-gray-500 m-0">{d.shopCategory}</p>
+              <p className="text-[12px] text-gray-500 m-0">{d.categoryName}</p>
               <p className="text-[13px] text-gray-700 m-0">{d.completedRequests}</p>
               <p className="text-[13px] font-bold text-gray-900 m-0">LKR {Number(d.totalAmount).toLocaleString()}</p>
             </div>
@@ -360,7 +369,7 @@ function DraftReviewModal({ drafts, onClose, onDispatch }) {
 
 // ── Billing Action Panel ────────────────────────────────────────────────────
 
-function BillingActions({ analytics }) {
+function BillingActions({ analytics, onRefresh }) {
   const [year, setYear]   = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [loading, setLoading] = useState("");
@@ -383,6 +392,7 @@ function BillingActions({ analytics }) {
       const res = await api.post("admin/generateDraftInvoices.php", { year, month });
       toast.success(`${res.invoicesCreated} draft invoice(s) generated.`);
       loadDrafts();
+      if (onRefresh) onRefresh();
     } catch (err) { toast.error(err.message || "Action failed."); }
     finally { setLoading(""); }
   };
@@ -394,6 +404,7 @@ function BillingActions({ analytics }) {
       toast.success(`${res.dispatched} invoice(s) dispatched. ${res.emailsSent} email(s) sent.`);
       setShowConfirm(false); setShowReview(false);
       loadDrafts();
+      if (onRefresh) onRefresh();
     } catch (err) { toast.error(err.message || "Action failed."); }
     finally { setLoading(""); }
   };
@@ -493,7 +504,7 @@ function BillingActions({ analytics }) {
 
 const PAGE_SIZE = 10;
 
-function InvoiceLedgerTable() {
+function InvoiceLedgerTable({ refreshKey }) {
   const [invoices, setInvoices] = useState([]);
   const [loading,  setLoading]  = useState(false);
   const [page, setPage] = useState(1);
@@ -501,8 +512,8 @@ function InvoiceLedgerTable() {
   // Filters
   const thisYear  = new Date().getFullYear();
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterYear,   setFilterYear]   = useState("");
-  const [filterMonth,  setFilterMonth]  = useState("");
+  const [filterYear,   setFilterYear]   = useState(thisYear.toString());
+  const [filterMonth,  setFilterMonth]  = useState((new Date().getMonth() + 1).toString());
 
   const load = async () => {
     setLoading(true);
@@ -520,7 +531,7 @@ function InvoiceLedgerTable() {
     }
   };
 
-  useEffect(() => { load(); setPage(1); }, [filterStatus, filterYear, filterMonth]);
+  useEffect(() => { load(); setPage(1); }, [filterStatus, filterYear, filterMonth, refreshKey]);
 
   // CSV export
   const exportCSV = () => {
@@ -549,7 +560,7 @@ function InvoiceLedgerTable() {
 
   const months = ["", ...Array.from({ length: 12 }, (_, i) => MONTH_NAMES[i + 1])];
   const years  = ["", thisYear - 1, thisYear, thisYear + 1];
-  const statuses = ["", "Draft", "Dispatched", "Verification Pending", "Paid", "Overdue"];
+  const statuses = ["", "Draft", "Dispatched", "Verification Pending", "Paid", "Overdue", "Ignored"];
 
   return (
     <PageCard
@@ -602,7 +613,9 @@ function InvoiceLedgerTable() {
             }`}
           >
             <option value="">All Months</option>
-            {months.filter(Boolean).map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i + 1} value={i + 1}>{MONTH_NAMES[i + 1]}</option>
+            ))}
           </select>
         </div>
         {(filterStatus || filterYear || filterMonth) && (
@@ -709,6 +722,8 @@ function InvoiceLedgerTable() {
 function Revenue() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [healthMonth, setHealthMonth] = useState("latest");
 
   const load = async () => {
     setLoading(true);
@@ -724,14 +739,21 @@ function Revenue() {
 
   useEffect(() => { load(); }, []);
 
+  const handleRefresh = () => {
+    load();
+    setRefreshKey(prev => prev + 1);
+  };
+
   const kpis = analytics?.kpis || {};
+
+  const calendarMonths = Array.from({ length: 12 }, (_, i) => MONTH_NAMES[i + 1]);
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex justify-between items-start flex-wrap gap-3">
         <PageHeading title="Revenue & Ledger" sub="Monthly billing and commission tracking across all shops." />
         <button
-          onClick={load}
+          onClick={handleRefresh}
           className="flex items-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
         >
           <FontAwesomeIcon icon={faClock} /> Refresh
@@ -779,15 +801,30 @@ function Revenue() {
           </PageCard>
 
           {/* Collection health */}
-          <PageCard title="Collection Health">
-            <CollectionHealth health={analytics?.collectionHealth || {}} />
+          <PageCard 
+            title="Collection Health"
+            action={
+              <select 
+                className="text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 text-gray-700 font-semibold cursor-pointer outline-none hover:bg-gray-100 transition-colors" 
+                value={healthMonth} 
+                onChange={e => setHealthMonth(e.target.value)}
+              >
+                 <option value="latest">Latest Month</option>
+                 <option value="all">All Time</option>
+                 {calendarMonths.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                 ))}
+              </select>
+            }
+          >
+            <CollectionHealth health={analytics?.collectionHealth} selectedMonth={healthMonth} />
           </PageCard>
 
           {/* Billing action panel */}
-          <BillingActions analytics={analytics} />
+          <BillingActions analytics={analytics} onRefresh={handleRefresh} />
 
           {/* Full invoice ledger */}
-          <InvoiceLedgerTable />
+          <InvoiceLedgerTable refreshKey={refreshKey} />
         </>
       )}
     </div>

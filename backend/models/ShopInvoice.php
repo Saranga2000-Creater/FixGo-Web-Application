@@ -135,6 +135,20 @@ class ShopInvoice {
     }
 
     // ============================================================
+    // Ignore a single 0 LKR invoice (set status to Ignored)
+    // ============================================================
+
+    public function ignore(int $id): bool {
+        $stmt = $this->conn->prepare(
+            "UPDATE {$this->table_name}
+             SET invoiceStatus = 'Ignored',
+                 dispatchedAt  = NOW()
+             WHERE id = :id"
+        );
+        return $stmt->execute([':id' => $id]);
+    }
+
+    // ============================================================
     // Get all invoices for a shop (full ledger — admin view)
     // ============================================================
 
@@ -350,10 +364,11 @@ class ShopInvoice {
 
     public function getCollectionHealth(): array {
         $stmt = $this->conn->query(
-            "SELECT invoiceStatus, COUNT(*) AS cnt, COALESCE(SUM(totalAmount), 0) AS amount
+            "SELECT billingPeriodYear, billingPeriodMonth, invoiceStatus, COUNT(*) AS cnt, COALESCE(SUM(totalAmount), 0) AS amount
              FROM {$this->table_name}
              WHERE invoiceStatus IN ('Paid','Verification Pending','Overdue','Dispatched')
-             GROUP BY invoiceStatus"
+             GROUP BY billingPeriodYear, billingPeriodMonth, invoiceStatus
+             ORDER BY billingPeriodYear DESC, billingPeriodMonth DESC"
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

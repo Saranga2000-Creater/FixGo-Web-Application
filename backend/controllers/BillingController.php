@@ -204,8 +204,12 @@ class BillingController {
         $this->db->beginTransaction();
         try {
             foreach ($drafts as $inv) {
-                $graceDays = $this->getGracePeriod($config, (int)$inv['shopCategoryId']);
-                $invoiceModel->dispatch((int)$inv['id'], $graceDays);
+                if ((float)$inv['totalAmount'] == 0) {
+                    $invoiceModel->ignore((int)$inv['id']);
+                } else {
+                    $graceDays = $this->getGracePeriod($config, (int)$inv['shopCategoryId']);
+                    $invoiceModel->dispatch((int)$inv['id'], $graceDays);
+                }
             }
             $this->db->commit();
         } catch (Throwable $e) {
@@ -397,13 +401,37 @@ class BillingController {
 
         // --- Collection health (pie chart) ---
         $healthRaw = $invoiceModel->getCollectionHealth();
-        $health    = [];
+        $healthAll = [];
+        $healthMonths = [];
+        
         foreach ($healthRaw as $row) {
-            $health[$row['invoiceStatus']] = [
-                'count'  => (int)$row['cnt'],
-                'amount' => (float)$row['amount'],
-            ];
+            $status = $row['invoiceStatus'];
+            $amt = (float)$row['amount'];
+            $cnt = (int)$row['cnt'];
+            $year = (int)$row['billingPeriodYear'];
+            $month = (int)$row['billingPeriodMonth'];
+            $label = date('M Y', mktime(0, 0, 0, $month, 1, $year));
+            
+            // Global aggregation
+            if (!isset($healthAll[$status])) $healthAll[$status] = ['count' => 0, 'amount' => 0];
+            $healthAll[$status]['count'] += $cnt;
+            $healthAll[$status]['amount'] += $amt;
+            
+            // Month aggregation
+            if (!isset($healthMonths[$label])) {
+                $healthMonths[$label] = ['label' => $label, 'data' => []];
+            }
+            if (!isset($healthMonths[$label]['data'][$status])) {
+                $healthMonths[$label]['data'][$status] = ['count' => 0, 'amount' => 0];
+            }
+            $healthMonths[$label]['data'][$status]['count'] += $cnt;
+            $healthMonths[$label]['data'][$status]['amount'] += $amt;
         }
+        
+        $health = [
+            'all_time' => $healthAll,
+            'months'   => array_values($healthMonths)
+        ];
 
         http_response_code(200);
         echo json_encode([
