@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut } from "react-icons/fi";
+import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut, FiCreditCard } from "react-icons/fi";
 import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 import { UPLOADS_URL } from "../../src/services/api";
 
@@ -12,7 +12,8 @@ const NAV_ITEMS = [
   { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
   { id: "profile", label: "Shop Profile", icon: <FiHome /> },
   { id: "notifications", label: "Notifications", icon: <FiBell /> },
-  { id: "settings", label: "Settings", icon: <FiSettings /> },
+  { id: "billing",       label: "Billing",       icon: <FiCreditCard /> },
+  { id: "settings",      label: "Settings",      icon: <FiSettings /> },
 ];
 
 function Badge({ count }) {
@@ -24,7 +25,7 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount }) {
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount, billingCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
@@ -91,6 +92,8 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
                     ? reviewCount
                     : item.id === "notifications"
                     ? notificationCount
+                    : item.id === "billing"
+                    ? billingCount
                     : 0
                 }
               />
