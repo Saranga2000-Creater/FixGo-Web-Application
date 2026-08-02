@@ -13,8 +13,15 @@ function AdminControlDashboard() {
 
     const loadCounts = async () => {
         try {
-            const res = await api.get("admin/getPendingVerifications.php");
-            setVerificationCount(res.data?.length || 0);
+            const [payRes, shopRes] = await Promise.allSettled([
+                api.get("admin/getPendingVerifications.php"),
+                api.get("getPendingShops.php")
+            ]);
+            
+            const payCount = payRes.status === "fulfilled" ? (payRes.value.data?.length || 0) : 0;
+            const shopCount = shopRes.status === "fulfilled" ? (shopRes.value.data?.length || 0) : 0;
+            
+            setVerificationCount(payCount + shopCount);
         } catch (err) {
             console.error("Failed to fetch notification counts", err);
         }

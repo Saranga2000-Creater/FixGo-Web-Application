@@ -171,7 +171,7 @@ function CustomLineTooltip({ active, payload, label }) {
 
 function RevenueBarChart({ data }) {
   if (!data || data.length === 0) return null;
-  const chartData = data.slice(-12).map(d => ({
+  const chartData = [...data].slice(0, 12).reverse().map(d => ({
     monthLabel: MONTH_NAMES[Number(d.month)],
     Garages: Number(d.garages || 0),
     "Service Centers": Number(d.serviceCenters || 0),
