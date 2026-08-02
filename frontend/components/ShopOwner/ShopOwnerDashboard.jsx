@@ -149,6 +149,7 @@ function ShopOwnerDashboard() {
   const [completedJobCount, setCompletedJobCount] = useState(0); 
   const [notificationCount, setNotificationCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [billingCount, setBillingCount] = useState(0);
 
 const fetchRequestCount = () => {
   api.get("getServiceRequests.php")
@@ -220,6 +221,22 @@ useEffect(() => {
         .catch(console.error);
 }, []);
 
+useEffect(() => {
+    const loadBillingCount = () => {
+        api.get("shop/getMyInvoices.php")
+        .then(res => {
+            if (res.data) {
+                const unpaid = res.data.filter(
+                    inv => ["Dispatched", "Verification Pending", "Overdue"].includes(inv.invoiceStatus)
+                ).length;
+                setBillingCount(unpaid);
+            }
+        })
+        .catch(console.error);
+    };
+
+    loadBillingCount();
+}, []);
  
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
@@ -233,6 +250,7 @@ useEffect(() => {
   activeRepairCount={activeRepairCount}
   notificationCount={notificationCount}
   reviewCount={reviewCount}
+  billingCount={billingCount}
 />
 
       <main className="flex-1 p-6 ml-[240px]">

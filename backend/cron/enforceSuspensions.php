@@ -16,6 +16,7 @@ require_once $backendRoot . '/config/EnvLoader.php';
 EnvLoader::load($backendRoot . '/.env');
 
 require_once $backendRoot . '/config/Database.php';
+require_once $backendRoot . '/config/EmailSender.php';
 require_once $backendRoot . '/models/ShopInvoice.php';
 
 $db    = (new Database())->connect();
@@ -39,6 +40,16 @@ try {
     foreach ($overdue as $inv) {
         $model->markOverdue((int)$inv['id']);
         $suspendStmt->execute([':shopId' => $inv['shopId']]);
+        
+        if (!empty($inv['shopEmail'])) {
+            EmailSender::sendSuspensionEmail($inv['shopEmail'], $inv['shopName'], [
+                'invoiceReference'   => $inv['invoiceReference'],
+                'billingPeriodYear'  => $inv['billingPeriodYear'],
+                'billingPeriodMonth' => $inv['billingPeriodMonth'],
+                'totalAmount'        => $inv['totalAmount']
+            ]);
+        }
+
         $processed++;
         echo "  -> Invoice #{$inv['id']} marked Overdue. Shop #{$inv['shopId']} suspended.\n";
     }

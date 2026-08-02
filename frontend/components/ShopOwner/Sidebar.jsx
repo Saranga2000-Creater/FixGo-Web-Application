@@ -25,7 +25,7 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount }) {
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount, billingCount }) {
   const handleNav = (id) => {
     setActiveNav(id);
   };
@@ -92,6 +92,8 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
                     ? reviewCount
                     : item.id === "notifications"
                     ? notificationCount
+                    : item.id === "billing"
+                    ? billingCount
                     : 0
                 }
               />

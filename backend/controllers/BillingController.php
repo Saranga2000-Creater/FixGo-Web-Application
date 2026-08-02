@@ -316,9 +316,7 @@ class BillingController {
                 $this->db->prepare("UPDATE users SET isActive = 1 WHERE id = :shopId")
                          ->execute([':shopId' => $invoice['shopId']]);
             } else {
-                $model->markOverdueWithReason($invoiceId, trim($reason));
-                $this->db->prepare("UPDATE users SET isActive = 0 WHERE id = :shopId")
-                         ->execute([':shopId' => $invoice['shopId']]);
+                $model->rejectVerification($invoiceId, trim($reason));
             }
             $this->db->commit();
         } catch (Throwable $e) {
@@ -333,6 +331,7 @@ class BillingController {
                 'billingPeriodYear'  => $invoice['billingPeriodYear'],
                 'billingPeriodMonth' => $invoice['billingPeriodMonth'],
                 'totalAmount'        => $invoice['totalAmount'],
+                'dueDate'            => $invoice['dueDate'],
             ], trim($reason));
         }
 

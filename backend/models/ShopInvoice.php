@@ -258,13 +258,13 @@ class ShopInvoice {
     }
 
     // ============================================================
-    // Reject: set status to Overdue, store reason
+    // Reject: set status to Dispatched, store reason
     // ============================================================
 
-    public function markOverdueWithReason(int $invoiceId, string $reason): bool {
+    public function rejectVerification(int $invoiceId, string $reason): bool {
         $stmt = $this->conn->prepare(
             "UPDATE {$this->table_name}
-             SET invoiceStatus = 'Overdue', rejectionReason = :reason
+             SET invoiceStatus = 'Dispatched', rejectionReason = :reason
              WHERE id = :id"
         );
         return $stmt->execute([':reason' => $reason, ':id' => $invoiceId]);
@@ -325,8 +325,11 @@ class ShopInvoice {
 
     public function findOverdueForSweep(): array {
         $stmt = $this->conn->query(
-            "SELECT id, shopId FROM {$this->table_name}
-             WHERE invoiceStatus = 'Dispatched' AND dueDate < CURDATE()"
+            "SELECT si.*, s.name AS shopName, u.email AS shopEmail 
+             FROM {$this->table_name} si
+             JOIN shop s ON si.shopId = s.id
+             JOIN users u ON si.shopId = u.id
+             WHERE si.invoiceStatus = 'Dispatched' AND si.dueDate < CURDATE()"
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

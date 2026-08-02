@@ -9,8 +9,8 @@ import {
 
 const NAV_ITEMS = [
     { key: "dashboard",    icon: faChartLine,     label: "Dashboard" },
-    { key: "verification", icon: faShieldHalved,  label: "Verification Queue", badge: undefined },
-    { key: "moderation",   icon: faFlag,          label: "Moderation",         badge: undefined },
+    { key: "verification", icon: faShieldHalved,  label: "Verification Queue" },
+    { key: "moderation",   icon: faFlag,          label: "Moderation" },
     { key: "revenue",      icon: faMoneyBillWave, label: "Revenue & Ledger" },
     { key: "settings",     icon: faGear,          label: "Settings" },
 ];
@@ -39,7 +39,7 @@ function AdminSidebarLink({ active, icon, label, badge, onClick }) {
     );
 }
 
-function AdminSidebar({ currentPage, setCurrentPage }) {
+function AdminSidebar({ currentPage, setCurrentPage, verificationCount }) {
     return (
         <aside className="w-[240px] flex flex-col bg-white border-r border-gray-100 shadow-[4px_0_24px_rgba(0,0,0,0.08)] h-[calc(100vh-65px)] fixed top-[65px] left-0 z-50 overflow-y-auto">
             {/* Profile block */}
@@ -67,7 +67,7 @@ function AdminSidebar({ currentPage, setCurrentPage }) {
                         active={currentPage === item.key}
                         icon={item.icon}
                         label={item.label}
-                        badge={item.badge}
+                        badge={item.key === "verification" && verificationCount > 0 ? verificationCount : item.badge}
                         onClick={() => setCurrentPage(item.key)}
                     />
                 ))}

@@ -141,6 +141,7 @@ class EmailSender {
         $year     = (int)$invoiceData['billingPeriodYear'];
         $month    = (int)$invoiceData['billingPeriodMonth'];
         $amount   = number_format((float)$invoiceData['totalAmount'], 2);
+        $dueDate  = htmlspecialchars($invoiceData['dueDate'] ?? 'your due date');
         $period   = date('F Y', mktime(0, 0, 0, $month, 1, $year));
         $shopSafe = htmlspecialchars($shopName);
         $reasonSafe = htmlspecialchars($reason);
@@ -159,7 +160,7 @@ class EmailSender {
             <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:16px;margin:16px 0'>
               <p style='margin:0;font-weight:bold;color:#991b1b'>{$reasonSafe}</p>
             </div>
-            <p>Please log in to the FixGo portal immediately, verify your bank transfer details, and re-upload a valid payment slip. Your account suspension is now active and will remain until a valid payment is confirmed.</p>
+            <p>Please log in to the FixGo portal immediately, verify your bank transfer details, and re-upload a valid payment slip. To avoid automatic account suspension, please ensure a valid slip is uploaded and verified before your grace period expires (<strong>{$dueDate}</strong>).</p>
             <p style='color:#6b7280;font-size:13px'>The FixGo Team</p>
           </div>
         </div>";
@@ -173,6 +174,7 @@ class EmailSender {
             $mail->Password   = getenv('SMTP_PASS');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = getenv('SMTP_PORT') ?: 587;
+            $mail->Timeout    = 5; // Fail fast if SMTP hangs
             $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Billing');
             $mail->addAddress($email);
             $mail->isHTML(true);
@@ -183,6 +185,63 @@ class EmailSender {
             return true;
         } catch (Exception $e) {
             error_log("Rejection Email Error: {$mail->ErrorInfo}");
+            return false;
+        }
+    }
+
+    /**
+     * Sends a suspension notification to an overdue shop.
+     *
+     * @param string $email       Shop owner email.
+     * @param string $shopName    Shop name.
+     * @param array  $invoiceData Keys: invoiceReference, billingPeriodYear, billingPeriodMonth, totalAmount.
+     * @return bool
+     */
+    public static function sendSuspensionEmail(string $email, string $shopName, array $invoiceData): bool {
+        $ref      = htmlspecialchars($invoiceData['invoiceReference']);
+        $year     = (int)$invoiceData['billingPeriodYear'];
+        $month    = (int)$invoiceData['billingPeriodMonth'];
+        $amount   = number_format((float)$invoiceData['totalAmount'], 2);
+        $period   = date('F Y', mktime(0, 0, 0, $month, 1, $year));
+        $shopSafe = htmlspecialchars($shopName);
+
+        $subject = "FixGo — Account Suspended (Overdue Payment) | Ref: {$ref}";
+
+        $body = "
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden'>
+          <div style='background:#991b1b;padding:24px;text-align:center'>
+            <h1 style='color:#fff;margin:0;font-size:22px'>Account Suspended</h1>
+            <p style='color:#fecaca;margin:4px 0 0'>Overdue Invoice</p>
+          </div>
+          <div style='padding:28px'>
+            <p>Dear <strong>{$shopSafe}</strong>,</p>
+            <p>Your FixGo portal account has been <strong style='color:#991b1b'>deactivated</strong> because the grace period for invoice <strong>{$ref}</strong> ({$period} — LKR {$amount}) has expired without a verified payment.</p>
+            <p>Since your portal access is now suspended, you cannot upload payment slips directly. Please settle the outstanding amount immediately and confirm your payment by <strong>replying directly to this email with your payment proof attached</strong>.</p>
+            <p>Your account will remain deactivated until the payment is manually verified by the admin team.</p>
+            <p style='color:#6b7280;font-size:13px'>The FixGo Team</p>
+          </div>
+        </div>";
+
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = getenv('SMTP_USER');
+            $mail->Password   = getenv('SMTP_PASS');
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = getenv('SMTP_PORT') ?: 587;
+            $mail->Timeout    = 5; // Fail fast if SMTP hangs
+            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Billing');
+            $mail->addAddress($email);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $body;
+            $mail->AltBody = "Your account is deactivated due to an overdue payment for {$ref}. Please reply to this email with your payment proof.";
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("Suspension Email Error: {$mail->ErrorInfo}");
             return false;
         }
     }
