@@ -106,6 +106,26 @@ class EmailSender {
 
         $mail = new PHPMailer(true);
         try {
+     * Sends a password reset email to the user.
+     *
+     * @param string $email The recipient email.
+     * @param string $token The password reset OTP token.
+     * @return bool True if mail was sent, false otherwise.
+     */
+    public static function sendPasswordResetEmail($email, $token) {
+        $subject = "FixGo - Password Reset Request";
+        
+        $message = "Hello,<br><br>";
+        $message .= "We received a request to reset your password. Your One-Time Password (OTP) for password reset is:<br><br>";
+        $message .= "<strong style='font-size: 24px; letter-spacing: 2px; color: #059669;'>" . htmlspecialchars($token) . "</strong><br><br>";
+        $message .= "This OTP is valid for 15 minutes. Please enter it on the password reset page.<br><br>";
+        $message .= "If you did not request a password reset, please ignore this email or contact support if you have concerns.<br><br>";
+        $message .= "Best regards,<br>";
+        $message .= "The FixGo Team";
+
+        $mail = new PHPMailer(true);
+        try {
+            // Server settings
             $mail->isSMTP();
             $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
@@ -242,6 +262,21 @@ class EmailSender {
             return true;
         } catch (Exception $e) {
             error_log("Suspension Email Error: {$mail->ErrorInfo}");
+
+            // Recipients
+            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Team');
+            $mail->addAddress($email);
+
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br><br>'], ["\n", "\n\n"], $message));
+
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("SMTP Send Error: {$mail->ErrorInfo}");
             return false;
         }
     }

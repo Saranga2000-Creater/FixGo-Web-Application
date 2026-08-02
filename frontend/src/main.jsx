@@ -12,6 +12,8 @@ import CustomerForm from "../components/Registration/CustomerForm.jsx"
 import ShopForm from "../components/Registration/ShopOwnerForm.jsx"
 import SignIn from '../components/SignIn.jsx'
 import VerifyEmail from "../components/Registration/VerifyEmail.jsx"
+import ForgotPassword from "../components/ForgotPassword.jsx"
+import ResetPassword from "../components/ResetPassword.jsx"
 import { ScrollToTop } from "../components/ScrollToTop";
 
 createRoot(document.getElementById('root')).render(
@@ -31,6 +33,8 @@ createRoot(document.getElementById('root')).render(
         </Route>
         <Route path="/login" element={<SignIn />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
 

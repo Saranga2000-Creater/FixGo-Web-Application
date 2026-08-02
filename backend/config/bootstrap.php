@@ -71,7 +71,7 @@ header("Content-Type: application/json; charset=UTF-8");
 // ----------------------------------------------------------
 // 4. OPTIONS Preflight — answer and exit immediately
 // ----------------------------------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
