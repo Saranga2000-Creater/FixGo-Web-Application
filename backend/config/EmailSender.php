@@ -106,6 +106,28 @@ class EmailSender {
 
         $mail = new PHPMailer(true);
         try {
+            $mail->isSMTP();
+            $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = getenv('SMTP_USER');
+            $mail->Password   = getenv('SMTP_PASS');
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = getenv('SMTP_PORT') ?: 587;
+            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Billing');
+            $mail->addAddress($email);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $body;
+            $mail->AltBody = "FixGo Invoice | {$period} | Ref: {$ref} | Amount: LKR {$amount} | Due: {$dueDate}";
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("Invoice Email Error: {$mail->ErrorInfo}");
+            return false;
+        }
+    }
+
+    /**
      * Sends a password reset email to the user.
      *
      * @param string $email The recipient email.
@@ -133,16 +155,21 @@ class EmailSender {
             $mail->Password   = getenv('SMTP_PASS');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = getenv('SMTP_PORT') ?: 587;
-            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Billing');
+
+            // Recipients
+            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Team');
             $mail->addAddress($email);
+
+            // Content
             $mail->isHTML(true);
             $mail->Subject = $subject;
-            $mail->Body    = $body;
-            $mail->AltBody = "FixGo Invoice | {$period} | Ref: {$ref} | Amount: LKR {$amount} | Due: {$dueDate}";
+            $mail->Body    = $message;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br><br>'], ["\n", "\n\n"], $message));
+
             $mail->send();
             return true;
         } catch (Exception $e) {
-            error_log("Invoice Email Error: {$mail->ErrorInfo}");
+            error_log("SMTP Send Error: {$mail->ErrorInfo}");
             return false;
         }
     }
@@ -262,21 +289,6 @@ class EmailSender {
             return true;
         } catch (Exception $e) {
             error_log("Suspension Email Error: {$mail->ErrorInfo}");
-
-            // Recipients
-            $mail->setFrom(getenv('SMTP_USER') ?: 'no-reply@fixgo.com', 'FixGo Team');
-            $mail->addAddress($email);
-
-            // Content
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body    = $message;
-            $mail->AltBody = strip_tags(str_replace(['<br>', '<br><br>'], ["\n", "\n\n"], $message));
-
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            error_log("SMTP Send Error: {$mail->ErrorInfo}");
             return false;
         }
     }
