@@ -69,8 +69,9 @@ export const NavBar = () => {
             const data = await api.get("getNotifications.php");
             if (data.success) {
                 const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled", "Declined"];
-                const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
-                setNotifications(filtered);
+                const raw = data.data || [];
+                const filtered = raw.filter(r => !r.status || NOTIF_WORTHY.includes(r.status));
+                setNotifications(filtered.length > 0 ? filtered : raw);
             }
         } catch (err) {
             console.error("Error fetching notifications in NavBar:", err);
@@ -148,8 +149,21 @@ export const NavBar = () => {
 
     const handleNavigateToNotifications = (id = null) => {
         setShowNotifDropdown(false);
-        navigate("/services", { state: { targetPage: "notifications", selectedNotifId: id } });
-        window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "notifications", selectedNotifId: id } }));
+        let userRole = "customer";
+        try {
+            if (token) {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                userRole = payload.role || "customer";
+            }
+        } catch {}
+
+        if (userRole === "admin") {
+            navigate("/admin", { state: { targetPage: "verification" } });
+            window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "verification" } }));
+        } else {
+            navigate("/services", { state: { targetPage: "notifications", selectedNotifId: id } });
+            window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "notifications", selectedNotifId: id } }));
+        }
     };
 
     const unreadNotifications = notifications.filter(n => Number(n.isRead) === 0);
@@ -244,7 +258,14 @@ export const NavBar = () => {
                                             notifications.map(notif => {
                                                 const isUnread = Number(notif.isRead) === 0;
                                                 const message = getMessage(notif);
-                                                const meta = STATUS_META[notif.status] || STATUS_META["Pending"];
+                                                const meta = STATUS_META[notif.status] || {
+                                                    icon: faBell,
+                                                    iconBg: "rgba(22,163,74,0.08)",
+                                                    iconColor: "#16A34A",
+                                                    badgeBg: "rgba(22,163,74,0.10)",
+                                                    badgeColor: "#16A34A",
+                                                    label: notif.status || "Notice"
+                                                };
                                                 return (
                                                     <div
                                                         key={notif.id}
