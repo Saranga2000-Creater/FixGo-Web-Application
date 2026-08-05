@@ -33,9 +33,13 @@ const FILTERS = ["All Time", "Last 3 Months", "Last 6 Months", "This Year"];
 
 const isWithinFilter = (dateStr, filter) => {
     if (filter === "All Time" || !dateStr) return true;
-    const date   = new Date(dateStr);
-    const now    = new Date();
-    const months = filter === "Last 3 Months" ? 3 : filter === "Last 6 Months" ? 6 : 12;
+    const date = new Date(dateStr);
+    const now  = new Date();
+    if (filter === "This Year") {
+        // From 1 Jan of this calendar year
+        return date >= new Date(now.getFullYear(), 0, 1);
+    }
+    const months = filter === "Last 3 Months" ? 3 : 6; // "Last 3 Months" or "Last 6 Months"
     const cutoff = new Date(now.getFullYear(), now.getMonth() - months, now.getDate());
     return date >= cutoff;
 };
@@ -251,18 +255,21 @@ export default function ServiceHistory( ) {
                     </p>
                 </div>
 
-                {/* Filter dropdown */}
-                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400" />
+                {/* Filter dropdown — invisible select covers full pill, custom UI on top */}
+                <div className="relative flex items-center gap-2 bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm shadow-[0_1px_4px_rgba(0,0,0,0.04)] cursor-pointer">
+                    {/* Custom visual display */}
+                    <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400 flex-shrink-0 pointer-events-none" />
+                    <span className="text-sm text-gray-700 pointer-events-none" style={{ fontFamily: FONT }}>{filter}</span>
+                    <FontAwesomeIcon icon={faChevronDown} className="text-[11px] text-gray-400 pointer-events-none flex-shrink-0" />
+                    {/* Invisible select stretches over entire wrapper */}
                     <select
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="border-none outline-none text-sm text-gray-700 bg-transparent cursor-pointer"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         style={{ fontFamily: FONT }}
                     >
                         {FILTERS.map(f => <option key={f}>{f}</option>)}
                     </select>
-                    <FontAwesomeIcon icon={faChevronDown} className="text-[11px] text-gray-400" />
                 </div>
             </div>
 

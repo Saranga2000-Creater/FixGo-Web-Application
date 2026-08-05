@@ -73,6 +73,14 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Account Overview stats
+    const [stats, setStats] = useState({
+        totalRepairs:  0,
+        completed:     0,
+        appointments:  0,
+        reviewsGiven:  0,
+    });
+
     // Edit modal states
     const [isModalOpen, setIsModalOpen] = useState(initialModalOpen);
     const [activeTab, setActiveTab] = useState(initialTab); // "info" | "password"
@@ -125,6 +133,29 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
 
     useEffect(() => {
         fetchProfile();
+    }, []);
+
+    // Fetch Account Overview stats
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const [requestsData, reviewsData] = await Promise.all([
+                    api.get("getCustomerRequest.php"),
+                    api.get("getCustomerReviews.php"),
+                ]);
+
+                const all = (requestsData?.data || []);
+                setStats({
+                    totalRepairs:  all.length,
+                    completed:     all.filter(r => r.status === "Completed").length,
+                    appointments:  all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
+                    reviewsGiven:  (reviewsData?.data || reviewsData?.reviews || []).length,
+                });
+            } catch {
+                // silently fail — stats remain 0
+            }
+        };
+        fetchStats();
     }, []);
 
     const openEditModal = (tab = "info") => {
@@ -334,10 +365,10 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
                     <div className="bg-gray-50 border border-gray-200 rounded-[18px] p-5 min-w-[280px] w-[400px] flex-shrink-0">
                         <p className="text-[13px] font-bold text-gray-900 mb-3.5 mt-0">Account Overview</p>
                         <div className="grid grid-cols-2 gap-2.5">
-                            <StatsCard icon={faCar} title="Total Repairs" value="0" iconBg="rgba(22,163,74,0.08)" iconColor="#16A34A" />
-                            <StatsCard icon={faCircleCheck} title="Completed" value="0" iconBg="rgba(13,148,136,0.08)" iconColor="#0D9488" />
-                            <StatsCard icon={faCalendarDays} title="Appointments" value="0" iconBg="#EDF3FF" iconColor="#2563EB" />
-                            <StatsCard icon={faStar} title="Reviews Given" value="0" iconBg="#F5EDFF" iconColor="#A855F7" />
+                            <StatsCard icon={faCar} title="Total Repairs" value={String(stats.totalRepairs)} iconBg="rgba(22,163,74,0.08)" iconColor="#16A34A" />
+                            <StatsCard icon={faCircleCheck} title="Completed" value={String(stats.completed)} iconBg="rgba(13,148,136,0.08)" iconColor="#0D9488" />
+                            <StatsCard icon={faCalendarDays} title="Appointments" value={String(stats.appointments)} iconBg="#EDF3FF" iconColor="#2563EB" />
+                            <StatsCard icon={faStar} title="Reviews Given" value={String(stats.reviewsGiven)} iconBg="#F5EDFF" iconColor="#A855F7" />
                         </div>
                     </div>
                 </div>
