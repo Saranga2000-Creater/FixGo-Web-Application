@@ -293,7 +293,7 @@ export default function ServiceHistory( ) {
                         return (
                             <div
                                 key={record.id}
-                                className={`flex items-center gap-4 py-5 px-6 ${!isLast ? "border-b border-gray-100" : "border-b-0"}`}
+                                className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 sm:py-5 px-4 sm:px-6 ${!isLast ? "border-b border-gray-100" : "border-b-0"}`}
                             >
                                 {/* Timeline dot + line */}
                                 <div className="flex flex-col items-center self-stretch">
@@ -345,7 +345,7 @@ export default function ServiceHistory( ) {
                                 {/* View Details button */}
                                 <button
                                     onClick={() => setSelectedRecord(record)}
-                                    className="flex-shrink-0 flex items-center gap-2 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold bg-transparent cursor-pointer transition-colors duration-150"
+                                    className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold bg-transparent cursor-pointer transition-colors duration-150"
                                     style={{ border: `1px solid ${cfg.color}`, color: cfg.color }}
                                     onMouseEnter={e => e.currentTarget.style.background = cfg.bg}
                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}

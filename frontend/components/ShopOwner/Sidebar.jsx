@@ -25,91 +25,114 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount, billingCount }) {
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, notificationCount, reviewCount, billingCount, isOpen = false, onClose }) {
+  const navigate = useNavigate();
+
   const handleNav = (id) => {
     setActiveNav(id);
+    if (onClose) onClose();
+  };
+
+  const handleSignOut = () => {
+    const preserved = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("fixgo_read_notifs_")) {
+            preserved[key] = localStorage.getItem(key);
+        }
+    }
+    localStorage.clear();
+    Object.entries(preserved).forEach(([key, value]) => {
+        localStorage.setItem(key, value);
+    });
+    if (onClose) onClose();
+    navigate("/");
   };
 
   return (
-    // NOTE: top-[72px] and h-[calc(100vh-72px)] assume the site navbar above
-    // this component is 72px tall. If the sidebar still overlaps the navbar
-    // or leaves a gap, adjust the "72px" value(s) below to match the navbar's
-    // actual height.
-    <div className="w-[240px] h-[calc(100vh-72px)] bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.10)] fixed left-0 top-[72px] overflow-y-auto z-40">
-      {/* Shop Header */}
-      <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-gray-800 flex items-center justify-center text-[22px] shrink-0 overflow-hidden">
-          <img
-            src={
-              shopData?.profileImageURL
-                ? `${UPLOADS_URL}/${shopData.profileImageURL}`
-                : "/default-shop.png"
-            }
-            alt="Shop"
-            className="w-full h-full object-cover"
-          />
+    <aside 
+      className={`w-[240px] h-[calc(100vh-65px)] bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.08)] fixed left-0 top-[65px] justify-between z-50 transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+    >
+      <div className="flex flex-col flex-1 min-h-0">
+        {/* Shop Header */}
+        <div className="pt-5 px-4 pb-4 border-b border-gray-100 flex items-center gap-3 shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-gray-800 flex items-center justify-center text-[22px] shrink-0 overflow-hidden">
+            <img
+              src={
+                shopData?.profileImageURL
+                  ? `${UPLOADS_URL}/${shopData.profileImageURL}`
+                  : "/default-shop.png"
+              }
+              alt="Shop"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <div className="font-bold text-sm text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
+              {shopData?.name || "Shop"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {shopData?.categories || "No Category"}
+            </div>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <div className="font-bold text-sm text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
-            {shopData?.name || "Shop"}
-          </div>
-          <div className="text-xs text-gray-500">
-            {shopData?.categories || "No Category"}
-          </div>
-        </div>
-      </div>
-
-      {/* Nav Items */}
-      <nav className="flex-1 py-3 px-2 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const isActive = activeNav === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNav(item.id)}
-              className={`w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer text-sm text-left ${
-                isActive
-                  ? "bg-[#F0FDF4] text-green-600 font-bold"
-                  : "bg-transparent text-gray-700 font-medium"
-              }`}
-            >
-              <span
-                className={`text-lg flex items-center ${
-                  isActive ? "text-green-600" : "text-gray-500"
+        {/* Nav Items */}
+        <nav className="flex-1 py-3 px-2 overflow-y-auto">
+          {NAV_ITEMS.map((item) => {
+            const isActive = activeNav === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                className={`w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer text-sm text-left transition-all duration-150 ease-in-out ${
+                  isActive
+                    ? "bg-[#F0FDF4] text-green-600 font-bold border-l-4 border-green-600"
+                    : "bg-transparent text-gray-700 font-medium hover:bg-gray-50"
                 }`}
               >
-                {item.icon}
-              </span>
-              <span className="flex-1">{item.label}</span>
-              <Badge
-                count={
-                  item.id === "requests"
-                    ? requestCount
-                    : item.id === "repairs"
-                    ? activeRepairCount
-                    : item.id === "reviews"
-                    ? reviewCount
-                    : item.id === "notifications"
-                    ? notificationCount
-                    : item.id === "billing"
-                    ? billingCount
-                    : 0
-                }
-              />
-            </button>
-          );
-        })}
-      </nav>
+                <span
+                  className={`text-lg flex items-center ${
+                    isActive ? "text-green-600" : "text-gray-500"
+                  }`}
+                >
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.label}</span>
+                <Badge
+                  count={
+                    item.id === "requests"
+                      ? requestCount
+                      : item.id === "repairs"
+                      ? activeRepairCount
+                      : item.id === "reviews"
+                      ? reviewCount
+                      : item.id === "notifications"
+                      ? notificationCount
+                      : item.id === "billing"
+                      ? billingCount
+                      : 0
+                  }
+                />
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Logout */}
-      <div className="py-3 px-2 border-t border-gray-100">
-        <button className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer bg-transparent text-gray-500 font-medium text-sm">
+      <div className="p-2 border-t border-gray-100 bg-white shrink-0">
+        <button 
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer bg-transparent text-gray-500 font-medium text-sm hover:bg-red-50 hover:text-red-600 transition-colors"
+        >
           <FiLogOut size={18} />
           Log Out
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
 

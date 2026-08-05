@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
@@ -29,8 +31,8 @@ const NAV_ITEMS = [
 function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
   const stats = [
     { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
-    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-emerald-600", icon: "🔧" },
-    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-emerald-600", icon: "✅" },
+    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-green-600", icon: "🔧" },
+    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-green-600", icon: "✅" },
     { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "text-gray-500", icon: "⭐" },
   ];
   const quickActions = [
@@ -148,6 +150,7 @@ function ShopOwnerDashboard() {
   console.log("ShopOwnerDashboard rendered");
   const [activeNav, setActiveNav] = useState("dashboard");
   const [selectedNotifId, setSelectedNotifId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
   const [activeRepairCount, setActiveRepairCount] = useState(0);
@@ -259,30 +262,57 @@ useEffect(() => {
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
   return (
-    <div className="flex min-h-screen bg-slate-50">
-     <Sidebar
-  activeNav={activeNav}
-  setActiveNav={setActiveNav}
-  shopData={shopData}
-  requestCount={requestCount}
-  activeRepairCount={activeRepairCount}
-  notificationCount={notificationCount}
-  reviewCount={reviewCount}
-  billingCount={billingCount}
-/>
+    <div className="flex min-h-screen bg-slate-50 font-sans">
+      {/* Mobile Backdrop Overlay */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-xs transition-opacity"
+        />
+      )}
 
-      <main className="flex-1 p-6 ml-[240px]">
+      <Sidebar
+        activeNav={activeNav}
+        setActiveNav={(id) => {
+          setActiveNav(id);
+          setSidebarOpen(false);
+        }}
+        shopData={shopData}
+        requestCount={requestCount}
+        activeRepairCount={activeRepairCount}
+        notificationCount={notificationCount}
+        reviewCount={reviewCount}
+        billingCount={billingCount}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <main className="flex-1 p-4 sm:p-6 ml-0 md:ml-60 transition-all duration-300">
+        {/* Mobile Menu Toggle Bar */}
+        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 border border-gray-100 mb-4 rounded-2xl shadow-xs">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 bg-transparent border-none cursor-pointer p-0"
+          >
+            <FontAwesomeIcon icon={sidebarOpen ? faXmark : faBars} className="text-base text-green-600" />
+            <span>Shop Menu</span>
+          </button>
+          <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full capitalize">
+            {currentLabel}
+          </span>
+        </div>
+
         {renderPage(
-    activeNav,
-    shopData,
-    requestCount,
-    activeRepairCount,
-    completedJobCount,
-    setActiveNav,
-    fetchRequestCount,
-    selectedNotifId,
-    () => setSelectedNotifId(null)
-)}
+          activeNav,
+          shopData,
+          requestCount,
+          activeRepairCount,
+          completedJobCount,
+          setActiveNav,
+          fetchRequestCount,
+          selectedNotifId,
+          () => setSelectedNotifId(null)
+        )}
       </main>
     </div>
   );
