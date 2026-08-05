@@ -19,6 +19,7 @@ function CustomerControllDashboard() {
     const [currentPage, setCurrentPage] = useState(location.state?.targetPage || "dashboard");
     const [targetRequestId, setTargetRequestId] = useState(null);
     const [profileModalState, setProfileModalState] = useState(null);
+    const [selectedNotifId, setSelectedNotifId] = useState(null);
 
     //  Keep your existing variables
     const unreadCount = useUnreadCount();
@@ -31,13 +32,22 @@ function CustomerControllDashboard() {
 
             // Clear the state so revisiting /services doesn't re-trigger this
             navigate(location.pathname, { replace: true, state: {} });
+        } else if (location.state?.targetPage) {
+            setCurrentPage(location.state.targetPage);
+            setSelectedNotifId(location.state.selectedNotifId || null);
+            navigate(location.pathname, { replace: true, state: {} });
         }
-    }, [location.state?.navigateTo]);
+    }, [location.state?.navigateTo, location.state?.targetPage]);
 
     useEffect(() => {
         const handler = (e) => {
-            if (e.detail?.tab === "repair-status") {
+            if (e.detail?.tab === "repair-status" || e.detail?.tab === "repair") {
                 setCurrentPage("repair");
+            } else if (e.detail?.tab) {
+                setCurrentPage(e.detail.tab);
+                if (e.detail.tab === "notifications" && e.detail.selectedNotifId) {
+                    setSelectedNotifId(e.detail.selectedNotifId);
+                }
             }
         };
         window.addEventListener("fixgo_navigate", handler);
@@ -77,7 +87,12 @@ function CustomerControllDashboard() {
                     {currentPage === "repair" && <RepairStatus targetRequestId={targetRequestId} />}
                     {currentPage === "history" && <ServiceHistory />}
                     {currentPage === "reviews" && <ReviewsRatings />}
-                    {currentPage === "notifications" && <Notification />}
+                    {currentPage === "notifications" && (
+                        <Notification 
+                            initialSelectedId={selectedNotifId} 
+                            onClearSelection={() => setSelectedNotifId(null)} 
+                        />
+                    )}
                     {currentPage === "settings" && <Settings onNavigate={handlePageChange} />}
                 </div>
             </main>
