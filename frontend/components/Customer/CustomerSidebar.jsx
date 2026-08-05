@@ -31,7 +31,7 @@ function SidebarLink({ active = false, icon, label, badge, onClick, danger = fal
     );
 }
 
-function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
+function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0, isOpen = false, onClose }) {
     const navigate = useNavigate();
     const [customer, setCustomer] = useState(null);
 
@@ -56,7 +56,13 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
             localStorage.setItem(key, value);
         });
 
+        if (onClose) onClose();
         navigate("/");
+    };
+
+    const handleLinkClick = (page) => {
+        setCurrentPage(page);
+        if (onClose) onClose();
     };
 
     const cleanProfilePhoto = customer?.profilePhoto ? customer.profilePhoto.replace(/['"]/g, '') : null;
@@ -87,7 +93,8 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
                 }
             `}</style>
             <aside
-                className="w-60 flex flex-col bg-white border-r border-gray-100 fixed top-[65px] left-0 z-50 justify-between"
+                className={`w-60 flex flex-col bg-white border-r border-gray-100 fixed top-[65px] left-0 z-50 justify-between transition-transform duration-300 ease-in-out
+                    ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
                 style={{ height: "calc(100vh - 65px)", boxShadow: "4px 0 24px rgba(0,0,0,0.08)" }}
             >
                 <div className="flex flex-col flex-1 min-h-0">
@@ -110,19 +117,19 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0 }) {
                         </div>
                     </div>
                     <nav className="flex-1 py-3 px-2 overflow-y-auto">
-                        <SidebarLink active={currentPage === "dashboard"}     icon={faCarSide} label="Dashboard"         onClick={() => setCurrentPage("dashboard")} />
-                        <SidebarLink active={currentPage === "profile"}       icon={faUser}    label="My Profile"        onClick={() => setCurrentPage("profile")} />
-                        <SidebarLink active={currentPage === "repair"}        icon={faCar}     label="Repair Status"     onClick={() => setCurrentPage("repair")} />
-                        <SidebarLink active={currentPage === "history"}       icon={faClock}   label="Service History"   onClick={() => setCurrentPage("history")} />
-                        <SidebarLink active={currentPage === "reviews"}       icon={faStar}    label="Reviews & Ratings" onClick={() => setCurrentPage("reviews")} />
+                        <SidebarLink active={currentPage === "dashboard"}     icon={faCarSide} label="Dashboard"         onClick={() => handleLinkClick("dashboard")} />
+                        <SidebarLink active={currentPage === "profile"}       icon={faUser}    label="My Profile"        onClick={() => handleLinkClick("profile")} />
+                        <SidebarLink active={currentPage === "repair"}        icon={faCar}     label="Repair Status"     onClick={() => handleLinkClick("repair")} />
+                        <SidebarLink active={currentPage === "history"}       icon={faClock}   label="Service History"   onClick={() => handleLinkClick("history")} />
+                        <SidebarLink active={currentPage === "reviews"}       icon={faStar}    label="Reviews & Ratings" onClick={() => handleLinkClick("reviews")} />
                         <SidebarLink
                             active={currentPage === "notifications"}
                             icon={faBell}
                             label="Notifications"
                             badge={unreadCount}
-                            onClick={() => setCurrentPage("notifications")}
+                            onClick={() => handleLinkClick("notifications")}
                         />
-                        <SidebarLink active={currentPage === "settings"} icon={faGear} label="Settings" onClick={() => setCurrentPage("settings")} />
+                        <SidebarLink active={currentPage === "settings"} icon={faGear} label="Settings" onClick={() => handleLinkClick("settings")} />
                     </nav>
                 </div>
                 
