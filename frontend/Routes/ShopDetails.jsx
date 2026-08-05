@@ -548,8 +548,13 @@ function ShopDetails() {
                                   <FaWrench className="text-[15px] text-emerald-600" />
                                 </div>
                                 
-                                {/* Text Block: Removed all truncation to show full name */}
+                                {/* Text Block: Full Name, Category & Price */}
                                 <div className="flex flex-col min-w-0 flex-1">
+                                  {service.category && (
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded w-fit mb-1 border border-emerald-100">
+                                      {service.category}
+                                    </span>
+                                  )}
                                   <h3 className="text-[14px] leading-tight font-bold text-slate-800 break-words">
                                     {service.name}
                                   </h3>
@@ -569,7 +574,11 @@ function ShopDetails() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-slate-500 italic">No specific services listed yet.</p>
+                        <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500">
+                          <FaWrench className="text-3xl text-slate-300 mb-2" />
+                          <p className="text-sm font-semibold text-slate-700">No Services Listed Yet</p>
+                          <p className="text-xs text-slate-400 mt-1">This workshop has not added specific services to their menu yet.</p>
+                        </div>
                       )}
                     </div>
                     

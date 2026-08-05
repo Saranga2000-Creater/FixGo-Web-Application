@@ -485,4 +485,254 @@ public function updateShopTowTruckDetails($payload)
         ]);
     }
 }
+
+    public function getGalleryImages($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+        $shopModel = new Shop($this->db);
+        $images = $shopModel->getGalleryImages($shopId);
+        echo json_encode(["success" => true, "data" => $images]);
+    }
+
+    public function uploadGalleryImage($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        $shopModel = new Shop($this->db);
+        $imageCount = $shopModel->getGalleryImageCount($shopId);
+        if ($imageCount >= 4) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Maximum of 4 gallery images allowed per shop."]);
+            return;
+        }
+
+        if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Please select a valid image file."]);
+            return;
+        }
+
+        $file = $_FILES['image'];
+        if ($file['size'] > 5 * 1024 * 1024) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Image must be under 5MB."]);
+            return;
+        }
+
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExt, $allowedExts)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Allowed formats: JPG, JPEG, PNG, WEBP."]);
+            return;
+        }
+
+        $targetDir = __DIR__ . '/../uploads/gallery/';
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $filename = uniqid('gallery_', true) . '.' . $fileExt;
+        $targetPath = $targetDir . $filename;
+        $dbPath = 'uploads/gallery/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to save image."]);
+            return;
+        }
+
+        $shopModel = new Shop($this->db);
+        $imageId = $shopModel->addGalleryImage($shopId, $dbPath);
+        echo json_encode([
+            "success" => true,
+            "message" => "Gallery image uploaded successfully.",
+            "data" => ["id" => $imageId, "url" => $dbPath]
+        ]);
+    }
+
+    public function deleteGalleryImage($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $imageId = $input['image_id'] ?? null;
+        if (!$imageId) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Image ID is required."]);
+            return;
+        }
+
+        $shopModel = new Shop($this->db);
+        $success = $shopModel->deleteGalleryImage($shopId, $imageId);
+        if ($success) {
+            echo json_encode(["success" => true, "message" => "Gallery image deleted successfully."]);
+        } else {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Failed to delete image."]);
+        }
+    }
+
+    public function uploadProfileImage($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Please select a valid image file."]);
+            return;
+        }
+
+        $file = $_FILES['image'];
+        if ($file['size'] > 5 * 1024 * 1024) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Image must be under 5MB."]);
+            return;
+        }
+
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExt, $allowedExts)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Allowed formats: JPG, JPEG, PNG, WEBP."]);
+            return;
+        }
+
+        $targetDir = __DIR__ . '/../uploads/shopOwners/';
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $filename = uniqid('profile_', true) . '.' . $fileExt;
+        $targetPath = $targetDir . $filename;
+        $dbPath = 'uploads/shopOwners/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to save profile photo."]);
+            return;
+        }
+
+        $shopModel = new Shop($this->db);
+        $shopModel->updateProfileImage($shopId, $dbPath);
+
+        echo json_encode([
+            "success" => true,
+            "message" => "Profile photo updated successfully.",
+            "profileImageURL" => $dbPath
+        ]);
+    }
+
+    public function updateBusinessInfo($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        // SERVER-SIDE IMMUTABILITY: Remove email & category if sent in payload
+        unset($input['email'], $input['category'], $input['categories']);
+
+        $name = trim($input['name'] ?? '');
+        $owner = trim($input['owner'] ?? '');
+        $phone = trim($input['phone'] ?? '');
+        $address = trim($input['address'] ?? '');
+        $brn = trim($input['brn'] ?? '');
+        $openTime = trim($input['openTime'] ?? '');
+        $closeTime = trim($input['closeTime'] ?? '');
+        $vehicleCategories = $input['vehicleCategories'] ?? [];
+
+        if (empty($name) || empty($owner) || empty($phone) || empty($address)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Name, Owner, Phone, and Address are required."]);
+            return;
+        }
+
+        if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Invalid phone number format."]);
+            return;
+        }
+
+        // Map vehicle categories text to IDs (1: 3 Wheelers & Bikes, 2: 4 Wheelers, 3: Commercial Vehicles)
+        $vIds = [];
+        if (is_array($vehicleCategories)) {
+            foreach ($vehicleCategories as $v) {
+                if (strcasecmp($v, '3 Wheelers & Bikes') === 0 || $v == 1) $vIds[] = 1;
+                elseif (strcasecmp($v, '4 Wheelers') === 0 || $v == 2) $vIds[] = 2;
+                elseif (strcasecmp($v, 'Commercial Vehicles') === 0 || $v == 3) $vIds[] = 3;
+            }
+        }
+
+        $data = [
+            'name' => $name,
+            'owner' => $owner,
+            'phone' => $phone,
+            'address' => $address,
+            'brn' => $brn,
+            'openTime' => $openTime,
+            'closeTime' => $closeTime
+        ];
+
+        $shopModel = new Shop($this->db);
+        try {
+            $shopModel->updateBusinessInfo($shopId, $data, array_unique($vIds));
+            echo json_encode(["success" => true, "message" => "Business information updated successfully."]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Server error: " . $e->getMessage()]);
+        }
+    }
+
+    public function getShopServices($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+        $shopModel = new Shop($this->db);
+        $services = $shopModel->getServicesByShopId($shopId);
+        echo json_encode(["success" => true, "data" => $services]);
+    }
+
+    public function updateShopServices($payload) {
+        $shopId = $payload['user_id'] ?? null;
+        if (!$shopId) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $services = $input['services'] ?? [];
+
+        $shopModel = new Shop($this->db);
+        try {
+            $shopModel->updateShopServices($shopId, $services);
+            echo json_encode(["success" => true, "message" => "Services updated successfully."]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Server error: " . $e->getMessage()]);
+        }
+    }
 }
