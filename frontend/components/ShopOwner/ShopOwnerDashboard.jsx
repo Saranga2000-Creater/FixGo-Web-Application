@@ -111,7 +111,9 @@ function renderPage(
     activeRepairCount,
     completedJobCount,
     setActiveNav,
-    fetchRequestCount
+    fetchRequestCount,
+    selectedNotifId,
+    onClearSelection
 )  {
   switch (activeNav) {
        case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
@@ -131,6 +133,8 @@ function renderPage(
     return (
         <Notification
             setActiveNav={setActiveNav}
+            initialSelectedId={selectedNotifId}
+            onClearSelection={onClearSelection}
         />
     );
     case "settings":      return <Settings />;
@@ -143,6 +147,7 @@ function renderPage(
 function ShopOwnerDashboard() {
   console.log("ShopOwnerDashboard rendered");
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [selectedNotifId, setSelectedNotifId] = useState(null);
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
   const [activeRepairCount, setActiveRepairCount] = useState(0);
@@ -150,6 +155,19 @@ function ShopOwnerDashboard() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [billingCount, setBillingCount] = useState(0);
+
+  useEffect(() => {
+    const handleNavigate = (e) => {
+        if (e.detail?.tab === "notifications") {
+            setActiveNav("notifications");
+            if (e.detail?.selectedNotifId) {
+                setSelectedNotifId(e.detail.selectedNotifId);
+            }
+        }
+    };
+    window.addEventListener("fixgo_navigate", handleNavigate);
+    return () => window.removeEventListener("fixgo_navigate", handleNavigate);
+  }, []);
 
 const fetchRequestCount = () => {
   api.get("getServiceRequests.php")
@@ -183,7 +201,7 @@ useEffect(() => {
         api.get("getNotifications.php")
         .then(data => {
             if (data.success) {
-                const unread = data.data.filter(
+                const unread = (data.data || []).filter(
                     n => Number(n.isRead) === 0
                 ).length;
                 setNotificationCount(unread);
@@ -193,8 +211,8 @@ useEffect(() => {
     };
 
     loadNotificationCount();
-    const interval = setInterval(loadNotificationCount, 5000);
-    return () => clearInterval(interval);
+    window.addEventListener("fixgo_unread_changed", loadNotificationCount);
+    return () => window.removeEventListener("fixgo_unread_changed", loadNotificationCount);
 }, []);
 
 useEffect(() => {
@@ -261,7 +279,9 @@ useEffect(() => {
     activeRepairCount,
     completedJobCount,
     setActiveNav,
-    fetchRequestCount
+    fetchRequestCount,
+    selectedNotifId,
+    () => setSelectedNotifId(null)
 )}
       </main>
     </div>

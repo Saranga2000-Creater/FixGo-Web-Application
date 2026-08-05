@@ -2,7 +2,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faBell, faCircleQuestion, faRightFromBracket, faUser, faCheck, faEnvelopeOpen,
-    faClock, faCircleCheck, faHandshake, faStethoscope, faWrench, faBoxesStacked, faCircleXmark
+    faClock, faCircleCheck, faHandshake, faStethoscope, faWrench, faBoxesStacked, faCircleXmark,
+    faClipboardList, faStar
 } from "@fortawesome/free-solid-svg-icons";
 import logo from '../src/assets/FixGo.png'
 import { useState, useEffect } from "react";
@@ -10,15 +11,22 @@ import Sign from "./SignIn";
 import { api, UPLOADS_URL } from "../src/services/api";
 
 const STATUS_META = {
-    Pending:         { icon: faClock,        iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
-    Accepted:        { icon: faCircleCheck,  iconBg: "rgba(37,99,235,0.08)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
-    Confirmed:       { icon: faHandshake,    iconBg: "rgba(13,148,136,0.08)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
-    Diagnosis:       { icon: faStethoscope,  iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
-    "In Progress":   { icon: faWrench,       iconBg: "rgba(168,85,247,0.08)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
-    "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
-    Completed:       { icon: faCircleCheck,  iconBg: "rgba(22,163,74,0.08)",  iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)",  badgeColor: "#16A34A",  label: "Completed"     },
-    Cancelled:       { icon: faCircleXmark,  iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
-    Declined:        { icon: faCircleXmark,  iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
+    Pending:           { icon: faClock,         iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
+    Accepted:          { icon: faCircleCheck,   iconBg: "rgba(37,99,235,0.08)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
+    Confirmed:         { icon: faHandshake,     iconBg: "rgba(13,148,136,0.08)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    Diagnosis:         { icon: faStethoscope,   iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
+    "In Progress":     { icon: faWrench,        iconBg: "rgba(168,85,247,0.08)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
+    "Pending Parts":   { icon: faBoxesStacked,  iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
+    Completed:         { icon: faCircleCheck,   iconBg: "rgba(22,163,74,0.08)",  iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)",  badgeColor: "#16A34A",  label: "Completed"     },
+    Cancelled:         { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
+    Declined:          { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
+
+    // Shop Owner notification status types
+    NewRequest:        { icon: faClipboardList, iconBg: "rgba(37,99,235,0.08)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "New Request"   },
+    CustomerConfirmed: { icon: faHandshake,     iconBg: "rgba(13,148,136,0.08)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    CustomerCancelled: { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
+    CustomerDeclined:  { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
+    NewReview:         { icon: faStar,           iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "New Review"    },
 };
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
@@ -160,6 +168,9 @@ export const NavBar = () => {
         if (userRole === "admin") {
             navigate("/admin", { state: { targetPage: "verification" } });
             window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "verification" } }));
+        } else if (userRole === "shop" || userRole === "shop_owner") {
+            navigate("/shop-dashboard", { state: { targetPage: "notifications", selectedNotifId: id } });
+            window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "notifications", selectedNotifId: id } }));
         } else {
             navigate("/services", { state: { targetPage: "notifications", selectedNotifId: id } });
             window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "notifications", selectedNotifId: id } }));
@@ -258,13 +269,14 @@ export const NavBar = () => {
                                             notifications.map(notif => {
                                                 const isUnread = Number(notif.isRead) === 0;
                                                 const message = getMessage(notif);
-                                                const meta = STATUS_META[notif.status] || {
+                                                const statusKey = notif.type || notif.status;
+                                                const meta = STATUS_META[statusKey] || {
                                                     icon: faBell,
                                                     iconBg: "rgba(22,163,74,0.08)",
                                                     iconColor: "#16A34A",
                                                     badgeBg: "rgba(22,163,74,0.10)",
                                                     badgeColor: "#16A34A",
-                                                    label: notif.status || "Notice"
+                                                    label: statusKey || "Notice"
                                                 };
                                                 return (
                                                     <div
