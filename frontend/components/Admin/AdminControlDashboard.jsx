@@ -92,7 +92,7 @@ function AdminControlDashboard() {
                         </span>
                     </div>
 
-                    {currentPage === "dashboard"    && <Dashboard />}
+                    {currentPage === "dashboard"    && <Dashboard setCurrentPage={handlePageChange} />}
                     {currentPage === "verification" && <VerificationQueue />}
                     {currentPage === "moderation"   && <Moderation />}
                     {currentPage === "revenue"      && <Revenue />}

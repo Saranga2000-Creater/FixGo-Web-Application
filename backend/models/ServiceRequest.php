@@ -480,9 +480,73 @@ public function updateTowTruckDetails($data)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-   
+    /**
+     * Admin Dashboard: Get total service requests created in the current month
+     */
+    public function getMTDCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM servicerequest 
+            WHERE MONTH(created_at) = MONTH(CURRENT_DATE())
+              AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 
+    /**
+     * Admin Dashboard: Get daily service request volume for the past $days
+     */
+    public function getDailyVolume($days = 30) {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                DATE(created_at) as date, 
+                COUNT(id) as count
+            FROM servicerequest
+            WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL :days DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ");
+        $stmt->bindParam(':days', $days, PDO::PARAM_INT);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Format for Recharts { name (date), requests }
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'name' => date('M d', strtotime($row['date'])),
+                'requests' => (int)$row['count']
+            ];
+        }
+        return $formatted;
+    }
 
-
+    /**
+     * Admin Dashboard: Get monthly service request volume for the past 12 months
+     */
+    public function getMonthlyVolume() {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month, 
+                COUNT(id) as count
+            FROM servicerequest
+            WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month ASC
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $formatted = [];
+        foreach ($results as $row) {
+            $dateObj = DateTime::createFromFormat('Y-m', $row['month']);
+            $formatted[] = [
+                'name' => $dateObj ? $dateObj->format('M Y') : $row['month'],
+                'requests' => (int)$row['count']
+            ];
+        }
+        return $formatted;
+    }
 }
 ?>

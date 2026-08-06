@@ -656,5 +656,49 @@ public function updateShopTowTruckDetails($shopId, $data) {
             throw $e;
         }
     }
+
+    /**
+     * Admin Dashboard: Get total count of active shops
+     */
+    public function getActiveCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM shop s
+            JOIN users u ON s.id = u.id
+            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Admin Dashboard: Get shop distribution by category
+     */
+    public function getCategoryDistribution() {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                sc.name as categoryName, 
+                COUNT(s.id) as shopCount
+            FROM shop s
+            JOIN users u ON s.id = u.id
+            LEFT JOIN shopCategoryMapping scm ON s.id = scm.shop_id
+            LEFT JOIN shopCategory sc ON scm.shop_category_id = sc.id
+            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
+            GROUP BY sc.name
+            ORDER BY shopCount DESC
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Format for Recharts { name, value }
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'name' => $row['categoryName'] ?: 'Uncategorized',
+                'value' => (int)$row['shopCount']
+            ];
+        }
+        return $formatted;
+    }
 }
 ?>
