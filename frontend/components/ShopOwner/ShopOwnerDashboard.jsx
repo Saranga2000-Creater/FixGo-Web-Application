@@ -29,18 +29,21 @@ const NAV_ITEMS = [
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
+function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount ,averageRating,
+  reviewCount })  {
   const stats = [
     { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
     { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-green-600", icon: "🔧" },
     { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-green-600", icon: "✅" },
-    { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "text-gray-500", icon: "⭐" },
+    {
+  label: "Average Rating",
+  value: reviewCount > 0 ? Number(averageRating).toFixed(1) : "0.0",
+  sub: `(${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`,
+  subColor: "text-gray-500",
+  icon: "⭐",
+},
   ];
-  const quickActions = [
-    { label: "Add New Service", icon: "➕" },
-    { label: "Update Availability", icon: "📅" },
-    { label: "View Calendar", icon: "🗓️" },
-  ];
+
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -80,46 +83,37 @@ function DashboardView({ shopData, requestCount, activeRepairCount, completedJob
           </div>
         ))}
       </div>
-
-      {/* Quick Actions */}
-      <div>
-        <div className="w-[60px] h-1 bg-green-600 rounded-full mb-3" />
-        <h2 className="text-2xl font-extrabold text-gray-900 mb-4.5">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-3 gap-4 w-full">
-          {quickActions.map((a) => (
-            <div
-              key={a.label}
-              className="bg-white rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] py-8 px-6 text-center cursor-pointer border border-gray-200 transition-transform duration-200 ease-in-out hover:-translate-y-0.5"
-            >
-              <div className="w-12 h-12 rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] bg-green-600 flex items-center justify-center text-[22px] mx-auto mb-3">
-                {a.icon}
-              </div>
-              <div className="font-semibold text-sm text-gray-900">{a.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+  </div>
   );
 }
 
 
 
 function renderPage(
-    activeNav,
-    shopData,
-    requestCount,
-    activeRepairCount,
-    completedJobCount,
-    setActiveNav,
-    fetchRequestCount,
-    selectedNotifId,
-    onClearSelection
-)  {
+  activeNav,
+  shopData,
+  requestCount,
+  activeRepairCount,
+  completedJobCount,
+  averageRating,
+  reviewCount,
+  setActiveNav,
+  fetchRequestCount,
+  selectedNotifId,
+  onClearSelection
+) {
   switch (activeNav) {
-       case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
+    case "dashboard":
+  return (
+    <DashboardView
+      shopData={shopData}
+      requestCount={requestCount}
+      activeRepairCount={activeRepairCount}
+      completedJobCount={completedJobCount}
+      averageRating={averageRating}
+      reviewCount={reviewCount}
+    />
+  );
     case "requests":      return <ServiceRequests
   shopCategory={shopData?.categories}
   shopCoordinates={{
@@ -159,8 +153,9 @@ function ShopOwnerDashboard() {
   const [activeRepairCount, setActiveRepairCount] = useState(0);
   const [completedJobCount, setCompletedJobCount] = useState(0); 
   const [notificationCount, setNotificationCount] = useState(0);
-  const [reviewCount, setReviewCount] = useState(0);
   const [billingCount, setBillingCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
 
   useEffect(() => {
     if (location.state?.targetPage) {
@@ -242,15 +237,31 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-    const token = localStorage.getItem("jwt_token");
-    const shopId = JSON.parse(atob(token.split(".")[1])).shop_id;
+  const token = localStorage.getItem("jwt_token");
+
+  if (!token) return;
+
+  try {
+    const payload = JSON.parse(
+      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+    );
+
+    const shopId = payload.shop_id ?? payload.id ?? payload.user_id;
+
+    if (!shopId) return;
+
     api.get(`getShopReviews.php?shop_id=${shopId}`)
-        .then(data => {
-            if (data.success) {
-                setReviewCount(data.total_reviews);
-            }
-        })
-        .catch(console.error);
+      .then((data) => {
+        if (data.success) {
+          setReviewCount(Number(data.total_reviews) || 0);
+          setAverageRating(Number(data.average_rating) || 0);
+        }
+      })
+      .catch(console.error);
+
+  } catch (err) {
+    console.error("Invalid token:", err);
+  }
 }, []);
 
 useEffect(() => {
@@ -313,17 +324,19 @@ useEffect(() => {
           </span>
         </div>
 
-        {renderPage(
-          activeNav,
-          shopData,
-          requestCount,
-          activeRepairCount,
-          completedJobCount,
-          setActiveNav,
-          fetchRequestCount,
-          selectedNotifId,
-          () => setSelectedNotifId(null)
-        )}
+     {renderPage(
+  activeNav,
+  shopData,
+  requestCount,
+  activeRepairCount,
+  completedJobCount,
+  averageRating,
+  reviewCount,
+  setActiveNav,
+  fetchRequestCount,
+  selectedNotifId,
+  () => setSelectedNotifId(null)
+)}
       </main>
     </div>
   );
