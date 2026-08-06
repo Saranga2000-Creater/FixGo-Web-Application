@@ -284,10 +284,31 @@ export function useUnreadCount() {
 }
 
 // ── Main Notification component ───────────────────────────────────────────────
-export default function Notification() {
+export default function Notification({ initialSelectedId, onClearSelection }) {
     const navigate   = useNavigate();
 
     const [notifications, setNotifications]   = useState([]);
+    const [highlightedId, setHighlightedId]   = useState(initialSelectedId);
+
+    useEffect(() => {
+        if (initialSelectedId) {
+            markRead(initialSelectedId);
+            setActiveTab("all");
+            setHighlightedId(initialSelectedId);
+            setTimeout(() => {
+                const element = document.getElementById(`notif-${initialSelectedId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 150);
+
+            const timer = setTimeout(() => {
+                setHighlightedId(null);
+                if (onClearSelection) onClearSelection();
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [initialSelectedId, onClearSelection]);
     const [loading, setLoading]               = useState(true);
     const [activeTab, setActiveTab]           = useState("all");
     const [confirming, setConfirming]         = useState(null);
@@ -466,8 +487,11 @@ export default function Notification() {
                      onClose={() => setReviewModal(null)}
                     serviceRequestId={reviewModal.requestId}
                     shopId={reviewModal.shopId}
-                    shopName={reviewModal.shopName}
-                    onSubmitted={(requestId) => setReviewedIds(prev => [...prev, String(requestId)])}
+                    onSubmitted={(requestId) => {
+                        setReviewedIds(prev => [...prev, String(requestId)]);
+                        const targetNotif = notifications.find(n => String(n.service_request_id) === String(requestId));
+                        if (targetNotif) markRead(targetNotif.id);
+                    }}
                 />
             )}
 
@@ -539,14 +563,23 @@ export default function Notification() {
                         const isDeclined   = localDeclined.includes(String(notif.service_request_id))
                             || notif.current_status === "Cancelled";
                         const hasTow       = notif.requires_tow == 1;
+                        const isHighlighted = String(notif.id) === String(highlightedId);
                         return (
                             <div
+                                id={`notif-${notif.id}`}
                                 key={notif.id}
                                 onClick={() => !isRead && markRead(notif.id)}
-                                className={`flex items-start gap-4 py-5 px-6 cursor-pointer transition-colors duration-150
+                                className={`flex items-start gap-4 py-5 px-6 cursor-pointer transition-all duration-300
                                     ${isLast ? "border-b-0" : "border-b border-gray-100"}
                                     ${!isRead ? "hover:bg-[#F0FDF4]" : "hover:bg-gray-50"}`}
-                                style={{ background: !isRead ? "#F0FDF4" : "#FFFFFF" }}
+                                style={{ 
+                                    background: isHighlighted 
+                                        ? "rgba(22,163,74,0.08)" 
+                                        : !isRead ? "#F0FDF4" : "#FFFFFF",
+                                    borderLeft: isHighlighted
+                                        ? "4px solid #16A34A"
+                                        : "4px solid transparent"
+                                }}
                             >
                                 {/* Status Icon */}
                                 <div

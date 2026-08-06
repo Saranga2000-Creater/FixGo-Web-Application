@@ -293,22 +293,14 @@ export default function ServiceHistory( ) {
                         return (
                             <div
                                 key={record.id}
-                                className={`flex items-center gap-4 py-5 px-6 ${!isLast ? "border-b border-gray-100" : "border-b-0"}`}
+                                className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 sm:py-5 px-4 sm:px-6 ${!isLast ? "border-b border-gray-100" : "border-b-0"}`}
                             >
-                                {/* Timeline dot + line */}
-                                <div className="flex flex-col items-center self-stretch">
-                                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1" style={{ background: cfg.color }} />
-                                    {!isLast && (
-                                        <div className="w-px flex-1 bg-gray-200 mt-1" />
-                                    )}
-                                </div>
-
-                                {/* Icon */}
+                                {/* Status Icon */}
                                 <div
-                                    className="w-[52px] h-[52px] rounded-full flex-shrink-0 flex items-center justify-center"
+                                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex-shrink-0 flex items-center justify-center"
                                     style={{ background: cfg.bg }}
                                 >
-                                    <FontAwesomeIcon icon={cfg.icon} className="text-xl" style={{ color: cfg.color }} />
+                                    <FontAwesomeIcon icon={cfg.icon} className="text-lg" style={{ color: cfg.color }} />
                                 </div>
 
                                 {/* Content */}
@@ -345,7 +337,7 @@ export default function ServiceHistory( ) {
                                 {/* View Details button */}
                                 <button
                                     onClick={() => setSelectedRecord(record)}
-                                    className="flex-shrink-0 flex items-center gap-2 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold bg-transparent cursor-pointer transition-colors duration-150"
+                                    className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 rounded-[10px] py-2 px-3.5 text-[13px] font-semibold bg-transparent cursor-pointer transition-colors duration-150"
                                     style={{ border: `1px solid ${cfg.color}`, color: cfg.color }}
                                     onMouseEnter={e => e.currentTarget.style.background = cfg.bg}
                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}

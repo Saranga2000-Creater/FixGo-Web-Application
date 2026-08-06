@@ -75,6 +75,12 @@ class ReviewController {
 
             $reviewId = $this->review->create($customerId, $shopId, $serviceRequestId, $rating, $comment);
 
+            // Mark the customer's notification for this service request as read
+            try {
+                $markStmt = $this->review->getDb()->prepare("UPDATE notification SET isRead = 1 WHERE service_request_id = :req_id AND user_id = :user_id");
+                $markStmt->execute(['req_id' => $serviceRequestId, 'user_id' => $customerId]);
+            } catch (Throwable $t) {}
+
             echo json_encode(['success' => true, 'message' => 'Review submitted', 'review_id' => $reviewId]);
 
         } catch (PDOException $e) {

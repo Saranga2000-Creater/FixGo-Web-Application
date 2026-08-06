@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
@@ -29,8 +32,8 @@ const NAV_ITEMS = [
 function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount })  {
   const stats = [
     { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
-    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-emerald-600", icon: "🔧" },
-    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-emerald-600", icon: "✅" },
+    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-green-600", icon: "🔧" },
+    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-green-600", icon: "✅" },
     { label: "Average Rating", value: "4.8", sub: "(128 reviews)", subColor: "text-gray-500", icon: "⭐" },
   ];
   const quickActions = [
@@ -111,7 +114,9 @@ function renderPage(
     activeRepairCount,
     completedJobCount,
     setActiveNav,
-    fetchRequestCount
+    fetchRequestCount,
+    selectedNotifId,
+    onClearSelection
 )  {
   switch (activeNav) {
        case "dashboard":  return (<DashboardView shopData={shopData}requestCount={requestCount} activeRepairCount={activeRepairCount} completedJobCount={completedJobCount}/>);
@@ -131,6 +136,8 @@ function renderPage(
     return (
         <Notification
             setActiveNav={setActiveNav}
+            initialSelectedId={selectedNotifId}
+            onClearSelection={onClearSelection}
         />
     );
     case "settings":      return <Settings />;
@@ -142,7 +149,11 @@ function renderPage(
 // ── Main Layout (Guaranteed Spanning Layout) ──────────────────────────────────
 function ShopOwnerDashboard() {
   console.log("ShopOwnerDashboard rendered");
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeNav, setActiveNav] = useState(location.state?.targetPage || "dashboard");
+  const [selectedNotifId, setSelectedNotifId] = useState(location.state?.selectedNotifId || null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
   const [activeRepairCount, setActiveRepairCount] = useState(0);
@@ -150,6 +161,27 @@ function ShopOwnerDashboard() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [billingCount, setBillingCount] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.targetPage) {
+      setActiveNav(location.state.targetPage);
+      setSelectedNotifId(location.state.selectedNotifId || null);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.targetPage]);
+
+  useEffect(() => {
+    const handleNavigate = (e) => {
+        if (e.detail?.tab === "notifications") {
+            setActiveNav("notifications");
+            if (e.detail?.selectedNotifId) {
+                setSelectedNotifId(e.detail.selectedNotifId);
+            }
+        }
+    };
+    window.addEventListener("fixgo_navigate", handleNavigate);
+    return () => window.removeEventListener("fixgo_navigate", handleNavigate);
+  }, []);
 
 const fetchRequestCount = () => {
   api.get("getServiceRequests.php")
@@ -183,7 +215,7 @@ useEffect(() => {
         api.get("getNotifications.php")
         .then(data => {
             if (data.success) {
-                const unread = data.data.filter(
+                const unread = (data.data || []).filter(
                     n => Number(n.isRead) === 0
                 ).length;
                 setNotificationCount(unread);
@@ -193,8 +225,8 @@ useEffect(() => {
     };
 
     loadNotificationCount();
-    const interval = setInterval(loadNotificationCount, 5000);
-    return () => clearInterval(interval);
+    window.addEventListener("fixgo_unread_changed", loadNotificationCount);
+    return () => window.removeEventListener("fixgo_unread_changed", loadNotificationCount);
 }, []);
 
 useEffect(() => {
@@ -241,28 +273,57 @@ useEffect(() => {
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
   return (
-    <div className="flex min-h-screen bg-slate-50">
-     <Sidebar
-  activeNav={activeNav}
-  setActiveNav={setActiveNav}
-  shopData={shopData}
-  requestCount={requestCount}
-  activeRepairCount={activeRepairCount}
-  notificationCount={notificationCount}
-  reviewCount={reviewCount}
-  billingCount={billingCount}
-/>
+    <div className="flex min-h-screen bg-slate-50 font-sans">
+      {/* Mobile Backdrop Overlay */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-xs transition-opacity"
+        />
+      )}
 
-      <main className="flex-1 p-6 ml-[240px]">
+      <Sidebar
+        activeNav={activeNav}
+        setActiveNav={(id) => {
+          setActiveNav(id);
+          setSidebarOpen(false);
+        }}
+        shopData={shopData}
+        requestCount={requestCount}
+        activeRepairCount={activeRepairCount}
+        notificationCount={notificationCount}
+        reviewCount={reviewCount}
+        billingCount={billingCount}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <main className="flex-1 p-4 sm:p-6 ml-0 md:ml-60 transition-all duration-300">
+        {/* Mobile Menu Toggle Bar */}
+        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 border border-gray-100 mb-4 rounded-2xl shadow-xs">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 bg-transparent border-none cursor-pointer p-0"
+          >
+            <FontAwesomeIcon icon={sidebarOpen ? faXmark : faBars} className="text-base text-green-600" />
+            <span>Shop Menu</span>
+          </button>
+          <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full capitalize">
+            {currentLabel}
+          </span>
+        </div>
+
         {renderPage(
-    activeNav,
-    shopData,
-    requestCount,
-    activeRepairCount,
-    completedJobCount,
-    setActiveNav,
-    fetchRequestCount
-)}
+          activeNav,
+          shopData,
+          requestCount,
+          activeRepairCount,
+          completedJobCount,
+          setActiveNav,
+          fetchRequestCount,
+          selectedNotifId,
+          () => setSelectedNotifId(null)
+        )}
       </main>
     </div>
   );
