@@ -38,10 +38,7 @@ CREATE TABLE `billingConfiguration` (
     FOREIGN KEY (`updatedByAdminId`) REFERENCES `admin` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `billingConfiguration`
-  (`garagePerRequestFee`, `serviceCenterPerRequestFee`, `sparePartsMonthlyFee`,
-   `garageGracePeriodDays`, `serviceCenterGracePeriodDays`, `sparePartsGracePeriodDays`)
-VALUES (500.00, 400.00, 3000.00, 14, 14, 14);
+
 
 -- ============================================================
 -- STEP 3: Create `shopInvoice` — core billing ledger
