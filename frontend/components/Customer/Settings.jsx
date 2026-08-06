@@ -274,7 +274,7 @@ function Settings({ onNavigate }) {
                 title="App Settings"
                 description="Manage app behavior and data."
             >
-                <SettingsRow icon={faFileLines} label="Terms & Conditions" />
+                <SettingsRow icon={faFileLines} label="Terms & Conditions" onClick={() => navigate("/terms-conditions")} />
                 <div className="border-t border-gray-100">
                     <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" onClick={() => navigate("/support")} />
                 </div>
