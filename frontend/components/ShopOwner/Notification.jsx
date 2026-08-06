@@ -11,22 +11,22 @@ import { api } from "../../src/services/api";
 const FONT = "'Segoe UI', system-ui, sans-serif";
 
 const STATUS_META = {
-    Pending:           { icon: faClock,         iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
-    Accepted:          { icon: faCircleCheck,   iconBg: "rgba(37,99,235,0.10)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
-    Confirmed:         { icon: faHandshake,     iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
-    Diagnosis:         { icon: faStethoscope,   iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
-    "In Progress":     { icon: faWrench,        iconBg: "rgba(168,85,247,0.10)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
-    "Pending Parts":   { icon: faBoxesStacked,  iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
-    Completed:         { icon: faCircleCheck,   iconBg: "rgba(22,163,74,0.10)",  iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)",  badgeColor: "#16A34A",  label: "Completed"     },
-    Cancelled:         { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
-    Declined:          { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
-    
+    Pending: { icon: faClock, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Pending" },
+    Accepted: { icon: faCircleCheck, iconBg: "rgba(37,99,235,0.10)", iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)", badgeColor: "#2563EB", label: "Accepted" },
+    Confirmed: { icon: faHandshake, iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488", label: "Confirmed" },
+    Diagnosis: { icon: faStethoscope, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Diagnosis" },
+    "In Progress": { icon: faWrench, iconBg: "rgba(168,85,247,0.10)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7", label: "In Progress" },
+    "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Pending Parts" },
+    Completed: { icon: faCircleCheck, iconBg: "rgba(22,163,74,0.10)", iconColor: "#16A34A", badgeBg: "rgba(22,163,74,0.10)", badgeColor: "#16A34A", label: "Completed" },
+    Cancelled: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Cancelled" },
+    Declined: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Declined" },
+
     // Shop owner specific types
-    NewRequest:        { icon: faClipboardList, iconBg: "rgba(37,99,235,0.10)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "New Request",     targetNav: "requests", buttonText: "View Requests" },
-    CustomerConfirmed: { icon: faHandshake,     iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed",       targetNav: "repairs",  buttonText: "View Active Jobs" },
-    CustomerCancelled: { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
-    CustomerDeclined:  { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
-    NewReview:         { icon: faStar,           iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "New Review",      targetNav: "reviews",  buttonText: "View Reviews" },
+    NewRequest: { icon: faClipboardList, iconBg: "rgba(37,99,235,0.10)", iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)", badgeColor: "#2563EB", label: "New Request", targetNav: "requests", buttonText: "View Requests" },
+    CustomerConfirmed: { icon: faHandshake, iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488", label: "Confirmed", targetNav: "repairs", buttonText: "View Active Jobs" },
+    CustomerCancelled: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Cancelled" },
+    CustomerDeclined: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Declined" },
+    NewReview: { icon: faStar, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "New Review", targetNav: "reviews", buttonText: "View Reviews" },
 };
 
 const DEFAULT_META = {
@@ -40,10 +40,10 @@ const DEFAULT_META = {
 };
 
 const TABS = [
-    { key: "all",       label: "All"       },
-    { key: "unread",    label: "Unread"    },
-    { key: "requests",  label: "Requests"  },
-    { key: "reviews",   label: "Reviews"   },
+    { key: "all", label: "All" },
+    { key: "unread", label: "Unread" },
+    { key: "requests", label: "Requests" },
+    { key: "reviews", label: "Reviews" },
     { key: "cancelled", label: "Cancelled" },
 ];
 
@@ -54,7 +54,7 @@ const formatTime = (dateStr) => {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-    if (d.toDateString() === today.toDateString())     return `Today, ${timeStr}`;
+    if (d.toDateString() === today.toDateString()) return `Today, ${timeStr}`;
     if (d.toDateString() === yesterday.toDateString()) return `Yesterday, ${timeStr}`;
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + `, ${timeStr}`;
 };
@@ -66,10 +66,10 @@ export function useUnreadCount() {
         try {
             const res = await api.get("getNotifications.php");
             if (res.success) {
-                const unread = (res.data || res.notifications || []).filter(n => !n.isRead).length;
+                const unread = (res.data || res.notifications || []).filter(n => Number(n.isRead) === 0).length;
                 setCount(unread);
             }
-        } catch {}
+        } catch { }
     }, []);
 
     useEffect(() => {
@@ -84,9 +84,9 @@ export function useUnreadCount() {
 
 export default function Notification({ setActiveNav, initialSelectedId, onClearSelection }) {
     const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading]              = useState(true);
-    const [activeTab, setActiveTab]          = useState("all");
-    const [highlightedId, setHighlightedId]  = useState(initialSelectedId || null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("all");
+    const [highlightedId, setHighlightedId] = useState(initialSelectedId || null);
 
     const loadNotifications = useCallback(() => {
         api.get("getNotifications.php")
@@ -105,7 +105,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         meta,
                         requestNumber: item.service_request_id ? `REQ-${item.service_request_id}` : `NOTIF-${item.id}`,
                         vehicle: item.vehicle_brand || "",
-                        isUnread: !item.isRead,
+                        isUnread: Number(item.isRead) === 0,
                     };
                 });
                 setNotifications(formatted);
@@ -122,6 +122,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
 
     useEffect(() => {
         if (initialSelectedId) {
+            markAsRead(initialSelectedId);
             setHighlightedId(String(initialSelectedId));
             setActiveTab("all");
 
@@ -147,18 +148,18 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
     const unreadCount = notifications.filter((n) => n.isUnread).length;
 
     const tabCount = (key) => {
-        if (key === "all")       return notifications.length;
-        if (key === "unread")    return unreadCount;
-        if (key === "requests")  return notifications.filter(n => n.statusKey === "NewRequest" || n.statusKey === "CustomerConfirmed").length;
-        if (key === "reviews")   return notifications.filter(n => n.statusKey === "NewReview").length;
+        if (key === "all") return notifications.length;
+        if (key === "unread") return unreadCount;
+        if (key === "requests") return notifications.filter(n => n.statusKey === "NewRequest" || n.statusKey === "CustomerConfirmed").length;
+        if (key === "reviews") return notifications.filter(n => n.statusKey === "NewReview").length;
         if (key === "cancelled") return notifications.filter(n => n.statusKey === "CustomerCancelled" || n.statusKey === "CustomerDeclined" || n.statusKey === "Cancelled").length;
         return 0;
     };
 
     const filteredNotifications = notifications.filter((n) => {
-        if (activeTab === "unread")    return n.isUnread;
-        if (activeTab === "requests")  return n.statusKey === "NewRequest" || n.statusKey === "CustomerConfirmed";
-        if (activeTab === "reviews")   return n.statusKey === "NewReview";
+        if (activeTab === "unread") return n.isUnread;
+        if (activeTab === "requests") return n.statusKey === "NewRequest" || n.statusKey === "CustomerConfirmed";
+        if (activeTab === "reviews") return n.statusKey === "NewReview";
         if (activeTab === "cancelled") return n.statusKey === "CustomerCancelled" || n.statusKey === "CustomerDeclined" || n.statusKey === "Cancelled";
         return true;
     });
@@ -214,11 +215,10 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`rounded-full py-1.5 px-4 text-xs font-semibold cursor-pointer transition-all duration-150 border-none ${
-                                    active
+                                className={`rounded-full py-1.5 px-4 text-xs font-semibold cursor-pointer transition-all duration-150 border-none ${active
                                         ? "bg-green-600 text-white shadow-sm"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
+                                    }`}
                             >
                                 {tab.label} {count > 0 && <span className="ml-1 opacity-80">({count})</span>}
                             </button>
@@ -254,13 +254,12 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                 key={notif.id}
                                 id={`notif-card-${notif.id}`}
                                 onClick={() => markAsRead(notif.id)}
-                                className={`bg-white border rounded-2xl p-5 shadow-xs transition-all duration-300 relative cursor-pointer ${
-                                    isHighlighted
+                                className={`bg-white border rounded-2xl p-5 shadow-xs transition-all duration-300 relative cursor-pointer ${isHighlighted
                                         ? "border-2 border-green-500 shadow-lg shadow-green-500/20 scale-[1.01]"
                                         : notif.isUnread
                                             ? "border-green-200/80 bg-green-50/10 hover:border-green-300"
                                             : "border-gray-100 hover:border-gray-200"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-start gap-4">
                                     {/* Status Icon */}
@@ -316,6 +315,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
+                                                        markAsRead(notif.id);
                                                         setActiveNav(meta.targetNav);
                                                     }}
                                                     className="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:underline bg-transparent border-none cursor-pointer p-0"

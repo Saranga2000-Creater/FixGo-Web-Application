@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "./Sidebar";
@@ -148,8 +149,10 @@ function renderPage(
 // ── Main Layout (Guaranteed Spanning Layout) ──────────────────────────────────
 function ShopOwnerDashboard() {
   console.log("ShopOwnerDashboard rendered");
-  const [activeNav, setActiveNav] = useState("dashboard");
-  const [selectedNotifId, setSelectedNotifId] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeNav, setActiveNav] = useState(location.state?.targetPage || "dashboard");
+  const [selectedNotifId, setSelectedNotifId] = useState(location.state?.selectedNotifId || null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
@@ -158,6 +161,14 @@ function ShopOwnerDashboard() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [billingCount, setBillingCount] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.targetPage) {
+      setActiveNav(location.state.targetPage);
+      setSelectedNotifId(location.state.selectedNotifId || null);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.targetPage]);
 
   useEffect(() => {
     const handleNavigate = (e) => {

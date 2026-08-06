@@ -166,10 +166,10 @@ export const NavBar = () => {
         } catch {}
 
         if (userRole === "admin") {
-            navigate("/admin", { state: { targetPage: "verification" } });
+            navigate("/services", { state: { targetPage: "verification" } });
             window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "verification" } }));
         } else if (userRole === "shop" || userRole === "shop_owner") {
-            navigate("/shop-dashboard", { state: { targetPage: "notifications", selectedNotifId: id } });
+            navigate("/services", { state: { targetPage: "notifications", selectedNotifId: id } });
             window.dispatchEvent(new CustomEvent("fixgo_navigate", { detail: { tab: "notifications", selectedNotifId: id } }));
         } else {
             navigate("/services", { state: { targetPage: "notifications", selectedNotifId: id } });

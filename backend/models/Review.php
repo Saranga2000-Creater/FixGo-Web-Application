@@ -7,6 +7,10 @@ class Review {
         $this->db = $db;
     }
 
+    public function getDb() {
+        return $this->db;
+    }
+
     public function getServiceRequest($serviceRequestId) {
         $stmt = $this->db->prepare("SELECT status, customer_id, shop_id FROM servicerequest WHERE id = ?");
         $stmt->execute([$serviceRequestId]);

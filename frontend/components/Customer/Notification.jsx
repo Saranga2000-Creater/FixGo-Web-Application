@@ -292,6 +292,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
 
     useEffect(() => {
         if (initialSelectedId) {
+            markRead(initialSelectedId);
             setActiveTab("all");
             setHighlightedId(initialSelectedId);
             setTimeout(() => {
@@ -486,8 +487,11 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
                      onClose={() => setReviewModal(null)}
                     serviceRequestId={reviewModal.requestId}
                     shopId={reviewModal.shopId}
-                    shopName={reviewModal.shopName}
-                    onSubmitted={(requestId) => setReviewedIds(prev => [...prev, String(requestId)])}
+                    onSubmitted={(requestId) => {
+                        setReviewedIds(prev => [...prev, String(requestId)]);
+                        const targetNotif = notifications.find(n => String(n.service_request_id) === String(requestId));
+                        if (targetNotif) markRead(targetNotif.id);
+                    }}
                 />
             )}
 
