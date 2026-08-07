@@ -570,7 +570,9 @@ public function updateShopTowTruckDetails($shopId, $data) {
                         address = :address,
                         BRN = :brn,
                         openTime = :openTime,
-                        closeTime = :closeTime
+                        closeTime = :closeTime,
+                        description = :description,
+                        isAvailable = :isAvailable
                       WHERE id = :id";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
@@ -581,6 +583,8 @@ public function updateShopTowTruckDetails($shopId, $data) {
                 ':brn' => $data['brn'],
                 ':openTime' => $data['openTime'],
                 ':closeTime' => $data['closeTime'],
+                ':description' => $data['description'],
+                ':isAvailable' => $data['isAvailable'] ?? 1,
                 ':id' => $shopId
             ]);
 

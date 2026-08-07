@@ -290,18 +290,6 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
         })}
       </div>
 
-      {/* Search + Filter */}
-      <div className="flex gap-3 mb-6">
-        <input
-          placeholder="Search customer, vehicle, or service..."
-          className="flex-1 py-3 px-4.5 rounded-xl border border-[#E5E9F0] bg-white text-[15px] text-slate-900 outline-none transition-colors duration-150 ease-in-out focus:border-green-600"
-        />
-
-        <button className="bg-green-700 text-white border-none rounded-xl px-6 font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]">
-          Filter
-        </button>
-      </div>
-
       {/* Table card */}
       <div className="bg-white rounded-[18px] border border-[#E5E9F0] overflow-hidden shadow-[0_1px_3px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         {/* Table Header */}
