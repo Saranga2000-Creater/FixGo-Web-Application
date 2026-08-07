@@ -107,8 +107,6 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
                       ? requestCount
                       : item.id === "repairs"
                       ? activeRepairCount
-                      : item.id === "reviews"
-                      ? reviewCount
                       : item.id === "notifications"
                       ? notificationCount
                       : item.id === "billing"

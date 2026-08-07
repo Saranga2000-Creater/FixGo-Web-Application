@@ -659,6 +659,8 @@ public function updateShopTowTruckDetails($payload)
         $brn = trim($input['brn'] ?? '');
         $openTime = trim($input['openTime'] ?? '');
         $closeTime = trim($input['closeTime'] ?? '');
+        $description = trim($input['description'] ?? '');
+        $isAvailable = isset($input['isAvailable']) ? (int)$input['isAvailable'] : 1;
         $vehicleCategories = $input['vehicleCategories'] ?? [];
 
         if (empty($name) || empty($owner) || empty($phone) || empty($address)) {
@@ -690,7 +692,9 @@ public function updateShopTowTruckDetails($payload)
             'address' => $address,
             'brn' => $brn,
             'openTime' => $openTime,
-            'closeTime' => $closeTime
+            'closeTime' => $closeTime,
+            'description' => $description,
+            'isAvailable' => $isAvailable
         ];
 
         $shopModel = new Shop($this->db);

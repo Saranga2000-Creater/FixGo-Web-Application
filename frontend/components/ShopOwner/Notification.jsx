@@ -101,6 +101,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         title: item.title || "Notification",
                         subtitle: item.message || "",
                         statusKey,
+                        requestStatus: item.request_status || item.status,
                         timestamp: item.created_at,
                         meta,
                         requestNumber: item.service_request_id ? `REQ-${item.service_request_id}` : `NOTIF-${item.id}`,
@@ -248,6 +249,9 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                     filteredNotifications.map((notif) => {
                         const meta = notif.meta;
                         const isHighlighted = String(notif.id) === String(highlightedId);
+                        const isRequestMoved =
+    notif.statusKey === "NewRequest" &&
+    notif.requestStatus !== "Pending";
 
                         return (
                             <div
@@ -311,19 +315,37 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                                 )}
                                             </div>
 
-                                            {meta.targetNav && setActiveNav && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        markAsRead(notif.id);
-                                                        setActiveNav(meta.targetNav);
-                                                    }}
-                                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:underline bg-transparent border-none cursor-pointer p-0"
-                                                >
-                                                    <span>{meta.buttonText || "View details"}</span>
-                                                    <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
-                                                </button>
-                                            )}
+                                         {meta.targetNav && setActiveNav && (
+    <button
+        disabled={isRequestMoved}
+        onClick={(e) => {
+            e.stopPropagation();
+
+            if (isRequestMoved) return;
+
+            markAsRead(notif.id);
+            setActiveNav(meta.targetNav);
+        }}
+        className={`inline-flex items-center gap-1.5 text-xs font-bold bg-transparent border-none p-0 ${
+            isRequestMoved
+                ? "text-gray-400 cursor-not-allowed no-underline"
+                : "text-green-600 hover:text-green-700 hover:underline cursor-pointer"
+        }`}
+    >
+        <span>
+            {isRequestMoved
+                ? "Request Moved"
+                : meta.buttonText || "View details"}
+        </span>
+
+        {!isRequestMoved && (
+            <FontAwesomeIcon
+                icon={faChevronRight}
+                className="text-[10px]"
+            />
+        )}
+    </button>
+)}
                                         </div>
                                     </div>
                                 </div>

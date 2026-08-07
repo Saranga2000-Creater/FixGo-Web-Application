@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUser, faGear, faBell, faShieldHalved, faFileLines,
-  faStore, faClipboardList, faRotate, faFlag, faChevronRight,
+  faUser, faGear, faShieldHalved,
+  faStore, faChevronRight,
   faSave, faSpinner, faMoneyBillWave,
+  faShieldAlt, faFileLines, faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 import toast from "react-hot-toast";
@@ -164,9 +165,8 @@ function Settings() {
       title: "Admin Account",
       subtitle: "Manage admin profile and access.",
       rows: [
-        { icon: faUser,         label: "Edit Profile",    onClick: null },
+        { icon: faUser,         label: "Edit Email",      onClick: null },
         { icon: faShieldHalved, label: "Change Password", onClick: null },
-        { icon: faFileLines,    label: "Activity Log",    onClick: null },
       ],
     },
     {
@@ -177,20 +177,19 @@ function Settings() {
       subtitle: "Platform-level configuration.",
       rows: [
         { icon: faMoneyBillWave,  label: "Billing Rates",      onClick: () => setShowRatesModal(true) },
-        { icon: faStore,          label: "Commission Rates",    onClick: null },
-        { icon: faClipboardList,  label: "Verification Rules",  onClick: null },
-        { icon: faRotate,         label: "API & Integrations",  onClick: null },
+        { icon: faStore,          label: "Commission Rates",   onClick: null },
       ],
     },
     {
-      icon: faBell,
-      iconBg: "bg-[#FFF4EE]",
-      iconColor: "text-[#FF6B1A]",
-      title: "Notifications",
-      subtitle: "Alert and notification preferences.",
+      icon: faGear,
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-500",
+      title: "App Settings",
+      subtitle: "Manage app behavior and data.",
       rows: [
-        { icon: faBell, label: "Email Alerts",      onClick: null },
-        { icon: faFlag, label: "Moderation Alerts", onClick: null },
+        { icon: faShieldAlt,   label: "Privacy Policy",     onClick: null },
+        { icon: faFileLines,   label: "Terms & Conditions", onClick: null },
+        { icon: faCircleInfo,  label: "About FixGo",        onClick: null, trailing: "Version 1.0.0" },
       ],
     },
   ];
@@ -227,7 +226,12 @@ function Settings() {
                   <FontAwesomeIcon icon={row.icon} className="text-gray-400 w-4" />
                   <span className="text-sm text-gray-700">{row.label}</span>
                 </div>
-                <FontAwesomeIcon icon={faChevronRight} className="text-[11px] text-gray-400" />
+                <div className="flex items-center gap-2">
+                  {row.trailing && (
+                    <span className="text-xs text-gray-400">{row.trailing}</span>
+                  )}
+                  <FontAwesomeIcon icon={faChevronRight} className="text-[11px] text-gray-400" />
+                </div>
               </button>
             ))}
           </div>
