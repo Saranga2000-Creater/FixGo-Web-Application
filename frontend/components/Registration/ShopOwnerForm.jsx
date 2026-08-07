@@ -6,6 +6,9 @@ import { api } from "../../src/services/api";
 
 
 export default function ShopForm() {
+    const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    });
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         ownerName: "",
@@ -34,12 +37,34 @@ export default function ShopForm() {
     const [shopImagePreview, setShopImagePreview] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [availableCategories, setAvailableCategories] = useState([]);
+    const [availableVehicleCategories, setAvailableVehicleCategories] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Load the Google Maps API Script
-    const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
-    });
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await api.getPublic("getCategories.php");
+                if (res?.services) {
+                    setAvailableCategories(res.services);
+                }
+                if (res?.vehicles) {
+                    setAvailableVehicleCategories(res.vehicles);
+                }
+            } catch (err) {
+                console.error("Failed to load categories:", err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    const getVehicleIcon = (name) => {
+        const lower = (name || "").toLowerCase();
+        if (lower.includes("bike") || lower.includes("3 wheel")) return "🏍️";
+        if (lower.includes("car") || lower.includes("4 wheel")) return "🚗";
+        if (lower.includes("commercial") || lower.includes("truck")) return "🚛";
+        return "⚙️";
+    };
 
 
     const handleChange = (e) => {
@@ -325,20 +350,19 @@ export default function ShopForm() {
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         >
                             <option value="">Select Category</option>
-                            <option value="Garages">Garages</option>
-                            <option value="Service centers">Service centers</option>
-                            <option value="Spare parts">Spare parts</option>
+                            {availableCategories.map((cat) => (
+                                <option key={cat.id} value={cat.name || cat.label}>
+                                    {cat.name || cat.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Vehicle Categories Serviced</label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {[
-                                { id: "bikes", val: "3 wheelers and bikes", label: "3 Wheelers & Bikes", icon: "🏍️" },
-                                { id: "cars", val: "4 wheelers", label: "4 Wheelers", icon: "🚗" },
-                                { id: "commercial", val: "commercial vehicles", label: "Commercial Vehicles", icon: "🚛" }
-                            ].map((item) => {
-                                const isChecked = Array.isArray(formData.vehicleCategory) && formData.vehicleCategory.includes(item.val);
+                            {availableVehicleCategories.map((item) => {
+                                const val = item.name || item.label;
+                                const isChecked = Array.isArray(formData.vehicleCategory) && formData.vehicleCategory.includes(val);
                                 return (
                                     <label
                                         key={item.id}
@@ -351,13 +375,13 @@ export default function ShopForm() {
                                         <input
                                             type="checkbox"
                                             name="vehicleCategory"
-                                            value={item.val}
+                                            value={val}
                                             checked={isChecked}
                                             onChange={handleVehicleCategoryChange}
                                             className="rounded text-green-600 focus:ring-green-500 w-4 h-4 transition-all"
                                         />
-                                        <span className="text-lg">{item.icon}</span>
-                                        <span className="text-sm font-medium">{item.label}</span>
+                                        <span className="text-lg">{getVehicleIcon(val)}</span>
+                                        <span className="text-sm font-medium">{val}</span>
                                     </label>
                                 );
                             })}

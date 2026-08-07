@@ -92,6 +92,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
       fetchRequests();
       fetchRequestCount();
+      window.dispatchEvent(new Event("fixgo_unread_changed"));
 
       if (status === "Declined" && declinedLoaded) {
         fetchDeclinedRequests();

@@ -262,14 +262,18 @@ class ShopController {
             return;
         }
 
-        // Map Shop Category
+        // Map Shop Category dynamically from database
         $categoryId = null;
-        if (strcasecmp($category, 'Garages') === 0) {
-            $categoryId = 1;
-        } elseif (strcasecmp($category, 'Service centers') === 0 || strcasecmp($category, 'Service Centers') === 0) {
-            $categoryId = 2;
-        } elseif (strcasecmp($category, 'Spare parts') === 0 || strcasecmp($category, 'Spare Parts') === 0) {
-            $categoryId = 3;
+        if (is_numeric($category)) {
+            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => (int)$category]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) $categoryId = (int)$row['id'];
+        } else {
+            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
+            $stmt->execute([':name' => trim($category)]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) $categoryId = (int)$row['id'];
         }
 
         if ($categoryId === null) {
@@ -278,7 +282,7 @@ class ShopController {
             return;
         }
 
-        // Map Vehicle Category
+        // Map Vehicle Categories dynamically from database
         $vehicleIds = [];
         $categoriesToProcess = [];
         if (is_array($vehicleCategory)) {
@@ -298,12 +302,16 @@ class ShopController {
         }
 
         foreach ($categoriesToProcess as $cat) {
-            if (strcasecmp($cat, '3 wheelers and bikes') === 0 || strcasecmp($cat, '3 Wheelers & Bikes') === 0) {
-                $vehicleIds[] = 1;
-            } elseif (strcasecmp($cat, '4 wheelers') === 0 || strcasecmp($cat, '4 Wheelers') === 0) {
-                $vehicleIds[] = 2;
-            } elseif (strcasecmp($cat, 'commercial vehicles') === 0 || strcasecmp($cat, 'Commercial Vehicles') === 0) {
-                $vehicleIds[] = 3;
+            if (is_numeric($cat)) {
+                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE id = :id LIMIT 1");
+                $stmt->execute([':id' => (int)$cat]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($row) $vehicleIds[] = (int)$row['id'];
+            } else {
+                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
+                $stmt->execute([':name' => trim($cat)]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($row) $vehicleIds[] = (int)$row['id'];
             }
         }
 
@@ -737,6 +745,72 @@ public function updateShopTowTruckDetails($payload)
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "Server error: " . $e->getMessage()]);
+        }
+    }
+
+    private function authorizeShopOwner($payload, $allowedMethod = null) {
+        if ($allowedMethod && $_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return false;
+        }
+        $role = $payload['role'] ?? $payload['userRole'] ?? '';
+        $shopId = $payload['user_id'] ?? $payload['id'] ?? null;
+        if (!$shopId || $role !== 'shop_owner') {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Shop owner access required."]);
+            return false;
+        }
+        return $shopId;
+    }
+
+
+    public function updatePassword($payload) {
+        $shopId = $this->authorizeShopOwner($payload, 'POST');
+        if (!$shopId) return;
+
+        $rawInput = file_get_contents("php://input");
+        $data = json_decode($rawInput, true);
+        if (!is_array($data) || empty($data)) {
+            $data = $_POST;
+        }
+
+        $currentPassword = isset($data['currentPassword']) ? $data['currentPassword'] : '';
+        $newPassword = isset($data['newPassword']) ? $data['newPassword'] : '';
+        $confirmPassword = isset($data['confirmPassword']) ? $data['confirmPassword'] : '';
+
+        if (empty(trim($currentPassword)) || empty(trim($newPassword))) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Current password and new password are required."]);
+            return;
+        }
+
+        if (strlen(trim($newPassword)) < 6) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "New password must be at least 6 characters long."]);
+            return;
+        }
+
+        if (trim($newPassword) !== trim($confirmPassword)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "New password and confirm password do not match."]);
+            return;
+        }
+
+        $shopModel = new Shop($this->db);
+
+        if (!$shopModel->verifyPassword($shopId, $currentPassword)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Current password is incorrect."]);
+            return;
+        }
+
+        if ($shopModel->updatePassword($shopId, trim($newPassword))) {
+            http_response_code(200);
+            echo json_encode(["success" => true, "message" => "Password updated successfully!"]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to update password."]);
         }
     }
 }

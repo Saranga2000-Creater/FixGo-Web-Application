@@ -7,4 +7,4 @@ $database = new Database();
 $db = $database->connect();
 
 $controller = new ShopController($db);
-$controller->deleteGalleryImage($payload);
+$controller->updatePassword($payload);
