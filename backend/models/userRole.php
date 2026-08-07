@@ -146,4 +146,54 @@ class User {
         return $stmt->execute();
     }
 
+    /**
+     * Admin Dashboard: Get total count of active customers
+     */
+    public function getActiveCustomerCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM users 
+            WHERE isActive = 1 AND userRole = 'customer'
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Admin Dashboard: Get distribution of user roles (Customer vs Shop Owner)
+     */
+    public function getUserRoleDistribution() {
+        $stmt = $this->conn->prepare("
+            SELECT userRole, COUNT(id) as count
+            FROM users
+            WHERE isActive = 1 AND userRole IN ('customer', 'shop_owner')
+            GROUP BY userRole
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'name' => ucfirst(str_replace('_', ' ', $row['userRole'])),
+                'value' => (int)$row['count']
+            ];
+        }
+        return $formatted;
+    }
+
+    /**
+     * Admin Dashboard: Get count of shop owners waiting for admin verification
+     */
+    public function getPendingShopOwnerCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) FROM users 
+            WHERE userRole = 'shop_owner' 
+            AND is_email_verified = 1 
+            AND isActive = 0
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 }
+?>

@@ -396,4 +396,31 @@ class ShopInvoice {
         $stmt->execute(array_merge([$year, $month], $categoryIds));
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Admin Dashboard: Get count of invoices pending verification
+     */
+    public function getPendingInvoiceCount(): int {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM shopInvoice 
+            WHERE invoiceStatus = 'Verification Pending'
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Admin Dashboard: Get count of overdue invoices
+     */
+    public function getOverdueInvoiceCount(): int {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM shopInvoice 
+            WHERE invoiceStatus = 'Overdue'
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 }
+?>
