@@ -1,80 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faShieldHalved,
+  faGear,
+  faLock,
+  faFileLines,
+  faCircleInfo,
+  faChevronRight
+} from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 
-// Simple inline icon components
-function IconShield({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-    </svg>
-  );
-}
-
-function IconSmartphone({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="5" y="2" width="14" height="20" rx="2" />
-      <line x1="12" y1="18" x2="12" y2="18" />
-    </svg>
-  );
-}
-
-
-function IconLock({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
-function IconFileText({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-      <path d="M14 2v6h6" />
-      <line x1="8" y1="13" x2="16" y2="13" />
-      <line x1="8" y1="17" x2="16" y2="17" />
-    </svg>
-  );
-}
-
-function IconInfo({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="16" x2="12" y2="12" />
-      <line x1="12" y1="8" x2="12" y2="8" />
-    </svg>
-  );
-}
-
-function IconChevronRight({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
-}
-
 const SECURITY_ITEMS = [
-  { icon: IconLock, label: "Password Update" },
+  { icon: faLock, label: "Password Update" },
 ];
 
 const APP_SETTINGS_ITEMS = [
-  { icon: IconFileText, label: "Terms & Conditions" },
-  { icon: IconInfo, label: "About FixGo", trailing: "Version 1.0.0" },
+  { icon: faFileLines, label: "Terms & Conditions" },
+  { icon: faCircleInfo, label: "About FixGo", trailing: "Version 1.0.0" },
 ];
 
-function SettingsSection({ icon: Icon, iconBg, iconColor, title, description, items, onItemClick }) {
+function SettingsSection({ icon, iconBg, iconColor, title, description, items, onItemClick }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden grid grid-cols-1 md:[grid-template-columns:280px_1fr] items-stretch">
       {/* Left info panel */}
       <div className="p-5 border-b md:border-b-0 md:border-r border-gray-100">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>
-          <Icon className={`w-5 h-5 ${iconColor}`} />
+          <FontAwesomeIcon icon={icon} className={`text-lg ${iconColor}`} />
         </div>
         <h3 className="font-bold text-base text-gray-900 mb-1.5">{title}</h3>
         <p className="text-sm text-gray-500 leading-snug m-0">{description}</p>
@@ -92,14 +44,14 @@ function SettingsSection({ icon: Icon, iconBg, iconColor, title, description, it
             }`}
           >
             <span className="flex items-center gap-3">
-              <item.icon className="w-[18px] h-[18px] text-green-600" />
+              <FontAwesomeIcon icon={item.icon} className="w-[18px] h-[18px] text-green-600" />
               <span className="text-sm font-semibold text-gray-900">{item.label}</span>
             </span>
             <span className="flex items-center gap-2">
               {item.trailing && (
                 <span className="text-xs text-gray-400">{item.trailing}</span>
               )}
-              <IconChevronRight className="w-4 h-4 text-gray-300" />
+              <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4 text-gray-300" />
             </span>
           </button>
         ))}
@@ -192,7 +144,7 @@ function Settings() {
 
       <div className="flex flex-col gap-5">
         <SettingsSection
-          icon={IconShield}
+          icon={faShieldHalved}
           iconBg="bg-blue-50"
           iconColor="text-blue-600"
           title="Security"
@@ -201,7 +153,7 @@ function Settings() {
           onItemClick={handleItemClick}
         />
         <SettingsSection
-          icon={IconSmartphone}
+          icon={faGear}
           iconBg="bg-orange-50"
           iconColor="text-orange-500"
           title="App Settings"
@@ -218,7 +170,7 @@ function Settings() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 relative space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-base text-slate-900 m-0 flex items-center gap-2">
-                <IconLock className="w-5 h-5 text-green-600" />
+                <FontAwesomeIcon icon={faLock} className="w-5 h-5 text-green-600" />
                 Update Password
               </h3>
               <button
