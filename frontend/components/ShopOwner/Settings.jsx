@@ -7,7 +7,8 @@ import {
   faLock,
   faFileLines,
   faCircleInfo,
-  faChevronRight
+  faChevronRight,
+  faXmark
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 
@@ -176,9 +177,9 @@ function Settings() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg border-none bg-transparent cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 font-bold text-base border-none bg-transparent cursor-pointer"
               >
-                ✕
+                <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
 

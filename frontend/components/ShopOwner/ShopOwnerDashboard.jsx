@@ -1,7 +1,20 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faXmark,
+  faCarSide,
+  faClipboardList,
+  faWrench,
+  faClock,
+  faStar,
+  faStore,
+  faBell,
+  faCreditCard,
+  faGear,
+  faCircleCheck,
+} from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
@@ -13,37 +26,62 @@ import Settings from "./Settings";
 import Billing from "./Billing";
 import { api } from "../../src/services/api";
 
-
-
-
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "🏠" },
-  { id: "requests", label: "Service Requests", icon: "📋" },
-  { id: "repairs", label: "Active Repairs", icon: "🔧" },
-  { id: "history", label: "Service History", icon: "🕐" },
-  { id: "reviews", label: "Reviews & Ratings", icon: "⭐" },
-  { id: "profile", label: "Shop Profile", icon: "🏪" },
-  { id: "notifications", label: "Notifications", icon: "🔔" },
-  { id: "billing", label: "Billing", icon: "💳" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "dashboard", label: "Dashboard", icon: faCarSide },
+  { id: "requests", label: "Service Requests", icon: faClipboardList },
+  { id: "repairs", label: "Active Repairs", icon: faWrench },
+  { id: "history", label: "Service History", icon: faClock },
+  { id: "reviews", label: "Reviews & Ratings", icon: faStar },
+  { id: "profile", label: "Shop Profile", icon: faStore },
+  { id: "notifications", label: "Notifications", icon: faBell },
+  { id: "billing", label: "Billing", icon: faCreditCard },
+  { id: "settings", label: "Settings", icon: faGear },
 ];
 
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
-function DashboardView({ shopData, requestCount, activeRepairCount, completedJobCount ,averageRating,
-  reviewCount })  {
+function DashboardView({
+  shopData,
+  requestCount,
+  activeRepairCount,
+  completedJobCount,
+  averageRating,
+  reviewCount,
+  setActiveNav,
+}) {
   const stats = [
-    { label: "New Requests", value: requestCount, sub: "Pending requests", subColor: "text-green-600", icon: "📋" },
-    { label: "Active Jobs", value: activeRepairCount, sub: "View all", subColor: "text-green-600", icon: "🔧" },
-    { label: "Completed Jobs", value: completedJobCount, sub: "+6 this week", subColor: "text-green-600", icon: "✅" },
     {
-  label: "Average Rating",
-  value: reviewCount > 0 ? Number(averageRating).toFixed(1) : "0.0",
-  sub: `(${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`,
-  subColor: "text-gray-500",
-  icon: "⭐",
-},
+      label: "New Requests",
+      value: requestCount,
+      sub: "Pending requests",
+      subColor: "text-green-600",
+      icon: faClipboardList,
+      target: "requests",
+    },
+    {
+      label: "Active Jobs",
+      value: activeRepairCount,
+      sub: "View all",
+      subColor: "text-green-600",
+      icon: faWrench,
+      target: "repairs",
+    },
+    {
+      label: "Completed Jobs",
+      value: completedJobCount,
+      sub: "+6 this week",
+      subColor: "text-green-600",
+      icon: faCircleCheck,
+      target: "history",
+    },
+    {
+      label: "Average Rating",
+      value: reviewCount > 0 ? Number(averageRating).toFixed(1) : "0.0",
+      sub: `(${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`,
+      subColor: "text-gray-500",
+      icon: faStar,
+      target: "reviews",
+    },
   ];
-
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -74,9 +112,20 @@ function DashboardView({ shopData, requestCount, activeRepairCount, completedJob
         {stats.map((s) => (
           <div
             key={s.label}
+            role="button"
+            tabIndex={0}
+            onClick={() => setActiveNav && setActiveNav(s.target)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (setActiveNav) setActiveNav(s.target);
+              }
+            }}
             className="bg-white rounded-[18px] border border-[#E7EFE8] py-5 px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
           >
-            <div className="text-2xl mb-2">{s.icon}</div>
+            <div className="text-2xl mb-2 text-green-600">
+              <FontAwesomeIcon icon={s.icon} />
+            </div>
             <div className="text-gray-500 text-[13px] mb-1">{s.label}</div>
             <div className="text-[32px] font-bold text-gray-900 leading-none">{s.value}</div>
             <div className={`text-[13px] mt-1.5 ${s.subColor}`}>{s.sub}</div>
@@ -86,8 +135,6 @@ function DashboardView({ shopData, requestCount, activeRepairCount, completedJob
   </div>
   );
 }
-
-
 
 function renderPage(
   activeNav,
@@ -112,6 +159,7 @@ function renderPage(
       completedJobCount={completedJobCount}
       averageRating={averageRating}
       reviewCount={reviewCount}
+      setActiveNav={setActiveNav}
     />
   );
     case "requests":      return <ServiceRequests
@@ -136,7 +184,17 @@ function renderPage(
     );
     case "settings":      return <Settings />;
     case "billing":       return <Billing />;
-    default:              return <DashboardView />;
+    default:              return (
+      <DashboardView
+        shopData={shopData}
+        requestCount={requestCount}
+        activeRepairCount={activeRepairCount}
+        completedJobCount={completedJobCount}
+        averageRating={averageRating}
+        reviewCount={reviewCount}
+        setActiveNav={setActiveNav}
+      />
+    );
   }
 }
 
@@ -284,7 +342,7 @@ useEffect(() => {
     const currentLabel =
     NAV_ITEMS.find((n) => n.id === activeNav)?.label || "Dashboard";
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-[#F4F8F5] text-[#111827]" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       {/* Mobile Backdrop Overlay */}
       {sidebarOpen && (
         <div 
@@ -309,34 +367,36 @@ useEffect(() => {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex-1 p-4 sm:p-6 ml-0 md:ml-60 transition-all duration-300">
-        {/* Mobile Menu Toggle Bar */}
-        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 border border-gray-100 mb-4 rounded-2xl shadow-xs">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 bg-transparent border-none cursor-pointer p-0"
-          >
-            <FontAwesomeIcon icon={sidebarOpen ? faXmark : faBars} className="text-base text-green-600" />
-            <span>Shop Menu</span>
-          </button>
-          <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full capitalize">
-            {currentLabel}
-          </span>
-        </div>
+      <main className="ml-0 md:ml-60 min-h-[calc(100vh-65px)] p-4 sm:p-6 box-border transition-all duration-300">
+        <div className="max-w-[1180px] mx-auto">
+          {/* Mobile Menu Toggle Bar */}
+          <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 border border-gray-100 mb-4 rounded-2xl shadow-xs">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 bg-transparent border-none cursor-pointer p-0"
+            >
+              <FontAwesomeIcon icon={sidebarOpen ? faXmark : faBars} className="text-base text-green-600" />
+              <span>Shop Menu</span>
+            </button>
+            <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full capitalize">
+              {currentLabel}
+            </span>
+          </div>
 
-     {renderPage(
-  activeNav,
-  shopData,
-  requestCount,
-  activeRepairCount,
-  completedJobCount,
-  averageRating,
-  reviewCount,
-  setActiveNav,
-  fetchRequestCount,
-  selectedNotifId,
-  () => setSelectedNotifId(null)
-)}
+          {renderPage(
+            activeNav,
+            shopData,
+            requestCount,
+            activeRepairCount,
+            completedJobCount,
+            averageRating,
+            reviewCount,
+            setActiveNav,
+            fetchRequestCount,
+            selectedNotifId,
+            () => setSelectedNotifId(null)
+          )}
+        </div>
       </main>
     </div>
   );
