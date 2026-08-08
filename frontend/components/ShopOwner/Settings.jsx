@@ -124,6 +124,8 @@ function Settings() {
       setActiveModal("password");
     } else if (label === "Terms & Conditions") {
       navigate("/terms-conditions");
+    } else if (label === "About FixGo") {
+      navigate("/support");
     } else {
       alert(`${label} - Coming soon.`);
     }
