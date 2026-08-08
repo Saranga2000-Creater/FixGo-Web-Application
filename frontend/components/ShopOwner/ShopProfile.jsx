@@ -1,4 +1,26 @@
 import { useEffect, useState, useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faStar,
+  faCamera,
+  faCheck,
+  faLocationDot,
+  faEye,
+  faCircleInfo,
+  faClock,
+  faImage,
+  faTruck,
+  faWrench,
+  faPenToSquare,
+  faStore,
+  faTag,
+  faUser,
+  faCar,
+  faEnvelope,
+  faPhone,
+  faClipboardList,
+  faFileLines,
+} from "@fortawesome/free-solid-svg-icons";
 import { api, UPLOADS_URL } from "../../src/services/api";
 
 const VEHICLE_CAT_OPTIONS = [
@@ -21,12 +43,11 @@ function Stars({ count, max = 5 }) {
   return (
     <span className="inline-flex gap-0.5">
       {Array.from({ length: max }).map((_, i) => (
-        <span
+        <FontAwesomeIcon
           key={i}
+          icon={faStar}
           className={`text-sm ${i < count ? "text-amber-500" : "text-gray-300"}`}
-        >
-          ★
-        </span>
+        />
       ))}
     </span>
   );
@@ -504,7 +525,7 @@ function ShopProfile() {
               title="Change Profile Photo"
               className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white text-slate-700 shadow-md border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-transform active:scale-95"
             >
-              {uploadingProfilePhoto ? "..." : "📷"}
+              {uploadingProfilePhoto ? "..." : <FontAwesomeIcon icon={faCamera} />}
             </button>
           </div>
 
@@ -514,7 +535,7 @@ function ShopProfile() {
                 {shopData.name}
               </h2>
               <span className="bg-green-50 text-green-600 border border-green-200/80 rounded-full py-0.5 px-3 text-xs font-semibold inline-flex items-center gap-1">
-                ✓ Verified
+                <FontAwesomeIcon icon={faCheck} /> Verified
               </span>
 
               {/* Shop Availability Badge */}
@@ -537,7 +558,7 @@ function ShopProfile() {
             </p>
             
             <div className="text-xs font-medium text-slate-500 flex items-center justify-center md:justify-start gap-1">
-              <span className="text-green-600">📍</span> {shopData.address}
+              <FontAwesomeIcon icon={faLocationDot} className="text-green-600" /> {shopData.address}
             </div>
             
             <div className="flex items-center justify-center md:justify-start gap-1.5 pt-1">
@@ -558,7 +579,7 @@ function ShopProfile() {
           onClick={handleGoToShop}
           className="py-2.5 px-5 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-2 transition-all shadow-2xs shrink-0"
         >
-          <span>👁️</span> Go to My Shop ↗
+          <FontAwesomeIcon icon={faEye} /> Go to My Shop ↗
         </button>
       </div>
 
@@ -573,7 +594,7 @@ function ShopProfile() {
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>ℹ️</span> Shop Information
+          <FontAwesomeIcon icon={faCircleInfo} /> Shop Information
         </button>
 
         <button
@@ -585,7 +606,7 @@ function ShopProfile() {
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>⏰</span> Opening Hours
+          <FontAwesomeIcon icon={faClock} /> Opening Hours
         </button>
 
         <button
@@ -597,7 +618,7 @@ function ShopProfile() {
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🖼️</span> Shop Gallery
+          <FontAwesomeIcon icon={faImage} /> Shop Gallery
         </button>
 
         <button
@@ -609,7 +630,7 @@ function ShopProfile() {
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🚛</span> Transportation Details
+          <FontAwesomeIcon icon={faTruck} /> Transportation Details
         </button>
 
         <button
@@ -621,7 +642,7 @@ function ShopProfile() {
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🔧</span> Services Offered
+          <FontAwesomeIcon icon={faWrench} /> Services Offered
         </button>
       </div>
 
@@ -643,7 +664,7 @@ function ShopProfile() {
                   onClick={() => setIsEditingBusinessInfo(true)}
                   className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
                 >
-                  <span>✏️</span> Edit Information
+                  <FontAwesomeIcon icon={faPenToSquare} /> Edit Information
                 </button>
               ) : (
                 <button
@@ -662,28 +683,28 @@ function ShopProfile() {
                 <div className="space-y-3.5 divide-y divide-slate-100">
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🏪</span> Shop Name
+                      <FontAwesomeIcon icon={faStore} className="text-slate-400" /> Shop Name
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.name}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🏷️</span> Category
+                      <FontAwesomeIcon icon={faTag} className="text-slate-400" /> Category
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.categories || "Garages"}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>👤</span> Owner
+                      <FontAwesomeIcon icon={faUser} className="text-slate-400" /> Owner
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.owner}</span>
                   </div>
 
                   <div className="flex items-start justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🚗</span> Vehicle Categories
+                      <FontAwesomeIcon icon={faCar} className="text-slate-400" /> Vehicle Categories
                     </span>
                     <span className="text-slate-900 font-bold text-right max-w-[60%] leading-relaxed">
                       {shopData.vehicleCategories || "3 Wheelers & Bikes, 4 Wheelers, Commercial Vehicles"}
@@ -692,28 +713,28 @@ function ShopProfile() {
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>✉️</span> Email (Read-Only)
+                      <FontAwesomeIcon icon={faEnvelope} className="text-slate-400" /> Email (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.email}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📞</span> Phone
+                      <FontAwesomeIcon icon={faPhone} className="text-slate-400" /> Phone
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.contactNumber}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📍</span> Address (Read-Only)
+                      <FontAwesomeIcon icon={faLocationDot} className="text-slate-400" /> Address (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.address}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📋</span> Reg. No. (Read-Only)
+                      <FontAwesomeIcon icon={faClipboardList} className="text-slate-400" /> Reg. No. (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.BRN || "Not Available"}</span>
                   </div>
@@ -723,7 +744,7 @@ function ShopProfile() {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="text-slate-600 font-semibold flex items-center gap-2">
-                      <span>🛠️</span> Carriage Service
+                      <FontAwesomeIcon icon={faWrench} className="text-slate-400" /> Carriage Service
                     </span>
                     <span className={`font-bold py-0.5 px-3 rounded-full text-xs ${
                       shopData.carriageService ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-700"
@@ -734,7 +755,7 @@ function ShopProfile() {
 
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <span className="text-slate-600 font-semibold block flex items-center gap-2">
-                      <span>📝</span> Description
+                      <FontAwesomeIcon icon={faFileLines} className="text-slate-400" /> Description
                     </span>
                     <p className="text-slate-700 leading-relaxed text-xs m-0">
                       {shopData.description || "We provide high-quality vehicle repair and maintenance services with experienced technicians and modern equipment. Your vehicle's safety and performance are our top priority."}
