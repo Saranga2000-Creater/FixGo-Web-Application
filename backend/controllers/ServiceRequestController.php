@@ -81,8 +81,22 @@ class ServiceRequestController {
     }
 }
 
-    public function handleCreateRequest($requestData, $payload)
+    public function handleCreateRequest($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["message" => "Method not allowed."]);
+        return;
+    }
+
+    $requestData = json_decode(file_get_contents("php://input"), true);
+
+    if ($requestData === null) {
+        http_response_code(400);
+        echo json_encode(["message" => "Invalid request body."]);
+        return;
+    }
+
     $requestData['customer_id'] = $payload['user_id'];
 
         if (
@@ -91,7 +105,8 @@ class ServiceRequestController {
             empty($requestData['vehicle_category_id'])
         ) {
             http_response_code(400);
-            return json_encode(["message" => "Incomplete data. Shop ID, Customer ID, and Vehicle Category are required."]);
+            echo json_encode(["message" => "Incomplete data. Shop ID, Customer ID, and Vehicle Category are required."]);
+            return;
         }
 
         if (
@@ -155,21 +170,35 @@ class ServiceRequestController {
         }
     }
 
-    public function handleUpdateStatus($requestData, $payload)
+    public function handleUpdateStatus($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["message" => "Only POST requests are allowed."]);
+        return;
+    }
+
+    $requestData = json_decode(file_get_contents("php://input"), true);
+
+    if ($requestData === null) {
+        http_response_code(400);
+        echo json_encode(["message" => "Invalid or missing JSON payload."]);
+        return;
+    }
+
     $actor_id = $payload['user_id'] ?? null;
     $actor_role = $payload['role'] ?? null;
 
     if (!$actor_id || !$actor_role) {
         http_response_code(401);
-        return json_encode([
-            "message" => "Unauthorized."
-        ]);
+        echo json_encode(["message" => "Unauthorized."]);
+        return;
     }
 
         if (empty($requestData['request_id']) || empty($requestData['new_status'])) {
             http_response_code(400);
-            return json_encode(["message" => "Request ID and New Status are required."]);
+            echo json_encode(["message" => "Request ID and New Status are required."]);
+            return;
         }
 
         $request_id = $requestData['request_id'];

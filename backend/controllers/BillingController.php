@@ -71,7 +71,20 @@ class BillingController {
     // ADMIN: UPDATE billing configuration
     // ============================================================
 
-    public function updateRates(array $data, int $adminId): void {
+    public function updateRates(int $adminId): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        if ($data === null) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid JSON payload."]);
+            return;
+        }
+
         $allowed = [
             'garagePerRequestFee', 'serviceCenterPerRequestFee', 'sparePartsMonthlyFee',
             'garageGracePeriodDays', 'serviceCenterGracePeriodDays', 'sparePartsGracePeriodDays',
@@ -106,7 +119,29 @@ class BillingController {
     // ADMIN: GENERATE draft invoices for a billing period
     // ============================================================
 
-    public function generateDrafts(int $year, int $month): void {
+    public function generateDrafts(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        if ($data === null || !isset($data['year'], $data['month'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Required fields: year, month."]);
+            return;
+        }
+
+        $year  = (int)$data['year'];
+        $month = (int)$data['month'];
+
+        if ($year < 2024 || $month < 1 || $month > 12) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid year or month value."]);
+            return;
+        }
+
         $invoiceModel = new ShopInvoice($this->db);
         $configModel  = new BillingConfiguration($this->db);
 
@@ -175,7 +210,16 @@ class BillingController {
     // ADMIN: GET draft invoices for the review panel
     // ============================================================
 
-    public function getDrafts(?int $year, ?int $month): void {
+    public function getDrafts(array $queryParams): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $year  = isset($queryParams['year'])  ? (int)$queryParams['year']  : null;
+        $month = isset($queryParams['month']) ? (int)$queryParams['month'] : null;
+
         $model  = new ShopInvoice($this->db);
         $drafts = $model->getDrafts($year, $month);
 
@@ -187,7 +231,29 @@ class BillingController {
     // ADMIN: DISPATCH all drafts for a period
     // ============================================================
 
-    public function dispatchInvoices(int $year, int $month): void {
+    public function dispatchInvoices(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        if ($data === null || !isset($data['year'], $data['month'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Required fields: year, month."]);
+            return;
+        }
+
+        $year  = (int)$data['year'];
+        $month = (int)$data['month'];
+
+        if ($year < 2024 || $month < 1 || $month > 12) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid year or month value."]);
+            return;
+        }
+
         $invoiceModel = new ShopInvoice($this->db);
         $configModel  = new BillingConfiguration($this->db);
 
@@ -250,7 +316,20 @@ class BillingController {
     // ADMIN: GET full invoice ledger for a specific shop
     // ============================================================
 
-    public function getShopLedger(int $shopId): void {
+    public function getShopLedger(array $queryParams): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        if (empty($queryParams['shopId'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Query parameter 'shopId' is required."]);
+            return;
+        }
+
+        $shopId = (int)$queryParams['shopId'];
         $model  = new ShopInvoice($this->db);
         $ledger = $model->getLedgerByShop($shopId);
 
@@ -263,9 +342,21 @@ class BillingController {
     // Optional GET params: shopId, status, year, month
     // ============================================================
 
-    public function getAllInvoices(array $filters): void {
-        $model  = new ShopInvoice($this->db);
-        $data   = $model->getAllInvoices($filters);
+    public function getAllInvoices(array $queryParams): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $filters = [];
+        if (!empty($queryParams['shopId']))  $filters['shopId']  = $queryParams['shopId'];
+        if (!empty($queryParams['status']))  $filters['status']  = $queryParams['status'];
+        if (!empty($queryParams['year']))    $filters['year']    = $queryParams['year'];
+        if (!empty($queryParams['month']))   $filters['month']   = $queryParams['month'];
+
+        $model = new ShopInvoice($this->db);
+        $data  = $model->getAllInvoices($filters);
 
         http_response_code(200);
         echo json_encode(["success" => true, "data" => $data, "count" => count($data)]);
@@ -288,7 +379,24 @@ class BillingController {
     // ADMIN: PROCESS a payment verification (approve / reject)
     // ============================================================
 
-    public function processVerification(int $invoiceId, string $action, ?string $reason, int $adminId): void {
+    public function processVerification(int $adminId): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        if ($data === null || !isset($data['invoiceId'], $data['action'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Required fields: invoiceId, action."]);
+            return;
+        }
+
+        $invoiceId = (int)$data['invoiceId'];
+        $action    = (string)$data['action'];
+        $reason    = isset($data['reason']) ? (string)$data['reason'] : null;
+
         if (!in_array($action, ['approve', 'reject'], true)) {
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Action must be 'approve' or 'reject'."]);
@@ -470,7 +578,30 @@ class BillingController {
     // SHOP OWNER: SUBMIT payment slip
     // ============================================================
 
-    public function submitPaymentSlip(int $invoiceId, string $paymentReference, array $file, int $shopId): void {
+    public function submitPaymentSlip(int $shopId): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
+        if (empty($_POST['invoiceId']) || empty($_POST['paymentReference'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Required fields: invoiceId, paymentReference."]);
+            return;
+        }
+
+        if (!isset($_FILES['paymentSlip']) || $_FILES['paymentSlip']['error'] !== UPLOAD_ERR_OK) {
+            $errCode = $_FILES['paymentSlip']['error'] ?? 'no file';
+            http_response_code(400);
+            echo json_encode(["message" => "Payment slip file is required. Upload error code: $errCode"]);
+            return;
+        }
+
+        $invoiceId        = (int)$_POST['invoiceId'];
+        $paymentReference = trim($_POST['paymentReference']);
+        $file             = $_FILES['paymentSlip'];
+
         $model   = new ShopInvoice($this->db);
         $invoice = $model->findPayable($invoiceId, $shopId);
 
