@@ -704,5 +704,80 @@ public function updateShopTowTruckDetails($shopId, $data) {
         }
         return $formatted;
     }
+    /**
+     * Admin: Attempt to activate a pending shop owner account.
+     * Returns a status string to allow the controller to format the response.
+     *
+     * @param  int  $shopId
+     * @return string  'approved' | 'already_active' | 'not_found'
+     */
+    public function approveShop(int $shopId): string {
+        $stmt = $this->conn->prepare(
+            "UPDATE users SET isActive = 1
+             WHERE id = :id AND userRole = 'shop_owner' AND is_email_verified = 1"
+        );
+        $stmt->bindParam(':id', $shopId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return 'approved';
+        }
+
+        // Check whether the shop simply already exists and is already active
+        $check = $this->conn->prepare(
+            "SELECT isActive FROM users WHERE id = :id AND userRole = 'shop_owner'"
+        );
+        $check->bindParam(':id', $shopId, PDO::PARAM_INT);
+        $check->execute();
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && $row['isActive'] == 1) {
+            return 'already_active';
+        }
+
+        return 'not_found';
+    }
+
+    /**
+     * Admin: Fetch all shop owner accounts that have verified their email
+     * but are still awaiting admin approval (isActive = 0).
+     *
+     * @return array
+     */
+    public function getPendingApprovals(): array {
+        $stmt = $this->conn->prepare("
+            SELECT
+                u.id,
+                u.email,
+                u.is_email_verified,
+                s.name          AS shopName,
+                s.owner         AS ownerName,
+                s.address,
+                s.contactNumber,
+                s.description,
+                s.openTime,
+                s.closeTime,
+                s.carriageService,
+                s.BRN,
+                s.profileImageURL,
+                GROUP_CONCAT(DISTINCT sc.name  SEPARATOR ', ') AS category,
+                GROUP_CONCAT(DISTINCT vc.name  SEPARATOR ', ') AS vehicleCategories
+            FROM users u
+            INNER JOIN shop s                ON s.id  = u.id
+            LEFT  JOIN shopCategoryMapping scm ON scm.shop_id = s.id
+            LEFT  JOIN shopCategory sc       ON sc.id  = scm.shop_category_id
+            LEFT  JOIN shopVehicleCategories svc ON svc.shop_id = s.id
+            LEFT  JOIN vehicleCategory vc    ON vc.id  = svc.vehicle_category_id
+            WHERE u.userRole = 'shop_owner'
+              AND u.is_email_verified = 1
+              AND u.isActive = 0
+            GROUP BY u.id, s.name, s.owner, s.address, s.contactNumber,
+                     s.description, s.openTime, s.closeTime, s.carriageService,
+                     s.BRN, s.profileImageURL
+            ORDER BY u.id DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
