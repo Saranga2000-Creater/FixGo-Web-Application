@@ -366,7 +366,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
                         <p className="text-[13px] font-bold text-gray-900 mb-3.5 mt-0">Account Overview</p>
                         <div className="grid grid-cols-2 gap-2.5">
                             <StatsCard icon={faCar} title="Total Repairs" value={String(stats.totalRepairs)} iconBg="rgba(22,163,74,0.08)" iconColor="#16A34A" />
-                            <StatsCard icon={faCircleCheck} title="Completed" value={String(stats.completed)} iconBg="rgba(13,148,136,0.08)" iconColor="#0D9488" />
+                            <StatsCard icon={faCircleCheck} title="Completed" value={String(stats.completed)} iconBg="rgba(22, 163, 74,0.08)" iconColor="#16A34A" />
                             <StatsCard icon={faCalendarDays} title="Appointments" value={String(stats.appointments)} iconBg="#EDF3FF" iconColor="#2563EB" />
                             <StatsCard icon={faStar} title="Reviews Given" value={String(stats.reviewsGiven)} iconBg="#F5EDFF" iconColor="#A855F7" />
                         </div>

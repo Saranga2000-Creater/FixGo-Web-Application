@@ -92,7 +92,7 @@ function SettingsSection({ icon: Icon, iconBg, iconColor, title, description, it
             }`}
           >
             <span className="flex items-center gap-3">
-              <item.icon className="w-[18px] h-[18px] text-emerald-600" />
+              <item.icon className="w-[18px] h-[18px] text-green-600" />
               <span className="text-sm font-semibold text-gray-900">{item.label}</span>
             </span>
             <span className="flex items-center gap-2">
@@ -218,7 +218,7 @@ function Settings() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 relative space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-base text-slate-900 m-0 flex items-center gap-2">
-                <IconLock className="w-5 h-5 text-emerald-600" />
+                <IconLock className="w-5 h-5 text-green-600" />
                 Update Password
               </h3>
               <button
@@ -243,7 +243,7 @@ function Settings() {
                     if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
                   }}
                   placeholder="Enter current password"
-                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                 />
               </div>
 
@@ -259,7 +259,7 @@ function Settings() {
                     if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
                   }}
                   placeholder="At least 6 characters"
-                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                 />
               </div>
 
@@ -275,13 +275,13 @@ function Settings() {
                     if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
                   }}
                   placeholder="Re-enter new password"
-                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                 />
               </div>
 
               {pwdMsg.text && (
                 <div className={`p-3 rounded-xl text-xs font-semibold ${
-                  pwdMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                  pwdMsg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
                 }`}>
                   {pwdMsg.text}
                 </div>
@@ -291,8 +291,8 @@ function Settings() {
                 <button
                   type="submit"
                   disabled={pwdLoading}
-                  className={`flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs border-none shadow-2xs ${
-                    pwdLoading ? "opacity-70 cursor-not-allowed" : "hover:bg-emerald-700 cursor-pointer"
+                  className={`flex-1 py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs border-none shadow-2xs ${
+                    pwdLoading ? "opacity-70 cursor-not-allowed" : "hover:bg-green-700 cursor-pointer"
                   }`}
                 >
                   {pwdLoading ? "Updating..." : "Update Password"}

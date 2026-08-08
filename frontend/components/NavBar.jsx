@@ -13,7 +13,7 @@ import { api, UPLOADS_URL } from "../src/services/api";
 const STATUS_META = {
     Pending:           { icon: faClock,         iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
     Accepted:          { icon: faCircleCheck,   iconBg: "rgba(37,99,235,0.08)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
-    Confirmed:         { icon: faHandshake,     iconBg: "rgba(13,148,136,0.08)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    Confirmed:         { icon: faHandshake,     iconBg: "rgba(22, 163, 74,0.08)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A",  label: "Confirmed"     },
     Diagnosis:         { icon: faStethoscope,   iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
     "In Progress":     { icon: faWrench,        iconBg: "rgba(168,85,247,0.08)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
     "Pending Parts":   { icon: faBoxesStacked,  iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
@@ -23,7 +23,7 @@ const STATUS_META = {
 
     // Shop Owner notification status types
     NewRequest:        { icon: faClipboardList, iconBg: "rgba(37,99,235,0.08)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "New Request"   },
-    CustomerConfirmed: { icon: faHandshake,     iconBg: "rgba(13,148,136,0.08)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    CustomerConfirmed: { icon: faHandshake,     iconBg: "rgba(22, 163, 74,0.08)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A",  label: "Confirmed"     },
     CustomerCancelled: { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
     CustomerDeclined:  { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
     NewReview:         { icon: faStar,           iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "New Review"    },

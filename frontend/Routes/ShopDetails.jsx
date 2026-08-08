@@ -355,7 +355,7 @@ function ShopDetails() {
                   <div className="mt-6 flex flex-wrap gap-2">
                     {/* Shop Categories */}
                     {shopCategories && shopCategories.map((category, idx) => (
-                      <span key={`sc-${idx}`} className="rounded-full bg-emerald-50 px-4 py-1.5 text-[13px] font-bold text-emerald-700 border border-emerald-100">
+                      <span key={`sc-${idx}`} className="rounded-full bg-green-50 px-4 py-1.5 text-[13px] font-bold text-green-700 border border-green-100">
                         {category}
                       </span>
                     ))}
@@ -544,21 +544,21 @@ function ShopDetails() {
                               {/* Top Section: Icon, Full Name & Price */}
                               <div className="flex items-center gap-3">
                                 {/* Circular Icon */}
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 border border-emerald-100/50">
-                                  <FaWrench className="text-[15px] text-emerald-600" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 border border-green-100/50">
+                                  <FaWrench className="text-[15px] text-green-600" />
                                 </div>
                                 
                                 {/* Text Block: Full Name, Category & Price */}
                                 <div className="flex flex-col min-w-0 flex-1">
                                   {service.category && (
-                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded w-fit mb-1 border border-emerald-100">
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-700 bg-green-50 px-1.5 py-0.5 rounded w-fit mb-1 border border-green-100">
                                       {service.category}
                                     </span>
                                   )}
                                   <h3 className="text-[14px] leading-tight font-bold text-slate-800 break-words">
                                     {service.name}
                                   </h3>
-                                  <p className="mt-1 text-[13px] font-bold text-emerald-600">
+                                  <p className="mt-1 text-[13px] font-bold text-green-600">
                                     from {service.price}
                                   </p>
                                 </div>

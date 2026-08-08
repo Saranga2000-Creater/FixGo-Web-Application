@@ -436,10 +436,10 @@ const heroFeatures = [
     accent: "bg-green-50 border-green-200",
   },
   {
-    icon: <FaShieldAlt className="text-emerald-600 text-2xl" />,
+    icon: <FaShieldAlt className="text-green-600 text-2xl" />,
     title: "Verified Service Shops",
     desc: "Every shop on FixGo is reviewed and verified. You can trust the quality before you book.",
-    accent: "bg-emerald-50 border-emerald-200",
+    accent: "bg-green-50 border-green-200",
   },
   {
     icon: <FaBolt className="text-teal-600 text-2xl" />,
