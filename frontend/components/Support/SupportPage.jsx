@@ -436,10 +436,10 @@ const heroFeatures = [
     accent: "bg-green-50 border-green-200",
   },
   {
-    icon: <FaShieldAlt className="text-emerald-600 text-2xl" />,
+    icon: <FaShieldAlt className="text-green-600 text-2xl" />,
     title: "Verified Service Shops",
     desc: "Every shop on FixGo is reviewed and verified. You can trust the quality before you book.",
-    accent: "bg-emerald-50 border-emerald-200",
+    accent: "bg-green-50 border-green-200",
   },
   {
     icon: <FaBolt className="text-teal-600 text-2xl" />,
@@ -511,16 +511,14 @@ const ReviewSection = () => {
                 return (
                   <div
                     key={idx}
-                    className={`w-1/3 shrink-0 px-2 transition-all duration-500 ${
-                      isCenter ? "opacity-100 scale-100" : "opacity-50 scale-95"
-                    }`}
+                    className={`w-1/3 shrink-0 px-2 transition-all duration-500 ${isCenter ? "opacity-100 scale-100" : "opacity-50 scale-95"
+                      }`}
                   >
-                    <div className={`border rounded-2xl p-5 flex flex-col gap-3 min-h-[180px] justify-between transition-all duration-500 ${
-                      isCenter ? "border-[#16a34a] bg-white shadow-md" : "border-gray-100 bg-white"
-                    }`}>
+                    <div className={`border rounded-2xl p-5 flex flex-col gap-3 min-h-[180px] justify-between transition-all duration-500 ${isCenter ? "border-[#16a34a] bg-white shadow-md" : "border-gray-100 bg-white"
+                      }`}>
                       <div>
                         <div className="flex gap-0.5 mb-3">
-                          {[1,2,3,4,5].map((s) => (
+                          {[1, 2, 3, 4, 5].map((s) => (
                             <HiStar key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           ))}
                         </div>
@@ -547,9 +545,8 @@ const ReviewSection = () => {
                 <button
                   key={idx}
                   onClick={() => setActiveIndex(idx + 3)}
-                  className={`rounded-full transition-all duration-300 ${
-                    isActive ? "w-5 h-2.5 bg-[#16a34a]" : "w-2.5 h-2.5 bg-gray-200 hover:bg-gray-300"
-                  }`}
+                  className={`rounded-full transition-all duration-300 ${isActive ? "w-5 h-2.5 bg-[#16a34a]" : "w-2.5 h-2.5 bg-gray-200 hover:bg-gray-300"
+                    }`}
                 />
               );
             })}
@@ -592,7 +589,7 @@ const ReviewSection = () => {
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Your Rating</label>
                 <div className="flex gap-1">
-                  {[1,2,3,4,5].map((s) => (
+                  {[1, 2, 3, 4, 5].map((s) => (
                     <button
                       key={s}
                       type="button"
@@ -603,11 +600,10 @@ const ReviewSection = () => {
                       className="p-0.5 transition-transform hover:scale-110 active:scale-95"
                     >
                       <HiStar
-                        className={`w-7 h-7 transition-colors ${
-                          s <= (hoverStar || rating)
+                        className={`w-7 h-7 transition-colors ${s <= (hoverStar || rating)
                             ? "fill-yellow-400 text-yellow-400"
                             : "fill-gray-200 text-gray-200"
-                        }`}
+                          }`}
                       />
                     </button>
                   ))}

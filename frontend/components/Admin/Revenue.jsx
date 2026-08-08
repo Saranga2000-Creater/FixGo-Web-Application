@@ -490,7 +490,7 @@ function BillingActions({ analytics, onRefresh }) {
             )}
             {/* Dispatch */}
             <button disabled={!!loading || !hasDrafts} onClick={() => setShowConfirm(true)}
-              className="py-2.5 px-6 rounded-xl bg-emerald-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-emerald-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_4px_14px_rgba(5,150,105,0.35)] transition-all duration-150">
+              className="py-2.5 px-6 rounded-xl bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.35)] transition-all duration-150">
               <FontAwesomeIcon icon={faCheckCircle} /> Dispatch Invoices
             </button>
           </div>

@@ -7,7 +7,7 @@ import {
     faFileLines,
     faLock,
     faMapPin,
-    faMobile,
+    faGear,
     faShield,
     faShieldHalved,
     faUser,
@@ -268,7 +268,7 @@ function Settings({ onNavigate }) {
 
             {/* ── App Settings ── */}
             <SettingsSection
-                icon={faMobile}
+                icon={faGear}
                 iconBg="rgba(217,119,6,0.10)"
                 iconColor="#D97706"
                 title="App Settings"

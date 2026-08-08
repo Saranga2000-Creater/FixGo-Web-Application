@@ -14,7 +14,7 @@ const FONT = "'Segoe UI', system-ui, sans-serif";
 const STATUS_CONFIG = {
     Pending:       { label: "Pending",     color: "#D97706", bg: "rgba(217,119,6,0.10)",  icon: faClock       },
     Accepted:      { label: "Accepted",    color: "#2563EB", bg: "#EDF3FF",               icon: faCircleCheck },
-    Confirmed:     { label: "Confirmed",   color: "#0D9488", bg: "rgba(13,148,136,0.10)", icon: faHandshake   },
+    Confirmed:     { label: "Confirmed",   color: "#16A34A", bg: "rgba(22, 163, 74,0.10)", icon: faHandshake   },
     "In Progress": { label: "In Progress", color: "#A855F7", bg: "rgba(168,85,247,0.10)", icon: faWrench      },
     Completed:     { label: "Completed",   color: "#16A34A", bg: "rgba(22,163,74,0.08)",  icon: faFlag        },
     Cancelled:     { label: "Cancelled",   color: "#DC2626", bg: "#FEF2F2",               icon: faCircleXmark },
@@ -23,7 +23,7 @@ const STATUS_CONFIG = {
 const ACCENT_CYCLE = ["green", "teal", "blue", "violet", "yellow"];
 const ACCENT = {
     green:  { iconBg: "#EDF9F0", iconColor: "#16A34A", badgeBg: "#EDF9F0", badgeColor: "#16A34A" },
-    teal:   { iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488" },
+    teal:   { iconBg: "rgba(22, 163, 74,0.10)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A" },
     blue:   { iconBg: "#EDF3FF", iconColor: "#2563EB", badgeBg: "#EDF3FF", badgeColor: "#2563EB" },
     violet: { iconBg: "#F5EDFF", iconColor: "#A855F7", badgeBg: "#F5EDFF", badgeColor: "#A855F7" },
     yellow: { iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706" },

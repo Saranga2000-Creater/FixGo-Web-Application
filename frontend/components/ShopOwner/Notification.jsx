@@ -13,7 +13,7 @@ const FONT = "'Segoe UI', system-ui, sans-serif";
 const STATUS_META = {
     Pending: { icon: faClock, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Pending" },
     Accepted: { icon: faCircleCheck, iconBg: "rgba(37,99,235,0.10)", iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)", badgeColor: "#2563EB", label: "Accepted" },
-    Confirmed: { icon: faHandshake, iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488", label: "Confirmed" },
+    Confirmed: { icon: faHandshake, iconBg: "rgba(22, 163, 74,0.10)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A", label: "Confirmed" },
     Diagnosis: { icon: faStethoscope, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Diagnosis" },
     "In Progress": { icon: faWrench, iconBg: "rgba(168,85,247,0.10)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7", label: "In Progress" },
     "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "Pending Parts" },
@@ -23,7 +23,7 @@ const STATUS_META = {
 
     // Shop owner specific types
     NewRequest: { icon: faClipboardList, iconBg: "rgba(37,99,235,0.10)", iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)", badgeColor: "#2563EB", label: "New Request", targetNav: "requests", buttonText: "View Requests" },
-    CustomerConfirmed: { icon: faHandshake, iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488", label: "Confirmed", targetNav: "repairs", buttonText: "View Active Jobs" },
+    CustomerConfirmed: { icon: faHandshake, iconBg: "rgba(22, 163, 74,0.10)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A", label: "Confirmed", targetNav: "repairs", buttonText: "View Active Jobs" },
     CustomerCancelled: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Cancelled" },
     CustomerDeclined: { icon: faCircleXmark, iconBg: "#FEF2F2", iconColor: "#DC2626", badgeBg: "#FEF2F2", badgeColor: "#DC2626", label: "Declined" },
     NewReview: { icon: faStar, iconBg: "rgba(217,119,6,0.10)", iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)", badgeColor: "#D97706", label: "New Review", targetNav: "reviews", buttonText: "View Reviews" },
@@ -64,7 +64,7 @@ export function useUnreadCount() {
 
     const fetchCount = useCallback(async () => {
         try {
-            const res = await api.get("getNotifications.php");
+            const res = await api.get(`getNotifications.php?_t=${Date.now()}`);
             if (res.success) {
                 const unread = (res.data || res.notifications || []).filter(n => Number(n.isRead) === 0).length;
                 setCount(unread);
@@ -89,11 +89,12 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
     const [highlightedId, setHighlightedId] = useState(initialSelectedId || null);
 
     const loadNotifications = useCallback(() => {
-        api.get("getNotifications.php")
+        api.get(`getNotifications.php?_t=${Date.now()}`)
             .then((data) => {
                 if (!data || !data.success) return;
                 const formatted = (data.data || []).map((item) => {
-                    const statusKey = item.type || item.status || "Pending";
+                    const rawStatusKey = item.type || item.status || "Pending";
+                    const statusKey = typeof rawStatusKey === "string" ? rawStatusKey.trim() : rawStatusKey;
                     const meta = STATUS_META[statusKey] || DEFAULT_META;
                     return {
                         id: String(item.id),
@@ -101,7 +102,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         title: item.title || "Notification",
                         subtitle: item.message || "",
                         statusKey,
-                        requestStatus: item.request_status || item.status,
+                        requestStatus: (item.current_status || item.request_status || item.status || "").trim(),
                         timestamp: item.created_at,
                         meta,
                         requestNumber: item.service_request_id ? `REQ-${item.service_request_id}` : `NOTIF-${item.id}`,
@@ -249,9 +250,13 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                     filteredNotifications.map((notif) => {
                         const meta = notif.meta;
                         const isHighlighted = String(notif.id) === String(highlightedId);
-                        const isRequestMoved =
-    notif.statusKey === "NewRequest" &&
-    notif.requestStatus !== "Pending";
+                        const statusUpper = (notif.requestStatus || "").toUpperCase().trim();
+                        let isRequestMoved = false;
+                        if (notif.statusKey === "NewRequest") {
+                            isRequestMoved = ["CONFIRMED", "DIAGNOSIS", "PENDING PARTS", "IN PROGRESS", "COMPLETED"].includes(statusUpper);
+                        } else {
+                            isRequestMoved = ["COMPLETED", "CANCELLED", "CANCELED", "DECLINED"].includes(statusUpper);
+                        }
 
                         return (
                             <div

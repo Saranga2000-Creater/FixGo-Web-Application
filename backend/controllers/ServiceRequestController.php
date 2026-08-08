@@ -207,7 +207,7 @@ class ServiceRequestController {
                 $this->notifyShop(
     $currentRequest['shop_id'],
     $request_id,
-    " CustomerConfirmed",
+    "CustomerConfirmed",
     "Customer confirmed booking"
 );
              

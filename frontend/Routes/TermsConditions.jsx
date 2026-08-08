@@ -60,7 +60,7 @@ function TermsConditions() {
             
             {/* Background Aesthetic Blobs */}
             <div className="absolute top-24 -left-48 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse pointer-events-none" />
-            <div className="absolute top-96 -right-48 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse pointer-events-none" />
+            <div className="absolute top-96 -right-48 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse pointer-events-none" />
 
             <main className="flex-grow max-w-5xl mx-auto w-full px-4 md:px-8 py-12 relative z-10">
                 {/* Hero / Header Section */}

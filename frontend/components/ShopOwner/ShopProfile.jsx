@@ -1,4 +1,26 @@
 import { useEffect, useState, useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faStar,
+  faCamera,
+  faCheck,
+  faLocationDot,
+  faEye,
+  faCircleInfo,
+  faClock,
+  faImage,
+  faTruck,
+  faWrench,
+  faPenToSquare,
+  faStore,
+  faTag,
+  faUser,
+  faCar,
+  faEnvelope,
+  faPhone,
+  faClipboardList,
+  faFileLines,
+} from "@fortawesome/free-solid-svg-icons";
 import { api, UPLOADS_URL } from "../../src/services/api";
 
 const VEHICLE_CAT_OPTIONS = [
@@ -21,12 +43,11 @@ function Stars({ count, max = 5 }) {
   return (
     <span className="inline-flex gap-0.5">
       {Array.from({ length: max }).map((_, i) => (
-        <span
+        <FontAwesomeIcon
           key={i}
+          icon={faStar}
           className={`text-sm ${i < count ? "text-amber-500" : "text-gray-300"}`}
-        >
-          ★
-        </span>
+        />
       ))}
     </span>
   );
@@ -504,7 +525,7 @@ function ShopProfile() {
               title="Change Profile Photo"
               className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white text-slate-700 shadow-md border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-transform active:scale-95"
             >
-              {uploadingProfilePhoto ? "..." : "📷"}
+              {uploadingProfilePhoto ? "..." : <FontAwesomeIcon icon={faCamera} />}
             </button>
           </div>
 
@@ -513,8 +534,8 @@ function ShopProfile() {
               <h2 className="text-2xl font-extrabold text-slate-900 m-0">
                 {shopData.name}
               </h2>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full py-0.5 px-3 text-xs font-semibold inline-flex items-center gap-1">
-                ✓ Verified
+              <span className="bg-green-50 text-green-600 border border-green-200/80 rounded-full py-0.5 px-3 text-xs font-semibold inline-flex items-center gap-1">
+                <FontAwesomeIcon icon={faCheck} /> Verified
               </span>
 
               {/* Shop Availability Badge */}
@@ -524,7 +545,7 @@ function ShopProfile() {
                 title="Click to toggle shop availability"
                 className={`py-0.5 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   isCurrentlyOpen
-                    ? "bg-emerald-100/90 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                    ? "bg-green-100/90 text-green-600 border-green-300 hover:bg-green-200"
                     : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
                 }`}
               >
@@ -537,7 +558,7 @@ function ShopProfile() {
             </p>
             
             <div className="text-xs font-medium text-slate-500 flex items-center justify-center md:justify-start gap-1">
-              <span className="text-emerald-600">📍</span> {shopData.address}
+              <FontAwesomeIcon icon={faLocationDot} className="text-green-600" /> {shopData.address}
             </div>
             
             <div className="flex items-center justify-center md:justify-start gap-1.5 pt-1">
@@ -556,9 +577,9 @@ function ShopProfile() {
         <button
           type="button"
           onClick={handleGoToShop}
-          className="py-2.5 px-5 rounded-xl border border-emerald-600 bg-white text-emerald-700 font-semibold text-xs cursor-pointer hover:bg-emerald-50 flex items-center gap-2 transition-all shadow-2xs shrink-0"
+          className="py-2.5 px-5 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-2 transition-all shadow-2xs shrink-0"
         >
-          <span>👁️</span> Go to My Shop ↗
+          <FontAwesomeIcon icon={faEye} /> Go to My Shop ↗
         </button>
       </div>
 
@@ -569,11 +590,11 @@ function ShopProfile() {
           onClick={() => setActiveTab("info")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "info"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>ℹ️</span> Shop Information
+          <FontAwesomeIcon icon={faCircleInfo} /> Shop Information
         </button>
 
         <button
@@ -581,11 +602,11 @@ function ShopProfile() {
           onClick={() => setActiveTab("hours")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "hours"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>⏰</span> Opening Hours
+          <FontAwesomeIcon icon={faClock} /> Opening Hours
         </button>
 
         <button
@@ -593,11 +614,11 @@ function ShopProfile() {
           onClick={() => setActiveTab("gallery")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "gallery"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🖼️</span> Shop Gallery
+          <FontAwesomeIcon icon={faImage} /> Shop Gallery
         </button>
 
         <button
@@ -605,11 +626,11 @@ function ShopProfile() {
           onClick={() => setActiveTab("tow")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "tow"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🚛</span> Transportation Details
+          <FontAwesomeIcon icon={faTruck} /> Transportation Details
         </button>
 
         <button
@@ -617,11 +638,11 @@ function ShopProfile() {
           onClick={() => setActiveTab("services")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "services"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>🔧</span> Services Offered
+          <FontAwesomeIcon icon={faWrench} /> Services Offered
         </button>
       </div>
 
@@ -641,9 +662,9 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingBusinessInfo(true)}
-                  className="py-2 px-4 rounded-xl border border-emerald-600 bg-white text-emerald-700 font-semibold text-xs cursor-pointer hover:bg-emerald-50 flex items-center gap-1.5 transition-all shadow-2xs"
+                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
                 >
-                  <span>✏️</span> Edit Information
+                  <FontAwesomeIcon icon={faPenToSquare} /> Edit Information
                 </button>
               ) : (
                 <button
@@ -662,28 +683,28 @@ function ShopProfile() {
                 <div className="space-y-3.5 divide-y divide-slate-100">
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🏪</span> Shop Name
+                      <FontAwesomeIcon icon={faStore} className="text-slate-400" /> Shop Name
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.name}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🏷️</span> Category
+                      <FontAwesomeIcon icon={faTag} className="text-slate-400" /> Category
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.categories || "Garages"}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>👤</span> Owner
+                      <FontAwesomeIcon icon={faUser} className="text-slate-400" /> Owner
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.owner}</span>
                   </div>
 
                   <div className="flex items-start justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>🚗</span> Vehicle Categories
+                      <FontAwesomeIcon icon={faCar} className="text-slate-400" /> Vehicle Categories
                     </span>
                     <span className="text-slate-900 font-bold text-right max-w-[60%] leading-relaxed">
                       {shopData.vehicleCategories || "3 Wheelers & Bikes, 4 Wheelers, Commercial Vehicles"}
@@ -692,28 +713,28 @@ function ShopProfile() {
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>✉️</span> Email (Read-Only)
+                      <FontAwesomeIcon icon={faEnvelope} className="text-slate-400" /> Email (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.email}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📞</span> Phone
+                      <FontAwesomeIcon icon={faPhone} className="text-slate-400" /> Phone
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.contactNumber}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📍</span> Address (Read-Only)
+                      <FontAwesomeIcon icon={faLocationDot} className="text-slate-400" /> Address (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.address}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <span>📋</span> Reg. No. (Read-Only)
+                      <FontAwesomeIcon icon={faClipboardList} className="text-slate-400" /> Reg. No. (Read-Only)
                     </span>
                     <span className="text-slate-900 font-bold">{shopData.BRN || "Not Available"}</span>
                   </div>
@@ -723,10 +744,10 @@ function ShopProfile() {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="text-slate-600 font-semibold flex items-center gap-2">
-                      <span>🛠️</span> Carriage Service
+                      <FontAwesomeIcon icon={faWrench} className="text-slate-400" /> Carriage Service
                     </span>
                     <span className={`font-bold py-0.5 px-3 rounded-full text-xs ${
-                      shopData.carriageService ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"
+                      shopData.carriageService ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-700"
                     }`}>
                       {shopData.carriageService ? "Available" : "Not Available"}
                     </span>
@@ -734,7 +755,7 @@ function ShopProfile() {
 
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <span className="text-slate-600 font-semibold block flex items-center gap-2">
-                      <span>📝</span> Description
+                      <FontAwesomeIcon icon={faFileLines} className="text-slate-400" /> Description
                     </span>
                     <p className="text-slate-700 leading-relaxed text-xs m-0">
                       {shopData.description || "We provide high-quality vehicle repair and maintenance services with experienced technicians and modern equipment. Your vehicle's safety and performance are our top priority."}
@@ -753,7 +774,7 @@ function ShopProfile() {
                       name="name"
                       value={businessForm.name}
                       onChange={handleBusinessFormChange}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                     />
                   </div>
 
@@ -764,7 +785,7 @@ function ShopProfile() {
                       name="owner"
                       value={businessForm.owner}
                       onChange={handleBusinessFormChange}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                     />
                   </div>
                 </div>
@@ -790,7 +811,7 @@ function ShopProfile() {
                       value={businessForm.phone}
                       onChange={handleBusinessFormChange}
                       placeholder="e.g. +94123456789 or 0123456789"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                     />
                   </div>
 
@@ -816,7 +837,7 @@ function ShopProfile() {
                     value={businessForm.description}
                     onChange={handleBusinessFormChange}
                     placeholder="Describe your shop services, technicians, and equipment..."
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border leading-relaxed"
+                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border leading-relaxed"
                   />
                 </div>
 
@@ -829,7 +850,7 @@ function ShopProfile() {
                           type="checkbox"
                           checked={businessForm.vehicleCategories.includes(vCat)}
                           onChange={() => handleVehicleCatToggle(vCat)}
-                          className="rounded text-emerald-600 focus:ring-emerald-500"
+                          className="rounded text-green-600 focus:ring-green-500"
                         />
                         {vCat}
                       </label>
@@ -843,7 +864,7 @@ function ShopProfile() {
                   type="button"
                   onClick={handleSaveBusinessInfo}
                   disabled={businessSaving}
-                  className="mt-2 w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs cursor-pointer hover:bg-emerald-700 shadow-2xs"
+                  className="mt-2 w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                 >
                   {businessSaving ? "Saving..." : "Save Changes"}
                 </button>
@@ -869,7 +890,7 @@ function ShopProfile() {
                     onClick={() => handleToggleAvailability(isCurrentlyOpen ? 0 : 1)}
                     className={`py-0.5 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer ${
                       isCurrentlyOpen
-                        ? "bg-emerald-100/90 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                        ? "bg-green-100/90 text-green-600 border-green-300 hover:bg-green-200"
                         : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
                     }`}
                   >
@@ -882,7 +903,7 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingHours(true)}
-                  className="py-2 px-4 rounded-xl border border-emerald-600 bg-white text-emerald-700 font-semibold text-xs cursor-pointer hover:bg-emerald-50 flex items-center gap-1.5 transition-all shadow-2xs"
+                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
                 >
                   <span>✏️</span> Edit Hours
                 </button>
@@ -935,7 +956,7 @@ function ShopProfile() {
                         name="openTime"
                         value={businessForm.openTime}
                         onChange={handleBusinessFormChange}
-                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                     </div>
                     <div>
@@ -945,7 +966,7 @@ function ShopProfile() {
                         name="closeTime"
                         value={businessForm.closeTime}
                         onChange={handleBusinessFormChange}
-                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                     </div>
                   </div>
@@ -959,7 +980,7 @@ function ShopProfile() {
                       type="button"
                       onClick={() => setSatClosed(!satClosed)}
                       className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
                       }`}
                     >
                       {satClosed ? "Mark Open" : "Mark Closed"}
@@ -973,7 +994,7 @@ function ShopProfile() {
                           type="time"
                           value={businessForm.openTime}
                           onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                         />
                       </div>
                       <div>
@@ -983,7 +1004,7 @@ function ShopProfile() {
                           name="satCloseTime"
                           value={businessForm.satCloseTime}
                           onChange={(e) => setBusinessForm({ ...businessForm, satCloseTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                         />
                       </div>
                     </div>
@@ -1000,7 +1021,7 @@ function ShopProfile() {
                       type="button"
                       onClick={() => setSunClosed(!sunClosed)}
                       className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
                       }`}
                     >
                       {sunClosed ? "Mark Open" : "Mark Closed"}
@@ -1014,7 +1035,7 @@ function ShopProfile() {
                           type="time"
                           value={businessForm.openTime}
                           onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                         />
                       </div>
                       <div>
@@ -1038,7 +1059,7 @@ function ShopProfile() {
                   type="button"
                   onClick={handleSaveBusinessInfo}
                   disabled={businessSaving}
-                  className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs cursor-pointer hover:bg-emerald-700 shadow-2xs"
+                  className="w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                 >
                   {businessSaving ? "Saving..." : "Save Operating Hours"}
                 </button>
@@ -1055,7 +1076,7 @@ function ShopProfile() {
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
               <h3 className="font-extrabold text-lg text-slate-900 m-0 flex items-center gap-2">
                 <span>🖼️</span> Shop Gallery <span className="text-xs font-normal text-slate-500">({galleryImages.length}/4)</span>
-                {uploadingGallery && <span className="text-xs text-emerald-600 font-semibold ml-1">(Uploading...)</span>}
+                {uploadingGallery && <span className="text-xs text-green-600 font-semibold ml-1">(Uploading...)</span>}
               </h3>
               
               <div className="flex gap-2">
@@ -1074,7 +1095,7 @@ function ShopProfile() {
                   className={`py-2 px-4 rounded-xl border font-semibold text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow-2xs ${
                     galleryImages.length >= 4
                       ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                      : "border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50"
+                      : "border-green-600 bg-white text-green-600 hover:bg-green-50"
                   }`}
                 >
                   + Add Photo
@@ -1112,7 +1133,7 @@ function ShopProfile() {
                         } ${
                           isSelected
                             ? "ring-2 ring-red-500 border-red-500 shadow-md"
-                            : "border-slate-200 hover:border-emerald-300"
+                            : "border-slate-200 hover:border-green-300"
                         }`}
                       >
                         <img
@@ -1135,7 +1156,7 @@ function ShopProfile() {
                   {galleryImages.length < 4 && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-44 rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 hover:bg-emerald-50/30 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-500 hover:text-emerald-700"
+                      className="h-44 rounded-2xl border-2 border-dashed border-slate-300 hover:border-green-500 bg-slate-50/50 hover:bg-green-50/30 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-500 hover:text-green-600"
                     >
                       <span className="text-2xl font-bold mb-1">+</span>
                       <span className="text-xs font-semibold">Add Photo</span>
@@ -1205,7 +1226,7 @@ function ShopProfile() {
                 </p>
                 <button
                   onClick={() => setShowTowForm(true)}
-                  className="py-2.5 px-5 rounded-xl border-none bg-emerald-600 text-white font-semibold text-xs cursor-pointer hover:bg-emerald-700 transition shadow-2xs"
+                  className="py-2.5 px-5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 transition shadow-2xs"
                 >
                   Yes, I provide tow service
                 </button>
@@ -1262,7 +1283,7 @@ function ShopProfile() {
                       value={towForm[name]}
                       onChange={handleTowFormChange}
                       placeholder={placeholder}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                     />
                   </div>
                 ))}
@@ -1273,8 +1294,8 @@ function ShopProfile() {
                   <button
                     onClick={handleTowSave}
                     disabled={towSaving}
-                    className={`flex-1 py-2.5 rounded-xl border-none bg-emerald-600 text-white font-semibold text-xs ${
-                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-emerald-700 shadow-2xs"
+                    className={`flex-1 py-2.5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs ${
+                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-green-600 shadow-2xs"
                     }`}
                   >
                     {towSaving ? "Saving..." : "Save Details"}
@@ -1307,9 +1328,9 @@ function ShopProfile() {
                 {shopServices.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {shopServices.map((s, idx) => (
-                      <div key={idx} className="p-4 border border-slate-200/70 rounded-xl bg-slate-50/60 flex justify-between items-center hover:border-emerald-200 transition-colors">
+                      <div key={idx} className="p-4 border border-slate-200/70 rounded-xl bg-slate-50/60 flex justify-between items-center hover:border-green-200 transition-colors">
                         <div>
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200/50">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-600 bg-green-100/80 px-2 py-0.5 rounded-md border border-green-200/50">
                             {s.category || "General"}
                           </span>
                           <div className="font-bold text-sm text-slate-900 mt-1.5">{s.service_name || s.name}</div>
@@ -1317,7 +1338,7 @@ function ShopProfile() {
                             <span>⏱️</span> {s.duration}
                           </div>
                         </div>
-                        <div className="font-bold text-xs text-emerald-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                        <div className="font-bold text-xs text-green-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
                           {s.starting_price || s.price}
                         </div>
                       </div>
@@ -1329,7 +1350,7 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingServices(true)}
-                  className="mt-6 py-2.5 px-6 rounded-xl border-[1.5px] border-emerald-600 text-emerald-700 bg-white font-semibold text-xs cursor-pointer hover:bg-emerald-50 transition-colors shadow-2xs"
+                  className="mt-6 py-2.5 px-6 rounded-xl border-[1.5px] border-green-600 text-green-600 bg-white font-semibold text-xs cursor-pointer hover:bg-green-50 transition-colors shadow-2xs"
                 >
                   + Add / Edit Services
                 </button>
@@ -1343,7 +1364,7 @@ function ShopProfile() {
                   {shopServices.map((s, idx) => (
                     <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                       <div>
-                        <span className="font-extrabold text-emerald-700 mr-2">[{s.category || "General"}]</span>
+                        <span className="font-extrabold text-green-600 mr-2">[{s.category || "General"}]</span>
                         <span className="font-semibold text-slate-900">{s.service_name || s.name}</span>
                         <span className="text-slate-500 ml-2">({s.starting_price || s.price} • {s.duration})</span>
                       </div>
@@ -1363,8 +1384,8 @@ function ShopProfile() {
                 </div>
 
                 {/* Add Custom Service Form */}
-                <div className="p-4 bg-emerald-50/40 rounded-xl border border-emerald-200/80 space-y-3 mb-6">
-                  <div className="font-bold text-xs text-emerald-900 flex items-center gap-1">
+                <div className="p-4 bg-green-50/40 rounded-xl border border-green-200/80 space-y-3 mb-6">
+                  <div className="font-bold text-xs text-green-900 flex items-center gap-1">
                     <span>+</span> Add New Custom Service
                   </div>
                   
@@ -1377,7 +1398,7 @@ function ShopProfile() {
                         placeholder="e.g. Mechanical, Electrical"
                         value={newService.category}
                         onChange={(e) => setNewService({ ...newService, category: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                       <datalist id="category-suggestions">
                         {COMMON_CATEGORIES.map(cat => (
@@ -1392,7 +1413,7 @@ function ShopProfile() {
                         placeholder="e.g. Full Engine Tune-up"
                         value={newService.service_name}
                         onChange={(e) => setNewService({ ...newService, service_name: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                     </div>
                   </div>
@@ -1405,7 +1426,7 @@ function ShopProfile() {
                         placeholder="e.g. Rs. 8,500"
                         value={newService.starting_price}
                         onChange={(e) => setNewService({ ...newService, starting_price: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                     </div>
                     <div>
@@ -1415,7 +1436,7 @@ function ShopProfile() {
                         placeholder="e.g. 3 Hours"
                         value={newService.duration}
                         onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
+                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
                       />
                     </div>
                   </div>
@@ -1425,7 +1446,7 @@ function ShopProfile() {
                     onClick={handleAddCustomService}
                     disabled={servicesSaving}
                     className={`w-full py-2.5 text-white font-bold text-xs rounded-xl border-none shadow-2xs transition-colors ${
-                      servicesSaving ? "bg-emerald-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                      servicesSaving ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-600 cursor-pointer"
                     }`}
                   >
                     {servicesSaving ? "Saving..." : "+ Add Service to List"}
@@ -1437,7 +1458,7 @@ function ShopProfile() {
                     type="button"
                     onClick={handleSaveServices}
                     disabled={servicesSaving}
-                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs cursor-pointer hover:bg-emerald-700 shadow-2xs"
+                    className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                   >
                     {servicesSaving ? "Saving..." : "Save All Services"}
                   </button>
