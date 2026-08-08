@@ -64,7 +64,7 @@ export function useUnreadCount() {
 
     const fetchCount = useCallback(async () => {
         try {
-            const res = await api.get("getNotifications.php");
+            const res = await api.get(`getNotifications.php?_t=${Date.now()}`);
             if (res.success) {
                 const unread = (res.data || res.notifications || []).filter(n => Number(n.isRead) === 0).length;
                 setCount(unread);
@@ -89,11 +89,12 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
     const [highlightedId, setHighlightedId] = useState(initialSelectedId || null);
 
     const loadNotifications = useCallback(() => {
-        api.get("getNotifications.php")
+        api.get(`getNotifications.php?_t=${Date.now()}`)
             .then((data) => {
                 if (!data || !data.success) return;
                 const formatted = (data.data || []).map((item) => {
-                    const statusKey = item.type || item.status || "Pending";
+                    const rawStatusKey = item.type || item.status || "Pending";
+                    const statusKey = typeof rawStatusKey === "string" ? rawStatusKey.trim() : rawStatusKey;
                     const meta = STATUS_META[statusKey] || DEFAULT_META;
                     return {
                         id: String(item.id),
@@ -101,7 +102,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         title: item.title || "Notification",
                         subtitle: item.message || "",
                         statusKey,
-                        requestStatus: item.request_status || item.status,
+                        requestStatus: (item.current_status || item.request_status || item.status || "").trim(),
                         timestamp: item.created_at,
                         meta,
                         requestNumber: item.service_request_id ? `REQ-${item.service_request_id}` : `NOTIF-${item.id}`,
@@ -249,9 +250,13 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                     filteredNotifications.map((notif) => {
                         const meta = notif.meta;
                         const isHighlighted = String(notif.id) === String(highlightedId);
-                        const isRequestMoved =
-    notif.statusKey === "NewRequest" &&
-    notif.requestStatus !== "Pending";
+                        const statusUpper = (notif.requestStatus || "").toUpperCase().trim();
+                        let isRequestMoved = false;
+                        if (notif.statusKey === "NewRequest") {
+                            isRequestMoved = ["CONFIRMED", "DIAGNOSIS", "PENDING PARTS", "IN PROGRESS", "COMPLETED"].includes(statusUpper);
+                        } else {
+                            isRequestMoved = ["COMPLETED", "CANCELLED", "CANCELED", "DECLINED"].includes(statusUpper);
+                        }
 
                         return (
                             <div

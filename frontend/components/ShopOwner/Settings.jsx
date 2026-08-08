@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../src/services/api";
 
 // Simple inline icon components
@@ -19,29 +20,12 @@ function IconSmartphone({ className }) {
   );
 }
 
-function IconMail({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m2 6 10 7L22 6" />
-    </svg>
-  );
-}
 
 function IconLock({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <rect x="3" y="11" width="18" height="11" rx="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
-function IconShieldCheck({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }
@@ -76,12 +60,10 @@ function IconChevronRight({ className }) {
 }
 
 const SECURITY_ITEMS = [
-  { icon: IconMail, label: "Email Update" },
   { icon: IconLock, label: "Password Update" },
 ];
 
 const APP_SETTINGS_ITEMS = [
-  { icon: IconShieldCheck, label: "Privacy Policy" },
   { icon: IconFileText, label: "Terms & Conditions" },
   { icon: IconInfo, label: "About FixGo", trailing: "Version 1.0.0" },
 ];
@@ -127,12 +109,8 @@ function SettingsSection({ icon: Icon, iconBg, iconColor, title, description, it
 }
 
 function Settings() {
-  const [activeModal, setActiveModal] = useState(null); // 'email' | 'password' | null
-
-  // Email form state
-  const [emailForm, setEmailForm] = useState({ currentPassword: "", newEmail: "" });
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailMsg, setEmailMsg] = useState({ type: "", text: "" });
+  const navigate = useNavigate();
+  const [activeModal, setActiveModal] = useState(null); // 'password' | null
 
   // Password form state
   const [pwdForm, setPwdForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -140,42 +118,14 @@ function Settings() {
   const [pwdMsg, setPwdMsg] = useState({ type: "", text: "" });
 
   const handleItemClick = (label) => {
-    if (label === "Email Update") {
-      setEmailForm({ currentPassword: "", newEmail: "" });
-      setEmailMsg({ type: "", text: "" });
-      setActiveModal("email");
-    } else if (label === "Password Update") {
+    if (label === "Password Update") {
       setPwdForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setPwdMsg({ type: "", text: "" });
       setActiveModal("password");
+    } else if (label === "Terms & Conditions") {
+      navigate("/terms-conditions");
     } else {
       alert(`${label} - Coming soon.`);
-    }
-  };
-
-  const handleUpdateEmail = async (e) => {
-    e.preventDefault();
-    setEmailMsg({ type: "", text: "" });
-
-    if (!emailForm.currentPassword.trim() || !emailForm.newEmail.trim()) {
-      setEmailMsg({ type: "error", text: "Please enter your current password and new email address." });
-      return;
-    }
-
-    setEmailLoading(true);
-    try {
-      const res = await api.post("shop/updateEmail.php", emailForm);
-      if (res?.success) {
-        setEmailMsg({ type: "success", text: res.message || "Email address updated successfully!" });
-        setEmailForm({ currentPassword: "", newEmail: "" });
-        setTimeout(() => setActiveModal(null), 1800);
-      } else {
-        setEmailMsg({ type: "error", text: res?.message || "Failed to update email." });
-      }
-    } catch (err) {
-      setEmailMsg({ type: "error", text: err.message || "Error updating email address." });
-    } finally {
-      setEmailLoading(false);
     }
   };
 
@@ -183,33 +133,44 @@ function Settings() {
     e.preventDefault();
     setPwdMsg({ type: "", text: "" });
 
-    if (!pwdForm.currentPassword.trim() || !pwdForm.newPassword.trim() || !pwdForm.confirmPassword.trim()) {
+    const currentPassword = pwdForm.currentPassword.trim();
+    const newPassword = pwdForm.newPassword.trim();
+    const confirmPassword = pwdForm.confirmPassword.trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
       setPwdMsg({ type: "error", text: "All password fields are required." });
       return;
     }
 
-    if (pwdForm.newPassword.length < 6) {
+    if (newPassword.length < 6) {
       setPwdMsg({ type: "error", text: "New password must be at least 6 characters long." });
       return;
     }
 
-    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
-      setPwdMsg({ type: "error", text: "New password and confirmation do not match." });
+    if (newPassword !== confirmPassword) {
+      setPwdMsg({ type: "error", text: "New password and confirm password do not match." });
       return;
     }
 
     setPwdLoading(true);
     try {
-      const res = await api.post("shop/updatePassword.php", pwdForm);
+      const res = await api.post("shop/updatePassword.php", {
+        currentPassword: pwdForm.currentPassword,
+        newPassword: pwdForm.newPassword,
+        confirmPassword: pwdForm.confirmPassword
+      });
       if (res?.success) {
         setPwdMsg({ type: "success", text: res.message || "Password updated successfully!" });
         setPwdForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setTimeout(() => setActiveModal(null), 1800);
+        setTimeout(() => {
+          setActiveModal(null);
+          setPwdMsg({ type: "", text: "" });
+        }, 1800);
       } else {
         setPwdMsg({ type: "error", text: res?.message || "Failed to update password." });
       }
     } catch (err) {
-      setPwdMsg({ type: "error", text: err.message || "Error updating password." });
+      setPwdMsg({ type: "error", text: err.message || "Current password is incorrect." });
     } finally {
       setPwdLoading(false);
     }
@@ -248,81 +209,6 @@ function Settings() {
         />
       </div>
 
-      {/* Email Update Modal */}
-      {activeModal === "email" && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 relative space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <h3 className="font-extrabold text-base text-slate-900 m-0 flex items-center gap-2">
-                <IconMail className="w-5 h-5 text-emerald-600" />
-                Update Email Address
-              </h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg border-none bg-transparent cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateEmail} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1">
-                  Current Password *
-                </label>
-                <input
-                  type="password"
-                  value={emailForm.currentPassword}
-                  onChange={(e) => setEmailForm({ ...emailForm, currentPassword: e.target.value })}
-                  placeholder="Enter current password to verify"
-                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1">
-                  New Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={emailForm.newEmail}
-                  onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })}
-                  placeholder="e.g. owner@example.com"
-                  className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
-                />
-              </div>
-
-              {emailMsg.text && (
-                <div className={`p-3 rounded-xl text-xs font-semibold ${
-                  emailMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-                }`}>
-                  {emailMsg.text}
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={emailLoading}
-                  className={`flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs border-none shadow-2xs ${
-                    emailLoading ? "opacity-70 cursor-not-allowed" : "hover:bg-emerald-700 cursor-pointer"
-                  }`}
-                >
-                  {emailLoading ? "Updating..." : "Update Email"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Password Update Modal */}
       {activeModal === "password" && (
@@ -350,7 +236,10 @@ function Settings() {
                 <input
                   type="password"
                   value={pwdForm.currentPassword}
-                  onChange={(e) => setPwdForm({ ...pwdForm, currentPassword: e.target.value })}
+                  onChange={(e) => {
+                    setPwdForm({ ...pwdForm, currentPassword: e.target.value });
+                    if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
+                  }}
                   placeholder="Enter current password"
                   className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
                 />
@@ -363,7 +252,10 @@ function Settings() {
                 <input
                   type="password"
                   value={pwdForm.newPassword}
-                  onChange={(e) => setPwdForm({ ...pwdForm, newPassword: e.target.value })}
+                  onChange={(e) => {
+                    setPwdForm({ ...pwdForm, newPassword: e.target.value });
+                    if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
+                  }}
                   placeholder="At least 6 characters"
                   className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
                 />
@@ -376,7 +268,10 @@ function Settings() {
                 <input
                   type="password"
                   value={pwdForm.confirmPassword}
-                  onChange={(e) => setPwdForm({ ...pwdForm, confirmPassword: e.target.value })}
+                  onChange={(e) => {
+                    setPwdForm({ ...pwdForm, confirmPassword: e.target.value });
+                    if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
+                  }}
                   placeholder="Re-enter new password"
                   className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border"
                 />

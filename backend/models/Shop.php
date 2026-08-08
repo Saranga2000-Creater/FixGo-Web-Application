@@ -704,5 +704,37 @@ public function updateShopTowTruckDetails($shopId, $data) {
         }
         return $formatted;
     }
+
+    /**
+     * Verifies current password for a shop user ID.
+     */
+    public function verifyPassword($shopId, $currentPassword) {
+        $stmt = $this->conn->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $shopId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$user) {
+            return false;
+        }
+        return password_verify($currentPassword, $user['password']);
+    }
+
+    /**
+     * Checks if an email is registered to another user account.
+     */
+    public function isEmailTaken($email, $excludeUserId) {
+        $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = :email AND id != :id LIMIT 1");
+        $stmt->execute([':email' => $email, ':id' => $excludeUserId]);
+        return (bool) $stmt->fetch();
+    }
+
+
+    /**
+     * Hashes and updates password in 'users' table.
+     */
+    public function updatePassword($shopId, $newPassword) {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->conn->prepare("UPDATE users SET password = :password WHERE id = :id");
+        return $stmt->execute([':password' => $hashedPassword, ':id' => $shopId]);
+    }
 }
 ?>

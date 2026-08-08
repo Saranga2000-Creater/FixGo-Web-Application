@@ -269,7 +269,8 @@ export const NavBar = () => {
                                             notifications.map(notif => {
                                                 const isUnread = Number(notif.isRead) === 0;
                                                 const message = getMessage(notif);
-                                                const statusKey = notif.type || notif.status;
+                                                const rawStatusKey = notif.type || notif.status || "";
+                                                const statusKey = typeof rawStatusKey === "string" ? rawStatusKey.trim() : rawStatusKey;
                                                 const meta = STATUS_META[statusKey] || {
                                                     icon: faBell,
                                                     iconBg: "rgba(22,163,74,0.08)",

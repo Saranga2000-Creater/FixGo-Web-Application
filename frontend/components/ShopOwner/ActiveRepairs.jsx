@@ -121,6 +121,7 @@ function ActiveRepairs() {
           )
         );
       }
+      window.dispatchEvent(new Event("fixgo_unread_changed"));
     } catch (err) {
       console.error(err);
       alert("Something went wrong while updating the status.");

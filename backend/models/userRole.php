@@ -195,5 +195,28 @@ class User {
         $stmt->execute();
         return (int)$stmt->fetchColumn();
     }
+
+    /**
+     * Verifies current password for a user ID.
+     */
+    public function verifyPassword($userId, $currentPassword) {
+        $stmt = $this->conn->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$user) {
+            return false;
+        }
+        return password_verify($currentPassword, $user['password']);
+    }
+
+    /**
+     * Checks if an email is registered to another user account.
+     */
+    public function isEmailTaken($email, $excludeUserId) {
+        $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = :email AND id != :id LIMIT 1");
+        $stmt->execute([':email' => $email, ':id' => $excludeUserId]);
+        return (bool) $stmt->fetch();
+    }
+
 }
 ?>
