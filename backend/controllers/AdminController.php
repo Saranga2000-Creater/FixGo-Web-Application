@@ -77,6 +77,71 @@ class AdminController {
         }
     }
 
+
+    /**
+     * Admin: Approve a pending shop owner account.
+     * Reads { shopId } from the JSON request body.
+     */
+    public function approveShop(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
+        $data   = json_decode(file_get_contents("php://input"));
+        $shopId = isset($data->shopId) ? intval($data->shopId) : 0;
+
+        if ($shopId <= 0) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Valid shopId is required."]);
+            return;
+        }
+
+        try {
+            $shopModel = new Shop($this->db);
+            $result    = $shopModel->approveShop($shopId);
+
+            switch ($result) {
+                case 'approved':
+                    http_response_code(200);
+                    echo json_encode(["success" => true, "message" => "Shop approved successfully."]);
+                    break;
+                case 'already_active':
+                    http_response_code(200);
+                    echo json_encode(["success" => true, "message" => "Shop is already active."]);
+                    break;
+                default:
+                    http_response_code(404);
+                    echo json_encode(["success" => false, "message" => "Shop not found or email not yet verified."]);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Server error.", "debug" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Admin: Get all shop owner accounts pending approval.
+     */
+    public function getPendingShops(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
+        try {
+            $shopModel = new Shop($this->db);
+            $shops     = $shopModel->getPendingApprovals();
+            http_response_code(200);
+            echo json_encode(["success" => true, "data" => $shops]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Server error.", "debug" => $e->getMessage()]);
+        }
+    }
+
     private function authorizeAdmin($payload, $allowedMethod = null) {
         if ($allowedMethod && $_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
             http_response_code(405);

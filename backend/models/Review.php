@@ -68,4 +68,14 @@ class Review {
         $stmt->execute([$shopId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Home Page: Get the global average rating across all shops
+     */
+    public function getGlobalAverageRating() {
+        $stmt = $this->db->prepare("SELECT ROUND(AVG(rating), 1) AS average_rating FROM review");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result && $result['average_rating'] !== null ? (float)$result['average_rating'] : 0.0;
+    }
 }

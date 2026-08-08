@@ -16,6 +16,12 @@ class AuthController{
 
     public function login(){
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["message" => "Method not allowed."]);
+            return;
+        }
+
         $rawInput = file_get_contents("php://input");
         $data = json_decode($rawInput);
         

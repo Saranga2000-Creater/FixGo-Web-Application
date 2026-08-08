@@ -548,5 +548,14 @@ public function updateTowTruckDetails($data)
         }
         return $formatted;
     }
+
+    /**
+     * Home Page: Get total count of successfully completed requests
+     */
+    public function getTotalCompletedRequests() {
+        $stmt = $this->conn->prepare("SELECT COUNT(id) FROM servicerequest WHERE status = 'Completed'");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 }
 ?>

@@ -7,7 +7,7 @@ require_once __DIR__ . '/../controllers/ServiceRequestController.php';
 $database = new Database();
 $db = $database->connect();
 
-$payload = AuthMiddleware::authenticate();
+$payload = AuthMiddleware::authenticate(['customer']);
 
 $controller = new ServiceRequestController($db);
 
