@@ -1,19 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { FiGrid, FiClipboard, FiClock, FiStar, FiHome, FiBell, FiSettings, FiLogOut, FiCreditCard } from "react-icons/fi";
-import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCarSide,
+  faClipboardList,
+  faWrench,
+  faClock,
+  faStar,
+  faStore,
+  faBell,
+  faCreditCard,
+  faGear,
+  faRightFromBracket
+} from "@fortawesome/free-solid-svg-icons";
 import { UPLOADS_URL } from "../../src/services/api";
 
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: <FiGrid /> },
-  { id: "requests", label: "Service Requests", icon: <FiClipboard /> },
-  { id: "repairs", label: "Active Repairs", icon: <HiOutlineWrenchScrewdriver /> },
-  { id: "history", label: "Service History", icon: <FiClock /> },
-  { id: "reviews", label: "Reviews & Ratings", icon: <FiStar /> },
-  { id: "profile", label: "Shop Profile", icon: <FiHome /> },
-  { id: "notifications", label: "Notifications", icon: <FiBell /> },
-  { id: "billing",       label: "Billing",       icon: <FiCreditCard /> },
-  { id: "settings",      label: "Settings",      icon: <FiSettings /> },
+  { id: "dashboard", label: "Dashboard", icon: faCarSide },
+  { id: "profile", label: "Shop Profile", icon: faStore },
+  { id: "requests", label: "Service Requests", icon: faClipboardList },
+  { id: "repairs", label: "Active Repairs", icon: faWrench },
+  { id: "history", label: "Service History", icon: faClock },
+  { id: "reviews", label: "Reviews & Ratings", icon: faStar },
+  { id: "notifications", label: "Notifications", icon: faBell },
+  { id: "billing",       label: "Billing",       icon: faCreditCard },
+  { id: "settings",      label: "Settings",      icon: faGear },
 ];
 
 function Badge({ count }) {
@@ -93,13 +104,10 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
                     : "bg-transparent text-gray-700 font-medium hover:bg-gray-50"
                 }`}
               >
-                <span
-                  className={`text-lg flex items-center ${
-                    isActive ? "text-green-600" : "text-gray-500"
-                  }`}
-                >
-                  {item.icon}
-                </span>
+                <FontAwesomeIcon
+                  icon={item.icon}
+                  className={`text-base ${isActive ? "text-green-600" : "text-gray-500"}`}
+                />
                 <span className="flex-1">{item.label}</span>
                 <Badge
                   count={
@@ -126,7 +134,7 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
           onClick={handleSignOut}
           className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] border-none cursor-pointer bg-transparent text-gray-500 font-medium text-sm hover:bg-red-50 hover:text-red-600 transition-colors"
         >
-          <FiLogOut size={18} />
+          <FontAwesomeIcon icon={faRightFromBracket} className="text-base" />
           Log Out
         </button>
       </div>

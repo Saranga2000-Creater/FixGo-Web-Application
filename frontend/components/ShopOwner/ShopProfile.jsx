@@ -513,7 +513,7 @@ function ShopProfile() {
               <h2 className="text-2xl font-extrabold text-slate-900 m-0">
                 {shopData.name}
               </h2>
-              <span className="bg-green-50 text-green-700 border border-green-200/80 rounded-full py-0.5 px-3 text-xs font-semibold inline-flex items-center gap-1">
+              <span className="bg-green-50 text-green-600 border border-green-200/80 rounded-full py-0.5 px-3 text-xs font-semibold inline-flex items-center gap-1">
                 ✓ Verified
               </span>
 
@@ -524,7 +524,7 @@ function ShopProfile() {
                 title="Click to toggle shop availability"
                 className={`py-0.5 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   isCurrentlyOpen
-                    ? "bg-green-100/90 text-green-800 border-green-300 hover:bg-green-200"
+                    ? "bg-green-100/90 text-green-600 border-green-300 hover:bg-green-200"
                     : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
                 }`}
               >
@@ -556,7 +556,7 @@ function ShopProfile() {
         <button
           type="button"
           onClick={handleGoToShop}
-          className="py-2.5 px-5 rounded-xl border border-green-600 bg-white text-green-700 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-2 transition-all shadow-2xs shrink-0"
+          className="py-2.5 px-5 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-2 transition-all shadow-2xs shrink-0"
         >
           <span>👁️</span> Go to My Shop ↗
         </button>
@@ -569,7 +569,7 @@ function ShopProfile() {
           onClick={() => setActiveTab("info")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "info"
-              ? "bg-green-50 text-green-700 border-green-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -581,7 +581,7 @@ function ShopProfile() {
           onClick={() => setActiveTab("hours")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "hours"
-              ? "bg-green-50 text-green-700 border-green-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -593,7 +593,7 @@ function ShopProfile() {
           onClick={() => setActiveTab("gallery")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "gallery"
-              ? "bg-green-50 text-green-700 border-green-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -605,7 +605,7 @@ function ShopProfile() {
           onClick={() => setActiveTab("tow")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "tow"
-              ? "bg-green-50 text-green-700 border-green-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -617,7 +617,7 @@ function ShopProfile() {
           onClick={() => setActiveTab("services")}
           className={`py-2.5 px-4 rounded-xl border font-semibold text-xs cursor-pointer transition-all flex items-center gap-2 ${
             activeTab === "services"
-              ? "bg-green-50 text-green-700 border-green-600 shadow-2xs"
+              ? "bg-green-50 text-green-600 border-green-600 shadow-2xs"
               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -641,7 +641,7 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingBusinessInfo(true)}
-                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-700 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
+                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
                 >
                   <span>✏️</span> Edit Information
                 </button>
@@ -726,7 +726,7 @@ function ShopProfile() {
                       <span>🛠️</span> Carriage Service
                     </span>
                     <span className={`font-bold py-0.5 px-3 rounded-full text-xs ${
-                      shopData.carriageService ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"
+                      shopData.carriageService ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-700"
                     }`}>
                       {shopData.carriageService ? "Available" : "Not Available"}
                     </span>
@@ -843,7 +843,7 @@ function ShopProfile() {
                   type="button"
                   onClick={handleSaveBusinessInfo}
                   disabled={businessSaving}
-                  className="mt-2 w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-700 shadow-2xs"
+                  className="mt-2 w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                 >
                   {businessSaving ? "Saving..." : "Save Changes"}
                 </button>
@@ -869,7 +869,7 @@ function ShopProfile() {
                     onClick={() => handleToggleAvailability(isCurrentlyOpen ? 0 : 1)}
                     className={`py-0.5 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer ${
                       isCurrentlyOpen
-                        ? "bg-green-100/90 text-green-800 border-green-300 hover:bg-green-200"
+                        ? "bg-green-100/90 text-green-600 border-green-300 hover:bg-green-200"
                         : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
                     }`}
                   >
@@ -882,7 +882,7 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingHours(true)}
-                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-700 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
+                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
                 >
                   <span>✏️</span> Edit Hours
                 </button>
@@ -959,7 +959,7 @@ function ShopProfile() {
                       type="button"
                       onClick={() => setSatClosed(!satClosed)}
                       className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-800 border-green-300"
+                        satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
                       }`}
                     >
                       {satClosed ? "Mark Open" : "Mark Closed"}
@@ -1000,7 +1000,7 @@ function ShopProfile() {
                       type="button"
                       onClick={() => setSunClosed(!sunClosed)}
                       className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-800 border-green-300"
+                        sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
                       }`}
                     >
                       {sunClosed ? "Mark Open" : "Mark Closed"}
@@ -1038,7 +1038,7 @@ function ShopProfile() {
                   type="button"
                   onClick={handleSaveBusinessInfo}
                   disabled={businessSaving}
-                  className="w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-700 shadow-2xs"
+                  className="w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                 >
                   {businessSaving ? "Saving..." : "Save Operating Hours"}
                 </button>
@@ -1074,7 +1074,7 @@ function ShopProfile() {
                   className={`py-2 px-4 rounded-xl border font-semibold text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow-2xs ${
                     galleryImages.length >= 4
                       ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                      : "border-green-600 bg-white text-green-700 hover:bg-green-50"
+                      : "border-green-600 bg-white text-green-600 hover:bg-green-50"
                   }`}
                 >
                   + Add Photo
@@ -1135,7 +1135,7 @@ function ShopProfile() {
                   {galleryImages.length < 4 && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-44 rounded-2xl border-2 border-dashed border-slate-300 hover:border-green-500 bg-slate-50/50 hover:bg-green-50/30 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-500 hover:text-green-700"
+                      className="h-44 rounded-2xl border-2 border-dashed border-slate-300 hover:border-green-500 bg-slate-50/50 hover:bg-green-50/30 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-500 hover:text-green-600"
                     >
                       <span className="text-2xl font-bold mb-1">+</span>
                       <span className="text-xs font-semibold">Add Photo</span>
@@ -1205,7 +1205,7 @@ function ShopProfile() {
                 </p>
                 <button
                   onClick={() => setShowTowForm(true)}
-                  className="py-2.5 px-5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-700 transition shadow-2xs"
+                  className="py-2.5 px-5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 transition shadow-2xs"
                 >
                   Yes, I provide tow service
                 </button>
@@ -1274,7 +1274,7 @@ function ShopProfile() {
                     onClick={handleTowSave}
                     disabled={towSaving}
                     className={`flex-1 py-2.5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs ${
-                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-green-700 shadow-2xs"
+                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-green-600 shadow-2xs"
                     }`}
                   >
                     {towSaving ? "Saving..." : "Save Details"}
@@ -1309,7 +1309,7 @@ function ShopProfile() {
                     {shopServices.map((s, idx) => (
                       <div key={idx} className="p-4 border border-slate-200/70 rounded-xl bg-slate-50/60 flex justify-between items-center hover:border-green-200 transition-colors">
                         <div>
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-800 bg-green-100/80 px-2 py-0.5 rounded-md border border-green-200/50">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-600 bg-green-100/80 px-2 py-0.5 rounded-md border border-green-200/50">
                             {s.category || "General"}
                           </span>
                           <div className="font-bold text-sm text-slate-900 mt-1.5">{s.service_name || s.name}</div>
@@ -1317,7 +1317,7 @@ function ShopProfile() {
                             <span>⏱️</span> {s.duration}
                           </div>
                         </div>
-                        <div className="font-bold text-xs text-green-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                        <div className="font-bold text-xs text-green-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
                           {s.starting_price || s.price}
                         </div>
                       </div>
@@ -1329,7 +1329,7 @@ function ShopProfile() {
                 <button
                   type="button"
                   onClick={() => setIsEditingServices(true)}
-                  className="mt-6 py-2.5 px-6 rounded-xl border-[1.5px] border-green-600 text-green-700 bg-white font-semibold text-xs cursor-pointer hover:bg-green-50 transition-colors shadow-2xs"
+                  className="mt-6 py-2.5 px-6 rounded-xl border-[1.5px] border-green-600 text-green-600 bg-white font-semibold text-xs cursor-pointer hover:bg-green-50 transition-colors shadow-2xs"
                 >
                   + Add / Edit Services
                 </button>
@@ -1343,7 +1343,7 @@ function ShopProfile() {
                   {shopServices.map((s, idx) => (
                     <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                       <div>
-                        <span className="font-extrabold text-green-700 mr-2">[{s.category || "General"}]</span>
+                        <span className="font-extrabold text-green-600 mr-2">[{s.category || "General"}]</span>
                         <span className="font-semibold text-slate-900">{s.service_name || s.name}</span>
                         <span className="text-slate-500 ml-2">({s.starting_price || s.price} • {s.duration})</span>
                       </div>
@@ -1425,7 +1425,7 @@ function ShopProfile() {
                     onClick={handleAddCustomService}
                     disabled={servicesSaving}
                     className={`w-full py-2.5 text-white font-bold text-xs rounded-xl border-none shadow-2xs transition-colors ${
-                      servicesSaving ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 cursor-pointer"
+                      servicesSaving ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-600 cursor-pointer"
                     }`}
                   >
                     {servicesSaving ? "Saving..." : "+ Add Service to List"}
@@ -1437,7 +1437,7 @@ function ShopProfile() {
                     type="button"
                     onClick={handleSaveServices}
                     disabled={servicesSaving}
-                    className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-700 shadow-2xs"
+                    className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
                   >
                     {servicesSaving ? "Saving..." : "Save All Services"}
                   </button>

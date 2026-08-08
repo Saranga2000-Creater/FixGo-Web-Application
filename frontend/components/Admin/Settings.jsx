@@ -676,7 +676,7 @@ function Settings() {
       subtitle: "Manage app behavior and data.",
       rows: [
         { icon: faFileLines,   label: "Terms & Conditions", onClick: () => navigate("/terms-conditions") },
-        { icon: faCircleInfo,  label: "About FixGo",        onClick: null, trailing: "Version 1.0.0" },
+        { icon: faCircleInfo,  label: "About FixGo",        onClick: () => navigate("/support"), trailing: "Version 1.0.0" },
       ],
     },
   ];
