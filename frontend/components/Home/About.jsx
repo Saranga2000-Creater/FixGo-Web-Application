@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api } from "../../src/services/api";
 import {
     HiOutlineShieldCheck,
     HiOutlineUserGroup,
@@ -11,6 +12,32 @@ import {
 } from "react-icons/hi2";
 
 const About = () => {
+    const [stats, setStats] = useState({
+        verifiedGarages: "...",
+        successfulBookings: "...",
+        averageRating: "..."
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await api.getPublic('home/getHomeStats.php');
+                if (res?.success && res.data) {
+                    setStats(res.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch home stats:", error);
+                // Fallback to static values if API fails
+                setStats({
+                    verifiedGarages: "500+",
+                    successfulBookings: "12,000+",
+                    averageRating: "4.8"
+                });
+            }
+        };
+        fetchStats();
+    }, []);
+
     const testimonials = [
         {
             id: 1,
@@ -93,7 +120,9 @@ const About = () => {
                         <HiOutlineShieldCheck className="w-6 h-6" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">500+</span>
+                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">
+                            {stats.verifiedGarages === "..." ? "..." : `${stats.verifiedGarages}+`}
+                        </span>
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Verified Garages</span>
                     </div>
                 </div>
@@ -104,7 +133,9 @@ const About = () => {
                         <HiOutlineUserGroup className="w-6 h-6" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">12,000+</span>
+                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">
+                            {stats.successfulBookings === "..." ? "..." : `${Number(stats.successfulBookings).toLocaleString()}+`}
+                        </span>
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Successful Bookings</span>
                     </div>
                 </div>
@@ -126,7 +157,9 @@ const About = () => {
                         <HiStar className="w-6 h-6 text-[#16a34a]" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">4.8 <span className="text-sm font-normal text-gray-400">/ 5</span></span>
+                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">
+                            {stats.averageRating} <span className="text-sm font-normal text-gray-400">/ 5</span>
+                        </span>
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Average Rating</span>
                     </div>
                 </div>
