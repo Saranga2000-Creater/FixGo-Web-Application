@@ -33,15 +33,14 @@ class NotificationController {
         }
     }
 
-    public function markRead() {
-        $payload = AuthMiddleware::authenticate();
-        $userId  = $payload['user_id'] ?? null;
-
-        if (!$userId) {
-            http_response_code(401);
-            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+    public function markRead(array $payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
             return;
         }
+
+        $userId = (int)$payload['user_id'];
 
         $rawData = json_decode(file_get_contents("php://input"), true);
         if ($rawData === null) {

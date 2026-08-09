@@ -19,6 +19,12 @@ class AdminController {
      * Follows 'Thin Controller' pattern by delegating SQL to Models.
      */
     public function getDashboardOverview() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
         try {
             // Instantiate models
             $shopModel = new Shop($this->db);

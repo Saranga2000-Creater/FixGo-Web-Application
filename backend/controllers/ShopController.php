@@ -12,6 +12,12 @@ class ShopController {
     }
 
     public function getProfile($shopId) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
         $shopModel = new Shop($this->db);
         $shopProfile = $shopModel->getById($shopId);
 
@@ -394,6 +400,12 @@ class ShopController {
 
 public function getTowTruckDetails($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shopId = $payload['user_id'] ?? null;
 
     if (!$shopId) {
