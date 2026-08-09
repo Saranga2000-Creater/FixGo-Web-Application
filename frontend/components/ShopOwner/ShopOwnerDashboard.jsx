@@ -15,6 +15,9 @@ import {
   faGear,
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
+} from "recharts";
 import Sidebar from "./Sidebar";
 import ServiceRequests from "./ServiceRequests";
 import ActiveRepairs from "./ActiveRepairs";
@@ -38,6 +41,30 @@ const NAV_ITEMS = [
   { id: "settings", label: "Settings", icon: faGear },
 ];
 
+function CustomTimelineTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const dataItem = payload[0]?.payload;
+  const headerLabel = dataItem?.fullName || label;
+
+  return (
+    <div className="bg-gray-900 text-white rounded-xl px-4 py-3 shadow-xl text-[12px] min-w-[140px]">
+      <p className="font-bold mb-2 text-gray-300">{headerLabel}</p>
+      {payload.map((p) => (
+        <div key={p.name} className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full inline-block"
+              style={{ background: p.stroke || p.fill || "#10b981" }}
+            />
+            Requests
+          </span>
+          <span className="font-bold text-white">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Dashboard View (Forced Full Width) ──────────────────────────────────────
 function DashboardView({
   shopData,
@@ -48,6 +75,56 @@ function DashboardView({
   reviewCount,
   setActiveNav,
 }) {
+  const [timelineFilter, setTimelineFilter] = useState("30days");
+  const [chartData, setChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setChartLoading(true);
+
+    api.get(`shop/getServiceRequestVolume.php?timeframe=${timelineFilter}`)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res && res.success && Array.isArray(res.data)) {
+          setChartData(res.data);
+        } else {
+          setChartData([]);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error("Failed to load request volume chart:", err);
+        setChartData([]);
+      })
+      .finally(() => {
+        if (isMounted) setChartLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [timelineFilter]);
+
+  const getTimelineDateRange = () => {
+    const end = new Date();
+    const start = new Date();
+
+    if (timelineFilter === "7days") {
+      start.setDate(end.getDate() - 6);
+      const formatOpts = { month: "short", day: "numeric", year: "numeric" };
+      return `${start.toLocaleDateString("en-US", formatOpts)} — ${end.toLocaleDateString("en-US", formatOpts)}`;
+    } else if (timelineFilter === "12months") {
+      start.setMonth(end.getMonth() - 11);
+      const formatOpts = { month: "short", year: "numeric" };
+      return `${start.toLocaleDateString("en-US", formatOpts)} — ${end.toLocaleDateString("en-US", formatOpts)}`;
+    } else {
+      start.setDate(end.getDate() - 29);
+      const formatOpts = { month: "short", day: "numeric", year: "numeric" };
+      return `${start.toLocaleDateString("en-US", formatOpts)} — ${end.toLocaleDateString("en-US", formatOpts)}`;
+    }
+  };
+
   const stats = [
     {
       label: "New Requests",
@@ -132,7 +209,60 @@ function DashboardView({
           </div>
         ))}
       </div>
-  </div>
+
+      {/* Service Request Volume Line Chart */}
+      <div className="bg-white rounded-[18px] border border-[#E7EFE8] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] w-full flex flex-col min-h-[350px]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 m-0">Service Request Volume</h3>
+            <p className="text-xs text-gray-500 font-medium mt-1 tracking-wide">
+              {getTimelineDateRange()}
+            </p>
+          </div>
+          <select
+            value={timelineFilter}
+            onChange={(e) => setTimelineFilter(e.target.value)}
+            className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2 outline-none cursor-pointer self-end sm:self-auto"
+          >
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="12months">Last 12 Months</option>
+          </select>
+        </div>
+
+        <div className="flex-1 w-full min-h-[250px] relative">
+          {chartLoading ? (
+            <div className="flex justify-center items-center h-full min-h-[220px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="flex justify-center items-center h-full min-h-[220px] text-gray-400 text-sm font-medium">
+              No service requests during this period.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} dy={10} minTickGap={20} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
+                <RechartsTooltip
+                  content={<CustomTimelineTooltip />}
+                  cursor={{ stroke: "#e5e7eb", strokeWidth: 2, strokeDasharray: "5 5" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="requests"
+                  stroke="#10b981"
+                  strokeWidth={4}
+                  dot={false}
+                  activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2, fill: "#10b981" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
