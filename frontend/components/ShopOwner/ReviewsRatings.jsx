@@ -107,6 +107,31 @@ function ReviewsRatings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [highlightedReqId, setHighlightedReqId] = useState(null);
+
+  useEffect(() => {
+    const handleHighlight = (e) => {
+      if (e.detail) {
+        setHighlightedReqId(e.detail);
+        setActiveTab("All");
+        
+        setTimeout(() => {
+          const el = document.getElementById(`review-card-${e.detail}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+
+        setTimeout(() => {
+          setHighlightedReqId(null);
+        }, 3000);
+      }
+    };
+    
+    window.addEventListener("fixgo_highlight_review", handleHighlight);
+    return () => window.removeEventListener("fixgo_highlight_review", handleHighlight);
+  }, []);
+
   useEffect(() => {
     const shopId = getShopIdFromToken();
 
@@ -245,13 +270,15 @@ function ReviewsRatings() {
           filteredReviews.map((r, i) => {
             const initials = getInitials(r.customer_name);
             const color = getColorForName(r.customer_name);
+            const isHighlighted = highlightedReqId && String(highlightedReqId) === String(r.service_request_id);
 
             return (
               <div
                 key={r.id}
-                className={`py-4.5 px-5 ${
+                id={`review-card-${r.service_request_id}`}
+                className={`py-4.5 px-5 transition-all duration-500 ${
                   i < filteredReviews.length - 1 ? "border-b border-gray-50" : ""
-                }`}
+                } ${isHighlighted ? "bg-green-50" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <Avatar initials={initials} color={color} />

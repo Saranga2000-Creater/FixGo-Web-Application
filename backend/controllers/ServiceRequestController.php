@@ -586,7 +586,44 @@ public function updateTowTruckDetails($payload)
         ]);
     }
 
+    public function handleGetServiceRequestVolume($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
 
+        $userId = $payload['user_id'] ?? null;
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
 
+        // Verify shop identity using existing Shop model logic
+        $shopProfile = $this->shopModel->getById($userId);
+        if (!$shopProfile) {
+            http_response_code(404);
+            echo json_encode(["success" => false, "message" => "Shop profile not found."]);
+            return;
+        }
+
+        $shop_id = (int)$shopProfile['id'];
+        $timeframe = $_GET['timeframe'] ?? ($_GET['days'] ?? '30days');
+
+        if ($timeframe === '12months' || $timeframe === '12') {
+            $volumeData = $this->serviceRequestModel->getMonthlyVolumeByShop($shop_id);
+        } else {
+            $days = ($timeframe === '7days' || $timeframe === '7' || $timeframe === 7) ? 7 : 30;
+            $volumeData = $this->serviceRequestModel->getDailyVolumeByShop($shop_id, $days);
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "data"    => $volumeData
+        ]);
+    }
 }
 ?>
