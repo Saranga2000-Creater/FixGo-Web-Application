@@ -621,5 +621,120 @@ public function updateTowTruckDetails($data)
         $stmt->execute();
         return (int)$stmt->fetchColumn();
     }
+
+    /**
+     * Shop Dashboard: Get daily service request volume for a specific shop
+     * Returns an array of consecutive days with zero-filled counts for days with no requests.
+     */
+    public function getDailyVolumeByShop($shop_id, $days = 30) {
+        $days = in_array((int)$days, [7, 30, 90], true) ? (int)$days : 30;
+
+        // Calculate exact start and end dates (e.g. today and today minus ($days - 1) days)
+        // 7 days  => today - 6 days to today
+        // 30 days => today - 29 days to today
+        // 90 days => today - 89 days to today
+        $daysOffset = $days - 1;
+        $startDateStr = date('Y-m-d', strtotime("-{$daysOffset} days"));
+        $endDateStr   = date('Y-m-d');
+
+        $query = "
+            SELECT 
+                DATE(created_at) as date, 
+                COUNT(id) as count
+            FROM " . $this->table_name . "
+            WHERE shop_id = :shop_id
+              AND DATE(created_at) >= :start_date
+              AND DATE(created_at) <= :end_date
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':shop_id', $shop_id, PDO::PARAM_INT);
+        $stmt->bindParam(':start_date', $startDateStr);
+        $stmt->bindParam(':end_date', $endDateStr);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $countsByDate = [];
+        foreach ($results as $row) {
+            $countsByDate[$row['date']] = (int)$row['count'];
+        }
+
+        $formatted = [];
+        $current = new DateTime($startDateStr);
+        $end     = new DateTime($endDateStr);
+        $end->modify('+1 day');
+
+        while ($current < $end) {
+            $dateKey = $current->format('Y-m-d');
+            $name    = $current->format('M d');
+            $count   = $countsByDate[$dateKey] ?? 0;
+
+            $formatted[] = [
+                'date'     => $dateKey,
+                'name'     => $name,
+                'requests' => $count
+            ];
+
+            $current->modify('+1 day');
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Shop Dashboard: Get monthly service request volume for the past 12 months for a specific shop
+     * Returns an array of 12 consecutive months with zero-filled counts for months with no requests.
+     */
+    public function getMonthlyVolumeByShop($shop_id) {
+        // Start date: 1st day of the month 11 months ago (12 calendar months total including current month)
+        $startDateStr = date('Y-m-01', strtotime('-11 months'));
+
+        $query = "
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month, 
+                COUNT(id) as count
+            FROM " . $this->table_name . "
+            WHERE shop_id = :shop_id
+              AND created_at >= :start_date
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month ASC
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':shop_id', $shop_id, PDO::PARAM_INT);
+        $stmt->bindParam(':start_date', $startDateStr);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $countsByMonth = [];
+        foreach ($results as $row) {
+            $countsByMonth[$row['month']] = (int)$row['count'];
+        }
+
+        $formatted = [];
+        $current = new DateTime(date('Y-m-01', strtotime('-11 months')));
+        $end     = new DateTime(date('Y-m-01'));
+        $end->modify('+1 month');
+
+        while ($current < $end) {
+            $monthKey  = $current->format('Y-m');
+            $shortName = $current->format('M');     // e.g. "Jul"
+            $fullName  = $current->format('M Y');   // e.g. "Jul 2026"
+            $count     = $countsByMonth[$monthKey] ?? 0;
+
+            $formatted[] = [
+                'date'     => $monthKey,
+                'name'     => $shortName,
+                'fullName' => $fullName,
+                'requests' => $count
+            ];
+
+            $current->modify('+1 month');
+        }
+
+        return $formatted;
+    }
 }
 ?>
