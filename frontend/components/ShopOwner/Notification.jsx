@@ -253,7 +253,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         const statusUpper = (notif.requestStatus || "").toUpperCase().trim();
                         let isRequestMoved = false;
                         if (notif.statusKey === "NewRequest") {
-                            isRequestMoved = ["CONFIRMED", "DIAGNOSIS", "PENDING PARTS", "IN PROGRESS", "COMPLETED"].includes(statusUpper);
+                            isRequestMoved = ["CONFIRMED", "DIAGNOSIS", "PENDING PARTS", "IN PROGRESS", "COMPLETED", "CANCELLED", "CANCELED", "DECLINED"].includes(statusUpper);
                         } else if (notif.statusKey === "NewReview") {
                             isRequestMoved = false;
                         } else {
