@@ -47,7 +47,7 @@ function ServiceHistory({ shopCategory }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
-    api.get("getServiceHistory.php")
+    api.get("shop/getServiceHistory.php")
       .then((data) => {
         if (data.success) {
           setHistory(data.data);

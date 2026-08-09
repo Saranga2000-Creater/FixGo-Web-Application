@@ -116,7 +116,7 @@ function ReviewsRatings() {
       return;
     }
 
-    api.get(`getShopReviews.php?shop_id=${shopId}`)
+    api.get(`shop/getShopReviews.php?shop_id=${shopId}`)
       .then((data) => {
         if (!data || !data.success) {
           setError(data?.message || "Failed to load reviews.");

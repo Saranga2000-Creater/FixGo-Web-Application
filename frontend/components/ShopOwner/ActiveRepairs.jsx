@@ -92,7 +92,7 @@ function ActiveRepairs() {
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    api.get("getActiveRepairs.php")
+    api.get("shop/getActiveRepairs.php")
       .then((data) => {
         if (data.success) {
           setActiveRepairs(data.data);

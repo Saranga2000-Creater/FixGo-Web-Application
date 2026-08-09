@@ -237,7 +237,7 @@ function ShopOwnerDashboard() {
   }, []);
 
 const fetchRequestCount = () => {
-  api.get("getServiceRequests.php")
+  api.get("shop/getServiceRequests.php")
     .then((data) => {
       if (data.success) {
         const pendingCount = data.data.filter(
@@ -254,7 +254,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  api.get("getServiceHistory.php")
+  api.get("shop/getServiceHistory.php")
     .then((data) => {
       if (data.success) {
         setCompletedJobCount(data.data.length);
@@ -283,7 +283,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  api.get("getShopProfile.php")
+  api.get("shop/getShopProfile.php")
     .then((data) => {
       if (data.success) {
         setShopData(data.data);
@@ -308,7 +308,7 @@ useEffect(() => {
 
     if (!shopId) return;
 
-    api.get(`getShopReviews.php?shop_id=${shopId}`)
+    api.get(`shop/getShopReviews.php?shop_id=${shopId}`)
       .then((data) => {
         if (data.success) {
           setReviewCount(Number(data.total_reviews) || 0);

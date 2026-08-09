@@ -108,7 +108,7 @@ function ShopProfile() {
   });
 
   useEffect(() => {
-    api.get("getShopProfile.php")
+    api.get("shop/getShopProfile.php")
       .then(data => {
         if (data.success) {
           setShopData(data.data);
@@ -142,7 +142,7 @@ function ShopProfile() {
   useEffect(() => {
     if (!shopData) return;
     setTowLoading(true);
-    api.get("getTowTruckDetails.php")
+    api.get("shop/getTowTruckDetails.php")
       .then(data => {
         if (data.success) {
           setTowDetails(data.data);
@@ -449,7 +449,7 @@ function ShopProfile() {
     }
 
     setTowSaving(true);
-    api.post("updateShopTowTruckDetails.php", { ...towForm })
+    api.post("shop/updateShopTowTruckDetails.php", { ...towForm })
       .then(data => {
         if (data.success) {
           setTowDetails({
