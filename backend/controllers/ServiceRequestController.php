@@ -116,9 +116,10 @@ class ServiceRequestController {
             )
         ) {
             http_response_code(429);
-            return json_encode([
+            echo json_encode([
                 "message" => "You already have a pending request for this shop."
             ]);
+            return;
         }
 
         $photoPath = null;
@@ -159,14 +160,14 @@ class ServiceRequestController {
     "New Service Request"
 );
             http_response_code(201);
-            return json_encode([
+            echo json_encode([
                 "message"    => "Service request created successfully.",
                 "request_id" => $insertId
                 
             ]);
         } else {
             http_response_code(503);
-            return json_encode(["message" => "Unable to create service request."]);
+            echo json_encode(["message" => "Unable to create service request."]);
         }
     }
 
@@ -232,7 +233,22 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
+                
+                // Get the list of competing requests BEFORE cancelling them
+                $losing_requests = $this->serviceRequestModel->getCompetingRequests($actor_id, $request_id);
+                
                 $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
+                
+                // Notify all losing shops
+                foreach ($losing_requests as $losing_req) {
+                    $this->notifyShop(
+                        $losing_req['shop_id'],
+                        $losing_req['id'],
+                        "SystemCancelled",
+                        "Request No Longer Available"
+                    );
+                }
+
                 $this->notifyShop(
                     $currentRequest['shop_id'],
                     $request_id,
@@ -285,6 +301,11 @@ class ServiceRequestController {
             }
 
             if ($new_status === 'Accepted') {
+                if ($current_status === 'Cancelled') {
+                    http_response_code(400);
+                    return json_encode(["message" => "This request is no longer available as the customer confirmed a different shop."]);
+                }
+                
                 if ($current_status !== 'Pending') {
                     http_response_code(400);
                     return json_encode(["message" => "You can only accept 'Pending' requests."]);
@@ -394,23 +415,41 @@ public function handleGetCustomerRequests($payload)
         return json_encode(["success" => true, "data" => $requests]);
     }
 
-public function handleGetDeclinedRequests($payload)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
+    public function handleGetDeclinedRequests($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
+        $shop_id = $payload['user_id'];
+        $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
+
+        http_response_code(200);
+        return json_encode([
+            "success" => true,
+            "data"    => $requests
+        ]);
     }
 
-    $shop_id = $payload['user_id'];
-    $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
+    public function handleGetMissedRequests($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
 
-    http_response_code(200);
-    return json_encode([
-        "success" => true,
-        "data"    => $requests
-    ]);
-}
+        $shop_id = $payload['user_id'];
+        $requests = $this->serviceRequestModel->getMissedRequestsByShop($shop_id);
+
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "data"    => $requests
+        ]);
+    }
 
     
  public function handleGetConfirmedRequests($payload)

@@ -221,7 +221,64 @@ public function getDeclinedRequestsByShop($shop_id) {
     return $results;
 }
 
+public function getMissedRequestsByShop($shop_id) {
+    $query = "SELECT sr.*, 
+                     c.name          as customer_name, 
+                     c.contactNumber as customer_phone 
+              FROM " . $this->table_name . " sr
+              LEFT JOIN customer c ON sr.customer_id = c.id
+              WHERE sr.shop_id = :shop_id
+              AND sr.status = 'Cancelled'
+              AND sr.cancelled_by = 'System'
+              ORDER BY sr.cancelled_at DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($results as &$row) {
+        unset($row['location']);
+    }
+    return $results;
+}
+
+    private function getWinningRequestData($winning_request_id) {
+        $query = "SELECT created_at, vehicle_brand, issue_category FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $winning_request_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getCompetingRequests($customer_id, $winning_request_id) {
+        $winningData = $this->getWinningRequestData($winning_request_id);
+        if (!$winningData) return [];
+
+        $query = "SELECT id, shop_id FROM " . $this->table_name . " 
+                  WHERE customer_id = :customer_id 
+                  AND id != :winning_id 
+                  AND status IN ('Pending', 'Accepted')
+                  AND vehicle_brand = :vehicle_brand
+                  AND issue_category = :issue_category
+                  AND created_at >= DATE_SUB(:created_at, INTERVAL 30 MINUTE)
+                  AND created_at <= DATE_ADD(:created_at, INTERVAL 30 MINUTE)";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->bindParam(":winning_id", $winning_request_id, PDO::PARAM_INT);
+        $stmt->bindParam(":vehicle_brand", $winningData['vehicle_brand']);
+        $stmt->bindParam(":issue_category", $winningData['issue_category']);
+        $stmt->bindParam(":created_at", $winningData['created_at']);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function cancelCompetingRequests($customer_id, $winning_request_id) {
+        $winningData = $this->getWinningRequestData($winning_request_id);
+        if (!$winningData) return false;
+
         $reason = "Customer confirmed a different shop for this incident.";
         $by     = "System";
 
@@ -232,13 +289,20 @@ public function getDeclinedRequestsByShop($shop_id) {
                       cancellation_reason = :reason 
                   WHERE customer_id = :customer_id 
                   AND id            != :winning_id 
-                  AND status        IN ('Pending', 'Accepted')";
+                  AND status        IN ('Pending', 'Accepted')
+                  AND vehicle_brand = :vehicle_brand
+                  AND issue_category = :issue_category
+                  AND created_at >= DATE_SUB(:created_at, INTERVAL 30 MINUTE)
+                  AND created_at <= DATE_ADD(:created_at, INTERVAL 30 MINUTE)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":by",          $by);
         $stmt->bindParam(":reason",      $reason);
         $stmt->bindParam(":customer_id", $customer_id,       PDO::PARAM_INT);
         $stmt->bindParam(":winning_id",  $winning_request_id, PDO::PARAM_INT);
+        $stmt->bindParam(":vehicle_brand", $winningData['vehicle_brand']);
+        $stmt->bindParam(":issue_category", $winningData['issue_category']);
+        $stmt->bindParam(":created_at", $winningData['created_at']);
 
         return $stmt->execute();
     }
