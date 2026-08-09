@@ -234,11 +234,11 @@ class ServiceRequestController {
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
                 $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
                 $this->notifyShop(
-    $currentRequest['shop_id'],
-    $request_id,
-    "CustomerConfirmed",
-    "Customer confirmed booking"
-);
+                    $currentRequest['shop_id'],
+                    $request_id,
+                    "CustomerConfirmed",
+                    "Customer confirmed booking"
+                );
              
 
                 http_response_code(200);
@@ -261,11 +261,11 @@ class ServiceRequestController {
             
 
                 $this->notifyShop(
-    $currentRequest['shop_id'],
-    $request_id,
-    "CustomerCancelled",
-    "Customer cancelled booking"
-);
+                    $currentRequest['shop_id'],
+                    $request_id,
+                    "CustomerCancelled",
+                    "Customer cancelled booking"
+                );
                 http_response_code(200);
                 return json_encode(["message" => "Request cancelled." . $penaltyMsg]);
             }
@@ -300,25 +300,25 @@ class ServiceRequestController {
             }
 
           elseif ($new_status === 'Declined') {
-    $reason = $requestData['reason'] ?? "Shop declined the request.";
-    $this->serviceRequestModel->declineRequest($request_id, $reason);
+                $reason = $requestData['reason'] ?? "Shop declined the request.";
+                $this->serviceRequestModel->declineRequest($request_id, $reason);
 
-    $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
+                $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
 
-    http_response_code(200);
-    return json_encode(["message" => "Request successfully declined."]);
-}
+                http_response_code(200);
+                return json_encode(["message" => "Request successfully declined."]);
+            }
 
-elseif ($new_status === 'Cancelled') {
-    $reason = $requestData['reason'] ?? "Shop cancelled the request.";
-    $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
+            elseif ($new_status === 'Cancelled') {
+                $reason = $requestData['reason'] ?? "Shop cancelled the request.";
+                $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
 
 
-    $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
+                $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
 
-    http_response_code(200);
-    return json_encode(["message" => "Request successfully cancelled."]);
-} 
+                http_response_code(200);
+                return json_encode(["message" => "Request successfully cancelled."]);
+            } 
 
             elseif (in_array($new_status, ['Diagnosis', 'Pending Parts', 'In Progress', 'Completed'])) {
 
