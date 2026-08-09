@@ -96,28 +96,22 @@ function Dashboard({ onNavigate }) {
 
                 const all = data.data || [];
 
-                // Read-state from localStorage (same key pattern as Notification.jsx)
-                let readIds = [];
-
-try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const userId = payload.user_id || payload.id;
-
-    readIds = JSON.parse(
-        localStorage.getItem(`fixgo_read_notifs_${userId}`) || "[]"
-    ).map(String);
-} catch {
-    readIds = [];
-}
-
-                const notifItems = all.filter(r => NOTIF_WORTHY.includes(r.status));
-                const unread     = notifItems.filter(r => !readIds.includes(String(r.id))).length;
+                let unreadCount = 0;
+                try {
+                    const notifData = await api.get("getNotifications.php");
+                    if (notifData.success) {
+                        const notifItems = (notifData.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
+                        unreadCount = notifItems.filter(n => Number(n.isRead) === 0).length;
+                    }
+                } catch (err) {
+                    console.error("Dashboard failed to fetch notifications count:", err);
+                }
 
                 setCounts({
                     active:        all.filter(r => ONGOING_STATUSES.includes(r.status)).length,
                     completed:     all.filter(r => r.status === "Completed").length,
                     appointments:  all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
-                    notifications: unread,
+                    notifications: unreadCount,
                 });
             } catch { /* ignore */ }
         };
