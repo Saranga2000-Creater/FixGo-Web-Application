@@ -200,14 +200,36 @@ public function declineRequest($request_id, $reason) {
     return $stmt->execute();
 }
 
-public function getDeclinedRequestsByShop($shop_id) {
+    public function getDeclinedRequestsByShop($shop_id) {
+        $query = "SELECT sr.*, 
+                         c.name          as customer_name, 
+                         c.contactNumber as customer_phone 
+                  FROM " . $this->table_name . " sr
+                  LEFT JOIN customer c ON sr.customer_id = c.id
+                  WHERE sr.shop_id = :shop_id
+                  AND sr.status = 'Declined'
+                  ORDER BY sr.cancelled_at DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($results as &$row) {
+        unset($row['location']);
+    }
+    return $results;
+}
+
+public function getMissedRequestsByShop($shop_id) {
     $query = "SELECT sr.*, 
                      c.name          as customer_name, 
                      c.contactNumber as customer_phone 
               FROM " . $this->table_name . " sr
               LEFT JOIN customer c ON sr.customer_id = c.id
               WHERE sr.shop_id = :shop_id
-              AND sr.status = 'Declined'
+              AND sr.status = 'Cancelled'
+              AND sr.cancelled_by IN ('System', 'Customer')
               ORDER BY sr.cancelled_at DESC";
 
     $stmt = $this->conn->prepare($query);
@@ -221,7 +243,42 @@ public function getDeclinedRequestsByShop($shop_id) {
     return $results;
 }
 
+    private function getWinningRequestData($winning_request_id) {
+        $query = "SELECT created_at, vehicle_brand, issue_category FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $winning_request_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getCompetingRequests($customer_id, $winning_request_id) {
+        $winningData = $this->getWinningRequestData($winning_request_id);
+        if (!$winningData) return [];
+
+        $query = "SELECT id, shop_id FROM " . $this->table_name . " 
+                  WHERE customer_id = :customer_id 
+                  AND id != :winning_id 
+                  AND status IN ('Pending', 'Accepted')
+                  AND vehicle_brand = :vehicle_brand
+                  AND issue_category = :issue_category
+                  AND created_at >= DATE_SUB(:created_at, INTERVAL 30 MINUTE)
+                  AND created_at <= DATE_ADD(:created_at, INTERVAL 30 MINUTE)";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+        $stmt->bindParam(":winning_id", $winning_request_id, PDO::PARAM_INT);
+        $stmt->bindParam(":vehicle_brand", $winningData['vehicle_brand']);
+        $stmt->bindParam(":issue_category", $winningData['issue_category']);
+        $stmt->bindParam(":created_at", $winningData['created_at']);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function cancelCompetingRequests($customer_id, $winning_request_id) {
+        $winningData = $this->getWinningRequestData($winning_request_id);
+        if (!$winningData) return false;
+
         $reason = "Customer confirmed a different shop for this incident.";
         $by     = "System";
 
@@ -232,13 +289,20 @@ public function getDeclinedRequestsByShop($shop_id) {
                       cancellation_reason = :reason 
                   WHERE customer_id = :customer_id 
                   AND id            != :winning_id 
-                  AND status        IN ('Pending', 'Accepted')";
+                  AND status        IN ('Pending', 'Accepted')
+                  AND vehicle_brand = :vehicle_brand
+                  AND issue_category = :issue_category
+                  AND created_at >= DATE_SUB(:created_at, INTERVAL 30 MINUTE)
+                  AND created_at <= DATE_ADD(:created_at, INTERVAL 30 MINUTE)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":by",          $by);
         $stmt->bindParam(":reason",      $reason);
         $stmt->bindParam(":customer_id", $customer_id,       PDO::PARAM_INT);
         $stmt->bindParam(":winning_id",  $winning_request_id, PDO::PARAM_INT);
+        $stmt->bindParam(":vehicle_brand", $winningData['vehicle_brand']);
+        $stmt->bindParam(":issue_category", $winningData['issue_category']);
+        $stmt->bindParam(":created_at", $winningData['created_at']);
 
         return $stmt->execute();
     }
@@ -480,9 +544,197 @@ public function updateTowTruckDetails($data)
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-   
+    /**
+     * Admin Dashboard: Get total service requests created in the current month
+     */
+    public function getMTDCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM servicerequest 
+            WHERE MONTH(created_at) = MONTH(CURRENT_DATE())
+              AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 
+    /**
+     * Admin Dashboard: Get daily service request volume for the past $days
+     */
+    public function getDailyVolume($days = 30) {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                DATE(created_at) as date, 
+                COUNT(id) as count
+            FROM servicerequest
+            WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL :days DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ");
+        $stmt->bindParam(':days', $days, PDO::PARAM_INT);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Format for Recharts { name (date), requests }
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'name' => date('M d', strtotime($row['date'])),
+                'requests' => (int)$row['count']
+            ];
+        }
+        return $formatted;
+    }
 
+    /**
+     * Admin Dashboard: Get monthly service request volume for the past 12 months
+     */
+    public function getMonthlyVolume() {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month, 
+                COUNT(id) as count
+            FROM servicerequest
+            WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month ASC
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $formatted = [];
+        foreach ($results as $row) {
+            $dateObj = DateTime::createFromFormat('Y-m', $row['month']);
+            $formatted[] = [
+                'name' => $dateObj ? $dateObj->format('M Y') : $row['month'],
+                'requests' => (int)$row['count']
+            ];
+        }
+        return $formatted;
+    }
 
+    /**
+     * Home Page: Get total count of successfully completed requests
+     */
+    public function getTotalCompletedRequests() {
+        $stmt = $this->conn->prepare("SELECT COUNT(id) FROM servicerequest WHERE status = 'Completed'");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Shop Dashboard: Get daily service request volume for a specific shop
+     * Returns an array of consecutive days with zero-filled counts for days with no requests.
+     */
+    public function getDailyVolumeByShop($shop_id, $days = 30) {
+        $days = in_array((int)$days, [7, 30, 90], true) ? (int)$days : 30;
+
+        // Calculate exact start and end dates (e.g. today and today minus ($days - 1) days)
+        // 7 days  => today - 6 days to today
+        // 30 days => today - 29 days to today
+        // 90 days => today - 89 days to today
+        $daysOffset = $days - 1;
+        $startDateStr = date('Y-m-d', strtotime("-{$daysOffset} days"));
+        $endDateStr   = date('Y-m-d');
+
+        $query = "
+            SELECT 
+                DATE(created_at) as date, 
+                COUNT(id) as count
+            FROM " . $this->table_name . "
+            WHERE shop_id = :shop_id
+              AND DATE(created_at) >= :start_date
+              AND DATE(created_at) <= :end_date
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':shop_id', $shop_id, PDO::PARAM_INT);
+        $stmt->bindParam(':start_date', $startDateStr);
+        $stmt->bindParam(':end_date', $endDateStr);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $countsByDate = [];
+        foreach ($results as $row) {
+            $countsByDate[$row['date']] = (int)$row['count'];
+        }
+
+        $formatted = [];
+        $current = new DateTime($startDateStr);
+        $end     = new DateTime($endDateStr);
+        $end->modify('+1 day');
+
+        while ($current < $end) {
+            $dateKey = $current->format('Y-m-d');
+            $name    = $current->format('M d');
+            $count   = $countsByDate[$dateKey] ?? 0;
+
+            $formatted[] = [
+                'date'     => $dateKey,
+                'name'     => $name,
+                'requests' => $count
+            ];
+
+            $current->modify('+1 day');
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Shop Dashboard: Get monthly service request volume for the past 12 months for a specific shop
+     * Returns an array of 12 consecutive months with zero-filled counts for months with no requests.
+     */
+    public function getMonthlyVolumeByShop($shop_id) {
+        // Start date: 1st day of the month 11 months ago (12 calendar months total including current month)
+        $startDateStr = date('Y-m-01', strtotime('-11 months'));
+
+        $query = "
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month, 
+                COUNT(id) as count
+            FROM " . $this->table_name . "
+            WHERE shop_id = :shop_id
+              AND created_at >= :start_date
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month ASC
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':shop_id', $shop_id, PDO::PARAM_INT);
+        $stmt->bindParam(':start_date', $startDateStr);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $countsByMonth = [];
+        foreach ($results as $row) {
+            $countsByMonth[$row['month']] = (int)$row['count'];
+        }
+
+        $formatted = [];
+        $current = new DateTime(date('Y-m-01', strtotime('-11 months')));
+        $end     = new DateTime(date('Y-m-01'));
+        $end->modify('+1 month');
+
+        while ($current < $end) {
+            $monthKey  = $current->format('Y-m');
+            $shortName = $current->format('M');     // e.g. "Jul"
+            $fullName  = $current->format('M Y');   // e.g. "Jul 2026"
+            $count     = $countsByMonth[$monthKey] ?? 0;
+
+            $formatted[] = [
+                'date'     => $monthKey,
+                'name'     => $shortName,
+                'fullName' => $fullName,
+                'requests' => $count
+            ];
+
+            $current->modify('+1 month');
+        }
+
+        return $formatted;
+    }
 }
 ?>

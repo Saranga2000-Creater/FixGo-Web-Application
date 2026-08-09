@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../models/Customer.php';
 require_once __DIR__ . '/../models/userRole.php';
 require_once __DIR__ . '/../config/EmailSender.php';
+require_once __DIR__ . '/../models/CustomerVehicle.php';
 
 class CustomerController {
     private $db;
@@ -14,6 +15,12 @@ class CustomerController {
     }
 
     public function getProfile($customerId) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
         $customerModel = new Customer($this->db);
         $customer = $customerModel->getById($customerId);
 
@@ -318,6 +325,139 @@ class CustomerController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["message" => "Failed to update profile: " . $e->getMessage()]);
+        }
+    }
+
+    // ==========================================
+    // "My Garage" Vehicle Management
+    // ==========================================
+
+    public function handleGetVehicles($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
+        $customer_id = $payload['user_id'];
+        $vehicleModel = new CustomerVehicle($this->db);
+        $vehicles = $vehicleModel->getByCustomer($customer_id);
+
+        echo json_encode([
+            'success' => true,
+            'vehicles' => $vehicles
+        ]);
+    }
+
+    public function handleAddVehicle($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) $input = $_POST;
+
+        $required = ['vehicle_category_id', 'brand', 'color'];
+        foreach ($required as $field) {
+            if (empty($input[$field])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => "Missing field: $field"]);
+                return;
+            }
+        }
+
+        $customer_id = $payload['user_id'];
+        $vehicleModel = new CustomerVehicle($this->db);
+
+        // Optional: Check if already exists to prevent duplicates
+        if ($vehicleModel->exists($customer_id, $input['brand'], $input['color'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Vehicle already exists in your garage.']);
+            return;
+        }
+
+        $data = [
+            'customer_id' => $customer_id,
+            'vehicle_category_id' => $input['vehicle_category_id'],
+            'brand' => $input['brand'],
+            'color' => $input['color']
+        ];
+
+        $vehicleId = $vehicleModel->add($data);
+
+        if ($vehicleId) {
+            echo json_encode(['success' => true, 'message' => 'Vehicle added successfully', 'id' => $vehicleId]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to add vehicle.']);
+        }
+    }
+
+    public function handleUpdateVehicle($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $required = ['id', 'vehicle_category_id', 'brand', 'color'];
+        foreach ($required as $field) {
+            if (empty($input[$field])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => "Missing field: $field"]);
+                return;
+            }
+        }
+
+        $customer_id = $payload['user_id'];
+        $vehicleModel = new CustomerVehicle($this->db);
+        
+        $data = [
+            'vehicle_category_id' => $input['vehicle_category_id'],
+            'brand' => $input['brand'],
+            'color' => $input['color']
+        ];
+
+        if ($vehicleModel->update($input['id'], $customer_id, $data)) {
+            echo json_encode(['success' => true, 'message' => 'Vehicle updated successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update vehicle.']);
+        }
+    }
+
+    public function handleDeleteVehicle($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $vehicle_id = $input['id'] ?? null;
+        
+        if (isset($_GET['id'])) {
+            $vehicle_id = $_GET['id'];
+        }
+
+        if (!$vehicle_id) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing vehicle ID.']);
+            return;
+        }
+
+        $customer_id = $payload['user_id'];
+        $vehicleModel = new CustomerVehicle($this->db);
+        
+        if ($vehicleModel->delete($vehicle_id, $customer_id)) {
+            echo json_encode(['success' => true, 'message' => 'Vehicle deleted successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to delete vehicle.']);
         }
     }
 }

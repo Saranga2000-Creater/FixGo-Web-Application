@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCar,
+  faPalette,
+  faTruck,
+  faLocationDot,
+  faTriangleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
 import { api, UPLOADS_URL } from "../../src/services/api";
-
 
 function Avatar({ initials, color, size = 40 }) {
   return (
@@ -40,11 +47,13 @@ function TowField({ label, value, onChange, type = "text", placeholder, disabled
 }
 
 function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
-  const [activeTab, setActiveTab] = useState("new"); // "new" | "declined"
+  const [activeTab, setActiveTab] = useState("new"); // "new" | "missed" | "declined"
 
   const [requests, setRequests] = useState([]);
   const [declinedRequests, setDeclinedRequests] = useState([]);
   const [declinedLoaded, setDeclinedLoaded] = useState(false);
+  const [missedRequests, setMissedRequests] = useState([]);
+  const [missedLoaded, setMissedLoaded] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requestPendingTow, setRequestPendingTow] = useState(null);
@@ -78,6 +87,13 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
     }
   }, [activeTab, declinedLoaded]);
 
+  // Fetch the missed list lazily
+  useEffect(() => {
+    if (activeTab === "missed" && !missedLoaded) {
+      fetchMissedRequests();
+    }
+  }, [activeTab, missedLoaded]);
+
   const updateStatus = async (requestId, status) => {
     try {
       const data = await api.post("updateStatus.php", {
@@ -92,6 +108,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
       fetchRequests();
       fetchRequestCount();
+      window.dispatchEvent(new Event("fixgo_unread_changed"));
 
       if (status === "Declined" && declinedLoaded) {
         fetchDeclinedRequests();
@@ -99,6 +116,9 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
     } catch (error) {
       console.error(error);
+      if (error.message) {
+        alert(error.message);
+      }
     }
   };
 
@@ -119,6 +139,18 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       if (data.success) {
         setDeclinedRequests(data.data);
         setDeclinedLoaded(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchMissedRequests = async () => {
+    try {
+      const data = await api.get("shop/getMissedRequests.php");
+      if (data.success) {
+        setMissedRequests(data.data);
+        setMissedLoaded(true);
       }
     } catch (error) {
       console.error(error);
@@ -253,7 +285,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
     }
   };
 
-  const visibleRequests = activeTab === "new" ? requests : declinedRequests;
+  const visibleRequests = activeTab === "new" ? requests : (activeTab === "missed" ? missedRequests : declinedRequests);
 
   return (
     <div className="w-full font-[inherit]">
@@ -271,6 +303,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       <div className="flex gap-2 mb-5">
         {[
           { key: "new", label: "Service Requests" },
+          { key: "missed", label: "Missed Opportunities" },
           { key: "declined", label: "Declined Requests" },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
@@ -288,18 +321,6 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             </button>
           );
         })}
-      </div>
-
-      {/* Search + Filter */}
-      <div className="flex gap-3 mb-6">
-        <input
-          placeholder="Search customer, vehicle, or service..."
-          className="flex-1 py-3 px-4.5 rounded-xl border border-[#E5E9F0] bg-white text-[15px] text-slate-900 outline-none transition-colors duration-150 ease-in-out focus:border-green-600"
-        />
-
-        <button className="bg-green-700 text-white border-none rounded-xl px-6 font-semibold text-[15px] cursor-pointer transition-colors duration-150 ease-in-out hover:bg-[#116530]">
-          Filter
-        </button>
       </div>
 
       {/* Table card */}
@@ -327,8 +348,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
         {/* Rows */}
         {visibleRequests.length === 0 ? (
-          <div className="py-12 px-5 text-center text-slate-400 text-[15px]">
-            {activeTab === "new" ? "No service requests found" : "No declined requests"}
+          <div className="py-12 text-center text-slate-500 text-[14.5px]">
+            {activeTab === "new" ? "No service requests found" : (activeTab === "missed" ? "No missed opportunities" : "No declined requests")}
           </div>
         ) : (
           visibleRequests.map((r, i) => (
@@ -357,7 +378,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                   </div>
 
                   <div className="text-sm text-slate-500 mt-0.5">
-                    🚗 {r.vehicle_brand}
+                    <FontAwesomeIcon icon={faCar} className="mr-1 text-slate-400" /> {r.vehicle_brand}
                   </div>
 
                   <div
@@ -365,7 +386,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
                       activeTab === "new" ? "text-green-700" : "text-slate-400"
                     }`}
                   >
-                    🎨 {r.vehicle_color}
+                    <FontAwesomeIcon icon={faPalette} className="mr-1 opacity-80" /> {r.vehicle_color}
                   </div>
                 </div>
               </div>
@@ -378,13 +399,13 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
                 {activeTab === "new" && Number(r.requires_tow) === 1 && (
                   <div className="mt-2 inline-block py-1 px-2.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
-                    🚚 Tow Truck Required
+                    <FontAwesomeIcon icon={faTruck} className="mr-1.5" /> Tow Truck Required
                   </div>
                 )}
 
                 {activeTab === "new" && r.pickup_landmark && Number(r.requires_tow) === 1 && (
                   <div className="mt-1.5 text-[12.5px] text-slate-400">
-                    📍 {r.pickup_landmark}
+                    <FontAwesomeIcon icon={faLocationDot} className="mr-1 text-slate-400" /> {r.pickup_landmark}
                   </div>
                 )}
               </div>
@@ -538,8 +559,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
           <div className="bg-white w-[420px] max-w-full rounded-2xl overflow-hidden shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
             {/* Header */}
             <div className="pt-5.5 px-6.5 pb-1 flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-[10px] bg-red-50 border border-red-200 flex items-center justify-center text-[19px] shrink-0">
-                ⚠️
+              <div className="w-10 h-10 rounded-[10px] bg-red-50 border border-red-200 flex items-center justify-center text-[19px] shrink-0 text-red-600">
+                <FontAwesomeIcon icon={faTriangleExclamation} />
               </div>
               <div>
                 <h2 className="m-0 text-[17.5px] font-bold text-slate-900">
@@ -585,8 +606,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
           <div className="bg-white w-[480px] max-w-full rounded-2xl overflow-hidden shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
             {/* Header */}
             <div className="py-5 px-7 border-b border-[#E5E9F0] flex items-center gap-3">
-              <div className="w-[38px] h-[38px] rounded-[10px] bg-blue-100 flex items-center justify-center text-lg shrink-0">
-                🚚
+              <div className="w-[38px] h-[38px] rounded-[10px] bg-blue-100 flex items-center justify-center text-lg shrink-0 text-blue-600">
+                <FontAwesomeIcon icon={faTruck} />
               </div>
               <div>
                 <h2 className="m-0 text-lg font-bold text-slate-900">
@@ -663,7 +684,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             {/* THE FIX 4: The Inline Warning Box */}
             {etaError && (
               <div className="mx-7 mb-5 py-3 px-4 bg-red-50 border border-red-200 rounded-[10px] text-red-600 text-[14.5px] font-medium flex items-center gap-2.5 animate-[fadeIn_0.2s_ease]">
-                <span className="text-lg">⚠️</span>
+                <FontAwesomeIcon icon={faTriangleExclamation} className="text-lg" />
                 {etaError}
               </div>
             )}

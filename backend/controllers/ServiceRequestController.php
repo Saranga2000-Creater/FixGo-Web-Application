@@ -81,8 +81,22 @@ class ServiceRequestController {
     }
 }
 
-    public function handleCreateRequest($requestData, $payload)
+    public function handleCreateRequest($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["message" => "Method not allowed."]);
+        return;
+    }
+
+    $requestData = json_decode(file_get_contents("php://input"), true);
+
+    if ($requestData === null) {
+        http_response_code(400);
+        echo json_encode(["message" => "Invalid request body."]);
+        return;
+    }
+
     $requestData['customer_id'] = $payload['user_id'];
 
         if (
@@ -91,7 +105,8 @@ class ServiceRequestController {
             empty($requestData['vehicle_category_id'])
         ) {
             http_response_code(400);
-            return json_encode(["message" => "Incomplete data. Shop ID, Customer ID, and Vehicle Category are required."]);
+            echo json_encode(["message" => "Incomplete data. Shop ID, Customer ID, and Vehicle Category are required."]);
+            return;
         }
 
         if (
@@ -101,9 +116,10 @@ class ServiceRequestController {
             )
         ) {
             http_response_code(429);
-            return json_encode([
+            echo json_encode([
                 "message" => "You already have a pending request for this shop."
             ]);
+            return;
         }
 
         $photoPath = null;
@@ -144,32 +160,46 @@ class ServiceRequestController {
     "New Service Request"
 );
             http_response_code(201);
-            return json_encode([
+            echo json_encode([
                 "message"    => "Service request created successfully.",
                 "request_id" => $insertId
                 
             ]);
         } else {
             http_response_code(503);
-            return json_encode(["message" => "Unable to create service request."]);
+            echo json_encode(["message" => "Unable to create service request."]);
         }
     }
 
-    public function handleUpdateStatus($requestData, $payload)
+    public function handleUpdateStatus($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["message" => "Only POST requests are allowed."]);
+        return;
+    }
+
+    $requestData = json_decode(file_get_contents("php://input"), true);
+
+    if ($requestData === null) {
+        http_response_code(400);
+        echo json_encode(["message" => "Invalid or missing JSON payload."]);
+        return;
+    }
+
     $actor_id = $payload['user_id'] ?? null;
     $actor_role = $payload['role'] ?? null;
 
     if (!$actor_id || !$actor_role) {
         http_response_code(401);
-        return json_encode([
-            "message" => "Unauthorized."
-        ]);
+        echo json_encode(["message" => "Unauthorized."]);
+        return;
     }
 
         if (empty($requestData['request_id']) || empty($requestData['new_status'])) {
             http_response_code(400);
-            return json_encode(["message" => "Request ID and New Status are required."]);
+            echo json_encode(["message" => "Request ID and New Status are required."]);
+            return;
         }
 
         $request_id = $requestData['request_id'];
@@ -203,13 +233,28 @@ class ServiceRequestController {
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
+                
+                // Get the list of competing requests BEFORE cancelling them
+                $losing_requests = $this->serviceRequestModel->getCompetingRequests($actor_id, $request_id);
+                
                 $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
+                
+                // Notify all losing shops
+                foreach ($losing_requests as $losing_req) {
+                    $this->notifyShop(
+                        $losing_req['shop_id'],
+                        $losing_req['id'],
+                        "SystemCancelled",
+                        "Request No Longer Available"
+                    );
+                }
+
                 $this->notifyShop(
-    $currentRequest['shop_id'],
-    $request_id,
-    " CustomerConfirmed",
-    "Customer confirmed booking"
-);
+                    $currentRequest['shop_id'],
+                    $request_id,
+                    "CustomerConfirmed",
+                    "Customer confirmed booking"
+                );
              
 
                 http_response_code(200);
@@ -232,11 +277,11 @@ class ServiceRequestController {
             
 
                 $this->notifyShop(
-    $currentRequest['shop_id'],
-    $request_id,
-    "CustomerCancelled",
-    "Customer cancelled booking"
-);
+                    $currentRequest['shop_id'],
+                    $request_id,
+                    "CustomerCancelled",
+                    "Customer cancelled booking"
+                );
                 http_response_code(200);
                 return json_encode(["message" => "Request cancelled." . $penaltyMsg]);
             }
@@ -256,6 +301,11 @@ class ServiceRequestController {
             }
 
             if ($new_status === 'Accepted') {
+                if ($current_status === 'Cancelled') {
+                    http_response_code(400);
+                    return json_encode(["message" => "This request is no longer available as the customer confirmed a different shop."]);
+                }
+                
                 if ($current_status !== 'Pending') {
                     http_response_code(400);
                     return json_encode(["message" => "You can only accept 'Pending' requests."]);
@@ -271,25 +321,25 @@ class ServiceRequestController {
             }
 
           elseif ($new_status === 'Declined') {
-    $reason = $requestData['reason'] ?? "Shop declined the request.";
-    $this->serviceRequestModel->declineRequest($request_id, $reason);
+                $reason = $requestData['reason'] ?? "Shop declined the request.";
+                $this->serviceRequestModel->declineRequest($request_id, $reason);
 
-    $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
+                $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
 
-    http_response_code(200);
-    return json_encode(["message" => "Request successfully declined."]);
-}
+                http_response_code(200);
+                return json_encode(["message" => "Request successfully declined."]);
+            }
 
-elseif ($new_status === 'Cancelled') {
-    $reason = $requestData['reason'] ?? "Shop cancelled the request.";
-    $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
+            elseif ($new_status === 'Cancelled') {
+                $reason = $requestData['reason'] ?? "Shop cancelled the request.";
+                $this->serviceRequestModel->cancelRequest($request_id, 'Shop', $reason);
 
 
-    $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
+                $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
 
-    http_response_code(200);
-    return json_encode(["message" => "Request successfully cancelled."]);
-} 
+                http_response_code(200);
+                return json_encode(["message" => "Request successfully cancelled."]);
+            } 
 
             elseif (in_array($new_status, ['Diagnosis', 'Pending Parts', 'In Progress', 'Completed'])) {
 
@@ -321,6 +371,12 @@ elseif ($new_status === 'Cancelled') {
     // ==========================================
 public function handleGetCustomerRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $customer_id = $payload['user_id'];
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByCustomer($customer_id);
@@ -338,6 +394,12 @@ public function handleGetCustomerRequests($payload)
 
  public function handleGetShopRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];   
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByShop($shop_id);
@@ -353,21 +415,51 @@ public function handleGetCustomerRequests($payload)
         return json_encode(["success" => true, "data" => $requests]);
     }
 
-public function handleGetDeclinedRequests($payload)
-{
-    $shop_id = $payload['user_id'];
-    $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
+    public function handleGetDeclinedRequests($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
 
-    http_response_code(200);
-    return json_encode([
-        "success" => true,
-        "data"    => $requests
-    ]);
-}
+        $shop_id = $payload['user_id'];
+        $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
+
+        http_response_code(200);
+        return json_encode([
+            "success" => true,
+            "data"    => $requests
+        ]);
+    }
+
+    public function handleGetMissedRequests($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
+        $shop_id = $payload['user_id'];
+        $requests = $this->serviceRequestModel->getMissedRequestsByShop($shop_id);
+
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "data"    => $requests
+        ]);
+    }
 
     
  public function handleGetConfirmedRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];   
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
 
@@ -380,6 +472,12 @@ public function handleGetDeclinedRequests($payload)
 
     public function handleGetActiveRepairs($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
     $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
 
@@ -393,6 +491,12 @@ public function handleGetDeclinedRequests($payload)
 
     public function handleGetServiceHistory($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByShop($shop_id);
 
@@ -404,6 +508,12 @@ public function handleGetDeclinedRequests($payload)
     }
 public function updateTowTruckDetails($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
 
     // Read request body first
@@ -460,6 +570,12 @@ public function updateTowTruckDetails($payload)
 
     public function handleGetCustomerServiceHistory($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $customer_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByCustomer($customer_id);
 
@@ -470,7 +586,44 @@ public function updateTowTruckDetails($payload)
         ]);
     }
 
+    public function handleGetServiceRequestVolume($payload)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
 
+        $userId = $payload['user_id'] ?? null;
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
 
+        // Verify shop identity using existing Shop model logic
+        $shopProfile = $this->shopModel->getById($userId);
+        if (!$shopProfile) {
+            http_response_code(404);
+            echo json_encode(["success" => false, "message" => "Shop profile not found."]);
+            return;
+        }
+
+        $shop_id = (int)$shopProfile['id'];
+        $timeframe = $_GET['timeframe'] ?? ($_GET['days'] ?? '30days');
+
+        if ($timeframe === '12months' || $timeframe === '12') {
+            $volumeData = $this->serviceRequestModel->getMonthlyVolumeByShop($shop_id);
+        } else {
+            $days = ($timeframe === '7days' || $timeframe === '7' || $timeframe === 7) ? 7 : 30;
+            $volumeData = $this->serviceRequestModel->getDailyVolumeByShop($shop_id, $days);
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "data"    => $volumeData
+        ]);
+    }
 }
 ?>

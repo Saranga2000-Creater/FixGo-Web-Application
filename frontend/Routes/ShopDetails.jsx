@@ -324,163 +324,252 @@ function ShopDetails() {
             )}
           </div>
           
-            <div className="space-y-6 px-4 pb-6 pt-4 sm:px-6">
-              <div className="grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
+            <div className="space-y-8 px-4 pb-6 pt-4 sm:px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 
-                {/* LEFT SIDE */}
-                <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200">
+                {/* LEFT COLUMN (Span 2 on Desktop) */}
+                <div className="lg:col-span-2 space-y-8">
                   
-                  {/* Title & Verified Badge */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{info.name}</h1>
-                    <span className="flex items-center gap-1.5 rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white shadow-sm">
-                      <FaCheckCircle className="text-white/90" /> Verified
-                    </span>
-                  </div>
-
-                  {/* Rating Row */}
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-[14px]">
-                    <span className="text-[17px] font-extrabold text-slate-900">{stats.averageRating}</span>
-                    <div className="flex items-center text-yellow-400 text-sm gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                         <FaStar key={i} className={i < Math.round(stats.averageRating) ? "text-yellow-400" : "text-slate-200"} />
-                      ))}
-                    </div>
-                    <span className="text-slate-500 font-medium ml-1">({stats.reviewCount} reviews)</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="font-semibold text-slate-600">{stats.recommendPercentage}% recommend</span>
-                  </div>
-
-                  {/* Dynamic Categories (Pills) */}
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {/* Shop Categories */}
-                    {shopCategories && shopCategories.map((category, idx) => (
-                      <span key={`sc-${idx}`} className="rounded-full bg-emerald-50 px-4 py-1.5 text-[13px] font-bold text-emerald-700 border border-emerald-100">
-                        {category}
-                      </span>
-                    ))}
-
-                    {/* Vehicle Categories */}
-                    {vehicleCategories && vehicleCategories.map((vehicle, idx) => (
-                      <span key={`vc-${idx}`} className="rounded-full bg-slate-50 px-4 py-1.5 text-[13px] font-semibold text-slate-600 border border-slate-200">
-                        {vehicle}
-                      </span>
-                    ))}
+                  {/* SHOP INFORMATION CARD */}
+                  <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm">
                     
-                    {(!shopCategories?.length && !vehicleCategories?.length) && (
-                       <span className="text-sm text-slate-400 italic">Categories not specified</span>
+                    {/* Title & Verified Badge */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{info.name}</h1>
+                      <span className="flex items-center gap-1.5 rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white shadow-sm">
+                        <FaCheckCircle className="text-white/90" /> Verified
+                      </span>
+                    </div>
+
+                    {/* Rating Row */}
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-[14px]">
+                      <span className="text-[17px] font-extrabold text-slate-900">{stats.averageRating}</span>
+                      <div className="flex items-center text-yellow-400 text-sm gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                           <FaStar key={i} className={i < Math.round(stats.averageRating) ? "text-yellow-400" : "text-slate-200"} />
+                        ))}
+                      </div>
+                      <span className="text-slate-500 font-medium ml-1">({stats.reviewCount} reviews)</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="font-semibold text-slate-600">{stats.recommendPercentage}% recommend</span>
+                    </div>
+
+                    {/* Dynamic Categories (Pills) */}
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {/* Shop Categories */}
+                      {shopCategories && shopCategories.map((category, idx) => (
+                        <span key={`sc-${idx}`} className="rounded-full bg-green-50 px-4 py-1.5 text-[13px] font-bold text-green-700 border border-green-100">
+                          {category}
+                        </span>
+                      ))}
+
+                      {/* Vehicle Categories */}
+                      {vehicleCategories && vehicleCategories.map((vehicle, idx) => (
+                        <span key={`vc-${idx}`} className="rounded-full bg-slate-50 px-4 py-1.5 text-[13px] font-semibold text-slate-600 border border-slate-200">
+                          {vehicle}
+                        </span>
+                      ))}
+                      
+                      {(!shopCategories?.length && !vehicleCategories?.length) && (
+                         <span className="text-sm text-slate-400 italic">Categories not specified</span>
+                      )}
+                    </div>
+
+                    {/* Tow Truck Banner */}
+                    {info.carriageService == 1 && (
+                      <div className="mt-6 flex items-center gap-4 rounded-xl bg-green-50 border border-green-100/80 px-5 py-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100/80">
+                          <FaTruckPickup className="text-lg text-green-600" />
+                        </div>
+                        <p className="text-[14.5px] leading-relaxed text-slate-700 font-medium m-0">
+                          <strong className="font-bold text-slate-900 mr-1">Pickup Available.</strong>
+                          We offer tow truck transport and pickup services for all supported vehicle types.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <p className="mt-6 text-[15px] leading-relaxed text-slate-600 m-0">
+                      {info.description || "No description provided."}
+                    </p>
+
+                    {/* Info Grid */}
+                    <div className="mt-8 mb-8 border-t border-slate-100 pt-8">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-6 items-start">
+                        
+                        {/* Col 1: Distance */}
+                        <div className="col-span-1 flex items-center gap-2.5">
+                          {passedDistance && (
+                            <>
+                              <FaMapMarkerAlt className="text-red-600 text-[18px] shrink-0" />
+                              <span className="font-medium text-slate-600 text-[15px]">
+                                {typeof passedDistance === 'string' && passedDistance.includes('km') 
+                                  ? passedDistance 
+                                  : parseFloat(passedDistance) > 100 
+                                    ? (parseFloat(passedDistance) / 1000).toFixed(1) + ' km' 
+                                    : parseFloat(passedDistance).toFixed(1) + ' km'} away
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Col 2: Status */}
+                        <div className="col-span-1 flex items-center gap-2.5">
+                          <div className={`h-2.5 w-2.5 rounded-full ${info.isAvailable ? 'bg-green-600' : 'bg-red-500'}`}></div>
+                          <span className={`font-bold text-[15px] ${info.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                            {info.isAvailable ? "Open Now" : "Currently Busy"}
+                          </span>
+                          {info.isAvailable && info.closeTime && (
+                            <span className="text-slate-500 text-[14px] font-medium ml-1">
+                              Closes at {info.closeTime.substring(0, 5)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Col 3: Schedule */}
+                        <div className="col-span-1 flex items-start gap-3">
+                          <FaClock className="text-slate-500 mt-0.5 text-[18px] shrink-0" />
+                          <div className="flex flex-col text-[14px] text-slate-700 font-medium leading-snug">
+                            <span>Everyday {info.openTime.substring(0, 5)} - {info.closeTime.substring(0, 5)}</span>
+                          </div>
+                        </div>
+
+                        {/* Col 1 & 2: Address */}
+                        <div className="md:col-span-2 flex items-start gap-2.5">
+                          <FaMapMarkerAlt className="text-red-600 mt-0.5 text-[18px] shrink-0" />
+                          <p className={`text-[15px] pr-6 leading-snug m-0 ${!isFullyUnlocked ? "text-slate-500 font-medium italic" : "text-slate-700 font-medium"}`}>
+                            {info.location}
+                          </p>
+                        </div>
+
+                        {/* Col 3: Phone */}
+                        <div className="col-span-1 flex items-start gap-3">
+                          <FaPhoneAlt className="text-slate-700 mt-0.5 text-[17px] shrink-0" />
+                          <div>
+                            <p className={`text-[15px] leading-snug m-0 ${!isFullyUnlocked ? "text-slate-500 font-medium italic" : "text-slate-800 font-bold tracking-wide"}`}>
+                              {info.phone}
+                            </p>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 pt-6 border-t border-slate-100">
+                      <div className="rounded-xl border border-slate-200 bg-white p-4.5 flex flex-col justify-between">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 mb-3">
+                          <FaWrench className="text-green-600 text-lg" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-extrabold text-slate-900 leading-none mb-1">{stats.jobsCompleted}</h3>
+                          <p className="text-xs font-medium text-slate-500 m-0">Jobs Completed</p>
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-white p-4.5 flex flex-col justify-between">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 mb-3">
+                          <FaStar className="text-green-600 text-lg" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-extrabold text-slate-900 leading-none mb-1">{stats.averageRating}</h3>
+                          <p className="text-xs font-medium text-slate-500 m-0">Rating</p>
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-white p-4.5 flex flex-col justify-between">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 mb-3">
+                          <FaShieldAlt className="text-green-600 text-lg" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-extrabold text-slate-900 leading-none mb-1">{stats.yearsExperience}</h3>
+                          <p className="text-xs font-medium text-slate-500 m-0">Years Experience</p>
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-white p-4.5 flex flex-col justify-between">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 mb-3">
+                          <FaSmile className="text-green-600 text-lg" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-extrabold text-slate-900 leading-none mb-1">{stats.completionRate}</h3>
+                          <p className="text-xs font-medium text-slate-500 m-0">Completion</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* OUR SERVICES SECTION */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold text-slate-900 m-0">Our Services</h2>
+                    </div>
+                    
+                    {services && services.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {services.map((service, index) => (
+                          <div key={index} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-green-300 hover:shadow-md">
+                            
+                            {/* Top Section: Icon, Name & Category */}
+                            <div>
+                              <div className="flex items-start gap-2.5">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-50 border border-green-100/60 mt-0.5">
+                                  <FaWrench className="text-xs text-green-600" />
+                                </div>
+                                
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  {service.category && (
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-700 bg-green-50 px-2 py-0.5 rounded w-fit mb-1 border border-green-100">
+                                      {service.category}
+                                    </span>
+                                  )}
+                                  <h3 className="text-[14px] leading-snug font-bold text-slate-900 break-words m-0">
+                                    {service.name}
+                                  </h3>
+                                </div>
+                              </div>
+
+                              {/* Starting Price Banner */}
+                              <div className="mt-2">
+                                <span className="text-xs font-extrabold text-green-700 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md inline-block">
+                                  from {service.price}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Bottom Section: Duration */}
+                            <div className="mt-3 pt-2 border-t border-slate-100 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                              <FaClock className="text-slate-400 text-xs shrink-0" />
+                              <span>{service.duration}</span>
+                            </div>
+                            
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500">
+                        <FaWrench className="text-2xl text-slate-300 mb-2" />
+                        <p className="text-sm font-semibold text-slate-700 m-0">No Services Listed Yet</p>
+                        <p className="text-xs text-slate-400 mt-1 m-0">This workshop has not added specific services to their menu yet.</p>
+                      </div>
                     )}
                   </div>
 
-                  {/* Premium Dynamic Tow Truck Banner */}
-                  {info.carriageService == 1 && (
-                    <div className="mt-6 flex items-center gap-4 rounded-2xl px-5 py-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100/80">
-                        <FaTruckPickup className="text-lg text-green-600" />
-                      </div>
-                      <p className="text-[14.5px] leading-relaxed text-slate-700 font-medium">
-                        <strong className="font-bold text-slate-900 mr-1">Pickup Available.</strong>
-                        We offer tow truck transport and pickup services for all supported vehicle types.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Description */}
-                  <p className="mt-6 text-[15px] leading-relaxed text-slate-600">
-                    {info.description || "No description provided."}
-                  </p>
-
-                 {/* Flawless Info Grid (True 3-Column Layout matching the original design) */}
-                  <div className="mt-8 mb-10 border-t border-slate-100 pt-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-y-7 gap-x-6 items-start">
-                      
-                      {/* --- ROW 1 --- */}
-
-                      {/* Col 1: Distance */}
-                      <div className="col-span-1 flex items-center gap-2.5">
-                        {passedDistance && (
-                          <>
-                            <FaMapMarkerAlt className="text-red-600 text-[18px] shrink-0" />
-                            <span className="font-medium text-slate-600 text-[15px]">
-                              {typeof passedDistance === 'string' && passedDistance.includes('km') 
-                                ? passedDistance 
-                                : parseFloat(passedDistance) > 100 
-                                  ? (parseFloat(passedDistance) / 1000).toFixed(1) + ' km' 
-                                  : parseFloat(passedDistance).toFixed(1) + ' km'} away
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Col 2: Status */}
-                      <div className="col-span-1 flex items-center gap-2.5">
-                        <div className={`h-2 w-2 rounded-full ${info.isAvailable ? 'bg-green-600' : 'bg-red-500'}`}></div>
-                        <span className={`font-bold text-[15px] ${info.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                          {info.isAvailable ? "Open Now" : "Currently Busy"}
-                        </span>
-                        {info.isAvailable && info.closeTime && (
-                          <span className="text-slate-500 text-[14px] font-medium ml-1">
-                            Closes at {info.closeTime.substring(0, 5)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Col 3: Schedule */}
-                      <div className="col-span-1 flex items-start gap-3">
-                        <FaClock className="text-slate-500 mt-0.5 text-[18px] shrink-0" />
-                        <div className="flex flex-col text-[14px] text-slate-700 font-medium leading-snug">
-                          {/* If your DB supports specific days later, replace this text */}
-                          <span>Everyday {info.openTime.substring(0, 5)} - {info.closeTime.substring(0, 5)}</span>
-                        </div>
-                      </div>
-
-                      {/* --- ROW 2 --- */}
-
-                      {/* Col 1 & 2: Address (Spans across the first two columns!) */}
-                      <div className="md:col-span-2 flex items-start gap-2.5">
-                        <FaMapMarkerAlt className="text-red-600 mt-0.5 text-[18px] shrink-0" />
-                        <p className={`text-[15px] pr-6 leading-snug ${!isFullyUnlocked ? "text-slate-500 font-medium italic" : "text-slate-700 font-medium"}`}>
-                          {info.location}
-                        </p>
-                      </div>
-
-                      {/* Col 3: Phone (Aligns perfectly under the schedule) */}
-                      <div className="col-span-1 flex items-start gap-3">
-                        <FaPhoneAlt className="text-slate-700 mt-0.5 text-[17px] shrink-0" />
-                        <div>
-                          <p className={`text-[15px] leading-snug ${!isFullyUnlocked ? "text-slate-500 font-medium italic" : "text-slate-800 font-bold tracking-wide"}`}>
-                            {info.phone}
-                          </p>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50"><FaWrench className="text-green-600 text-xl" /></div><div><h3 className="text-2xl font-bold text-slate-900">{stats.jobsCompleted}</h3><p className="text-xs text-slate-500">Jobs Completed</p></div></div></div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50"><FaStar className="text-green-600 text-xl" /></div><div><h3 className="text-2xl font-bold text-slate-900">{stats.averageRating}</h3><p className="text-xs text-slate-500">Rating</p></div></div></div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50"><FaShieldAlt className="text-green-600 text-xl" /></div><div><h3 className="text-2xl font-bold text-slate-900">{stats.yearsExperience}</h3><p className="text-xs text-slate-500">Experience</p></div></div></div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50"><FaSmile className="text-green-600 text-xl" /></div><div><h3 className="text-2xl font-bold text-slate-900">{stats.completionRate}</h3><p className="text-xs text-slate-500">Completion</p></div></div></div>
-                  </div>
                 </div>
 
-                {/* RIGHT SIDE */}
-                <div className="space-y-5">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-10">
-                    <h3 className="mb-4 text-lg font-bold">Book a Service</h3>
-                    {/* CONDITIONAL RENDER: Check if it's a Spare Parts shop */}
+                {/* RIGHT SIDEBAR COLUMN (Span 1 on Desktop) */}
+                <div className="lg:col-span-1 space-y-6">
+                  
+                  {/* 1. Book a Service Card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 text-lg font-bold text-slate-900 m-0">Book a Service</h3>
                     {shopCategories?.includes("Spare Parts") ? (
-                      <div className="space-y-3">
+                      <div className="space-y-3 mt-4">
                         <button 
                           disabled 
-                          className="w-full rounded-xl bg-slate-100 py-3 text-slate-400 font-semibold cursor-not-allowed border border-slate-200 transition"
+                          className="w-full rounded-xl bg-slate-100 py-3 text-slate-400 font-semibold cursor-not-allowed border border-slate-200 transition text-sm"
                         >
                           Service Unavailable
                         </button>
-                        <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                          <p className="text-[12.5px] text-amber-700 leading-snug">
+                        <div className="p-3.5 bg-amber-50 border border-amber-100 rounded-xl">
+                          <p className="text-xs text-amber-700 leading-snug m-0">
                             <strong className="font-bold">Note:</strong> Online service requests are not available for retail Spare Parts shops. Please contact the shop directly for part inquiries.
                           </p>
                         </div>
@@ -488,24 +577,23 @@ function ShopDetails() {
                     ) : (
                       <button 
                         onClick={() => setIsModalOpen(true)} 
-                        className="w-full rounded-xl bg-green-600 py-3 text-white font-semibold hover:bg-green-700 transition shadow-sm active:scale-95"
+                        className="w-full rounded-xl bg-green-600 py-3 text-white font-bold hover:bg-green-700 transition shadow-sm active:scale-95 text-sm cursor-pointer mt-4"
                       >
                         Request Service
                       </button>
                     )}
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                    <h3 className="mb-4 text-lg font-bold">Shop Location</h3>
-                    <div className="overflow-hidden rounded-xl bg-slate-200 relative group">
+                  {/* 2. Shop Location Card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 text-lg font-bold text-slate-900 m-0">Shop Location</h3>
+                    <div className="overflow-hidden rounded-xl bg-slate-100 relative group border border-slate-200">
                       <iframe 
                         title="shop-location" 
                         src={`https://maps.google.com/maps?q=${encodeURIComponent(info.mapQuery)}&t=&z=${isFullyUnlocked ? 15 : 14}&ie=UTF8&iwloc=&output=embed`} 
                         className="h-56 w-full" 
                         loading="lazy"
                       />
-                      
-                      {/* INVISIBLE SHIELD: Blocks all mouse clicks & dragging if locked */}
                       {!isFullyUnlocked && (
                         <div 
                            className="absolute inset-0 z-10 bg-transparent cursor-not-allowed" 
@@ -516,140 +604,110 @@ function ShopDetails() {
                     
                     <button 
                       disabled={!isFullyUnlocked} 
-                      onClick={handleGetDirections} /* <-- THE FIX */
-                      className={`mt-4 w-full rounded-xl py-3 font-semibold transition ${isFullyUnlocked ? 'bg-green-600 text-white hover:bg-green-700 active:scale-95 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                      onClick={handleGetDirections}
+                      className={`mt-4 w-full rounded-xl py-3 font-bold text-sm transition cursor-pointer ${isFullyUnlocked ? 'bg-green-600 text-white hover:bg-green-700 active:scale-95 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                     >
                       {isFullyUnlocked ? "Get Directions" : "Directions Locked"}
                     </button>
                   </div>
+
+                  {/* 3. Why Choose Us Card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 text-lg font-bold text-slate-900 m-0">Why Choose Us?</h3>
+                    <div className="space-y-3.5 text-xs sm:text-sm">
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-green-600 text-base shrink-0" />
+                        <span className="font-semibold text-slate-700">Certified Technicians</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-green-600 text-base shrink-0" />
+                        <span className="font-semibold text-slate-700">Modern Diagnostics</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-green-600 text-base shrink-0" />
+                        <span className="font-semibold text-slate-700">Transparent Pricing</span>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
+
               </div>
 
-              {/* SERVICES AND REVIEWS SECTION */}
-              <div className="grid gap-8 xl:grid-cols-[1.4fr,0.9fr]">
-                <div className="space-y-8">
-                  
-                  <div className="grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-                    {/* Services Box */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-slate-900">Our Services</h2>
-                      </div>
-                      
-                     {services && services.length > 0 ? (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                          {services.map((service, index) => (
-                            <div key={index} className="flex flex-col justify-between rounded-xl border border-slate-100 bg-white p-4 transition-all hover:border-green-200 hover:shadow-sm">
-                              
-                              {/* Top Section: Icon, Full Name & Price */}
-                              <div className="flex items-center gap-3">
-                                {/* Circular Icon */}
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 border border-emerald-100/50">
-                                  <FaWrench className="text-[15px] text-emerald-600" />
-                                </div>
-                                
-                                {/* Text Block: Removed all truncation to show full name */}
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <h3 className="text-[14px] leading-tight font-bold text-slate-800 break-words">
-                                    {service.name}
-                                  </h3>
-                                  <p className="mt-1 text-[13px] font-bold text-emerald-600">
-                                    from {service.price}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Bottom Section: Duration Only */}
-                              <div className="mt-5 flex items-center gap-2 text-[13px] font-medium text-slate-500">
-                                <FaClock className="text-[14px] text-slate-400" />
-                                <span>{service.duration}</span>
-                              </div>
-                              
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-slate-500 italic">No specific services listed yet.</p>
+              {/* FULL-WIDTH CUSTOMER REVIEWS SECTION (Spans 100% of container width on desktop) */}
+              <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h2 className="text-2xl font-bold text-slate-900 m-0">Customer Reviews</h2>
+                      {stats.averageRating && (
+                        <span className="inline-flex items-center gap-1 text-sm font-extrabold text-slate-900 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg">
+                          {stats.averageRating} <FaStar className="text-yellow-500 text-xs" />
+                        </span>
                       )}
                     </div>
-                    
-                    {/* Why Choose Us */}
-                    <div className="rounded-2xl border border-[#d1e7d7] bg-white p-8 shadow-sm self-start">
-                      <h2 className="text-xl font-bold text-[#0f172a]">Why Choose Us?</h2>
-                      <div className="mt-4 space-y-3 text-sm">
-                        <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span>Certified Technicians</span></div>
-                        <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span>Modern Diagnostics</span></div>
-                        <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span>Transparent Pricing</span></div>
-                      </div>
-                    </div>
+                    <p className="text-xs font-medium text-slate-500 mt-1 m-0">
+                      Based on {stats.reviewCount} {stats.reviewCount === 1 ? "review" : "reviews"} • {stats.recommendPercentage}% recommend
+                    </p>
                   </div>
+                  
+                  {/* Sort Dropdown */}
+                  <select 
+                    value={activeSort} 
+                    onChange={(e) => setActiveSort(e.target.value)} 
+                    className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:border-green-500 outline-none cursor-pointer bg-white shadow-2xs self-start sm:self-auto"
+                  >
+                    <option>Most Recent</option>
+                    <option>Highest Rated</option>
+                    <option>Lowest Rated</option>
+                  </select>
+                </div>
 
-                  {/* REVIEWS SECTION */}
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#d1e7d7] bg-white p-6 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-4">
-                        <h2 className="text-2xl font-bold text-slate-900">Customer Reviews</h2>
-                        <span className="text-slate-500">{stats.reviewCount} Reviews</span>
-                      </div>
-                      
-                      {/* Sort Dropdown */}
-                      <select 
-                        value={activeSort} 
-                        onChange={(e) => setActiveSort(e.target.value)} 
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-green-500 outline-none cursor-pointer"
-                      >
-                        <option>Most Recent</option>
-                        <option>Highest Rated</option>
-                        <option>Lowest Rated</option>
-                      </select>
-                    </div>
+                {/* Filter Pills */}
+                <div className="flex flex-wrap gap-2">
+                  {["All", "5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"].map(filter => (
+                    <button 
+                      key={filter} 
+                      onClick={() => setActiveFilter(filter)}
+                      className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeFilter === filter ? 'bg-green-600 text-white border-transparent shadow-xs' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {filter === "All" ? `All (${stats.reviewCount})` : filter}
+                    </button>
+                  ))}
+                </div>
 
-                    {/* Filter Pills */}
-                    <div className="flex flex-wrap gap-3">
-                      {["All", "5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"].map(filter => (
-                        <button 
-                          key={filter} 
-                          onClick={() => setActiveFilter(filter)}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeFilter === filter ? 'bg-green-600 text-white border-transparent' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                        >
-                          {filter === "All" ? `All (${stats.reviewCount})` : filter}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Filtered Reviews Output */}
-                    {processedReviews.length > 0 ? (
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4">
-                        {processedReviews.map((review, i) => (
-                          <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-600 text-sm font-semibold text-white">
-                                  {review.name.split(" ").slice(0, 2).map((n) => n[0]).join("")}
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-slate-900">{review.name}</p>
-                                  <div className="mt-1 flex items-center gap-1 text-yellow-500">
-                                    {Array.from({ length: parseInt(review.rating) }).map((_, index) => (
-                                      <FontAwesomeIcon key={index} icon={faStar} />
-                                    ))}
-                                  </div>
+                {/* Filtered Reviews Output */}
+                {processedReviews.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-1">
+                    {processedReviews.map((review, i) => (
+                      <div key={i} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-all">
+                        <div>
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white shrink-0">
+                                {review.name.split(" ").slice(0, 2).map((n) => n[0]).join("")}
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-slate-900 m-0">{review.name}</p>
+                                <div className="mt-0.5 flex items-center gap-0.5 text-yellow-400 text-xs">
+                                  {Array.from({ length: parseInt(review.rating) }).map((_, index) => (
+                                    <FontAwesomeIcon key={index} icon={faStar} />
+                                  ))}
                                 </div>
                               </div>
-                              <span className="text-sm text-slate-400">{review.date}</span>
                             </div>
-                            <p className="mt-4 text-sm leading-6 text-slate-600">{review.summary}</p>
+                            <span className="text-xs font-medium text-slate-400 shrink-0">{review.date}</span>
                           </div>
-                        ))}
+                          <p className="text-xs leading-relaxed text-slate-600 m-0">{review.summary}</p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="py-10 text-center text-slate-500 bg-slate-50 rounded-xl mt-4 border border-slate-100">
-                        <p>No reviews match this filter.</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
-
-                </div>
+                ) : (
+                  <div className="py-10 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-xs font-medium text-slate-500 m-0">No reviews match this filter.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

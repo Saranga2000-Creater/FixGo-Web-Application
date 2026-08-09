@@ -5,7 +5,7 @@ import {
     faCheckCircle, faExclamationTriangle, faClock, faChevronLeft,
     faCopy, faStar, faMapMarkerAlt, faBolt, faMotorcycle, faTruck,
     faCogs, faBatteryFull, faLifeRing, faWrench, faQuestionCircle,
-    faPaperPlane, faShieldAlt, faLock, faCheck
+    faPaperPlane, faShieldAlt, faLock, faCheck, faPlus
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 
@@ -21,6 +21,8 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
     const [requiresTow, setRequiresTow] = useState(initialNeedsTow);
     const [imageFile, setImageFile] = useState(null);
     const [vehicleCategory, setVehicleCategory] = useState(2);
+    const [savedVehicles, setSavedVehicles] = useState([]);
+    const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
     // NEW: Premium Data States matching our DB upgrades
     const [issueCategory, setIssueCategory] = useState('');
@@ -40,10 +42,24 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
     const [error, setError] = useState('');
     const [referenceId, setReferenceId] = useState(''); // NEW: To store the formatted ID
 
-    // Reset the form
+    // Reset the form and fetch vehicles
     useEffect(() => {
         if (isOpen) {
             setStep(1);
+            api.get("customer/getVehicles.php").then(res => {
+                if (res.success && res.vehicles && res.vehicles.length > 0) {
+                    setSavedVehicles(res.vehicles);
+                    // Pre-select first vehicle
+                    const first = res.vehicles[0];
+                    setSelectedVehicleId(first.id);
+                    setVehicleCategory(parseInt(first.vehicle_category_id));
+                    setBrand(first.brand);
+                    setColor(first.color);
+                } else {
+                    setSavedVehicles([]);
+                    setSelectedVehicleId('new');
+                }
+            });
             setRequiresTow(initialNeedsTow);
             setBrand('');
             setColor('');
@@ -110,6 +126,19 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
             let base64Image = null;
             if (imageFile) {
                 base64Image = await convertToBase64(imageFile);
+            }
+
+            // Just-in-Time Auto-Save for new vehicles
+            if (selectedVehicleId === 'new') {
+                try {
+                    await api.post("customer/addVehicle.php", {
+                        vehicle_category_id: vehicleCategory,
+                        brand: brand,
+                        color: color
+                    });
+                } catch (e) {
+                    // Silently fail auto-save if error, don't block request
+                }
             }
 
             const requestData = {
@@ -245,37 +274,101 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
     const renderStep1Form = () => (
         <form onSubmit={handleProceedToReview} className="space-y-6 pb-2">
 
-            {/* 1. Vehicle Type */}
+                        {/* 1. Select Vehicle */}
             <div>
                 <div className="flex items-center gap-2 mb-3">
                     <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">1</div>
-                    <h3 className="font-bold text-[#1f2937] text-[13px]">Vehicle Type</h3>
+                    <h3 className="font-bold text-[#1f2937] text-[13px]">Select Vehicle</h3>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                    {[
-                        { id: 1, label: "2/3 Wheeler", icon: faMotorcycle },
-                        { id: 2, label: "4 Wheeler", icon: faCar },
-                        { id: 3, label: "Commercial", icon: faTruck }
-                    ].map((type) => (
+                
+                {savedVehicles.length > 0 && (
+                    <div className="flex flex-col gap-2 mb-3">
+                        {savedVehicles.map(v => (
+                            <button
+                                key={v.id}
+                                type="button"
+                                onClick={() => {
+                                    setSelectedVehicleId(v.id);
+                                    setVehicleCategory(parseInt(v.vehicle_category_id));
+                                    setBrand(v.brand);
+                                    setColor(v.color);
+                                }}
+                                className={`p-3 rounded-xl border flex items-center gap-3 transition-all text-left ${selectedVehicleId === v.id ? 'border-[#16a34a] bg-[#f0fdf4] shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                            >
+                                <FontAwesomeIcon icon={faCar} className={`text-lg ${selectedVehicleId === v.id ? 'text-[#16a34a]' : 'text-gray-400'}`} />
+                                <div className="flex-1">
+                                    <span className={`block text-[13px] font-bold ${selectedVehicleId === v.id ? 'text-[#14532d]' : 'text-gray-800'}`}>{v.brand}</span>
+                                    <span className="block text-[11px] text-gray-500">{v.color}</span>
+                                </div>
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedVehicleId === v.id ? 'border-[#16a34a]' : 'border-gray-300'}`}>
+                                    {selectedVehicleId === v.id && <div className="w-2 h-2 rounded-full bg-[#16a34a]"></div>}
+                                </div>
+                            </button>
+                        ))}
+                        
                         <button
-                            key={type.id}
                             type="button"
-                            onClick={() => setVehicleCategory(type.id)}
-                            className={`py-3 px-2 flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-200 ${vehicleCategory === type.id
-                                    ? 'border-[#16a34a] bg-[#f0fdf4] shadow-sm'
-                                    : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
-                                }`}
+                            onClick={() => {
+                                setSelectedVehicleId('new');
+                                setBrand('');
+                                setColor('');
+                            }}
+                            className={`p-3 rounded-xl border border-dashed flex items-center gap-3 transition-all text-left ${selectedVehicleId === 'new' ? 'border-[#16a34a] bg-[#f0fdf4]' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}`}
                         >
-                            <FontAwesomeIcon icon={type.icon} className={`text-2xl mb-2 ${vehicleCategory === type.id ? 'text-[#16a34a]' : 'text-gray-400'}`} />
-                            <span className={`text-[11px] font-bold text-center leading-tight ${vehicleCategory === type.id ? 'text-[#14532d]' : 'text-gray-500'}`}>
-                                {type.label}
-                            </span>
+                            <FontAwesomeIcon icon={faPlus} className={`text-sm ${selectedVehicleId === 'new' ? 'text-[#16a34a]' : 'text-gray-500'}`} />
+                            <span className={`text-[12px] font-bold ${selectedVehicleId === 'new' ? 'text-[#14532d]' : 'text-gray-600'}`}>Use a different vehicle</span>
+                            <div className="flex-1"></div>
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedVehicleId === 'new' ? 'border-[#16a34a]' : 'border-gray-300'}`}>
+                                {selectedVehicleId === 'new' && <div className="w-2 h-2 rounded-full bg-[#16a34a]"></div>}
+                            </div>
                         </button>
-                    ))}
-                </div>
+                    </div>
+                )}
+
+                {selectedVehicleId === 'new' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-3 p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+                        
+                        <div className="mb-4">
+                            <label className="block text-[12px] font-bold text-gray-700 mb-2">Vehicle Type</label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { id: 1, label: "2/3 Wheeler", icon: faMotorcycle },
+                                    { id: 2, label: "4 Wheeler", icon: faCar },
+                                    { id: 3, label: "Commercial", icon: faTruck }
+                                ].map((type) => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        onClick={() => setVehicleCategory(type.id)}
+                                        className={`py-3 px-2 flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-200 ${vehicleCategory === type.id
+                                                ? 'border-[#16a34a] bg-[#f0fdf4] shadow-sm'
+                                                : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <FontAwesomeIcon icon={type.icon} className={`text-2xl mb-2 ${vehicleCategory === type.id ? 'text-[#16a34a]' : 'text-gray-400'}`} />
+                                        <span className={`text-[11px] font-bold text-center leading-tight ${vehicleCategory === type.id ? 'text-[#14532d]' : 'text-gray-500'}`}>
+                                            {type.label}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[12px] font-bold text-gray-700 mb-2">Vehicle Brand</label>
+                                <input type="text" required value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Toyota" className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white focus:border-[#16a34a] outline-none transition-colors text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-[12px] font-bold text-gray-700 mb-2">Vehicle Color</label>
+                                <input type="text" required value={color} onChange={(e) => setColor(e.target.value)} placeholder="e.g. Silver" className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white focus:border-[#16a34a] outline-none transition-colors text-sm" />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* CONDITIONAL GARAGE BLOCK: 1a. Tow Truck Options */}
+{/* CONDITIONAL GARAGE BLOCK: 1a. Tow Truck Options */}
             {shop.shopCategories?.includes('Garages') && shop.info?.carriageService == 1 && (
                 <div className="animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-3">
@@ -351,28 +444,10 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                 </div>
             )}
 
-            {/* 2. Vehicle Details */}
-            <div>
-                <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">2</div>
-                    <h3 className="font-bold text-[#1f2937] text-[13px]">Vehicle Details</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-[11px] text-gray-500 mb-1.5">Vehicle Brand</label>
-                        <input type="text" required value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Toyota" className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white focus:border-[#16a34a] outline-none transition-colors text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-[11px] text-gray-500 mb-1.5">Vehicle Color</label>
-                        <input type="text" required value={color} onChange={(e) => setColor(e.target.value)} placeholder="e.g. Silver" className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white focus:border-[#16a34a] outline-none transition-colors text-sm" />
-                    </div>
-                </div>
-            </div>
-
             {/* 3. Issue Chips */}
             <div>
                 <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">3</div>
+                    <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">2</div>
                     <h3 className="font-bold text-[#1f2937] text-[13px]">What do you need help with?</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -403,7 +478,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
             {/* 4. Description */}
             <div>
                 <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">4</div>
+                    <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">3</div>
                     <h3 className="font-bold text-[#1f2937] text-[13px]">Describe the issue</h3>
                 </div>
                 <div className="relative">
@@ -424,7 +499,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
             {(shop.shopCategories?.length > 0) && (
                 <div>
                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">5</div>
+                        <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">4</div>
                         <h3 className="font-bold text-[#1f2937] text-[13px]">Attach a Photo (Optional)</h3>
                     </div>
 
@@ -497,7 +572,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                     /* GARAGE UI: Urgency Level */
                     <div className="animate-in fade-in duration-300">
                         <div className="flex items-center gap-2 mb-3">
-                            <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">6</div>
+                            <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">5</div>
                             <h3 className="font-bold text-[#1f2937] text-[13px]">Urgency Level</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -513,7 +588,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                     /* SERVICE CENTER UI: Preferred Appointment */
                     <div className="animate-in fade-in duration-300">
                         <div className="flex items-center gap-2 mb-3">
-                            <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">6</div>
+                            <div className="w-5 h-5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[11px] font-bold">5</div>
                             <h3 className="font-bold text-[#1f2937] text-[13px]">Preferred Appointment Slot</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-4">

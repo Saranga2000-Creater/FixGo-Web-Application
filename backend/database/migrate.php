@@ -27,6 +27,24 @@ try {
     $migrationFiles = glob(__DIR__ . '/migrations/*.sql');
     sort($migrationFiles); // Ensure they run in alphabetical/numerical order
 
+    // --- NEW PRE-FLIGHT CHECK: Prevent prefix collisions ---
+    $prefixes = [];
+    foreach ($migrationFiles as $file) {
+        $basename = basename($file);
+        // Extract everything before the first underscore (e.g., "008" or "008a")
+        if (preg_match('/^([^_]+)_/', $basename, $matches)) {
+            $prefix = $matches[1];
+            if (isset($prefixes[$prefix])) {
+                echo "❌ Migration Collision Detected!\n";
+                echo "Multiple files share the prefix '{$prefix}_' (e.g., {$prefixes[$prefix]} and {$basename}).\n";
+                echo "Please rename them to ensure strict execution order.\n";
+                exit(1);
+            }
+            $prefixes[$prefix] = $basename;
+        }
+    }
+    // -------------------------------------------------------
+
     $newMigrationsRun = 0;
 
     // 4. Loop through the files
@@ -40,8 +58,18 @@ try {
             // Read the SQL file
             $sql = file_get_contents($file);
             
-            // Execute the SQL
-            $db->exec($sql);
+            try {
+                // Execute the SQL
+                $db->exec($sql);
+            } catch (PDOException $innerE) {
+                // MySQL Errors: 1050 (Table exists), 1060 (Column exists), 1061 (Key exists)
+                $mysqlCode = $innerE->errorInfo[1] ?? null;
+                if (in_array($mysqlCode, [1050, 1060, 1061])) {
+                    echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
+                } else {
+                    throw $innerE; // It's a real error, abort!
+                }
+            }
             
             // Record that we ran it so we never run it again
             $insertStmt = $db->prepare("INSERT INTO migrations_tracker (migration_file) VALUES (:file)");

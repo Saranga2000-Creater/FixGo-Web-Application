@@ -30,6 +30,9 @@ class Shop {
         ST_Y(s.location) AS latitude,
         ST_X(s.location) AS longitude,
 
+        (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM review WHERE shop_id = s.id) AS averageRating,
+        (SELECT COUNT(*) FROM review WHERE shop_id = s.id) AS reviewCount,
+
         GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories,
 
         GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ')
@@ -281,7 +284,7 @@ class Shop {
         $details['info'] = $info;
 
         // 5. Get Services
-        $svcQuery = "SELECT service_name as name, starting_price as price, duration 
+        $svcQuery = "SELECT service_name as name, starting_price as price, duration, category 
                      FROM shopServices WHERE shop_id = :id";
         $svcStmt = $this->conn->prepare($svcQuery);
         $svcStmt->bindParam(':id', $shopId);
@@ -496,5 +499,318 @@ public function updateShopTowTruckDetails($shopId, $data) {
         ':id'          => $shopId
     ]);
 }
+
+    // ==========================================
+    // Gallery Management
+    // ==========================================
+    public function getGalleryImages($shopId) {
+        $query = "SELECT id, url FROM shopImage WHERE shop_id = :shop_id ORDER BY id DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':shop_id' => $shopId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getGalleryImageCount($shopId) {
+        $query = "SELECT COUNT(*) FROM shopImage WHERE shop_id = :shop_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':shop_id' => $shopId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function updateProfileImage($shopId, $imagePath) {
+        $query = "UPDATE shop SET profileImageURL = :url WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':url' => $imagePath, ':id' => $shopId]);
+    }
+
+    public function addGalleryImage($shopId, $url) {
+        $query = "INSERT INTO shopImage (shop_id, url) VALUES (:shop_id, :url)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':shop_id' => $shopId,
+            ':url' => $url
+        ]);
+        return $this->conn->lastInsertId();
+    }
+
+    public function deleteGalleryImage($shopId, $imageId) {
+        $findQuery = "SELECT url FROM shopImage WHERE id = :id AND shop_id = :shop_id LIMIT 1";
+        $stmt = $this->conn->prepare($findQuery);
+        $stmt->execute([':id' => $imageId, ':shop_id' => $shopId]);
+        $img = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$img) {
+            return false;
+        }
+
+        $delQuery = "DELETE FROM shopImage WHERE id = :id AND shop_id = :shop_id";
+        $delStmt = $this->conn->prepare($delQuery);
+        $success = $delStmt->execute([':id' => $imageId, ':shop_id' => $shopId]);
+
+        if ($success && !empty($img['url'])) {
+            $filePath = __DIR__ . '/../' . $img['url'];
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+        return $success;
+    }
+
+    // ==========================================
+    // Editable Business Information
+    // ==========================================
+    public function updateBusinessInfo($shopId, $data, $vehicleCategoryIds) {
+        try {
+            $this->conn->beginTransaction();
+
+            $query = "UPDATE shop SET 
+                        name = :name,
+                        owner = :owner,
+                        contactNumber = :phone,
+                        address = :address,
+                        BRN = :brn,
+                        openTime = :openTime,
+                        closeTime = :closeTime,
+                        description = :description,
+                        isAvailable = :isAvailable
+                      WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':name' => $data['name'],
+                ':owner' => $data['owner'],
+                ':phone' => $data['phone'],
+                ':address' => $data['address'],
+                ':brn' => $data['brn'],
+                ':openTime' => $data['openTime'],
+                ':closeTime' => $data['closeTime'],
+                ':description' => $data['description'],
+                ':isAvailable' => $data['isAvailable'] ?? 1,
+                ':id' => $shopId
+            ]);
+
+            // Refresh vehicle categories mapping
+            $delVeh = "DELETE FROM shopVehicleCategories WHERE shop_id = :shop_id";
+            $delStmt = $this->conn->prepare($delVeh);
+            $delStmt->execute([':shop_id' => $shopId]);
+
+            if (!empty($vehicleCategoryIds)) {
+                $insVeh = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :v_id)";
+                $insStmt = $this->conn->prepare($insVeh);
+                foreach ($vehicleCategoryIds as $vId) {
+                    $insStmt->execute([':shop_id' => $shopId, ':v_id' => $vId]);
+                }
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    // ==========================================
+    // Services Offered
+    // ==========================================
+    public function getServicesByShopId($shopId) {
+        $query = "SELECT id, category, service_name, starting_price, duration FROM shopServices WHERE shop_id = :shop_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':shop_id' => $shopId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateShopServices($shopId, $services) {
+        try {
+            $this->conn->beginTransaction();
+
+            $delQuery = "DELETE FROM shopServices WHERE shop_id = :shop_id";
+            $delStmt = $this->conn->prepare($delQuery);
+            $delStmt->execute([':shop_id' => $shopId]);
+
+            if (!empty($services)) {
+                $insQuery = "INSERT INTO shopServices (shop_id, category, service_name, starting_price, duration) 
+                             VALUES (:shop_id, :category, :service_name, :starting_price, :duration)";
+                $insStmt = $this->conn->prepare($insQuery);
+                foreach ($services as $svc) {
+                    $categoryName = trim($svc['category'] ?? 'General');
+                    $serviceName  = trim($svc['service_name'] ?? $svc['name'] ?? '');
+                    $priceVal     = trim($svc['starting_price'] ?? $svc['price'] ?? 'Varies');
+                    $durationVal  = trim($svc['duration'] ?? 'Varies');
+
+                    if ($serviceName !== '') {
+                        $insStmt->execute([
+                            ':shop_id'        => $shopId,
+                            ':category'       => $categoryName !== '' ? $categoryName : 'General',
+                            ':service_name'   => $serviceName,
+                            ':starting_price' => $priceVal !== '' ? $priceVal : 'Varies',
+                            ':duration'       => $durationVal !== '' ? $durationVal : 'Varies'
+                        ]);
+                    }
+                }
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Admin Dashboard: Get total count of active shops
+     */
+    public function getActiveCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) 
+            FROM shop s
+            JOIN users u ON s.id = u.id
+            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Admin Dashboard: Get shop distribution by category
+     */
+    public function getCategoryDistribution() {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                sc.name as categoryName, 
+                COUNT(s.id) as shopCount
+            FROM shop s
+            JOIN users u ON s.id = u.id
+            LEFT JOIN shopCategoryMapping scm ON s.id = scm.shop_id
+            LEFT JOIN shopCategory sc ON scm.shop_category_id = sc.id
+            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
+            GROUP BY sc.name
+            ORDER BY shopCount DESC
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Format for Recharts { name, value }
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'name' => $row['categoryName'] ?: 'Uncategorized',
+                'value' => (int)$row['shopCount']
+            ];
+        }
+        return $formatted;
+    }
+
+    /**
+     * Admin: Attempt to activate a pending shop owner account.
+     * Returns a status string to allow the controller to format the response.
+     *
+     * @param  int  $shopId
+     * @return string  'approved' | 'already_active' | 'not_found'
+     */
+    public function approveShop(int $shopId): string {
+        $stmt = $this->conn->prepare(
+            "UPDATE users SET isActive = 1
+             WHERE id = :id AND userRole = 'shop_owner' AND is_email_verified = 1"
+        );
+        $stmt->bindParam(':id', $shopId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return 'approved';
+        }
+
+        // Check whether the shop simply already exists and is already active
+        $check = $this->conn->prepare(
+            "SELECT isActive FROM users WHERE id = :id AND userRole = 'shop_owner'"
+        );
+        $check->bindParam(':id', $shopId, PDO::PARAM_INT);
+        $check->execute();
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && $row['isActive'] == 1) {
+            return 'already_active';
+        }
+
+        return 'not_found';
+    }
+
+    /**
+     * Admin: Fetch all shop owner accounts that have verified their email
+     * but are still awaiting admin approval (isActive = 0).
+     *
+     * @return array
+     */
+    public function getPendingApprovals(): array {
+        $stmt = $this->conn->prepare("
+            SELECT
+                u.id,
+                u.email,
+                u.is_email_verified,
+                s.name          AS shopName,
+                s.owner         AS ownerName,
+                s.address,
+                s.contactNumber,
+                s.description,
+                s.openTime,
+                s.closeTime,
+                s.carriageService,
+                s.BRN,
+                s.profileImageURL,
+                GROUP_CONCAT(DISTINCT sc.name  SEPARATOR ', ') AS category,
+                GROUP_CONCAT(DISTINCT vc.name  SEPARATOR ', ') AS vehicleCategories
+            FROM users u
+            INNER JOIN shop s                ON s.id  = u.id
+            LEFT  JOIN shopCategoryMapping scm ON scm.shop_id = s.id
+            LEFT  JOIN shopCategory sc       ON sc.id  = scm.shop_category_id
+            LEFT  JOIN shopVehicleCategories svc ON svc.shop_id = s.id
+            LEFT  JOIN vehicleCategory vc    ON vc.id  = svc.vehicle_category_id
+            WHERE u.userRole = 'shop_owner'
+              AND u.is_email_verified = 1
+              AND u.isActive = 0
+            GROUP BY u.id, s.name, s.owner, s.address, s.contactNumber,
+                     s.description, s.openTime, s.closeTime, s.carriageService,
+                     s.BRN, s.profileImageURL
+            ORDER BY u.id DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Verifies current password for a shop user ID.
+     */
+    public function verifyPassword($shopId, $currentPassword) {
+        $stmt = $this->conn->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $shopId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$user) {
+            return false;
+        }
+        return password_verify($currentPassword, $user['password']);
+    }
+
+    /**
+     * Checks if an email is registered to another user account.
+     */
+    public function isEmailTaken($email, $excludeUserId) {
+        $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = :email AND id != :id LIMIT 1");
+        $stmt->execute([':email' => $email, ':id' => $excludeUserId]);
+        return (bool) $stmt->fetch();
+    }
+
+
+    /**
+     * Hashes and updates password in 'users' table.
+     */
+    public function updatePassword($shopId, $newPassword) {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->conn->prepare("UPDATE users SET password = :password WHERE id = :id");
+        return $stmt->execute([':password' => $hashedPassword, ':id' => $shopId]);
+    }
 }
 ?>

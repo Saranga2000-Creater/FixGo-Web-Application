@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { api } from "../../src/services/api";
 import {
     HiOutlineShieldCheck,
     HiOutlineUserGroup,
@@ -9,12 +10,121 @@ import {
     HiOutlineMagnifyingGlass,
     HiOutlineCalendar
 } from "react-icons/hi2";
-import { api, UPLOADS_URL } from "../../src/services/api";
+
+const useCountUp = (end, duration = 2500, decimals = 0, startAnimation = false) => {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        // Only run if end is a valid number and startAnimation is true
+        if (!startAnimation) return;
+        const numericEnd = typeof end === 'string' ? parseFloat(end.replace(/,/g, '')) : end;
+        if (end === "..." || isNaN(numericEnd)) return;
+
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // easeOutQuart for smooth deceleration
+            const easeProgress = 1 - Math.pow(1 - progress, 4);
+            setCount(+(easeProgress * numericEnd).toFixed(decimals));
+
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                setCount(numericEnd);
+            }
+        };
+
+        window.requestAnimationFrame(step);
+    }, [end, duration, decimals, startAnimation]);
+
+    return count;
+};
 
 const About = () => {
-    const [testimonials, setTestimonials] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [activeIndex, setActiveIndex] = useState(0);
+    const [stats, setStats] = useState({
+        verifiedGarages: "...",
+        successfulBookings: "...",
+        averageRating: "..."
+    });
+
+    const statsRef = useRef(null);
+    const [statsInView, setStatsInView] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setStatsInView(true);
+                    observer.disconnect(); // Only animate once
+                }
+            },
+            { threshold: 0.2 } // Trigger when 20% of the container is visible
+        );
+
+        if (statsRef.current) {
+            observer.observe(statsRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    const animatedGarages = useCountUp(stats.verifiedGarages, 2500, 0, statsInView);
+    const animatedBookings = useCountUp(stats.successfulBookings, 2500, 0, statsInView);
+    const animatedRating = useCountUp(stats.averageRating, 2500, 1, statsInView);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await api.getPublic('home/getHomeStats.php');
+                if (res?.success && res.data) {
+                    setStats(res.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch home stats:", error);
+                // Fallback to static values if API fails
+                setStats({
+                    verifiedGarages: "500+",
+                    successfulBookings: "12,000+",
+                    averageRating: "4.8"
+                });
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const testimonials = [
+        {
+            id: 1,
+            name: "Nuwan Perera",
+            location: "Colombo",
+            stars: 5,
+            text: "Found a great garage near me in minutes. The booking process was super easy!",
+            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+        },
+        {
+            id: 2,
+            name: "Dilini Fernando",
+            location: "Kandy",
+            stars: 5,
+            text: "Excellent service and transparent pricing. Highly recommended FixGo!",
+            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
+        },
+        {
+            id: 3,
+            name: "Tharindu Silva",
+            location: "Galle",
+            stars: 5,
+            text: "Their roadside assistance saved me during an emergency. Very professional!",
+            avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80"
+        }
+    ];
+
+    // Create a 3x extended array for smooth loop boundaries
+    const extendedTestimonials = [...testimonials, ...testimonials, ...testimonials];
+
+    // Initial index starts at the middle set's first element
+    const [activeIndex, setActiveIndex] = useState(3);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -66,7 +176,7 @@ const About = () => {
                 return prevIndex + 1;
             });
         }, 5000);
-        
+
         return () => clearInterval(timer);
     }, [activeTestimonials.length]);
 
@@ -92,47 +202,65 @@ const About = () => {
     return (
         <section className="w-full max-screen mx-auto px-4 md:px-10 mt-20 ">
             {/* 1. Statistics Strip */}
-            <div className="bg-green-100 border border-[#e2e8f0] rounded-2xl py-8 px-6 md:px-16 md:py-20 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-6 items-start">
+            <div ref={statsRef} className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#e2e8f0] rounded-2xl py-8 px-6 md:px-12 md:py-16 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-y-10 md:gap-y-0 md:divide-x divide-gray-200 items-center">
                 {/* Stat 1 */}
-                <div className="flex items-center gap-4 justify-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#f0fdf4] text-green-500 shrink-0">
-                        <HiOutlineShieldCheck className="w-6 h-6" />
+                <div className="flex items-center gap-4 justify-center md:justify-start md:pl-8 group cursor-default transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-green-50 text-green-500 shrink-0 group-hover:bg-green-100 transition-colors">
+                        <HiOutlineShieldCheck className="w-7 h-7" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">500+</span>
+                        {stats.verifiedGarages === "..." ? (
+                            <div className="animate-pulse bg-gray-200 h-8 w-16 rounded mb-1"></div>
+                        ) : (
+                            <span className="text-2xl md:text-3xl font-mono font-semibold bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-emerald-500 leading-none">
+                                {animatedGarages}+
+                            </span>
+                        )}
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Verified Garages</span>
                     </div>
                 </div>
 
                 {/* Stat 2 */}
-                <div className="flex items-center gap-4 justify-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#f0fdf4] text-green-500  shrink-0">
-                        <HiOutlineUserGroup className="w-6 h-6" />
+                <div className="flex items-center gap-4 justify-center md:justify-center group cursor-default transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-green-50 text-green-500 shrink-0 group-hover:bg-green-100 transition-colors">
+                        <HiOutlineUserGroup className="w-7 h-7" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">12,000+</span>
+                        {stats.successfulBookings === "..." ? (
+                            <div className="animate-pulse bg-gray-200 h-8 w-24 rounded mb-1"></div>
+                        ) : (
+                            <span className="text-2xl md:text-3xl font-mono font-semibold bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-emerald-500 leading-none">
+                                {Number(animatedBookings).toLocaleString()}+
+                            </span>
+                        )}
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Successful Bookings</span>
                     </div>
                 </div>
 
                 {/* Stat 3 */}
-                <div className="flex items-center gap-4 justify-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#f0fdf4] text-green-500  shrink-0">
-                        <HiOutlineMapPin className="w-6 h-6" />
+                <div className="flex items-center gap-4 justify-center md:justify-center group cursor-default transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-green-50 text-green-500 shrink-0 group-hover:bg-green-100 transition-colors">
+                        <HiOutlineMapPin className="w-7 h-7" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">Across</span>
+                        <span className="text-2xl md:text-3xl font-mono font-semibold bg-clip-text text-transparent bg-gradient-to-r from-gray-700 to-gray-500 leading-none">Across</span>
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Western Province</span>
                     </div>
                 </div>
 
                 {/* Stat 4 */}
-                <div className="flex items-center gap-4 justify-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#f0fdf4] text-green-500  shrink-0">
-                        <HiStar className="w-6 h-6 text-[#16a34a]" />
+                <div className="flex items-center gap-4 justify-center md:justify-end md:pr-8 group cursor-default transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-green-50 text-green-500 shrink-0 group-hover:bg-green-100 transition-colors">
+                        <HiStar className="w-7 h-7 text-[#16a34a]" />
                     </div>
                     <div className="flex flex-col items-start">
-                        <span className="text-2xl md:text-3xl font-mono font-semibold text-gray-900 leading-none">4.8 <span className="text-sm font-normal text-gray-400">/ 5</span></span>
+                        {stats.averageRating === "..." ? (
+                            <div className="animate-pulse bg-gray-200 h-8 w-16 rounded mb-1"></div>
+                        ) : (
+                            <span className="text-2xl md:text-3xl font-mono font-semibold bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-emerald-500 leading-none">
+                                {animatedRating.toFixed(1)} <span className="text-sm font-normal text-gray-400">/ 5</span>
+                            </span>
+                        )}
                         <span className="text-xs md:text-sm text-gray-500 font-mono font-semibold mt-1">Average Rating</span>
                     </div>
                 </div>
@@ -297,32 +425,29 @@ const About = () => {
 
             {/* Testimonials Carousel Container */}
             <div className="relative w-full max-w-7xl mx-auto overflow-hidden px-4 mb-4">
-                <div 
+                <div
                     className="flex transition-transform duration-500 ease-in-out"
                     style={{ transform: getTransformStyle() }}
                 >
                     {extendedTestimonials.map((t, idx) => {
                         const isCenter = idx === activeIndex;
                         return (
-                            <div 
-                                key={idx} 
-                                className={`w-[80%] md:w-1/3 shrink-0 px-3 transition-all duration-500 ${
-                                    isCenter ? 'opacity-100 scale-100 z-10' : 'opacity-60 scale-95 z-0'
-                                }`}
+                            <div
+                                key={idx}
+                                className={`w-[80%] md:w-1/3 shrink-0 px-3 transition-all duration-500 ${isCenter ? 'opacity-100 scale-100 z-10' : 'opacity-60 scale-95 z-0'
+                                    }`}
                             >
-                                <div className={`h-full border rounded-3xl p-8 shadow-sm transition-all duration-500 flex flex-col justify-between items-start text-left min-h-[240px] ${
-                                    isCenter ? 'bg-white border-[#16a34a] shadow-md' : 'bg-white border-[#f1f5f9]'
-                                }`}>
+                                <div className={`h-full border rounded-3xl p-8 shadow-sm transition-all duration-500 flex flex-col justify-between items-start text-left min-h-[240px] ${isCenter ? 'bg-white border-[#16a34a] shadow-md' : 'bg-white border-[#f1f5f9]'
+                                    }`}>
                                     <div>
                                         <div className="flex gap-1 mb-4">
                                             {[1, 2, 3, 4, 5].map((s) => (
                                                 <HiStar
                                                     key={s}
-                                                    className={`w-5 h-5 ${
-                                                        s <= (t.stars || 5)
+                                                    className={`w-5 h-5 ${s <= (t.stars || 5)
                                                             ? "fill-yellow-400 text-yellow-400"
                                                             : "fill-gray-200 text-gray-200"
-                                                    }`}
+                                                        }`}
                                                 />
                                             ))}
                                         </div>
@@ -365,9 +490,8 @@ const About = () => {
                         <button
                             key={idx}
                             onClick={() => handleDotClick(idx)}
-                            className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
-                                isActive ? 'bg-[#16a34a] scale-125' : 'bg-gray-200 hover:bg-gray-300'
-                            }`}
+                            className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${isActive ? 'bg-[#16a34a] scale-125' : 'bg-gray-200 hover:bg-gray-300'
+                                }`}
                             aria-label={`Go to slide ${idx + 1}`}
                         />
                     );

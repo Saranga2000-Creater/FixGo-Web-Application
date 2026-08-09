@@ -17,7 +17,7 @@ const FONT = "'Segoe UI', system-ui, sans-serif";
 const STATUS_META = {
     Pending:         { icon: faClock,        iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending"       },
     Accepted:        { icon: faCircleCheck,  iconBg: "rgba(37,99,235,0.10)",  iconColor: "#2563EB", badgeBg: "rgba(37,99,235,0.10)",  badgeColor: "#2563EB",  label: "Accepted"      },
-    Confirmed:       { icon: faHandshake,    iconBg: "rgba(13,148,136,0.10)", iconColor: "#0D9488", badgeBg: "rgba(13,148,136,0.10)", badgeColor: "#0D9488",  label: "Confirmed"     },
+    Confirmed:       { icon: faHandshake,    iconBg: "rgba(22, 163, 74,0.10)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A",  label: "Confirmed"     },
     Diagnosis:       { icon: faStethoscope,  iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Diagnosis"     },
     "In Progress":   { icon: faWrench,       iconBg: "rgba(168,85,247,0.10)", iconColor: "#A855F7", badgeBg: "rgba(168,85,247,0.10)", badgeColor: "#A855F7",  label: "In Progress"   },
     "Pending Parts": { icon: faBoxesStacked, iconBg: "rgba(217,119,6,0.10)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "Pending Parts" },
@@ -153,16 +153,16 @@ const TowTruckCard = ({ notif }) => {
         <div
             className="mt-3.5 border rounded-2xl py-4 px-[18px] flex flex-col gap-3"
             style={{
-                background: "linear-gradient(135deg, rgba(13,148,136,0.06) 0%, rgba(22,163,74,0.06) 100%)",
-                borderColor: "rgba(13,148,136,0.25)",
+                background: "linear-gradient(135deg, rgba(22, 163, 74,0.06) 0%, rgba(22,163,74,0.06) 100%)",
+                borderColor: "rgba(22, 163, 74,0.25)",
             }}
         >
             <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(13,148,136,0.12)" }}>
-                    <FontAwesomeIcon icon={faTruckPickup} className="text-sm" style={{ color: "#0D9488" }} />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(22, 163, 74,0.12)" }}>
+                    <FontAwesomeIcon icon={faTruckPickup} className="text-sm" style={{ color: "#16A34A" }} />
                 </div>
                 <div>
-                    <p className="text-[13px] font-bold m-0" style={{ color: "#0D9488" }}>
+                    <p className="text-[13px] font-bold m-0" style={{ color: "#16A34A" }}>
                         Tow Truck Service Included
                     </p>
                     <p className="text-[11px] text-gray-500 m-0">
@@ -174,8 +174,8 @@ const TowTruckCard = ({ notif }) => {
                 <span
                     className="ml-auto rounded-full py-0.5 px-2.5 text-[10px] font-bold flex-shrink-0"
                     style={{
-                        background: hasDetails ? "rgba(13,148,136,0.12)" : "rgba(217,119,6,0.10)",
-                        color: hasDetails ? "#0D9488" : "#D97706",
+                        background: hasDetails ? "rgba(22, 163, 74,0.12)" : "rgba(217,119,6,0.10)",
+                        color: hasDetails ? "#16A34A" : "#D97706",
                     }}
                 >
                     {hasDetails ? "En Route" : "Arranging"}
@@ -184,7 +184,7 @@ const TowTruckCard = ({ notif }) => {
 
             {hasDetails && (
                 <>
-                    <div className="h-px" style={{ background: "rgba(13,148,136,0.15)" }} />
+                    <div className="h-px" style={{ background: "rgba(22, 163, 74,0.15)" }} />
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                         {notif.dispatched_driver_name  && <DetailRow icon={faUser}        label="Driver"    value={notif.dispatched_driver_name} />}
                         {notif.dispatched_driver_phone && <DetailRow icon={faPhone}       label="Contact"   value={notif.dispatched_driver_phone} isPhone />}
@@ -192,9 +192,9 @@ const TowTruckCard = ({ notif }) => {
                         {notif.dispatched_truck_plate  && <DetailRow icon={faIdCard}      label="Plate No." value={notif.dispatched_truck_plate} isMono />}
                     </div>
                     {notif.promised_eta && notif.promised_eta > 0 && (
-                        <div className="flex items-center gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(13,148,136,0.08)" }}>
-                            <FontAwesomeIcon icon={faClock} className="text-xs" style={{ color: "#0D9488" }} />
-                            <span className="text-xs font-semibold" style={{ color: "#0D9488" }}>
+                        <div className="flex items-center gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(22, 163, 74,0.08)" }}>
+                            <FontAwesomeIcon icon={faClock} className="text-xs" style={{ color: "#16A34A" }} />
+                            <span className="text-xs font-semibold" style={{ color: "#16A34A" }}>
                                 Estimated arrival: <strong>{notif.promised_eta} minutes</strong>
                             </span>
                         </div>
@@ -215,7 +215,7 @@ const TowTruckCard = ({ notif }) => {
             )}
 
             {notif.pickup_landmark && (
-                <div className="flex items-start gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(13,148,136,0.05)" }}>
+                <div className="flex items-start gap-2 rounded-[10px] py-2 px-3" style={{ background: "rgba(22, 163, 74,0.05)" }}>
                     <span className="text-[11px] text-gray-500 font-semibold">📍 Pickup:</span>
                     <span className="text-[11px] text-gray-700">{notif.pickup_landmark}</span>
                 </div>
@@ -226,13 +226,13 @@ const TowTruckCard = ({ notif }) => {
 
 const DetailRow = ({ icon, label, value, isPhone, isMono }) => (
     <div className="flex items-start gap-2">
-        <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-px" style={{ background: "rgba(13,148,136,0.1)" }}>
-            <FontAwesomeIcon icon={icon} className="text-[10px]" style={{ color: "#0D9488" }} />
+        <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-px" style={{ background: "rgba(22, 163, 74,0.1)" }}>
+            <FontAwesomeIcon icon={icon} className="text-[10px]" style={{ color: "#16A34A" }} />
         </div>
         <div>
             <p className="text-[10px] text-gray-400 m-0 font-semibold uppercase tracking-[0.04em]">{label}</p>
             {isPhone ? (
-                <a href={`tel:${value}`} className="text-xs font-bold no-underline" style={{ color: "#0D9488" }}>{value}</a>
+                <a href={`tel:${value}`} className="text-xs font-bold no-underline" style={{ color: "#16A34A" }}>{value}</a>
             ) : (
                 <p
                     className="text-xs text-gray-700 font-bold m-0"
@@ -284,10 +284,31 @@ export function useUnreadCount() {
 }
 
 // ── Main Notification component ───────────────────────────────────────────────
-export default function Notification() {
+export default function Notification({ initialSelectedId, onClearSelection }) {
     const navigate   = useNavigate();
 
     const [notifications, setNotifications]   = useState([]);
+    const [highlightedId, setHighlightedId]   = useState(initialSelectedId);
+
+    useEffect(() => {
+        if (initialSelectedId) {
+            markRead(initialSelectedId);
+            setActiveTab("all");
+            setHighlightedId(initialSelectedId);
+            setTimeout(() => {
+                const element = document.getElementById(`notif-${initialSelectedId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 150);
+
+            const timer = setTimeout(() => {
+                setHighlightedId(null);
+                if (onClearSelection) onClearSelection();
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [initialSelectedId, onClearSelection]);
     const [loading, setLoading]               = useState(true);
     const [activeTab, setActiveTab]           = useState("all");
     const [confirming, setConfirming]         = useState(null);
@@ -308,7 +329,7 @@ export default function Notification() {
     if (!userId) return;
     const fetchReviewed = async () => {
         try {
-            const data = await api.get("getCustomerReviews.php");
+            const data = await api.get("customer/getCustomerReviews.php");
             if (data.success) {
                 const ids = (data.data || []).map(r => String(r.service_request_id));
                 setReviewedIds(ids);
@@ -466,8 +487,11 @@ export default function Notification() {
                      onClose={() => setReviewModal(null)}
                     serviceRequestId={reviewModal.requestId}
                     shopId={reviewModal.shopId}
-                    shopName={reviewModal.shopName}
-                    onSubmitted={(requestId) => setReviewedIds(prev => [...prev, String(requestId)])}
+                    onSubmitted={(requestId) => {
+                        setReviewedIds(prev => [...prev, String(requestId)]);
+                        const targetNotif = notifications.find(n => String(n.service_request_id) === String(requestId));
+                        if (targetNotif) markRead(targetNotif.id);
+                    }}
                 />
             )}
 
@@ -539,14 +563,23 @@ export default function Notification() {
                         const isDeclined   = localDeclined.includes(String(notif.service_request_id))
                             || notif.current_status === "Cancelled";
                         const hasTow       = notif.requires_tow == 1;
+                        const isHighlighted = String(notif.id) === String(highlightedId);
                         return (
                             <div
+                                id={`notif-${notif.id}`}
                                 key={notif.id}
                                 onClick={() => !isRead && markRead(notif.id)}
-                                className={`flex items-start gap-4 py-5 px-6 cursor-pointer transition-colors duration-150
+                                className={`flex items-start gap-4 py-5 px-6 cursor-pointer transition-all duration-300
                                     ${isLast ? "border-b-0" : "border-b border-gray-100"}
                                     ${!isRead ? "hover:bg-[#F0FDF4]" : "hover:bg-gray-50"}`}
-                                style={{ background: !isRead ? "#F0FDF4" : "#FFFFFF" }}
+                                style={{ 
+                                    background: isHighlighted 
+                                        ? "rgba(22,163,74,0.08)" 
+                                        : !isRead ? "#F0FDF4" : "#FFFFFF",
+                                    borderLeft: isHighlighted
+                                        ? "4px solid #16A34A"
+                                        : "4px solid transparent"
+                                }}
                             >
                                 {/* Status Icon */}
                                 <div
@@ -682,7 +715,7 @@ export default function Notification() {
                                         <>
                                             {hasTow && <TowTruckCard notif={notif} />}
                                             <div className={`flex flex-wrap items-center justify-between gap-2.5 ${hasTow ? "mt-2.5" : "mt-0"}`}>
-                                                <p className="text-xs m-0" style={{ color: "#0D9488" }}>
+                                                <p className="text-xs m-0" style={{ color: "#16A34A" }}>
                                                     {hasTow
                                                         ? <>🚛 Your tow truck is on the way! Track progress in the <strong>Repair Status</strong> tab.</>
                                                         : <>🏪 Please bring your vehicle to the shop. Track progress in the <strong>Repair Status</strong> tab.</>
