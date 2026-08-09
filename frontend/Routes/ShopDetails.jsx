@@ -79,7 +79,7 @@ function ShopDetails() {
     const fetchShopDetails = async () => {
       try {
         setLoading(true);
-        const data = await api.getOptionalAuth('getShopDetails.php', { id });
+        const data = await api.getOptionalAuth('shop-details/getShopDetails.php', { id });
         setShop(data.data);
       } catch (err) {
         setError(err.message || "Shop not found.");

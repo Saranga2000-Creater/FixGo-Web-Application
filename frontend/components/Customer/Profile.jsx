@@ -143,7 +143,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         api.get("customer/getVehicles.php").then(res => {
             if (res.success) setVehicles(res.vehicles || []);
         });
-        api.get("getCategories.php").then(res => {
+        api.get("search/getCategories.php").then(res => {
             if (res.vehicles) setVehicleCategories(res.vehicles);
         });
     }, []);
