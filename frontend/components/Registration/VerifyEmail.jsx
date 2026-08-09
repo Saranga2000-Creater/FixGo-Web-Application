@@ -20,7 +20,7 @@ export default function VerifyEmail() {
 
         setStatus("loading");
         try {
-            const data = await api.postPublic('verifyEmail.php', { token: otp });
+            const data = await api.postPublic('auth/verifyEmail.php', { token: otp });
             setStatus("success");
             setMessage(data.message || "Your email has been verified successfully!");
         } catch (err) {

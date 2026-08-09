@@ -32,7 +32,7 @@ const ResetPassword = () => {
         setLoading(true);
 
         try {
-            const data = await api.postPublic('resetPassword.php', { otp: otp.trim(), password });
+            const data = await api.postPublic('auth/resetPassword.php', { otp: otp.trim(), password });
             setSuccess(true);
             setMessage(data.message || 'Password updated successfully!');
             setTimeout(() => {

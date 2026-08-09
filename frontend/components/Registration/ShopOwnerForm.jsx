@@ -220,7 +220,7 @@ export default function ShopForm() {
         payload.append("towTruckPlate", formData.towTruckPlate);
 
         try {
-            await api.postPublic('registerShop.php', payload);
+            await api.postPublic('auth/registerShop.php', payload);
             setSuccess(true);
             setTimeout(() => {
                 navigate("/verify-email");
