@@ -64,7 +64,7 @@ export function useUnreadCount() {
 
     const fetchCount = useCallback(async () => {
         try {
-            const res = await api.get(`getNotifications.php?_t=${Date.now()}`);
+            const res = await api.get(`shared/getNotifications.php?_t=${Date.now()}`);
             if (res.success) {
                 const unread = (res.data || res.notifications || []).filter(n => Number(n.isRead) === 0).length;
                 setCount(unread);
@@ -89,7 +89,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
     const [highlightedId, setHighlightedId] = useState(initialSelectedId || null);
 
     const loadNotifications = useCallback(() => {
-        api.get(`getNotifications.php?_t=${Date.now()}`)
+        api.get(`shared/getNotifications.php?_t=${Date.now()}`)
             .then((data) => {
                 if (!data || !data.success) return;
                 const formatted = (data.data || []).map((item) => {
@@ -174,7 +174,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
             prev.map((n) => (n.id === String(id) ? { ...n, isUnread: false } : n))
         );
 
-        api.post("markNotificationRead.php", { notification_id: id })
+        api.post("shared/markNotificationRead.php", { notification_id: id })
             .then(() => {
                 window.dispatchEvent(new Event("fixgo_unread_changed"));
             })
@@ -184,7 +184,7 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
     const markAllAsRead = () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
 
-        api.post("markNotificationRead.php", { mark_all: true })
+        api.post("shared/markNotificationRead.php", { mark_all: true })
             .then(() => {
                 window.dispatchEvent(new Event("fixgo_unread_changed"));
             })

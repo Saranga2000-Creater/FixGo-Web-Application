@@ -74,7 +74,7 @@ export const NavBar = () => {
     const fetchNotifications = async () => {
         if (!token) return;
         try {
-            const data = await api.get("getNotifications.php");
+            const data = await api.get("shared/getNotifications.php");
             if (data.success) {
                 const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled", "Declined"];
                 const raw = data.data || [];
@@ -115,7 +115,7 @@ export const NavBar = () => {
         e.stopPropagation();
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: 1 } : n));
         try {
-            await api.post("markNotificationRead.php", { notification_id: id });
+            await api.post("shared/markNotificationRead.php", { notification_id: id });
             window.dispatchEvent(new Event("fixgo_unread_changed"));
         } catch (err) {
             console.error("Error marking notification read in NavBar:", err);
@@ -126,7 +126,7 @@ export const NavBar = () => {
         e.stopPropagation();
         setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })));
         try {
-            await api.post("markNotificationRead.php", { mark_all: true });
+            await api.post("shared/markNotificationRead.php", { mark_all: true });
             window.dispatchEvent(new Event("fixgo_unread_changed"));
         } catch (err) {
             console.error("Error marking all read in NavBar:", err);

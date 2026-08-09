@@ -96,7 +96,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const updateStatus = async (requestId, status) => {
     try {
-      const data = await api.post("updateStatus.php", {
+      const data = await api.post("shared/updateStatus.php", {
         request_id: requestId,
         new_status: status,
       });

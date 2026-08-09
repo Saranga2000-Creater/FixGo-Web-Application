@@ -263,7 +263,7 @@ export function useUnreadCount() {
 
         const fetchAndCount = async () => {
             try {
-                const data = await api.get("getNotifications.php");
+                const data = await api.get("shared/getNotifications.php");
                 if (data.success) {
                     const unread = (data.data || []).filter(n => Number(n.isRead) === 0).length;
                     setCount(unread);
@@ -343,7 +343,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
 
     const fetchNotifs = useCallback(async () => {
         try {
-            const data = await api.get("getNotifications.php");
+            const data = await api.get("shared/getNotifications.php");
             if (data.success) {
                 const filtered = (data.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
                 setNotifications(filtered);
@@ -370,7 +370,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
     const markRead = async (notificationId) => {
         setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: 1 } : n));
         try {
-            await api.post("markNotificationRead.php", { notification_id: notificationId });
+            await api.post("shared/markNotificationRead.php", { notification_id: notificationId });
         } catch (err) {
             console.error("Mark read error:", err);
         } finally {
@@ -381,7 +381,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
     const markAllRead = async () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })));
         try {
-            await api.post("markNotificationRead.php", { mark_all: true });
+            await api.post("shared/markNotificationRead.php", { mark_all: true });
         } catch (err) {
             console.error("Mark all read error:", err);
         } finally {
@@ -394,7 +394,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
         const requestId = notif.service_request_id;
         setConfirming(notif.id);
         try {
-            const data = await api.post("updateStatus.php", {
+            const data = await api.post("shared/updateStatus.php", {
                 request_id: requestId,
                 new_status: "Confirmed",
             });
@@ -425,7 +425,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
         const { requestId, notifId } = declineModal;
         setDeclining(requestId);
         try {
-            await api.post("updateStatus.php", {
+            await api.post("shared/updateStatus.php", {
                 request_id: requestId,
                 new_status: "Cancelled",
                 reason: "Customer declined the booking.",

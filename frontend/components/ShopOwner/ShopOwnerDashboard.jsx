@@ -265,7 +265,7 @@ useEffect(() => {
 
 useEffect(() => {
     const loadNotificationCount = () => {
-        api.get("getNotifications.php")
+        api.get("shared/getNotifications.php")
         .then(data => {
             if (data.success) {
                 const unread = (data.data || []).filter(
