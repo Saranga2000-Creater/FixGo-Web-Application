@@ -21,7 +21,7 @@ function AdminControlDashboard() {
         try {
             const [payRes, shopRes] = await Promise.allSettled([
                 api.get("admin/getPendingVerifications.php"),
-                api.get("getPendingShops.php")
+                api.get("admin/getPendingShops.php")
             ]);
             
             const payCount = payRes.status === "fulfilled" ? (payRes.value.data?.length || 0) : 0;
