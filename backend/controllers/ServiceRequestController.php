@@ -564,27 +564,6 @@ public function updateTowTruckDetails($payload)
     }
 }
 
-    // ==========================================
-    // CUSTOMER-SIDE HISTORY
-    // ==========================================
-
-    public function handleGetCustomerServiceHistory($payload)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
-
-    $customer_id = $payload['user_id'];
-        $history = $this->serviceRequestModel->getServiceHistoryByCustomer($customer_id);
-
-        http_response_code(200);
-        return json_encode([
-            "success" => true,
-            "data"    => $history
-        ]);
-    }
 
     public function handleGetServiceRequestVolume($payload)
     {
