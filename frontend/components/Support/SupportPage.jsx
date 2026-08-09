@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { HiStar } from "react-icons/hi2";
-import { FaPhoneAlt, FaEnvelope, FaClock, FaMapMarkerAlt, FaLinkedinIn, FaBook, FaCalendarAlt, FaCar, FaShieldAlt, FaHandshake, FaArrowRight, FaHeadset, FaPaperPlane, FaCheckCircle, FaBolt, FaTools } from "react-icons/fa";
+import { FaPhoneAlt, FaEnvelope, FaClock, FaMapMarkerAlt, FaLinkedinIn, FaBook, FaCalendarAlt, FaCar, FaShieldAlt, FaHandshake, FaArrowRight, FaHeadset, FaPaperPlane, FaCheckCircle, FaBolt, FaTools, FaLock } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { api, UPLOADS_URL } from "../../src/services/api";
 
 import sahanImg from "../../src/assets/sahan_kavinda.jpeg";
 import sanduniImg from "../../src/assets/sanduni_jayawardhana.jpeg";
@@ -449,47 +451,102 @@ const heroFeatures = [
   },
 ];
 
-// ─── Testimonials Data (shared with homepage) ────────────────────────────────
-const testimonials = [
-  {
-    name: "Nuwan Perera", location: "Colombo", stars: 5,
-    text: "Found a great garage near me in minutes. The booking process was super easy!",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
-  },
-  {
-    name: "Dilini Fernando", location: "Kandy", stars: 5,
-    text: "Excellent service and transparent pricing. Highly recommended FixGo!",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80",
-  },
-  {
-    name: "Tharindu Silva", location: "Galle", stars: 5,
-    text: "Their roadside assistance saved me during an emergency. Very professional!",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80",
-  },
-];
-
 // ─── Review Section ───────────────────────────────────────────────────────────
 const ReviewSection = () => {
-  const extended = [...testimonials, ...testimonials, ...testimonials];
-  const [activeIndex, setActiveIndex] = useState(3);
+  const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [hoverStar, setHoverStar] = useState(0);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
-  const [reviewName, setReviewName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const isLoggedIn = !!localStorage.getItem("jwt_token");
+
+  const loadPlatformReviews = async () => {
+    setLoading(true);
+    try {
+      const res = await api.getPublic("getPlatformReviews.php");
+      if (res && res.success && Array.isArray(res.data)) {
+        setReviews(res.data);
+        if (res.data.length >= 3) {
+          setActiveIndex(3);
+        } else if (res.data.length > 0) {
+          setActiveIndex(0);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load platform reviews:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setActiveIndex((i) => (i === 5 ? 3 : i + 1));
-    }, 4000);
-    return () => clearInterval(t);
+    loadPlatformReviews();
   }, []);
 
-  const handleSubmit = (e) => {
+  const activeTestimonials = reviews;
+  const extended = reviews.length >= 3
+    ? [...reviews, ...reviews, ...reviews]
+    : reviews;
+
+  useEffect(() => {
+    if (activeTestimonials.length <= 1) return;
+
+    const t = setInterval(() => {
+      setActiveIndex((i) => {
+        const maxIdx = activeTestimonials.length >= 3 ? activeTestimonials.length + 2 : activeTestimonials.length - 1;
+        const resetIdx = activeTestimonials.length >= 3 ? 3 : 0;
+        if (i >= maxIdx) return resetIdx;
+        return i + 1;
+      });
+    }, 4000);
+    return () => clearInterval(t);
+  }, [activeTestimonials.length]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!rating) return;
-    setSubmitted(true);
-    setTimeout(() => { setSubmitted(false); setRating(0); setReviewText(""); setReviewName(""); }, 4000);
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    if (!rating) {
+      setErrorMsg("Please select a star rating.");
+      return;
+    }
+    if (!reviewText.trim()) {
+      setErrorMsg("Please enter your review text.");
+      return;
+    }
+
+    setErrorMsg("");
+    setSubmitting(true);
+
+    try {
+      await api.post("submitPlatformReview.php", {
+        rating,
+        comment: reviewText.trim(),
+      });
+      setSubmitted(true);
+      setRating(0);
+      setReviewText("");
+      loadPlatformReviews();
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to submit review. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return null;
+    if (avatar.startsWith("http://") || avatar.startsWith("https://") || avatar.startsWith("data:")) return avatar;
+    return `${UPLOADS_URL}/${avatar}`;
   };
 
   return (
@@ -522,13 +579,26 @@ const ReviewSection = () => {
                             <HiStar key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           ))}
                         </div>
-                        <p className="text-gray-600 text-xs leading-relaxed">&ldquo;{t.text}&rdquo;</p>
+                        <p className="text-gray-600 text-xs leading-relaxed line-clamp-4">&ldquo;{t.text}&rdquo;</p>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <img src={t.avatar} alt={t.name} className="w-9 h-9 rounded-full object-cover border-2 border-green-100" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-xs">{t.name}</p>
-                          <p className="text-gray-400 text-[10px]">{t.location}</p>
+                        {getAvatarUrl(t.avatar) ? (
+                          <img
+                            src={getAvatarUrl(t.avatar)}
+                            alt={t.name}
+                            className="w-9 h-9 rounded-full object-cover border-2 border-green-100 shrink-0"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                          />
+                        ) : null}
+                        <div
+                          className="w-9 h-9 rounded-full bg-gray-100 border-2 border-gray-200 shrink-0 items-center justify-center text-gray-400 text-xs font-bold"
+                          style={{ display: getAvatarUrl(t.avatar) ? 'none' : 'flex' }}
+                        >
+                          {(t.name || '?')[0].toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-gray-900 text-xs truncate">{t.name}</p>
+                          <p className="text-gray-400 text-[10px] truncate">{t.location || "Sri Lanka"}</p>
                         </div>
                       </div>
                     </div>
@@ -539,8 +609,8 @@ const ReviewSection = () => {
           </div>
           {/* Dots */}
           <div className="flex justify-center gap-2 py-4">
-            {testimonials.map((_, idx) => {
-              const isActive = (activeIndex % 3) === idx;
+            {activeTestimonials.map((_, idx) => {
+              const isActive = (activeIndex % activeTestimonials.length) === idx;
               return (
                 <button
                   key={idx}
@@ -561,8 +631,26 @@ const ReviewSection = () => {
           </div>
           <p className="text-gray-400 text-xs mb-5">Share your experience with FixGo</p>
 
-          {submitted ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+          {!isLoggedIn ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-8 text-center bg-gray-50 rounded-xl p-5 border border-dashed border-gray-200">
+              <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-[#16a34a]">
+                <FaLock className="text-xl" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Members Only</p>
+                <p className="text-gray-500 text-xs mt-1 leading-relaxed">
+                  Only registered users can leave a review. Sign in to share your experience with FixGo!
+                </p>
+              </div>
+              <Link
+                to="/login"
+                className="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold py-2.5 rounded-xl text-xs transition-all shadow-md shadow-green-100 text-center block mt-1"
+              >
+                Sign In to Write a Review
+              </Link>
+            </div>
+          ) : submitted ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center animate-fade-in">
               <div className="w-14 h-14 rounded-full bg-green-50 border border-green-200 flex items-center justify-center">
                 <FaCheckCircle className="text-[#16a34a] text-2xl" />
               </div>
@@ -571,19 +659,11 @@ const ReviewSection = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              {/* Name */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Your Name</label>
-                <input
-                  id="review-name"
-                  type="text"
-                  required
-                  placeholder="Enter your name"
-                  value={reviewName}
-                  onChange={(e) => setReviewName(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/30 focus:border-[#16a34a] bg-gray-50 transition-all"
-                />
-              </div>
+              {errorMsg && (
+                <div className="bg-red-50 border border-red-100 text-red-600 rounded-lg text-xs p-2.5">
+                  {errorMsg}
+                </div>
+              )}
 
               {/* Star Rating */}
               <div className="flex flex-col gap-1">
@@ -601,8 +681,8 @@ const ReviewSection = () => {
                     >
                       <HiStar
                         className={`w-7 h-7 transition-colors ${s <= (hoverStar || rating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-gray-200 text-gray-200"
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "fill-gray-200 text-gray-200"
                           }`}
                       />
                     </button>
@@ -617,7 +697,7 @@ const ReviewSection = () => {
                   id="review-text"
                   required
                   rows={4}
-                  placeholder="Tell others about your experience..."
+                  placeholder="Tell others about your experience with FixGo..."
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
                   className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/30 focus:border-[#16a34a] bg-gray-50 resize-none transition-all"
@@ -627,10 +707,11 @@ const ReviewSection = () => {
               <button
                 id="submit-review-btn"
                 type="submit"
-                className="flex items-center justify-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold py-2.5 rounded-xl text-sm transition-all shadow-md shadow-green-100 active:scale-[0.98]"
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-semibold py-2.5 rounded-xl text-sm transition-all shadow-md shadow-green-100 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
               >
                 <FaPaperPlane className="text-xs" />
-                Submit Review
+                {submitting ? "Submitting..." : "Submit Review"}
               </button>
             </form>
           )}
