@@ -34,10 +34,18 @@ class Notification {
                 sr.promised_eta,
                 sr.pickup_landmark,
                 sr.created_at,
-                s.name AS shop_name
+                sr.description AS request_description,
+                sr.vehicle_color,
+                sr.urgency_level,
+                sr.preferred_date,
+                sr.preferred_time,
+                sr.issue_category,
+                s.name AS shop_name,
+                c.name AS customer_name
              FROM notification n
              LEFT JOIN servicerequest sr ON n.service_request_id = sr.id
              LEFT JOIN shop s ON sr.shop_id = s.id
+             LEFT JOIN customer c ON sr.customer_id = c.id
              WHERE n.user_id = :user_id
              ORDER BY n.id DESC"
         );

@@ -218,8 +218,8 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`rounded-full py-1.5 px-4 text-xs font-semibold cursor-pointer transition-all duration-150 border-none ${active
-                                        ? "bg-green-600 text-white shadow-sm"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    ? "bg-green-600 text-white shadow-sm"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
                             >
                                 {tab.label} {count > 0 && <span className="ml-1 opacity-80">({count})</span>}
@@ -254,6 +254,8 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                         let isRequestMoved = false;
                         if (notif.statusKey === "NewRequest") {
                             isRequestMoved = ["CONFIRMED", "DIAGNOSIS", "PENDING PARTS", "IN PROGRESS", "COMPLETED"].includes(statusUpper);
+                        } else if (notif.statusKey === "NewReview") {
+                            isRequestMoved = false;
                         } else {
                             isRequestMoved = ["COMPLETED", "CANCELLED", "CANCELED", "DECLINED"].includes(statusUpper);
                         }
@@ -264,10 +266,10 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                 id={`notif-card-${notif.id}`}
                                 onClick={() => markAsRead(notif.id)}
                                 className={`bg-white border rounded-2xl p-5 shadow-xs transition-all duration-300 relative cursor-pointer ${isHighlighted
-                                        ? "border-2 border-green-500 shadow-lg shadow-green-500/20 scale-[1.01]"
-                                        : notif.isUnread
-                                            ? "border-green-200/80 bg-green-50/10 hover:border-green-300"
-                                            : "border-gray-100 hover:border-gray-200"
+                                    ? "border-2 border-green-500 shadow-lg shadow-green-500/20 scale-[1.01]"
+                                    : notif.isUnread
+                                        ? "border-green-200/80 bg-green-50/10 hover:border-green-300"
+                                        : "border-gray-100 hover:border-gray-200"
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
@@ -320,37 +322,42 @@ export default function Notification({ setActiveNav, initialSelectedId, onClearS
                                                 )}
                                             </div>
 
-                                         {meta.targetNav && setActiveNav && (
-    <button
-        disabled={isRequestMoved}
-        onClick={(e) => {
-            e.stopPropagation();
+                                            {meta.targetNav && setActiveNav && (
+                                                <button
+                                                    disabled={isRequestMoved}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
 
-            if (isRequestMoved) return;
+                                                        if (isRequestMoved) return;
 
-            markAsRead(notif.id);
-            setActiveNav(meta.targetNav);
-        }}
-        className={`inline-flex items-center gap-1.5 text-xs font-bold bg-transparent border-none p-0 ${
-            isRequestMoved
-                ? "text-gray-400 cursor-not-allowed no-underline"
-                : "text-green-600 hover:text-green-700 hover:underline cursor-pointer"
-        }`}
-    >
-        <span>
-            {isRequestMoved
-                ? "Request Moved"
-                : meta.buttonText || "View details"}
-        </span>
+                                                        markAsRead(notif.id);
+                                                        setActiveNav(meta.targetNav);
 
-        {!isRequestMoved && (
-            <FontAwesomeIcon
-                icon={faChevronRight}
-                className="text-[10px]"
-            />
-        )}
-    </button>
-)}
+                                                        if (notif.statusKey === "NewReview") {
+                                                            setTimeout(() => {
+                                                                window.dispatchEvent(new CustomEvent("fixgo_highlight_review", { detail: notif.serviceRequestId }));
+                                                            }, 100);
+                                                        }
+                                                    }}
+                                                    className={`inline-flex items-center gap-1.5 text-xs font-bold bg-transparent border-none p-0 ${isRequestMoved
+                                                            ? "text-gray-400 cursor-not-allowed no-underline"
+                                                            : "text-green-600 hover:text-green-700 hover:underline cursor-pointer"
+                                                        }`}
+                                                >
+                                                    <span>
+                                                        {isRequestMoved
+                                                            ? "Request Moved"
+                                                            : meta.buttonText || "View details"}
+                                                    </span>
+
+                                                    {!isRequestMoved && (
+                                                        <FontAwesomeIcon
+                                                            icon={faChevronRight}
+                                                            className="text-[10px]"
+                                                        />
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

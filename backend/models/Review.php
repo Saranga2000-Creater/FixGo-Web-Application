@@ -48,7 +48,7 @@ class Review {
 }
     public function getByShop($shopId) {
         $stmt = $this->db->prepare("
-            SELECT r.id, r.rating, r.comment, r.created_at,
+            SELECT r.id, r.service_request_id, r.rating, r.comment, r.created_at,
                    c.name AS customer_name
             FROM review r
             JOIN customer c ON c.id = r.customer_id

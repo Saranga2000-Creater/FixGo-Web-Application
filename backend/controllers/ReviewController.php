@@ -66,6 +66,26 @@ class ReviewController {
 
             $reviewId = $this->review->create($customerId, $shopId, $serviceRequestId, $rating, $comment);
 
+            // Create notification for the shop owner
+            try {
+                $stmtName = $this->review->getDb()->prepare("SELECT name FROM customer WHERE id = ?");
+                $stmtName->execute([$customerId]);
+                $userRow = $stmtName->fetch(PDO::FETCH_ASSOC);
+                $customerName = $userRow['name'] ?? 'A customer';
+
+                $notifStmt = $this->review->getDb()->prepare(
+                    "INSERT INTO notification (user_id, service_request_id, type, title, message, isRead)
+                     VALUES (:user_id, :request_id, :type, :title, :message, 0)"
+                );
+                $notifStmt->execute([
+                    'user_id'    => $shopId,
+                    'request_id' => $serviceRequestId,
+                    'type'       => 'NewReview',
+                    'title'      => 'New Review from ' . $customerName,
+                    'message'    => 'Has submitted a review and rating for your service.'
+                ]);
+            } catch (Throwable $t) {}
+
             // Mark the customer's notification for this service request as read
             try {
                 $markStmt = $this->review->getDb()->prepare("UPDATE notification SET isRead = 1 WHERE service_request_id = :req_id AND user_id = :user_id");
