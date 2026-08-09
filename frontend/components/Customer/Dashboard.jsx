@@ -98,7 +98,7 @@ function Dashboard({ onNavigate }) {
 
                 let unreadCount = 0;
                 try {
-                    const notifData = await api.get("getNotifications.php");
+                    const notifData = await api.get("shared/getNotifications.php");
                     if (notifData.success) {
                         const notifItems = (notifData.data || []).filter(r => NOTIF_WORTHY.includes(r.status));
                         unreadCount = notifItems.filter(n => Number(n.isRead) === 0).length;

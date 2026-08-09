@@ -158,7 +158,7 @@ export const ServiceRequestModal = ({ isOpen, onClose, shop, distance, initialNe
                 pickup_landmark: requiresTow ? pickupLandmark : null
             };
 
-            const data = await api.post('createServiceRequest.php', requestData);
+            const data = await api.post('shop-details/createServiceRequest.php', requestData);
             setReferenceId(formatReferenceId(data.request_id));
             setStep(3);
 

@@ -96,7 +96,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const updateStatus = async (requestId, status) => {
     try {
-      const data = await api.post("updateStatus.php", {
+      const data = await api.post("shared/updateStatus.php", {
         request_id: requestId,
         new_status: status,
       });
@@ -124,7 +124,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const fetchRequests = async () => {
     try {
-      const data = await api.get("getServiceRequests.php");
+      const data = await api.get("shop/getServiceRequests.php");
       if (data.success) {
         setRequests(data.data);
       }
@@ -135,7 +135,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
   const fetchDeclinedRequests = async () => {
     try {
-      const data = await api.get("getDeclinedRequests.php");
+      const data = await api.get("shop/getDeclinedRequests.php");
       if (data.success) {
         setDeclinedRequests(data.data);
         setDeclinedLoaded(true);
@@ -186,7 +186,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   // THE FIX: Accept 'isAccepting' as a parameter
   const openTowTruckModal = async (requestData, isAccepting = false) => {
     try {
-      const data = await api.get("getTowTruckDetails.php");
+      const data = await api.get("shop/getTowTruckDetails.php");
       if (data.success) {
         setTowTruck({
           ...data.data,
@@ -237,7 +237,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       return;
     }
     try {
-      const data = await api.post("updateTowTruckDetails.php", {
+      const data = await api.post("shop/updateTowTruckDetails.php", {
         request_id: requestPendingTow.id,
         driver_name: towTruck.default_driver_name,
         driver_phone: towTruck.default_driver_phone,
@@ -263,7 +263,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       return;
     }
     try {
-      const data = await api.post("updateTowTruckDetails.php", {
+      const data = await api.post("shop/updateTowTruckDetails.php", {
         request_id: requestPendingTow.id,
         driver_name: towTruck.default_driver_name,
         driver_phone: towTruck.default_driver_phone,

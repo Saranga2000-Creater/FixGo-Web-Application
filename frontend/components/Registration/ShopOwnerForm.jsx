@@ -44,7 +44,7 @@ export default function ShopForm() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await api.getPublic("getCategories.php");
+                const res = await api.getPublic("search/getCategories.php");
                 if (res?.services) {
                     setAvailableCategories(res.services);
                 }

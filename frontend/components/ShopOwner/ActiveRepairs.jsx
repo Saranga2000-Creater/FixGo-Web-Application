@@ -92,7 +92,7 @@ function ActiveRepairs() {
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    api.get("getActiveRepairs.php")
+    api.get("shop/getActiveRepairs.php")
       .then((data) => {
         if (data.success) {
           setActiveRepairs(data.data);
@@ -107,7 +107,7 @@ function ActiveRepairs() {
     setUpdatingId(requestId);
 
     try {
-      const data = await api.post("updateStatus.php", {
+      const data = await api.post("shared/updateStatus.php", {
         request_id: requestId,
         new_status: nextStatus,
       });

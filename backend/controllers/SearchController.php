@@ -1,5 +1,5 @@
 <?php
-require_once '../config/JwtHandler.php';
+require_once __DIR__ . '/../config/JwtHandler.php';
 
 class SearchController {
     private $shopModel;
