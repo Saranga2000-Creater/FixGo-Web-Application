@@ -47,11 +47,13 @@ function TowField({ label, value, onChange, type = "text", placeholder, disabled
 }
 
 function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
-  const [activeTab, setActiveTab] = useState("new"); // "new" | "declined"
+  const [activeTab, setActiveTab] = useState("new"); // "new" | "missed" | "declined"
 
   const [requests, setRequests] = useState([]);
   const [declinedRequests, setDeclinedRequests] = useState([]);
   const [declinedLoaded, setDeclinedLoaded] = useState(false);
+  const [missedRequests, setMissedRequests] = useState([]);
+  const [missedLoaded, setMissedLoaded] = useState(false);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requestPendingTow, setRequestPendingTow] = useState(null);
@@ -85,6 +87,13 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
     }
   }, [activeTab, declinedLoaded]);
 
+  // Fetch the missed list lazily
+  useEffect(() => {
+    if (activeTab === "missed" && !missedLoaded) {
+      fetchMissedRequests();
+    }
+  }, [activeTab, missedLoaded]);
+
   const updateStatus = async (requestId, status) => {
     try {
       const data = await api.post("updateStatus.php", {
@@ -107,6 +116,9 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
     } catch (error) {
       console.error(error);
+      if (error.message) {
+        alert(error.message);
+      }
     }
   };
 
@@ -127,6 +139,18 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       if (data.success) {
         setDeclinedRequests(data.data);
         setDeclinedLoaded(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchMissedRequests = async () => {
+    try {
+      const data = await api.get("shop/getMissedRequests.php");
+      if (data.success) {
+        setMissedRequests(data.data);
+        setMissedLoaded(true);
       }
     } catch (error) {
       console.error(error);
@@ -261,7 +285,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
     }
   };
 
-  const visibleRequests = activeTab === "new" ? requests : declinedRequests;
+  const visibleRequests = activeTab === "new" ? requests : (activeTab === "missed" ? missedRequests : declinedRequests);
 
   return (
     <div className="w-full font-[inherit]">
@@ -279,6 +303,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
       <div className="flex gap-2 mb-5">
         {[
           { key: "new", label: "Service Requests" },
+          { key: "missed", label: "Missed Opportunities" },
           { key: "declined", label: "Declined Requests" },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
@@ -323,8 +348,8 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
 
         {/* Rows */}
         {visibleRequests.length === 0 ? (
-          <div className="py-12 px-5 text-center text-slate-400 text-[15px]">
-            {activeTab === "new" ? "No service requests found" : "No declined requests"}
+          <div className="py-12 text-center text-slate-500 text-[14.5px]">
+            {activeTab === "new" ? "No service requests found" : (activeTab === "missed" ? "No missed opportunities" : "No declined requests")}
           </div>
         ) : (
           visibleRequests.map((r, i) => (
