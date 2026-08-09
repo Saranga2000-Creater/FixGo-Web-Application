@@ -200,19 +200,19 @@ public function declineRequest($request_id, $reason) {
     return $stmt->execute();
 }
 
-public function getDeclinedRequestsByShop($shop_id) {
-    $query = "SELECT sr.*, 
-                     c.name          as customer_name, 
-                     c.contactNumber as customer_phone 
-              FROM " . $this->table_name . " sr
-              LEFT JOIN customer c ON sr.customer_id = c.id
-              WHERE sr.shop_id = :shop_id
-              AND sr.status = 'Declined'
-              ORDER BY sr.cancelled_at DESC";
+    public function getDeclinedRequestsByShop($shop_id) {
+        $query = "SELECT sr.*, 
+                         c.name          as customer_name, 
+                         c.contactNumber as customer_phone 
+                  FROM " . $this->table_name . " sr
+                  LEFT JOIN customer c ON sr.customer_id = c.id
+                  WHERE sr.shop_id = :shop_id
+                  AND sr.status = 'Declined'
+                  ORDER BY sr.cancelled_at DESC";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
-    $stmt->execute();
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":shop_id", $shop_id, PDO::PARAM_INT);
+        $stmt->execute();
 
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($results as &$row) {
@@ -229,7 +229,7 @@ public function getMissedRequestsByShop($shop_id) {
               LEFT JOIN customer c ON sr.customer_id = c.id
               WHERE sr.shop_id = :shop_id
               AND sr.status = 'Cancelled'
-              AND sr.cancelled_by = 'System'
+              AND sr.cancelled_by IN ('System', 'Customer')
               ORDER BY sr.cancelled_at DESC";
 
     $stmt = $this->conn->prepare($query);
