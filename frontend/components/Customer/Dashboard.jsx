@@ -77,7 +77,7 @@ function Dashboard({ onNavigate }) {
 
     // Fetch profile for greeting name
     useEffect(() => {
-        api.get("getCustomerProfile.php")
+        api.get("customer/getCustomerProfile.php")
             .then(data => { if (data.success) setFirstName(data.name.split(" ")[0]); })
             .catch(() => {});
     }, []);
@@ -90,7 +90,7 @@ function Dashboard({ onNavigate }) {
         const fetchCounts = async () => {
             try {
                 const token = localStorage.getItem("jwt_token");
-                const data = await api.get("getCustomerRequest.php");
+                const data = await api.get("customer/getCustomerRequest.php");
 
                 if (!data.success) return;
 

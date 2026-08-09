@@ -36,7 +36,7 @@ function CustomerSidebar({ currentPage, setCurrentPage, unreadCount = 0, isOpen 
     const [customer, setCustomer] = useState(null);
 
     useEffect(() => {
-        api.get("getCustomerProfile.php")
+        api.get("customer/getCustomerProfile.php")
             .then(data => { if (data.success) setCustomer(data); })
             .catch(() => {});
     }, []);

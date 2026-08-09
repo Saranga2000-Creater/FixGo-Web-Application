@@ -202,7 +202,7 @@ export default function ServiceHistory( ) {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const data = await api.get("getCustomerRequest.php");
+                const data = await api.get("customer/getCustomerRequest.php");
                 if (data.success) {
                     const finished = (data.data || []).filter(r =>
                         ["Completed", "Cancelled"].includes(r.status)

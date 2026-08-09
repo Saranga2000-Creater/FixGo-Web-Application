@@ -59,7 +59,7 @@ export default function RepairStatus({targetRequestId }) {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const data = await api.get("getCustomerRequest.php");
+                const data = await api.get("customer/getCustomerRequest.php");
                 if (data.success) {
                     const ongoing = (data.data || []).filter(r =>
                         ONGOING_STATUSES.includes(r.status)
