@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { api } from "../../src/services/api";
+import { api, UPLOADS_URL } from "../../src/services/api";
 import {
     HiOutlineShieldCheck,
     HiOutlineUserGroup,
@@ -10,6 +10,33 @@ import {
     HiOutlineMagnifyingGlass,
     HiOutlineCalendar
 } from "react-icons/hi2";
+
+const DEFAULT_TESTIMONIALS = [
+    {
+        id: 1,
+        name: "Nuwan Perera",
+        location: "Colombo",
+        stars: 5,
+        text: "Found a great garage near me in minutes. The booking process was super easy!",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+    },
+    {
+        id: 2,
+        name: "Dilini Fernando",
+        location: "Kandy",
+        stars: 5,
+        text: "Excellent service and transparent pricing. Highly recommended FixGo!",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
+    },
+    {
+        id: 3,
+        name: "Tharindu Silva",
+        location: "Galle",
+        stars: 5,
+        text: "Their roadside assistance saved me during an emergency. Very professional!",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80"
+    }
+];
 
 const useCountUp = (end, duration = 2500, decimals = 0, startAnimation = false) => {
     const [count, setCount] = useState(0);
@@ -93,35 +120,8 @@ const About = () => {
         fetchStats();
     }, []);
 
-    const testimonials = [
-        {
-            id: 1,
-            name: "Nuwan Perera",
-            location: "Colombo",
-            stars: 5,
-            text: "Found a great garage near me in minutes. The booking process was super easy!",
-            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
-        },
-        {
-            id: 2,
-            name: "Dilini Fernando",
-            location: "Kandy",
-            stars: 5,
-            text: "Excellent service and transparent pricing. Highly recommended FixGo!",
-            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
-        },
-        {
-            id: 3,
-            name: "Tharindu Silva",
-            location: "Galle",
-            stars: 5,
-            text: "Their roadside assistance saved me during an emergency. Very professional!",
-            avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80"
-        }
-    ];
-
-    // Create a 3x extended array for smooth loop boundaries
-    const extendedTestimonials = [...testimonials, ...testimonials, ...testimonials];
+    const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
+    const [loading, setLoading] = useState(false);
 
     // Initial index starts at the middle set's first element
     const [activeIndex, setActiveIndex] = useState(3);
