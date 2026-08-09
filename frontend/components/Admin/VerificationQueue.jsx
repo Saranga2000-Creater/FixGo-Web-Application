@@ -332,7 +332,7 @@ function VerificationQueue() {
   const loadRegistrations = async () => {
     setRegLoading(true);
     try {
-      const res = await api.get("getPendingShops.php");
+      const res = await api.get("admin/getPendingShops.php");
       setRegQueue(res.data || []);
     } catch (err) {
       // Endpoint may not exist yet — silently show empty state
@@ -364,7 +364,7 @@ function VerificationQueue() {
   const handleApproveShop = async (shopId) => {
     setApproving(shopId);
     try {
-      await api.post("approveShop.php", { shopId });
+      await api.post("admin/approveShop.php", { shopId });
       toast.success("Shop approved and activated.");
       setRegQueue((prev) => prev.filter((s) => s.id !== shopId));
       if (reviewShop?.id === shopId) setReviewShop(null);

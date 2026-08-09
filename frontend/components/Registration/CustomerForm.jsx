@@ -84,7 +84,7 @@ export default function CustomerForm() {
         payload.append("profilePic", profilePic);
 
         try {
-            await api.postPublic('registerCustomer.php', payload);
+            await api.postPublic('auth/registerCustomer.php', payload);
             setSuccess(true);
             setTimeout(() => {
                 navigate("/verify-email");

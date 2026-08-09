@@ -108,7 +108,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
     }, [initialModalOpen, initialTab]);
 
     const fetchProfile = () => {
-        api.get("getCustomerProfile.php")
+        api.get("customer/getCustomerProfile.php")
             .then((data) => {
                 if (data.success) {
                     setCustomer(data);
@@ -140,8 +140,8 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         const fetchStats = async () => {
             try {
                 const [requestsData, reviewsData] = await Promise.all([
-                    api.get("getCustomerRequest.php"),
-                    api.get("getCustomerReviews.php"),
+                    api.get("customer/getCustomerRequest.php"),
+                    api.get("customer/getCustomerReviews.php"),
                 ]);
 
                 const all = (requestsData?.data || []);
@@ -248,7 +248,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
                 body.append("newPassword", formData.newPassword.trim());
             }
 
-            const res = await api.post("updateCustomerProfile.php", body);
+            const res = await api.post("customer/updateCustomerProfile.php", body);
 
             if (res.success) {
                 setCustomer(res);

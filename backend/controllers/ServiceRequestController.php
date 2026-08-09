@@ -350,6 +350,12 @@ class ServiceRequestController {
     // ==========================================
 public function handleGetCustomerRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $customer_id = $payload['user_id'];
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByCustomer($customer_id);
@@ -367,6 +373,12 @@ public function handleGetCustomerRequests($payload)
 
  public function handleGetShopRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];   
         $this->serviceRequestModel->cancelStaleRequests();
         $requests = $this->serviceRequestModel->getRequestsByShop($shop_id);
@@ -384,6 +396,12 @@ public function handleGetCustomerRequests($payload)
 
 public function handleGetDeclinedRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
     $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
 
@@ -397,6 +415,12 @@ public function handleGetDeclinedRequests($payload)
     
  public function handleGetConfirmedRequests($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];   
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
 
@@ -409,6 +433,12 @@ public function handleGetDeclinedRequests($payload)
 
     public function handleGetActiveRepairs($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
     $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
 
@@ -422,6 +452,12 @@ public function handleGetDeclinedRequests($payload)
 
     public function handleGetServiceHistory($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByShop($shop_id);
 
@@ -433,6 +469,12 @@ public function handleGetDeclinedRequests($payload)
     }
 public function updateTowTruckDetails($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $shop_id = $payload['user_id'];
 
     // Read request body first
@@ -489,6 +531,12 @@ public function updateTowTruckDetails($payload)
 
     public function handleGetCustomerServiceHistory($payload)
 {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["success" => false, "message" => "Method not allowed."]);
+        return;
+    }
+
     $customer_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByCustomer($customer_id);
 

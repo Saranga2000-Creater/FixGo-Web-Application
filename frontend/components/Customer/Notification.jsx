@@ -329,7 +329,7 @@ export default function Notification({ initialSelectedId, onClearSelection }) {
     if (!userId) return;
     const fetchReviewed = async () => {
         try {
-            const data = await api.get("getCustomerReviews.php");
+            const data = await api.get("customer/getCustomerReviews.php");
             if (data.success) {
                 const ids = (data.data || []).map(r => String(r.service_request_id));
                 setReviewedIds(ids);

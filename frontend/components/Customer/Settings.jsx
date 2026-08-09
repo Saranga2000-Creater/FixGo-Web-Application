@@ -87,7 +87,7 @@ function Settings({ onNavigate }) {
     const [modalSuccess, setModalSuccess] = useState("");
 
     const fetchProfile = () => {
-        api.get("getCustomerProfile.php")
+        api.get("customer/getCustomerProfile.php")
             .then((data) => {
                 if (data.success) {
                     setCustomer(data);
@@ -189,7 +189,7 @@ function Settings({ onNavigate }) {
                 body.append("newPassword", formData.newPassword.trim());
             }
 
-            const res = await api.post("updateCustomerProfile.php", body);
+            const res = await api.post("customer/updateCustomerProfile.php", body);
 
             if (res.success) {
                 setCustomer(res);
