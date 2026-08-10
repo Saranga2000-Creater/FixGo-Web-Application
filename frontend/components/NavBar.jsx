@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faBell, faCircleQuestion, faRightFromBracket, faUser, faCheck, faEnvelopeOpen,
     faClock, faCircleCheck, faHandshake, faStethoscope, faWrench, faBoxesStacked, faCircleXmark,
-    faClipboardList, faStar
+    faClipboardList, faStar, faBars, faXmark, faHome, faShop, faGauge, faHeadset
 } from "@fortawesome/free-solid-svg-icons";
 import logo from '../src/assets/FixGo.png'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sign from "./SignIn";
 import { api, UPLOADS_URL } from "../src/services/api";
 
@@ -26,7 +26,7 @@ const STATUS_META = {
     CustomerConfirmed: { icon: faHandshake,     iconBg: "rgba(22, 163, 74,0.08)", iconColor: "#16A34A", badgeBg: "rgba(22, 163, 74,0.10)", badgeColor: "#16A34A",  label: "Confirmed"     },
     CustomerCancelled: { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Cancelled"     },
     CustomerDeclined:  { icon: faCircleXmark,   iconBg: "#FEF2F2",               iconColor: "#DC2626", badgeBg: "#FEF2F2",               badgeColor: "#DC2626",  label: "Declined"      },
-    NewReview:         { icon: faStar,           iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "New Review"    },
+    NewReview:         { icon: faStar,          iconBg: "rgba(217,119,6,0.08)",  iconColor: "#D97706", badgeBg: "rgba(217,119,6,0.10)",  badgeColor: "#D97706",  label: "New Review"    },
 };
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
@@ -66,6 +66,10 @@ export const NavBar = () => {
     const [showSignIn, setShowSignIn] = useState(false);
     const token = localStorage.getItem("jwt_token");
     const profileImage = localStorage.getItem("profileImage");
+
+    // Mobile drawer state
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const drawerRef = useRef(null);
 
     // Notifications state
     const [notifications, setNotifications] = useState([]);
@@ -111,6 +115,22 @@ export const NavBar = () => {
         return () => document.removeEventListener("click", handleOutsideClick);
     }, [showNotifDropdown]);
 
+    // Lock body scroll and handle outside click when mobile menu is open
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        const handleOutside = (e) => {
+            if (drawerRef.current && !drawerRef.current.contains(e.target)) {
+                setMobileMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleOutside);
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.removeEventListener("mousedown", handleOutside);
+            document.body.style.overflow = "";
+        };
+    }, [mobileMenuOpen]);
+
     const handleMarkRead = async (e, id) => {
         e.stopPropagation();
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: 1 } : n));
@@ -145,15 +165,15 @@ export const NavBar = () => {
         Object.entries(preserved).forEach(([key, value]) => {
             localStorage.setItem(key, value);
         });
+        setMobileMenuOpen(false);
         navigate("/");
     };
 
     const handleRegister = () => {
-        setShowSignIn(false)
-        document.getElementById("register")?.scrollIntoView({
-            behavior: "smooth"
-        });
-    }
+        setShowSignIn(false);
+        setMobileMenuOpen(false);
+        document.getElementById("register")?.scrollIntoView({ behavior: "smooth" });
+    };
 
     const handleNavigateToNotifications = (id = null) => {
         setShowNotifDropdown(false);
@@ -180,56 +200,49 @@ export const NavBar = () => {
     const unreadNotifications = notifications.filter(n => Number(n.isRead) === 0);
     const unreadCount = unreadNotifications.length;
 
+    const navLinks = [
+        { to: "/",         label: "Homepage",   icon: faHome    },
+        { to: "/shops",    label: "Find Shops",  icon: faShop    },
+        { to: "/services", label: "Dashboard",   icon: faGauge   },
+        { to: "/support",  label: "Support",     icon: faHeadset },
+    ];
+
     return (
         <>
-            <header className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9]/95 backdrop-blur-md border-b border-[#d1e7d7] shadow-sm py-3 px-4 md:px-8" style={{ fontFamily: FONT }}>
-
+            <header
+                className="flex justify-between items-center w-full sticky top-0 z-50 bg-[#f9f9f9]/95 backdrop-blur-md border-b border-[#d1e7d7] shadow-sm py-3 px-4 min-[907px]:px-8"
+                style={{ fontFamily: FONT }}
+            >
+                {/* ── Logo ── */}
                 <div className="flex items-center gap-2 sm:gap-4">
                     <img alt="FixGo Logo" className="h-8 sm:h-10 w-auto" src={logo} />
                     <span className="text-base sm:text-lg font-bold text-[#14532d]">FixGo</span>
                 </div>
 
-                <nav className="hidden md:flex items-center gap-6 lg:gap-10">
-                    <NavLink
-                        to="/"
-                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
-                    >
+                {/* ── Desktop Nav Links ── */}
+                <nav className="hidden min-[907px]:flex items-center gap-6 lg:gap-10">
+                    <NavLink to="/" className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}>
                         Homepage
                     </NavLink>
-
                     <NavLink
                         to="/shops"
-                        onClick={() => {
-                            Object.keys(sessionStorage).forEach(key => {
-                                if (key.startsWith('fixgo_')) {
-                                    sessionStorage.removeItem(key);
-                                }
-                            });
-                        }}
+                        onClick={() => Object.keys(sessionStorage).forEach(k => { if (k.startsWith('fixgo_')) sessionStorage.removeItem(k); })}
                         className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
                     >
                         Find Shops
                     </NavLink>
-
-                    <NavLink
-                        to="/services"
-                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
-                    >
+                    <NavLink to="/services" className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}>
                         Dashboard
                     </NavLink>
-
-                    <NavLink
-                        to="/support"
-                        className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}
-                    >
+                    <NavLink to="/support" className={({ isActive }) => `font-mono active:scale-105 py-1 transition-colors ${isActive ? 'text-[#16a34a]' : 'text-[#000000] hover:text-[#16a34a]'}`}>
                         Support
                     </NavLink>
                 </nav>
 
-                <div className="flex items-center gap-2 sm:gap-4">
-
+                {/* ── Desktop Right Actions ── */}
+                <div className="hidden min-[907px]:flex items-center gap-2 sm:gap-4">
                     {token && (
-                        <div className="relative notif-dropdown-container hidden sm:block">
+                        <div className="relative notif-dropdown-container">
                             <button
                                 onClick={() => setShowNotifDropdown(!showNotifDropdown)}
                                 className="relative hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer shrink-0 border-none bg-transparent flex items-center justify-center"
@@ -242,23 +255,16 @@ export const NavBar = () => {
                                 )}
                             </button>
 
-                            {/* Dropdown Menu */}
                             {showNotifDropdown && (
                                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden z-50 py-1 text-left animate-in fade-in slide-in-from-top-2 duration-150">
-                                    {/* Header */}
                                     <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
                                         <span className="text-xs font-bold text-gray-800">Notifications</span>
                                         {unreadCount > 0 && (
-                                            <button
-                                                onClick={handleMarkAllRead}
-                                                className="text-[11px] font-semibold text-green-600 hover:text-green-700 bg-transparent border-none cursor-pointer"
-                                            >
+                                            <button onClick={handleMarkAllRead} className="text-[11px] font-semibold text-green-600 hover:text-green-700 bg-transparent border-none cursor-pointer">
                                                 Mark all as read
                                             </button>
                                         )}
                                     </div>
-
-                                    {/* List */}
                                     <div className="max-h-80 overflow-y-auto">
                                         {notifications.length === 0 ? (
                                             <div className="flex flex-col items-center justify-center py-8 text-gray-400">
@@ -283,15 +289,12 @@ export const NavBar = () => {
                                                     <div
                                                         key={notif.id}
                                                         onClick={() => {
-                                                            if (isUnread) handleMarkRead({ stopPropagation: () => { } }, notif.id);
+                                                            if (isUnread) handleMarkRead({ stopPropagation: () => {} }, notif.id);
                                                             handleNavigateToNotifications(notif.id);
                                                         }}
                                                         className={`flex gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors relative ${isUnread ? "bg-green-50/20" : ""}`}
                                                     >
-                                                        <div 
-                                                            className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5"
-                                                            style={{ background: meta.iconBg }}
-                                                        >
+                                                        <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style={{ background: meta.iconBg }}>
                                                             <FontAwesomeIcon icon={meta.icon} className="text-[10px]" style={{ color: meta.iconColor }} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -299,26 +302,17 @@ export const NavBar = () => {
                                                                 <p className={`text-xs m-0 truncate ${isUnread ? "font-bold text-gray-900" : "text-gray-700"}`}>
                                                                     {notif.title || "Notification"}
                                                                 </p>
-                                                                <span 
-                                                                    className="rounded-full py-[1px] px-2 text-[9px] font-bold"
-                                                                    style={{ background: meta.badgeBg, color: meta.badgeColor }}
-                                                                >
+                                                                <span className="rounded-full py-[1px] px-2 text-[9px] font-bold" style={{ background: meta.badgeBg, color: meta.badgeColor }}>
                                                                     {meta.label}
                                                                 </span>
                                                                 <span className="text-[9px] text-gray-400 whitespace-nowrap ml-auto self-center">
                                                                     {formatTime(notif.created_at)}
                                                                 </span>
                                                             </div>
-                                                            <p className="text-[11px] text-gray-500 m-0 mt-0.5 line-clamp-2 leading-normal">
-                                                                {message}
-                                                            </p>
+                                                            <p className="text-[11px] text-gray-500 m-0 mt-0.5 line-clamp-2 leading-normal">{message}</p>
                                                         </div>
                                                         {isUnread && (
-                                                            <button
-                                                                onClick={(e) => handleMarkRead(e, notif.id)}
-                                                                title="Mark as read"
-                                                                className="self-center w-5 h-5 rounded-full hover:bg-gray-200 border-none bg-transparent flex items-center justify-center text-gray-400 hover:text-green-600 transition-colors cursor-pointer"
-                                                            >
+                                                            <button onClick={(e) => handleMarkRead(e, notif.id)} title="Mark as read" className="self-center w-5 h-5 rounded-full hover:bg-gray-200 border-none bg-transparent flex items-center justify-center text-gray-400 hover:text-green-600 transition-colors cursor-pointer">
                                                                 <FontAwesomeIcon icon={faCheck} className="text-xs" />
                                                             </button>
                                                         )}
@@ -327,13 +321,8 @@ export const NavBar = () => {
                                             })
                                         )}
                                     </div>
-
-                                    {/* Footer */}
                                     <div className="px-4 py-2 border-t border-gray-100 text-center bg-gray-50">
-                                        <button
-                                            onClick={handleNavigateToNotifications}
-                                            className="text-xs font-bold text-green-600 hover:underline bg-transparent border-none cursor-pointer"
-                                        >
+                                        <button onClick={handleNavigateToNotifications} className="text-xs font-bold text-green-600 hover:underline bg-transparent border-none cursor-pointer">
                                             View all notifications
                                         </button>
                                     </div>
@@ -342,7 +331,7 @@ export const NavBar = () => {
                         </div>
                     )}
 
-                    <FontAwesomeIcon icon={faCircleQuestion} className="hidden sm:block hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer" />
+                    <FontAwesomeIcon icon={faCircleQuestion} className="hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer text-gray-700 text-lg" />
 
                     {token ? (
                         <>
@@ -352,45 +341,180 @@ export const NavBar = () => {
                                 title="Go to Dashboard"
                             >
                                 {profileImage ? (
-                                    <img
-                                        src={profileImage.startsWith("http") ? profileImage : `${UPLOADS_URL}/${profileImage}`}
-                                        alt="Profile"
-                                        className="w-full h-full object-cover"
-                                    />
+                                    <img src={profileImage.startsWith("http") ? profileImage : `${UPLOADS_URL}/${profileImage}`} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <FontAwesomeIcon icon={faUser} className="text-[#16a34a] text-sm sm:text-lg" />
                                 )}
                             </div>
-                            <button
-                                onClick={handleSignOut}
-                                title="Log Out"
-                                className="hover:bg-[#e8e8e8] p-1.5 sm:p-2 rounded-full transition-colors active:scale-95 cursor-pointer shrink-0"
-                            >
+                            <button onClick={handleSignOut} title="Log Out" className="hover:bg-[#e8e8e8] p-1.5 sm:p-2 rounded-full transition-colors active:scale-95 cursor-pointer shrink-0 border-none bg-transparent">
                                 <FontAwesomeIcon icon={faRightFromBracket} className="text-base sm:text-lg text-gray-700 hover:text-red-600" />
                             </button>
                         </>
                     ) : (
                         <div className="flex gap-2">
+                            <button onClick={() => setShowSignIn(true)} className="border-2 border-green-500 text-[#16a34a] font-mono px-3 py-1.5 sm:px-6 sm:py-2 rounded-lg hover:bg-[#16a34a] hover:text-white active:scale-95 transition-all text-xs sm:text-sm cursor-pointer whitespace-nowrap">
+                                Log In
+                            </button>
+                            <button onClick={handleRegister} className="bg-green-500 text-white font-mono px-3 py-1.5 sm:px-6 sm:py-2 rounded-lg hover:brightness-110 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer whitespace-nowrap">
+                                Get Started
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Mobile Right: Bell + Hamburger ── */}
+                <div className="flex min-[907px]:hidden items-center gap-1.5">
+                    {token && (
+                        <button
+                            onClick={() => handleNavigateToNotifications()}
+                            className="relative p-2 rounded-full hover:bg-gray-100 border-none bg-transparent cursor-pointer transition-colors"
+                            aria-label="Notifications"
+                        >
+                            <FontAwesomeIcon icon={faBell} className="text-lg text-gray-700" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#f9f9f9]">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
+                    <button
+                        id="hamburger-btn"
+                        onClick={() => setMobileMenuOpen(true)}
+                        className="p-2 rounded-lg hover:bg-gray-100 border-none bg-transparent cursor-pointer transition-colors"
+                        aria-label="Open navigation menu"
+                    >
+                        <FontAwesomeIcon icon={faBars} className="text-xl text-gray-700" />
+                    </button>
+                </div>
+            </header>
+
+            {/* ── Mobile Backdrop ── */}
+            <div
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                    position: "fixed", inset: 0, zIndex: 60,
+                    background: "rgba(0,0,0,0.45)",
+                    backdropFilter: "blur(3px)",
+                    opacity: mobileMenuOpen ? 1 : 0,
+                    pointerEvents: mobileMenuOpen ? "auto" : "none",
+                    transition: "opacity 0.25s ease",
+                }}
+                aria-hidden="true"
+            />
+
+            {/* ── Mobile Slide-In Drawer ── */}
+            <div
+                ref={drawerRef}
+                id="mobile-nav-drawer"
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    right: 0,
+                    height: "100%",
+                    width: "290px",
+                    maxWidth: "85vw",
+                    zIndex: 70,
+                    background: "#ffffff",
+                    boxShadow: "-8px 0 40px rgba(0,0,0,0.15)",
+                    display: "flex",
+                    flexDirection: "column",
+                    transform: mobileMenuOpen ? "translateX(0)" : "translateX(100%)",
+                    transition: "transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+                    fontFamily: FONT,
+                }}
+            >
+                {/* Drawer Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #f0f0f0", background: "linear-gradient(to right, #f0faf4, #ffffff)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <img alt="FixGo Logo" style={{ height: "32px", width: "auto" }} src={logo} />
+                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#14532d" }}>FixGo</span>
+                    </div>
+                    <button
+                        onClick={() => setMobileMenuOpen(false)}
+                        style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", color: "#4b5563" }}
+                        aria-label="Close menu"
+                    >
+                        <FontAwesomeIcon icon={faXmark} style={{ fontSize: "14px" }} />
+                    </button>
+                </div>
+
+                {/* Profile Strip (if logged in) */}
+                {token && (
+                    <div
+                        onClick={() => { navigate("/services"); setMobileMenuOpen(false); }}
+                        style={{ display: "flex", alignItems: "center", gap: "12px", margin: "16px", padding: "12px", borderRadius: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", cursor: "pointer" }}
+                    >
+                        <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "2px solid #16a34a", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", flexShrink: 0 }}>
+                            {profileImage ? (
+                                <img src={profileImage.startsWith("http") ? profileImage : `${UPLOADS_URL}/${profileImage}`} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                                <FontAwesomeIcon icon={faUser} style={{ color: "#16a34a", fontSize: "16px" }} />
+                            )}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: "13px", fontWeight: 700, color: "#111827", margin: 0 }}>My Account</p>
+                            <p style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600, margin: 0 }}>View Dashboard →</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Nav Links */}
+                <nav style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {navLinks.map(({ to, label, icon }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all no-underline ${
+                                    isActive
+                                        ? "bg-green-50 text-[#16a34a] border border-green-100"
+                                        : "text-gray-700 hover:bg-gray-50 hover:text-[#16a34a]"
+                                }`
+                            }
+                        >
+                            <span style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", background: "#f0fdf4", flexShrink: 0 }}>
+                                <FontAwesomeIcon icon={icon} style={{ color: "#16a34a", fontSize: "11px" }} />
+                            </span>
+                            {label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                {/* Spacer */}
+                <div style={{ flex: 1 }} />
+
+                {/* Auth Buttons */}
+                <div style={{ padding: "16px", borderTop: "1px solid #f3f4f6", display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {token ? (
+                        <button
+                            onClick={handleSignOut}
+                            style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid #fecaca", background: "#fff1f2", color: "#dc2626", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                        >
+                            <FontAwesomeIcon icon={faRightFromBracket} />
+                            Sign Out
+                        </button>
+                    ) : (
+                        <>
                             <button
-                                onClick={() => setShowSignIn(true)}
-                                className="border-2 border-green-500 text-[#16a34a] font-mono px-3 py-1.5 sm:px-6 sm:py-2 rounded-lg hover:bg-[#16a34a] hover:text-white active:scale-95 transition-all text-xs sm:text-sm cursor-pointer whitespace-nowrap"
+                                onClick={() => { setMobileMenuOpen(false); setShowSignIn(true); }}
+                                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "2px solid #22c55e", background: "transparent", color: "#16a34a", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
                             >
                                 Log In
                             </button>
                             <button
                                 onClick={handleRegister}
-                                className="bg-green-500 text-white font-mono px-3 py-1.5 sm:px-6 sm:py-2 rounded-lg hover:brightness-110 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer whitespace-nowrap"
+                                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "none", background: "#16a34a", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(22,163,74,0.25)" }}
                             >
                                 Get Started
                             </button>
-                        </div>
+                        </>
                     )}
-
                 </div>
-
-            </header>
+            </div>
 
             {showSignIn && <Sign setShowSignIn={setShowSignIn} />}
         </>
-    )
+    );
 }
