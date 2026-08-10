@@ -131,7 +131,7 @@ const About = () => {
         const loadReviews = async () => {
             setLoading(true);
             try {
-                const res = await api.getPublic("getPlatformReviews.php");
+                const res = await api.getPublic("reviews/getPlatformReviews.php");
                 if (res && res.success && Array.isArray(res.data)) {
                     setTestimonials(res.data);
                     if (res.data.length >= 3) {

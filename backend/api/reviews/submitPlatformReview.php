@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../controllers/PlatformReviewController.php';
+require_once __DIR__ . '/../../config/bootstrap.php';
+require_once __DIR__ . '/../../controllers/PlatformReviewController.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
