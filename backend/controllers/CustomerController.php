@@ -469,12 +469,7 @@ class CustomerController {
             return;
         }
 
-        $userId = $payload['user_id'] ?? $payload['id'] ?? null;
-        if (!$userId) {
-            http_response_code(401);
-            echo json_encode(["success" => false, "message" => "User authentication failed. Please login to submit a report."]);
-            return;
-        }
+        $userId = $payload['user_id'] ?? null;
 
         $input = json_decode(file_get_contents("php://input"), true);
         $shopId = isset($input['shop_id']) ? (int)$input['shop_id'] : 0;

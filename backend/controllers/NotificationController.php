@@ -18,11 +18,7 @@ class NotificationController {
 
         $userId  = $payload['user_id'] ?? null;
 
-        if (!$userId) {
-            http_response_code(401);
-            echo json_encode(["success" => false, "message" => "Unauthorized."]);
-            return;
-        }
+
 
         try {
             $notifications = $this->notification->getByUser($userId);

@@ -744,26 +744,11 @@ public function updateShopTowTruckDetails($payload)
         }
     }
 
-    private function authorizeShopOwner($payload, $allowedMethod = null) {
-        if ($allowedMethod && $_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return false;
-        }
-        $role = $payload['role'] ?? $payload['userRole'] ?? '';
-        $shopId = $payload['user_id'] ?? $payload['id'] ?? null;
-        if (!$shopId || $role !== 'shop_owner') {
-            http_response_code(403);
-            echo json_encode(["success" => false, "message" => "Shop owner access required."]);
-            return false;
-        }
-        return $shopId;
-    }
+
 
 
     public function updatePassword($payload) {
-        $shopId = $this->authorizeShopOwner($payload, 'POST');
-        if (!$shopId) return;
+        $shopId = $payload['user_id'] ?? null;
 
         $rawInput = file_get_contents("php://input");
         $data = json_decode($rawInput, true);
