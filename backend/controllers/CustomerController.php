@@ -4,6 +4,8 @@ require_once __DIR__ . '/../models/Customer.php';
 require_once __DIR__ . '/../models/userRole.php';
 require_once __DIR__ . '/../config/EmailSender.php';
 require_once __DIR__ . '/../models/CustomerVehicle.php';
+require_once __DIR__ . '/../models/ModerationFlag.php';
+require_once __DIR__ . '/../models/Shop.php';
 
 class CustomerController {
     private $db;
@@ -457,6 +459,56 @@ class CustomerController {
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to delete vehicle.']);
+        }
+    }
+
+    public function reportShop($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
+        $userId = $payload['user_id'] ?? $payload['id'] ?? null;
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "User authentication failed. Please login to submit a report."]);
+            return;
+        }
+
+        $input = json_decode(file_get_contents("php://input"), true);
+        $shopId = isset($input['shop_id']) ? (int)$input['shop_id'] : 0;
+        $flagType = trim($input['flag_type'] ?? 'PROFILE FLAG');
+        $description = trim($input['description'] ?? '');
+
+        if ($shopId <= 0 || empty($description)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Shop ID and report description are required."]);
+            return;
+        }
+
+        try {
+            $reporterName = $payload['name'] ?? $payload['email'] ?? null;
+            if (!$reporterName) {
+                $customerModel = new Customer($this->db);
+                $customer = $customerModel->getById($userId);
+                $reporterName = $customer ? $customer['name'] : "User #{$userId}";
+            }
+
+            $shopModel = new Shop($this->db);
+            $shop = $shopModel->getById($shopId);
+            $shopName = $shop ? $shop['name'] : "Garage #{$shopId}";
+
+            $moderationModel = new ModerationFlag($this->db);
+            $moderationModel->submitReport($shopId, $flagType, $reporterName, $shopName, $description);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Report submitted successfully. Our admin team will investigate this garage."
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to submit report.", "error" => $e->getMessage()]);
         }
     }
 }
