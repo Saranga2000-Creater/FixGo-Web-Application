@@ -70,4 +70,17 @@ class Notification {
         );
         return $stmt->execute(['user_id' => $userId]);
     }
+
+    public function createNotification($userId, $serviceRequestId, $type, $title) {
+        $stmt = $this->db->prepare(
+            "INSERT INTO notification (user_id, service_request_id, type, title, message, isRead)
+             VALUES (:user_id, :request_id, :type, :title, NULL, 0)"
+        );
+        return $stmt->execute([
+            'user_id'    => $userId,
+            'request_id' => $serviceRequestId,
+            'type'       => $type,
+            'title'      => $title,
+        ]);
+    }
 }

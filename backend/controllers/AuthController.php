@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/../models/userRole.php';
+require_once __DIR__ . '/../models/Shop.php';
+require_once __DIR__ . '/../models/Customer.php';
 require_once __DIR__ . '/../config/JwtHandler.php';
 
 
@@ -85,17 +87,11 @@ class AuthController{
                 // Fetch profile image URL
                 $profileImage = null;
                 if ($user->userRole === 'shop_owner') {
-                    $stmt = $this->db->prepare("SELECT profileImageURL FROM shop WHERE id = :id LIMIT 1");
-                    $stmt->execute([':id' => $user->id]);
-                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $profileImage = $row['profileImageURL'];
-                    }
+                    $shopModel = new Shop($this->db);
+                    $profileImage = $shopModel->getProfileImageURL($user->id);
                 } else if ($user->userRole === 'customer') {
-                    $stmt = $this->db->prepare("SELECT profilePhoto FROM customer WHERE id = :id LIMIT 1");
-                    $stmt->execute([':id' => $user->id]);
-                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $profileImage = $row['profilePhoto'];
-                    }
+                    $customerModel = new Customer($this->db);
+                    $profileImage = $customerModel->getProfilePhoto($user->id);
                 }
 
                 http_response_code(200);

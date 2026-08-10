@@ -300,11 +300,10 @@ class CustomerController {
             }
 
             // Verify current password
-            $userStmt = $this->db->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
-            $userStmt->execute([':id' => $customerId]);
-            $userRow = $userStmt->fetch(PDO::FETCH_ASSOC);
+            require_once __DIR__ . '/../models/userRole.php';
+            $userModel = new User($this->db);
 
-            if (!$userRow || !password_verify($currentPassword, $userRow['password'])) {
+            if (!$userModel->verifyPassword($customerId, $currentPassword)) {
                 http_response_code(400);
                 echo json_encode(["message" => "Current password is incorrect."]);
                 return;

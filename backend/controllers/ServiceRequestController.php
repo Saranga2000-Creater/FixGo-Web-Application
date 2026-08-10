@@ -28,16 +28,9 @@ class ServiceRequestController {
     // Failure here should never break the main status-update flow.
     private function notifyCustomer($userId, $requestId, $type, $title) {
         try {
-            $stmt = $this->db->prepare(
-                "INSERT INTO notification (user_id, service_request_id, type, title, message, isRead)
-                 VALUES (:user_id, :request_id, :type, :title, NULL, 0)"
-            );
-            $stmt->execute([
-                'user_id'    => $userId,
-                'request_id' => $requestId,
-                'type'       => $type,
-                'title'      => $title,
-            ]);
+            require_once __DIR__ . '/../models/Notification.php';
+            $notificationModel = new Notification($this->db);
+            $notificationModel->createNotification($userId, $requestId, $type, $title);
         } catch (Throwable $e) {
             error_log("notifyCustomer failed: " . $e->getMessage());
         }
@@ -47,35 +40,9 @@ class ServiceRequestController {
 {
     try {
         error_log("notifyShop called");
-
-        $stmt = $this->db->prepare("
-            INSERT INTO notification
-            (
-                user_id,
-                service_request_id,
-                type,
-                title,
-                message,
-                isRead
-            )
-            VALUES
-            (
-                :user_id,
-                :request_id,
-                :type,
-                :title,
-                NULL,
-                0
-            )
-        ");
-
-        $stmt->execute([
-            "user_id"=>$shopId,
-            "request_id"=>$requestId,
-            "type"=>$type,
-            "title"=>$title
-        ]);
-
+        require_once __DIR__ . '/../models/Notification.php';
+        $notificationModel = new Notification($this->db);
+        $notificationModel->createNotification($shopId, $requestId, $type, $title);
     } catch(Throwable $e){
         error_log($e->getMessage());
     }

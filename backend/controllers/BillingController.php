@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../models/BillingConfiguration.php';
 require_once __DIR__ . '/../models/ShopInvoice.php';
+require_once __DIR__ . '/../models/Shop.php';
+require_once __DIR__ . '/../models/userRole.php';
 require_once __DIR__ . '/../config/EmailSender.php';
 
 class BillingController {
@@ -36,23 +38,13 @@ class BillingController {
     }
 
     private function getActiveShopCount(): int {
-        $stmt = $this->db->query(
-            "SELECT COUNT(*) FROM shop s
-             JOIN users u ON s.id = u.id
-             WHERE u.isActive = 1 AND u.userRole = 'shop_owner'"
-        );
-        return (int)$stmt->fetchColumn();
+        $shopModel = new Shop($this->db);
+        return $shopModel->getActiveCount();
     }
 
     private function getActiveSparePartsShopCount(): int {
-        $stmt = $this->db->query(
-            "SELECT COUNT(*) FROM shop s
-             JOIN users u              ON s.id = u.id
-             JOIN shopCategoryMapping scm ON s.id = scm.shop_id
-             WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
-               AND scm.shop_category_id = " . self::CAT_SPARE_PARTS
-        );
-        return (int)$stmt->fetchColumn();
+        $shopModel = new Shop($this->db);
+        return $shopModel->getActiveSparePartsShopCount();
     }
 
     // ============================================================
@@ -421,8 +413,8 @@ class BillingController {
         try {
             if ($action === 'approve') {
                 $model->markPaid($invoiceId, $adminId);
-                $this->db->prepare("UPDATE users SET isActive = 1 WHERE id = :shopId")
-                         ->execute([':shopId' => $invoice['shopId']]);
+                $userModel = new User($this->db);
+                $userModel->activateUser($invoice['shopId']);
             } else {
                 $model->rejectVerification($invoiceId, trim($reason));
             }

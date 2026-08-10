@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../models/Shop.php';
 require_once __DIR__ . '/../models/userRole.php';
+require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../config/EmailSender.php';
 
 class ShopController {
@@ -269,18 +270,8 @@ class ShopController {
         }
 
         // Map Shop Category dynamically from database
-        $categoryId = null;
-        if (is_numeric($category)) {
-            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE id = :id LIMIT 1");
-            $stmt->execute([':id' => (int)$category]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) $categoryId = (int)$row['id'];
-        } else {
-            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-            $stmt->execute([':name' => trim($category)]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) $categoryId = (int)$row['id'];
-        }
+        $categoryModel = new Category($this->db);
+        $categoryId = $categoryModel->resolveShopCategoryId($category);
 
         if ($categoryId === null) {
             http_response_code(400);
@@ -308,16 +299,9 @@ class ShopController {
         }
 
         foreach ($categoriesToProcess as $cat) {
-            if (is_numeric($cat)) {
-                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE id = :id LIMIT 1");
-                $stmt->execute([':id' => (int)$cat]);
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($row) $vehicleIds[] = (int)$row['id'];
-            } else {
-                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-                $stmt->execute([':name' => trim($cat)]);
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($row) $vehicleIds[] = (int)$row['id'];
+            $vId = $categoryModel->resolveVehicleCategoryId($cat);
+            if ($vId !== null) {
+                $vehicleIds[] = $vId;
             }
         }
 

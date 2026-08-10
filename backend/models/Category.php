@@ -107,5 +107,29 @@ class Category {
         $stmt = $this->conn->prepare("DELETE FROM vehicleCategory WHERE id = :id");
         return $stmt->execute([':id' => $id]);
     }
+
+    public function resolveShopCategoryId($identifier) {
+        if (is_numeric($identifier)) {
+            $stmt = $this->conn->prepare("SELECT id FROM shopCategory WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => (int)$identifier]);
+        } else {
+            $stmt = $this->conn->prepare("SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
+            $stmt->execute([':name' => trim($identifier)]);
+        }
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['id'] : null;
+    }
+
+    public function resolveVehicleCategoryId($identifier) {
+        if (is_numeric($identifier)) {
+            $stmt = $this->conn->prepare("SELECT id FROM vehicleCategory WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => (int)$identifier]);
+        } else {
+            $stmt = $this->conn->prepare("SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
+            $stmt->execute([':name' => trim($identifier)]);
+        }
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['id'] : null;
+    }
 }
 ?>
