@@ -22,22 +22,11 @@ import {
   faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import { api, UPLOADS_URL } from "../../src/services/api";
-
-const VEHICLE_CAT_OPTIONS = [
-  "3 Wheelers & Bikes",
-  "4 Wheelers",
-  "Commercial Vehicles"
-];
-
-const COMMON_CATEGORIES = [
-  "Mechanical",
-  "Electrical",
-  "Maintenance",
-  "Detailing",
-  "Parts Supply",
-  "Towing",
-  "General"
-];
+import ShopInfoTab from "./ShopProfile/ShopInfoTab";
+import ShopHoursTab from "./ShopProfile/ShopHoursTab";
+import ShopGalleryTab from "./ShopProfile/ShopGalleryTab";
+import ShopTowTab from "./ShopProfile/ShopTowTab";
+import ShopServicesTab from "./ShopProfile/ShopServicesTab";
 
 function Stars({ count, max = 5 }) {
   return (
@@ -648,833 +637,82 @@ function ShopProfile() {
 
       {/* Tab Panel Content */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm min-h-[350px]">
-        
-        {/* ========================================== */}
-        {/* TAB 1: Shop Information                    */}
-        {/* ========================================== */}
         {activeTab === "info" && (
-          <div>
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h3 className="font-extrabold text-lg text-slate-900 m-0">
-                Shop Information
-              </h3>
-              {!isEditingBusinessInfo ? (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBusinessInfo(true)}
-                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
-                >
-                  <FontAwesomeIcon icon={faPenToSquare} /> Edit Information
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBusinessInfo(false)}
-                  className="py-2 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-
-            {!isEditingBusinessInfo ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs">
-                {/* Left Key-Value List */}
-                <div className="space-y-3.5 divide-y divide-slate-100">
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faStore} className="text-slate-400" /> Shop Name
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.name}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faTag} className="text-slate-400" /> Category
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.categories || "Garages"}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faUser} className="text-slate-400" /> Owner
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.owner}</span>
-                  </div>
-
-                  <div className="flex items-start justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faCar} className="text-slate-400" /> Vehicle Categories
-                    </span>
-                    <span className="text-slate-900 font-bold text-right max-w-[60%] leading-relaxed">
-                      {shopData.vehicleCategories || "3 Wheelers & Bikes, 4 Wheelers, Commercial Vehicles"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faEnvelope} className="text-slate-400" /> Email (Read-Only)
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.email}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faPhone} className="text-slate-400" /> Phone
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.contactNumber}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faLocationDot} className="text-slate-400" /> Address (Read-Only)
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.address}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-slate-500 font-medium flex items-center gap-2">
-                      <FontAwesomeIcon icon={faClipboardList} className="text-slate-400" /> Reg. No. (Read-Only)
-                    </span>
-                    <span className="text-slate-900 font-bold">{shopData.BRN || "Not Available"}</span>
-                  </div>
-                </div>
-
-                {/* Right Key-Value List */}
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-slate-600 font-semibold flex items-center gap-2">
-                      <FontAwesomeIcon icon={faWrench} className="text-slate-400" /> Carriage Service
-                    </span>
-                    <span className={`font-bold py-0.5 px-3 rounded-full text-xs ${
-                      shopData.carriageService ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-700"
-                    }`}>
-                      {shopData.carriageService ? "Available" : "Not Available"}
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-                    <span className="text-slate-600 font-semibold block flex items-center gap-2">
-                      <FontAwesomeIcon icon={faFileLines} className="text-slate-400" /> Description
-                    </span>
-                    <p className="text-slate-700 leading-relaxed text-xs m-0">
-                      {shopData.description || "We provide high-quality vehicle repair and maintenance services with experienced technicians and modern equipment. Your vehicle's safety and performance are our top priority."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Edit Business Info Form */
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-slate-600 font-semibold block mb-1">Shop Name *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={businessForm.name}
-                      onChange={handleBusinessFormChange}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-slate-600 font-semibold block mb-1">Owner *</label>
-                    <input
-                      type="text"
-                      name="owner"
-                      value={businessForm.owner}
-                      onChange={handleBusinessFormChange}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="py-1">
-                    <span className="text-xs text-slate-500 font-semibold block">Category (Read-Only)</span>
-                    <span className="text-xs text-slate-800 font-medium">{shopData.categories || "Garages"}</span>
-                  </div>
-
-                  <div className="py-1">
-                    <span className="text-xs text-slate-500 font-semibold block">Email (Read-Only)</span>
-                    <span className="text-xs text-slate-800 font-medium">{shopData.email}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-slate-600 font-semibold block mb-1">Phone *</label>
-                    <input
-                      type="text"
-                      name="phone"
-                      value={businessForm.phone}
-                      onChange={handleBusinessFormChange}
-                      placeholder="e.g. +94123456789 or 0123456789"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                    />
-                  </div>
-
-                  <div className="py-1">
-                    <span className="text-xs text-slate-500 font-semibold block">Reg. No. (BRN) (Read-Only)</span>
-                    <span className="text-xs text-slate-800 font-medium">{shopData.BRN || "Not Available"}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-xs text-slate-500 font-semibold block mb-1">Address (Read-Only)</span>
-                  <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800">
-                    {shopData.address}
-                  </div>
-                </div>
-
-                {/* Editable Description Textarea */}
-                <div>
-                  <label className="text-xs text-slate-600 font-semibold block mb-1">Shop Description</label>
-                  <textarea
-                    name="description"
-                    rows="3"
-                    value={businessForm.description}
-                    onChange={handleBusinessFormChange}
-                    placeholder="Describe your shop services, technicians, and equipment..."
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border leading-relaxed"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-slate-600 font-semibold block mb-1">Supported Vehicle Categories</label>
-                  <div className="flex flex-wrap gap-4 mt-2">
-                    {VEHICLE_CAT_OPTIONS.map(vCat => (
-                      <label key={vCat} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={businessForm.vehicleCategories.includes(vCat)}
-                          onChange={() => handleVehicleCatToggle(vCat)}
-                          className="rounded text-green-600 focus:ring-green-500"
-                        />
-                        {vCat}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {businessError && <p className="text-red-600 text-xs font-semibold">{businessError}</p>}
-
-                <button
-                  type="button"
-                  onClick={handleSaveBusinessInfo}
-                  disabled={businessSaving}
-                  className="mt-2 w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
-                >
-                  {businessSaving ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            )}
-          </div>
+          <ShopInfoTab
+            shopData={shopData}
+            isEditingBusinessInfo={isEditingBusinessInfo}
+            setIsEditingBusinessInfo={setIsEditingBusinessInfo}
+            businessForm={businessForm}
+            handleBusinessFormChange={handleBusinessFormChange}
+            handleVehicleCatToggle={handleVehicleCatToggle}
+            businessSaving={businessSaving}
+            businessError={businessError}
+            handleSaveBusinessInfo={handleSaveBusinessInfo}
+          />
         )}
-
-        {/* ========================================== */}
-        {/* TAB 2: Opening Hours                       */}
-        {/* ========================================== */}
         {activeTab === "hours" && (
-          <div>
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <div>
-                <h3 className="font-extrabold text-lg text-slate-900 m-0 flex items-center gap-2">
-                  <span>⏰</span> Operating Hours
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-slate-500">Current Availability:</span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleAvailability(isCurrentlyOpen ? 0 : 1)}
-                    className={`py-0.5 px-3 rounded-full text-xs font-bold border transition-all cursor-pointer ${
-                      isCurrentlyOpen
-                        ? "bg-green-100/90 text-green-600 border-green-300 hover:bg-green-200"
-                        : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
-                    }`}
-                  >
-                    {isCurrentlyOpen ? "🟢 OPEN FOR BUSINESS" : "🔴 CLOSED FOR BUSINESS"}
-                  </button>
-                </div>
-              </div>
-
-              {!isEditingHours ? (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingHours(true)}
-                  className="py-2 px-4 rounded-xl border border-green-600 bg-white text-green-600 font-semibold text-xs cursor-pointer hover:bg-green-50 flex items-center gap-1.5 transition-all shadow-2xs"
-                >
-                  <span>✏️</span> Edit Hours
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingHours(false)}
-                  className="py-2 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-
-            {!isEditingHours ? (
-              <div className="divide-y divide-slate-100 text-sm max-w-2xl">
-                <div className="py-3.5 flex justify-between items-center">
-                  <span className="font-semibold text-slate-800">Monday - Friday</span>
-                  <span className="font-bold text-slate-900">
-                    {formatTime(shopData.openTime)} - {formatTime(shopData.closeTime)}
-                  </span>
-                </div>
-
-                <div className="py-3.5 flex justify-between items-center">
-                  <span className="font-semibold text-slate-800">Saturday</span>
-                  <span className={`font-bold ${satClosed ? "text-red-600" : "text-slate-900"}`}>
-                    {satClosed ? "Closed" : `${formatTime(shopData.openTime)} - ${formatTime(businessForm.satCloseTime)}`}
-                  </span>
-                </div>
-
-                <div className="py-3.5 flex justify-between items-center">
-                  <span className="font-semibold text-slate-800">Sunday</span>
-                  <span className={`font-bold ${sunClosed ? "text-red-600" : "text-slate-900"}`}>
-                    {sunClosed ? "Closed" : `${formatTime(shopData.openTime)} - 2:00 PM`}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              /* Per-day Hours Edit Form */
-              <div className="max-w-xl space-y-6">
-                
-                {/* Mon - Fri */}
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-                  <span className="font-bold text-xs text-slate-900 block">Monday - Friday Hours</span>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
-                      <input
-                        type="time"
-                        name="openTime"
-                        value={businessForm.openTime}
-                        onChange={handleBusinessFormChange}
-                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] text-slate-600 font-semibold block mb-1">Close Time</label>
-                      <input
-                        type="time"
-                        name="closeTime"
-                        value={businessForm.closeTime}
-                        onChange={handleBusinessFormChange}
-                        className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Saturday */}
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-xs text-slate-900">Saturday Hours</span>
-                    <button
-                      type="button"
-                      onClick={() => setSatClosed(!satClosed)}
-                      className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
-                      }`}
-                    >
-                      {satClosed ? "Mark Open" : "Mark Closed"}
-                    </button>
-                  </div>
-                  {!satClosed ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
-                        <input
-                          type="time"
-                          value={businessForm.openTime}
-                          onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-600 font-semibold block mb-1">Close Time</label>
-                        <input
-                          type="time"
-                          name="satCloseTime"
-                          value={businessForm.satCloseTime}
-                          onChange={(e) => setBusinessForm({ ...businessForm, satCloseTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-red-600 font-medium m-0">Saturday marked as Closed.</p>
-                  )}
-                </div>
-
-                {/* Sunday */}
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-xs text-slate-900">Sunday Hours</span>
-                    <button
-                      type="button"
-                      onClick={() => setSunClosed(!sunClosed)}
-                      className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
-                      }`}
-                    >
-                      {sunClosed ? "Mark Open" : "Mark Closed"}
-                    </button>
-                  </div>
-                  {!sunClosed ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
-                        <input
-                          type="time"
-                          value={businessForm.openTime}
-                          onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-600 font-semibold block mb-1">Close Time</label>
-                        <input
-                          type="time"
-                          value="14:00"
-                          readOnly
-                          className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-100 text-slate-500 box-border"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-red-600 font-medium m-0">Sunday marked as Closed.</p>
-                  )}
-                </div>
-
-                {businessError && <p className="text-red-600 text-xs font-semibold">{businessError}</p>}
-
-                <button
-                  type="button"
-                  onClick={handleSaveBusinessInfo}
-                  disabled={businessSaving}
-                  className="w-full py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
-                >
-                  {businessSaving ? "Saving..." : "Save Operating Hours"}
-                </button>
-              </div>
-            )}
-          </div>
+          <ShopHoursTab
+            shopData={shopData}
+            isCurrentlyOpen={isCurrentlyOpen}
+            handleToggleAvailability={handleToggleAvailability}
+            isEditingHours={isEditingHours}
+            setIsEditingHours={setIsEditingHours}
+            formatTime={formatTime}
+            satClosed={satClosed}
+            setSatClosed={setSatClosed}
+            sunClosed={sunClosed}
+            setSunClosed={setSunClosed}
+            businessForm={businessForm}
+            setBusinessForm={setBusinessForm}
+            handleBusinessFormChange={handleBusinessFormChange}
+            businessSaving={businessSaving}
+            businessError={businessError}
+            handleSaveBusinessInfo={handleSaveBusinessInfo}
+          />
         )}
-
-        {/* ========================================== */}
-        {/* TAB 3: Shop Gallery                        */}
-        {/* ========================================== */}
         {activeTab === "gallery" && (
-          <div>
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h3 className="font-extrabold text-lg text-slate-900 m-0 flex items-center gap-2">
-                <span>🖼️</span> Shop Gallery <span className="text-xs font-normal text-slate-500">({galleryImages.length}/4)</span>
-                {uploadingGallery && <span className="text-xs text-green-600 font-semibold ml-1">(Uploading...)</span>}
-              </h3>
-              
-              <div className="flex gap-2">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleUploadImage}
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingGallery || galleryImages.length >= 4}
-                  title={galleryImages.length >= 4 ? "Maximum 4 images allowed" : "Add Image"}
-                  className={`py-2 px-4 rounded-xl border font-semibold text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow-2xs ${
-                    galleryImages.length >= 4
-                      ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                      : "border-green-600 bg-white text-green-600 hover:bg-green-50"
-                  }`}
-                >
-                  + Add Photo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDeleteMode(!isDeleteMode);
-                    setSelectedImagesToDelete([]);
-                  }}
-                  title={isDeleteMode ? "Cancel Removing" : "Remove Images"}
-                  className={`py-2 px-4 rounded-xl font-semibold text-xs cursor-pointer flex items-center gap-1.5 transition-all ${
-                    isDeleteMode
-                      ? "bg-slate-200 text-slate-700 border border-slate-300"
-                      : "border border-red-500 bg-white text-red-600 hover:bg-red-50"
-                  }`}
-                >
-                  {isDeleteMode ? "Cancel" : "− Remove Images"}
-                </button>
-              </div>
-            </div>
-
-            {/* Restored Multi-Select Thumbnail Grid UI */}
-            {galleryImages.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  {galleryImages.map((img) => {
-                    const isSelected = selectedImagesToDelete.includes(img.id);
-                    return (
-                      <div
-                        key={img.id}
-                        onClick={() => isDeleteMode && handleToggleSelectImage(img.id)}
-                        className={`relative h-44 rounded-2xl overflow-hidden border bg-slate-50 transition-all ${
-                          isDeleteMode ? "cursor-pointer" : ""
-                        } ${
-                          isSelected
-                            ? "ring-2 ring-red-500 border-red-500 shadow-md"
-                            : "border-slate-200 hover:border-green-300"
-                        }`}
-                      >
-                        <img
-                          src={`${UPLOADS_URL}/${img.url}`}
-                          alt="Gallery Photo"
-                          className="w-full h-full object-cover"
-                        />
-                        {isDeleteMode && (
-                          <div className={`absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
-                            isSelected ? "bg-red-600 text-white" : "bg-black/40 text-white/80 border border-white"
-                          }`}>
-                            {isSelected ? "✓" : "○"}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Dashed Add Photo Card */}
-                  {galleryImages.length < 4 && (
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="h-44 rounded-2xl border-2 border-dashed border-slate-300 hover:border-green-500 bg-slate-50/50 hover:bg-green-50/30 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-500 hover:text-green-600"
-                    >
-                      <span className="text-2xl font-bold mb-1">+</span>
-                      <span className="text-xs font-semibold">Add Photo</span>
-                    </div>
-                  )}
-                </div>
-
-                {isDeleteMode && (
-                  <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-200 flex items-center justify-between">
-                    <span className="text-xs text-red-700 font-medium">
-                      {selectedImagesToDelete.length} selected for deletion
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={handleConfirmBatchDelete}
-                        disabled={deletingGallery || selectedImagesToDelete.length === 0}
-                        className={`py-1.5 px-4 rounded-xl text-xs font-bold text-white border-none ${
-                          selectedImagesToDelete.length === 0 || deletingGallery
-                            ? "bg-red-300 cursor-not-allowed"
-                            : "bg-red-600 hover:bg-red-700 cursor-pointer shadow-2xs"
-                        }`}
-                      >
-                        {deletingGallery ? "Deleting..." : `Confirm Remove (${selectedImagesToDelete.length})`}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsDeleteMode(false);
-                          setSelectedImagesToDelete([]);
-                        }}
-                        className="py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-2xl text-xs text-slate-400">
-                No gallery photos added yet. Click + Add Photo to upload images.
-              </div>
-            )}
-
-            <p className="text-xs font-medium text-slate-500 m-0">
-              Recommended size: 1200 x 800 pixels. Max 5MB per image.
-            </p>
-          </div>
+          <ShopGalleryTab
+            galleryImages={galleryImages}
+            uploadingGallery={uploadingGallery}
+            fileInputRef={fileInputRef}
+            handleUploadImage={handleUploadImage}
+            isDeleteMode={isDeleteMode}
+            setIsDeleteMode={setIsDeleteMode}
+            selectedImagesToDelete={selectedImagesToDelete}
+            setSelectedImagesToDelete={setSelectedImagesToDelete}
+            handleToggleSelectImage={handleToggleSelectImage}
+            handleConfirmBatchDelete={handleConfirmBatchDelete}
+            deletingGallery={deletingGallery}
+          />
         )}
-
-        {/* ========================================== */}
-        {/* TAB 4: Transportation Details (Tow Truck)  */}
-        {/* ========================================== */}
         {activeTab === "tow" && (
-          <div>
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h3 className="font-extrabold text-lg text-slate-900 m-0 flex items-center gap-2">
-                <span>🚛</span> Tow Truck & Transportation Details
-              </h3>
-            </div>
-
-            {!hasTowService && !showTowForm && (
-              <div className="max-w-md py-4">
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  Do you provide tow truck or vehicle carriage services for customers in breakdown situations?
-                </p>
-                <button
-                  onClick={() => setShowTowForm(true)}
-                  className="py-2.5 px-5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 transition shadow-2xs"
-                >
-                  Yes, I provide tow service
-                </button>
-              </div>
-            )}
-
-            {hasTowService && !showTowForm && (
-              <div className="max-w-2xl">
-                {towLoading ? (
-                  <p className="text-xs text-slate-500">Loading tow truck details...</p>
-                ) : towDetails ? (
-                  <>
-                    <div className="divide-y divide-slate-100 text-xs">
-                      {[
-                        ["Driver Name", towDetails.default_driver_name],
-                        ["Driver Phone", towDetails.default_driver_phone],
-                        ["Truck Brand", towDetails.default_truck_brand],
-                        ["Truck Color", towDetails.default_truck_color],
-                        ["Plate Number", towDetails.tow_truck_plate],
-                      ].map(([k, v]) => (
-                        <div key={k} className="flex justify-between py-3">
-                          <span className="text-slate-500 font-medium">{k}</span>
-                          <span className="text-slate-900 font-bold">{v || "—"}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setShowTowForm(true)}
-                      className="mt-6 py-2.5 px-5 rounded-xl border border-slate-300 text-slate-700 bg-white font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                    >
-                      Edit Tow Truck Details
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-xs text-slate-500">No tow truck details found.</p>
-                )}
-              </div>
-            )}
-
-            {showTowForm && (
-              <div className="max-w-md space-y-3">
-                {[
-                  ["driverName", "Driver Name", "e.g. John Doe"],
-                  ["driverPhone", "Driver Phone", "e.g. +94 77 123 4567"],
-                  ["truckBrand", "Truck Brand", "e.g. Isuzu, Toyota"],
-                  ["truckColor", "Truck Color", "e.g. White, Blue"],
-                  ["truckPlate", "Plate Number", "e.g. WP GA-1234"],
-                ].map(([name, label, placeholder]) => (
-                  <div key={name}>
-                    <label className="text-[11px] text-slate-600 font-semibold block mb-1">{label}</label>
-                    <input
-                      type="text"
-                      name={name}
-                      value={towForm[name]}
-                      onChange={handleTowFormChange}
-                      placeholder={placeholder}
-                      className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                    />
-                  </div>
-                ))}
-
-                {towError && <p className="text-red-600 text-xs font-semibold">{towError}</p>}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={handleTowSave}
-                    disabled={towSaving}
-                    className={`flex-1 py-2.5 rounded-xl border-none bg-green-600 text-white font-semibold text-xs ${
-                      towSaving ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-green-600 shadow-2xs"
-                    }`}
-                  >
-                    {towSaving ? "Saving..." : "Save Details"}
-                  </button>
-                  <button
-                    onClick={() => { setShowTowForm(false); setTowError(""); }}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <ShopTowTab
+            hasTowService={hasTowService}
+            showTowForm={showTowForm}
+            setShowTowForm={setShowTowForm}
+            towLoading={towLoading}
+            towDetails={towDetails}
+            towForm={towForm}
+            handleTowFormChange={handleTowFormChange}
+            towError={towError}
+            setTowError={setTowError}
+            handleTowSave={handleTowSave}
+            towSaving={towSaving}
+          />
         )}
-
-        {/* ========================================== */}
-        {/* TAB 5: Services Offered                     */}
-        {/* ========================================== */}
         {activeTab === "services" && (
-          <div>
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h3 className="font-extrabold text-lg text-slate-900 m-0 flex items-center gap-2">
-                <span>🔧</span> Services Offered
-              </h3>
-            </div>
-
-            {!isEditingServices ? (
-              <>
-                {shopServices.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {shopServices.map((s, idx) => (
-                      <div key={idx} className="p-4 border border-slate-200/70 rounded-xl bg-slate-50/60 flex justify-between items-center hover:border-green-200 transition-colors">
-                        <div>
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-green-600 bg-green-100/80 px-2 py-0.5 rounded-md border border-green-200/50">
-                            {s.category || "General"}
-                          </span>
-                          <div className="font-bold text-sm text-slate-900 mt-1.5">{s.service_name || s.name}</div>
-                          <div className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1">
-                            <span>⏱️</span> {s.duration}
-                          </div>
-                        </div>
-                        <div className="font-bold text-xs text-green-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
-                          {s.starting_price || s.price}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic mb-4">No custom services added yet.</p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIsEditingServices(true)}
-                  className="mt-6 py-2.5 px-6 rounded-xl border-[1.5px] border-green-600 text-green-600 bg-white font-semibold text-xs cursor-pointer hover:bg-green-50 transition-colors shadow-2xs"
-                >
-                  + Add / Edit Services
-                </button>
-              </>
-            ) : (
-              <div>
-                <p className="text-xs text-slate-500 mb-4 font-medium">Manage custom services for your workshop:</p>
-
-                {/* Added Services List */}
-                <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-1">
-                  {shopServices.map((s, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                      <div>
-                        <span className="font-extrabold text-green-600 mr-2">[{s.category || "General"}]</span>
-                        <span className="font-semibold text-slate-900">{s.service_name || s.name}</span>
-                        <span className="text-slate-500 ml-2">({s.starting_price || s.price} • {s.duration})</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveService(idx)}
-                        disabled={servicesSaving}
-                        className="text-red-600 hover:text-red-800 font-bold border-none bg-transparent cursor-pointer text-xs flex items-center gap-1"
-                      >
-                        ✕ Remove
-                      </button>
-                    </div>
-                  ))}
-                  {shopServices.length === 0 && (
-                    <p className="text-xs text-slate-400 italic">No services in your list. Fill out below to add your first service.</p>
-                  )}
-                </div>
-
-                {/* Add Custom Service Form */}
-                <div className="p-4 bg-green-50/40 rounded-xl border border-green-200/80 space-y-3 mb-6">
-                  <div className="font-bold text-xs text-green-900 flex items-center gap-1">
-                    <span>+</span> Add New Custom Service
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Category *</label>
-                      <input
-                        type="text"
-                        list="category-suggestions"
-                        placeholder="e.g. Mechanical, Electrical"
-                        value={newService.category}
-                        onChange={(e) => setNewService({ ...newService, category: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                      <datalist id="category-suggestions">
-                        {COMMON_CATEGORIES.map(cat => (
-                          <option key={cat} value={cat} />
-                        ))}
-                      </datalist>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Service Name *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Full Engine Tune-up"
-                        value={newService.service_name}
-                        onChange={(e) => setNewService({ ...newService, service_name: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Starting Price</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Rs. 8,500"
-                        value={newService.starting_price}
-                        onChange={(e) => setNewService({ ...newService, starting_price: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Duration</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 3 Hours"
-                        value={newService.duration}
-                        onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-                        className="w-full py-2 px-3 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleAddCustomService}
-                    disabled={servicesSaving}
-                    className={`w-full py-2.5 text-white font-bold text-xs rounded-xl border-none shadow-2xs transition-colors ${
-                      servicesSaving ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-600 cursor-pointer"
-                    }`}
-                  >
-                    {servicesSaving ? "Saving..." : "+ Add Service to List"}
-                  </button>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSaveServices}
-                    disabled={servicesSaving}
-                    className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-semibold text-xs cursor-pointer hover:bg-green-600 shadow-2xs"
-                  >
-                    {servicesSaving ? "Saving..." : "Save All Services"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingServices(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-xs cursor-pointer hover:bg-slate-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <ShopServicesTab
+            isEditingServices={isEditingServices}
+            setIsEditingServices={setIsEditingServices}
+            shopServices={shopServices}
+            handleRemoveService={handleRemoveService}
+            servicesSaving={servicesSaving}
+            newService={newService}
+            setNewService={setNewService}
+            handleAddCustomService={handleAddCustomService}
+            handleSaveServices={handleSaveServices}
+          />
         )}
-
       </div>
     </div>
   );
