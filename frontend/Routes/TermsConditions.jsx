@@ -4,6 +4,7 @@ import { Footer } from "../components/footer";
 import * as FaIcons from "react-icons/fa";
 import { FaFileSignature, FaGavel, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import { api } from "../src/services/api";
+import toast from "react-hot-toast";
 
 function TermsConditions() {
     const [activeSection, setActiveSection] = useState(1);
@@ -13,6 +14,8 @@ function TermsConditions() {
     const [isEditing, setIsEditing] = useState(false);
     const [editFormData, setEditFormData] = useState([]);
     const [saving, setSaving] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     useEffect(() => {
         // Check if user is admin
@@ -63,18 +66,33 @@ function TermsConditions() {
         setEditFormData(newData);
     };
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
+        // Check if anything actually changed
+        if (JSON.stringify(editFormData) === JSON.stringify(sections)) {
+            toast.info("No changes were made.");
+            setIsEditing(false);
+            return;
+        }
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmSave = async () => {
+        setShowConfirmModal(false);
         try {
             setSaving(true);
             const data = await api.post('admin/updateTerms.php', { terms: editFormData });
             if (data.success) {
                 setSections(editFormData);
                 setIsEditing(false);
-                alert("Terms & Conditions updated successfully!");
+                setShowSuccessModal(true);
+                // Auto-hide the modal after 3 seconds
+                setTimeout(() => {
+                    setShowSuccessModal(false);
+                }, 3000);
             }
         } catch (error) {
             console.error("Failed to update terms:", error);
-            alert("Failed to update terms. Please try again.");
+            toast.error("Failed to update terms. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -117,7 +135,7 @@ function TermsConditions() {
                             ) : (
                                 <>
                                     <button 
-                                        onClick={handleSave}
+                                        onClick={handleSaveClick}
                                         disabled={saving}
                                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md shadow-blue-500/20 transition-all disabled:opacity-70"
                                     >
@@ -229,6 +247,56 @@ function TermsConditions() {
                     </>
                 )}
             </main>
+
+            {/* Custom Confirm Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200 border border-amber-100">
+                        <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-amber-100 mb-6">
+                            <FaEdit className="h-10 w-10 text-amber-600" />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-2">Save Changes?</h3>
+                        <p className="text-slate-500 font-medium mb-8">
+                            Are you sure you want to update the Terms & Conditions? These changes will be visible to all users immediately.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmSave}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md shadow-blue-500/20"
+                            >
+                                Yes, Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200 border border-green-100">
+                        <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
+                            <FaSave className="h-10 w-10 text-green-600" />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-2">Saved Successfully!</h3>
+                        <p className="text-slate-500 font-medium mb-8">
+                            The terms and conditions have been updated and are now live.
+                        </p>
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md shadow-green-500/20"
+                        >
+                            Got it, thanks!
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>
