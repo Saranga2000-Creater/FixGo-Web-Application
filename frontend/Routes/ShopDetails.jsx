@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { NavBar } from "../components/NavBar";
 import { Footer } from "../components/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faFlag, faTimes, faCheck, faTriangleExclamation, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { ServiceRequestModal } from "../components/ShopDetails/ServiceRequestForm";
 import { FaWrench } from "react-icons/fa";
 import { api } from "../src/services/api";
@@ -30,6 +30,43 @@ function ShopDetails() {
   // State for Review Filtering
   const [activeFilter, setActiveFilter] = useState("All");
   const [activeSort, setActiveSort] = useState("Most Recent");
+
+  // State for Report Garage Modal
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportType, setReportType] = useState("PROFILE FLAG");
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [reportSuccessMsg, setReportSuccessMsg] = useState("");
+  const [reportErrorMsg, setReportErrorMsg] = useState("");
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    if (!reportReason.trim()) {
+      setReportErrorMsg("Please enter a reason for reporting this garage.");
+      return;
+    }
+    setSubmittingReport(true);
+    setReportErrorMsg("");
+    try {
+      const res = await api.post("customer/reportShop.php", {
+        shop_id: id,
+        flag_type: reportType,
+        description: reportReason.trim()
+      });
+      if (res && res.success) {
+        setReportSuccessMsg(res.message || "Report submitted successfully.");
+        setReportReason("");
+        setTimeout(() => {
+          setIsReportModalOpen(false);
+          setReportSuccessMsg("");
+        }, 2200);
+      }
+    } catch (err) {
+      setReportErrorMsg(err.data?.error || err.message || "Failed to submit report. Please log in first.");
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
 
   // API Fetching Effect
   useEffect(() => {
@@ -170,6 +207,7 @@ function ShopDetails() {
                     vehicleCategories={vehicleCategories}
                     passedDistance={passedDistance}
                     isFullyUnlocked={isFullyUnlocked}
+                    onReportGarage={() => setIsReportModalOpen(true)}
                   />
                   <ShopServices services={services} />
                 </div>
@@ -197,6 +235,92 @@ function ShopDetails() {
           </div>
         </div>
       </main>
+
+      {/* REPORT GARAGE MODAL */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in duration-150 relative">
+            
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon icon={faFlag} className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 m-0">Report {info?.name || "Garage"}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5 m-0">Submit a flag to FixGo Platform Moderation</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsReportModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 bg-transparent border-none cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faTimes} className="text-lg" />
+              </button>
+            </div>
+
+            {reportSuccessMsg && (
+              <div className="mb-4 bg-green-50 border border-green-200 text-green-800 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                <FontAwesomeIcon icon={faCheck} className="text-green-600" />
+                {reportSuccessMsg}
+              </div>
+            )}
+
+            {reportErrorMsg && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold p-3 rounded-xl flex items-center gap-2">
+                <FontAwesomeIcon icon={faTriangleExclamation} className="text-red-500" />
+                {reportErrorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleReportSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Issue Category</label>
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:border-green-500 bg-white font-sans"
+                >
+                  <option value="PROFILE FLAG">Garage Profile / Compliance Issue</option>
+                  <option value="REVIEW REPORT">Fraudulent or Misleading Information</option>
+                  <option value="FRAUD SIGNAL">Overcharging / Service Misconduct</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Details & Description *</label>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Explain what happened or why this garage is being reported..."
+                  rows={4}
+                  required
+                  className="w-full text-xs p-3 rounded-xl border border-slate-200 outline-none focus:border-green-500 resize-none font-sans"
+                />
+              </div>
+
+              <div className="flex gap-2.5 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReportModalOpen(false)}
+                  disabled={submittingReport}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReport}
+                  className="px-4 py-2 text-xs font-bold rounded-xl border-none bg-red-600 hover:bg-red-700 text-white cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  {submittingReport ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faFlag} />}
+                  Submit Report
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <ServiceRequestModal
         isOpen={isModalOpen}

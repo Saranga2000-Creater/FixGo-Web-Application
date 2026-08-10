@@ -1,14 +1,27 @@
-import { FaCheckCircle, FaStar, FaWrench, FaShieldAlt, FaSmile, FaClock, FaMapMarkerAlt, FaPhoneAlt, FaTruckPickup } from "react-icons/fa";
+import { FaCheckCircle, FaStar, FaWrench, FaShieldAlt, FaSmile, FaClock, FaMapMarkerAlt, FaPhoneAlt, FaTruckPickup, FaFlag } from "react-icons/fa";
 
-export const ShopInfo = ({ info, stats, shopCategories, vehicleCategories, passedDistance, isFullyUnlocked }) => {
+export const ShopInfo = ({ info, stats, shopCategories, vehicleCategories, passedDistance, isFullyUnlocked, onReportGarage }) => {
   return (
     <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm">
-      {/* Title & Verified Badge */}
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{info.name}</h1>
-        <span className="flex items-center gap-1.5 rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white shadow-sm">
-          <FaCheckCircle className="text-white/90" /> Verified
-        </span>
+      {/* Title & Verified Badge + Report Garage Option */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{info.name}</h1>
+          <span className="flex items-center gap-1.5 rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white shadow-sm">
+            <FaCheckCircle className="text-white/90" /> Verified
+          </span>
+        </div>
+
+        {onReportGarage && (
+          <button
+            onClick={onReportGarage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Report this garage to platform moderation"
+          >
+            <FaFlag className="text-red-500 text-xs" />
+            <span>Report Garage</span>
+          </button>
+        )}
       </div>
 
       {/* Rating Row */}
