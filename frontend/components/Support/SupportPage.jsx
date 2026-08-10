@@ -469,7 +469,7 @@ const ReviewSection = () => {
   const loadPlatformReviews = async () => {
     setLoading(true);
     try {
-      const res = await api.getPublic("getPlatformReviews.php");
+      const res = await api.getPublic("reviews/getPlatformReviews.php");
       if (res && res.success && Array.isArray(res.data)) {
         setReviews(res.data);
         if (res.data.length >= 3) {
@@ -527,7 +527,7 @@ const ReviewSection = () => {
     setSubmitting(true);
 
     try {
-      await api.post("submitPlatformReview.php", {
+      await api.post("reviews/submitPlatformReview.php", {
         rating,
         comment: reviewText.trim(),
       });

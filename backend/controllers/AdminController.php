@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/ServiceRequest.php';
 require_once __DIR__ . '/../models/userRole.php';
 require_once __DIR__ . '/../models/ShopInvoice.php';
 require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../models/ModerationFlag.php';
 
 class AdminController {
     private $db;
@@ -350,6 +351,66 @@ class AdminController {
         } catch (PDOException $e) {
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Cannot delete item because it is currently assigned to existing records."]);
+        }
+    }
+
+    /**
+     * Admin Moderation: Get summary counts and list of flags
+     */
+    public function getModerationFlags($payload) {
+        $adminId = $this->authorizeAdmin($payload, 'GET');
+        if (!$adminId) return;
+
+        try {
+            $status = $_GET['status'] ?? 'ALL';
+            $type = $_GET['type'] ?? 'ALL';
+
+            $model = new ModerationFlag($this->db);
+            $summary = $model->getSummaryCounts();
+            $alerts = $model->getAllFlags($status, $type);
+
+            echo json_encode([
+                "success" => true,
+                "data" => [
+                    "summary" => $summary,
+                    "alerts" => $alerts
+                ]
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to load moderation data.", "error" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Admin Moderation: Resolve / action a moderation flag
+     */
+    public function resolveModerationFlag($payload) {
+        $adminId = $this->authorizeAdmin($payload, 'POST');
+        if (!$adminId) return;
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $flagId = isset($input['flagId']) ? (int)$input['flagId'] : 0;
+        $action = trim($input['action'] ?? '');
+        $notes = trim($input['notes'] ?? '');
+
+        if ($flagId <= 0 || empty($action)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Flag ID and action are required."]);
+            return;
+        }
+
+        try {
+            $model = new ModerationFlag($this->db);
+            $msg = $model->resolveFlag($flagId, $action, $notes, $adminId);
+
+            echo json_encode([
+                "success" => true,
+                "message" => is_string($msg) ? $msg : "Moderation action '{$action}' executed successfully."
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to process moderation action.", "error" => $e->getMessage()]);
         }
     }
 }
