@@ -9,8 +9,13 @@ class NotificationController {
         $this->notification = new Notification($db);
     }
 
-    public function getAll() {
-        $payload = AuthMiddleware::authenticate();
+    public function getAll($payload) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(["success" => false, "message" => "Method not allowed."]);
+            return;
+        }
+
         $userId  = $payload['user_id'] ?? null;
 
         if (!$userId) {
