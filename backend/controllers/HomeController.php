@@ -7,6 +7,7 @@ class HomeController {
     }
 
     public function getStats() {
+        RequestValidator::enforceMethod('GET');
         require_once __DIR__ . '/../models/Shop.php';
         require_once __DIR__ . '/../models/ServiceRequest.php';
         require_once __DIR__ . '/../models/Review.php';

@@ -15,20 +15,10 @@ class PlatformReviewController {
      * Submit a platform review (logged-in users only)
      */
     public function submitReview($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
+        $userId = $payload['user_id'] ?? null;
 
-        $userId = $payload['user_id'] ?? $payload['id'] ?? null;
-        if (!$userId) {
-            http_response_code(401);
-            echo json_encode(["success" => false, "message" => "User authentication failed."]);
-            return;
-        }
-
-        $data = json_decode(file_get_contents("php://input"));
+        $data = RequestValidator::getJsonPayload(false);
 
         $rating = isset($data->rating) ? intval($data->rating) : 0;
         $comment = isset($data->comment) ? trim($data->comment) : '';
@@ -75,11 +65,7 @@ class PlatformReviewController {
      * Retrieve top & recent platform reviews for homepage/support page carousel
      */
     public function getReviews() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         try {
             $rows = $this->platformReviewModel->getReviews();

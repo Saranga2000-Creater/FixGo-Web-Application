@@ -10,11 +10,7 @@ class NotificationController {
     }
 
     public function getAll($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $userId  = $payload['user_id'] ?? null;
 
@@ -35,20 +31,11 @@ class NotificationController {
     }
 
     public function markRead(array $payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         $userId = (int)$payload['user_id'];
 
-        $rawData = json_decode(file_get_contents("php://input"), true);
-        if ($rawData === null) {
-            http_response_code(400);
-            echo json_encode(["message" => "Invalid or missing JSON payload."]);
-            return;
-        }
+        $rawData = RequestValidator::getJsonPayload();
 
         try {
             if (!empty($rawData['notification_id'])) {
