@@ -10,15 +10,11 @@ class ReviewController {
     }
 
     public function submit(array $payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         $customerId = (int)$payload['user_id'];
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $serviceRequestId = $input['service_request_id'] ?? null;
         $shopId           = $input['shop_id'] ?? null;
         $rating           = (int)($input['rating'] ?? 0);
@@ -86,11 +82,7 @@ class ReviewController {
     }
 
     public function getCustomerReviews(array $payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $customerId = (int)$payload['user_id'];
 
@@ -104,6 +96,7 @@ class ReviewController {
     }
 
     public function getShopReviews() {
+        RequestValidator::enforceMethod('GET');
         $shopId = $_GET['shop_id'] ?? null;
         if (!$shopId) {
             http_response_code(400);

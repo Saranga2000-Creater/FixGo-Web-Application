@@ -52,6 +52,7 @@ class BillingController {
     // ============================================================
 
     public function getRates(): void {
+        RequestValidator::enforceMethod('GET');
         $model  = new BillingConfiguration($this->db);
         $config = $model->get();
 
@@ -64,18 +65,9 @@ class BillingController {
     // ============================================================
 
     public function updateRates(int $adminId): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($data === null) {
-            http_response_code(400);
-            echo json_encode(["message" => "Invalid JSON payload."]);
-            return;
-        }
+        $data = RequestValidator::getJsonPayload();
 
         $allowed = [
             'garagePerRequestFee', 'serviceCenterPerRequestFee', 'sparePartsMonthlyFee',
@@ -112,14 +104,10 @@ class BillingController {
     // ============================================================
 
     public function generateDrafts(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($data === null || !isset($data['year'], $data['month'])) {
+        $data = RequestValidator::getJsonPayload();
+        if (!isset($data['year'], $data['month'])) {
             http_response_code(400);
             echo json_encode(["message" => "Required fields: year, month."]);
             return;
@@ -203,11 +191,7 @@ class BillingController {
     // ============================================================
 
     public function getDrafts(array $queryParams): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $year  = isset($queryParams['year'])  ? (int)$queryParams['year']  : null;
         $month = isset($queryParams['month']) ? (int)$queryParams['month'] : null;
@@ -224,14 +208,10 @@ class BillingController {
     // ============================================================
 
     public function dispatchInvoices(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($data === null || !isset($data['year'], $data['month'])) {
+        $data = RequestValidator::getJsonPayload();
+        if (!isset($data['year'], $data['month'])) {
             http_response_code(400);
             echo json_encode(["message" => "Required fields: year, month."]);
             return;
@@ -309,11 +289,7 @@ class BillingController {
     // ============================================================
 
     public function getShopLedger(array $queryParams): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         if (empty($queryParams['shopId'])) {
             http_response_code(400);
@@ -335,11 +311,7 @@ class BillingController {
     // ============================================================
 
     public function getAllInvoices(array $queryParams): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $filters = [];
         if (!empty($queryParams['shopId']))  $filters['shopId']  = $queryParams['shopId'];
@@ -360,6 +332,7 @@ class BillingController {
     // ============================================================
 
     public function getPendingVerifications(): void {
+        RequestValidator::enforceMethod('GET');
         $model   = new ShopInvoice($this->db);
         $pending = $model->getPendingVerifications();
 
@@ -372,14 +345,10 @@ class BillingController {
     // ============================================================
 
     public function processVerification(int $adminId): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($data === null || !isset($data['invoiceId'], $data['action'])) {
+        $data = RequestValidator::getJsonPayload();
+        if (!isset($data['invoiceId'], $data['action'])) {
             http_response_code(400);
             echo json_encode(["message" => "Required fields: invoiceId, action."]);
             return;
@@ -447,6 +416,7 @@ class BillingController {
     // ============================================================
 
     public function getAnalytics(): void {
+        RequestValidator::enforceMethod('GET');
         $invoiceModel = new ShopInvoice($this->db);
         $configModel  = new BillingConfiguration($this->db);
 
@@ -552,6 +522,7 @@ class BillingController {
     // ============================================================
 
     public function getOwnerInvoices(int $shopId): void {
+        RequestValidator::enforceMethod('GET');
         $model    = new ShopInvoice($this->db);
         $invoices = $model->getOwnerInvoices($shopId);
 
@@ -571,11 +542,7 @@ class BillingController {
     // ============================================================
 
     public function submitPaymentSlip(int $shopId): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         if (empty($_POST['invoiceId']) || empty($_POST['paymentReference'])) {
             http_response_code(400);

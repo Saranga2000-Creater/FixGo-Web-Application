@@ -50,19 +50,8 @@ class ServiceRequestController {
 
     public function handleCreateRequest($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(["message" => "Method not allowed."]);
-        return;
-    }
-
-    $requestData = json_decode(file_get_contents("php://input"), true);
-
-    if ($requestData === null) {
-        http_response_code(400);
-        echo json_encode(["message" => "Invalid request body."]);
-        return;
-    }
+    RequestValidator::enforceMethod('POST');
+    $requestData = RequestValidator::getJsonPayload();
 
     $requestData['customer_id'] = $payload['user_id'];
 
@@ -140,19 +129,8 @@ class ServiceRequestController {
 
     public function handleUpdateStatus($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(["message" => "Only POST requests are allowed."]);
-        return;
-    }
-
-    $requestData = json_decode(file_get_contents("php://input"), true);
-
-    if ($requestData === null) {
-        http_response_code(400);
-        echo json_encode(["message" => "Invalid or missing JSON payload."]);
-        return;
-    }
+    RequestValidator::enforceMethod('POST');
+    $requestData = RequestValidator::getJsonPayload();
 
     $actor_id = $payload['user_id'] ?? null;
     $actor_role = $payload['role'] ?? null;
@@ -338,11 +316,7 @@ class ServiceRequestController {
     // ==========================================
 public function handleGetCustomerRequests($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $customer_id = $payload['user_id'];
         $this->serviceRequestModel->cancelStaleRequests();
@@ -361,11 +335,7 @@ public function handleGetCustomerRequests($payload)
 
  public function handleGetShopRequests($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $shop_id = $payload['user_id'];   
         $this->serviceRequestModel->cancelStaleRequests();
@@ -384,11 +354,7 @@ public function handleGetCustomerRequests($payload)
 
     public function handleGetDeclinedRequests($payload)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $shop_id = $payload['user_id'];
         $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
@@ -402,11 +368,7 @@ public function handleGetCustomerRequests($payload)
 
     public function handleGetMissedRequests($payload)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $shop_id = $payload['user_id'];
         $requests = $this->serviceRequestModel->getMissedRequestsByShop($shop_id);
@@ -421,11 +383,7 @@ public function handleGetCustomerRequests($payload)
     
  public function handleGetConfirmedRequests($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $shop_id = $payload['user_id'];   
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
@@ -439,11 +397,7 @@ public function handleGetCustomerRequests($payload)
 
     public function handleGetActiveRepairs($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $shop_id = $payload['user_id'];
     $repairs = $this->serviceRequestModel->getActiveRepairsByShop($shop_id);
@@ -458,11 +412,7 @@ public function handleGetCustomerRequests($payload)
 
     public function handleGetServiceHistory($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $shop_id = $payload['user_id'];
         $history = $this->serviceRequestModel->getServiceHistoryByShop($shop_id);
@@ -475,16 +425,12 @@ public function handleGetCustomerRequests($payload)
     }
 public function updateTowTruckDetails($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('POST');
 
     $shop_id = $payload['user_id'];
 
     // Read request body first
-    $data = json_decode(file_get_contents("php://input"), true);
+    $data = RequestValidator::getJsonPayload();
 
     if (empty($data['request_id'])) {
         http_response_code(400);
@@ -534,11 +480,7 @@ public function updateTowTruckDetails($payload)
 
     public function handleGetServiceRequestVolume($payload)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $userId = $payload['user_id'] ?? null;
         if (!$userId) {
