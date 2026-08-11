@@ -224,9 +224,14 @@ class QueryBuilder {
             $columns = array_keys($this->insertData);
             $paramNames = [];
             foreach ($columns as $col) {
-                $paramName = "p" . $this->paramCounter++;
-                $paramNames[] = ":$paramName";
-                $this->params[":$paramName"] = $this->insertData[$col];
+                $val = $this->insertData[$col];
+                if ($val instanceof stdClass && isset($val->raw)) {
+                    $paramNames[] = $val->raw;
+                } else {
+                    $paramName = "p" . $this->paramCounter++;
+                    $paramNames[] = ":$paramName";
+                    $this->params[":$paramName"] = $val;
+                }
             }
             
             $sql = "INSERT INTO " . $this->table . " (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $paramNames) . ")";
