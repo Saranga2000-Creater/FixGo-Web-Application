@@ -385,4 +385,29 @@ class AdminController {
             echo json_encode(["success" => false, "message" => "Failed to process moderation action.", "error" => $e->getMessage()]);
         }
     }
+
+    /**
+     * Admin: Update Terms and Conditions
+     */
+    public function updateTerms($payload) {
+        RequestValidator::enforceMethod('POST');
+        require_once __DIR__ . '/../models/SystemConfig.php';
+
+        $input = RequestValidator::getJsonPayload(true);
+        
+        if (!isset($input['terms']) || !is_array($input['terms'])) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Invalid input format. Expected a 'terms' array."]);
+            return;
+        }
+
+        $configModel = new SystemConfig();
+        if ($configModel->updateTerms($input['terms'])) {
+            http_response_code(200);
+            echo json_encode(["success" => true, "message" => "Terms and conditions updated successfully."]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to update terms and conditions."]);
+        }
+    }
 }

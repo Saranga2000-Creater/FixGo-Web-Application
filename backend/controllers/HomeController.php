@@ -30,5 +30,21 @@ class HomeController {
             ]
         ]);
     }
+
+    public function getTerms() {
+        RequestValidator::enforceMethod('GET');
+        require_once __DIR__ . '/../models/SystemConfig.php';
+
+        $configModel = new SystemConfig();
+        $terms = $configModel->getTerms();
+
+        if (!empty($terms)) {
+            http_response_code(200);
+            echo json_encode($terms);
+        } else {
+            http_response_code(404);
+            echo json_encode(["message" => "Terms and conditions not found."]);
+        }
+    }
 }
 ?>
