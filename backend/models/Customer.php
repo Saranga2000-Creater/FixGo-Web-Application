@@ -137,4 +137,13 @@ class Customer {
             throw $e;
         }
     }
+
+    public function getProfilePhoto($customerId) {
+        $stmt = $this->conn->prepare("SELECT profilePhoto FROM customer WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $customerId]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return $row['profilePhoto'];
+        }
+        return null;
+    }
 }

@@ -177,4 +177,22 @@ class ModerationFlag {
 
         return $responseMsg;
     }
+
+    /**
+     * Submit a new moderation flag report
+     */
+    public function submitReport($shopId, $flagType, $reporterName, $shopName, $description) {
+        $insertSql = "INSERT INTO {$this->table} 
+                      (entity_type, entity_id, flag_type, severity, reported_by_user, shop_name, description, status, created_at)
+                      VALUES ('shop', :entity_id, :flag_type, 'medium', :reported_by, :shop_name, :description, 'pending', NOW())";
+        
+        $stmt = $this->db->prepare($insertSql);
+        return $stmt->execute([
+            ':entity_id' => $shopId,
+            ':flag_type' => $flagType,
+            ':reported_by' => $reporterName,
+            ':shop_name' => $shopName,
+            ':description' => $description
+        ]);
+    }
 }

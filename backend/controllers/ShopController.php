@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../models/Shop.php';
 require_once __DIR__ . '/../models/userRole.php';
+require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../config/EmailSender.php';
 
 class ShopController {
@@ -12,11 +13,7 @@ class ShopController {
     }
 
     public function getProfile($shopId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $shopModel = new Shop($this->db);
         $shopProfile = $shopModel->getById($shopId);
@@ -39,11 +36,7 @@ class ShopController {
     // --- OUR NEW METHOD FOR THE SHOP DETAILS PAGE ---
     public function getDetails() {
         // 1. Only accept GET requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         // 2. Validate that the ID exists in the URL
         if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -124,11 +117,7 @@ class ShopController {
 
     public function register() {
         // Only handle POST requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         // Check inputs in $_POST
         $requiredFields = [
@@ -269,18 +258,8 @@ class ShopController {
         }
 
         // Map Shop Category dynamically from database
-        $categoryId = null;
-        if (is_numeric($category)) {
-            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE id = :id LIMIT 1");
-            $stmt->execute([':id' => (int)$category]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) $categoryId = (int)$row['id'];
-        } else {
-            $stmt = $this->db->prepare("SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-            $stmt->execute([':name' => trim($category)]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) $categoryId = (int)$row['id'];
-        }
+        $categoryModel = new Category($this->db);
+        $categoryId = $categoryModel->resolveShopCategoryId($category);
 
         if ($categoryId === null) {
             http_response_code(400);
@@ -308,16 +287,9 @@ class ShopController {
         }
 
         foreach ($categoriesToProcess as $cat) {
-            if (is_numeric($cat)) {
-                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE id = :id LIMIT 1");
-                $stmt->execute([':id' => (int)$cat]);
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($row) $vehicleIds[] = (int)$row['id'];
-            } else {
-                $stmt = $this->db->prepare("SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-                $stmt->execute([':name' => trim($cat)]);
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($row) $vehicleIds[] = (int)$row['id'];
+            $vId = $categoryModel->resolveVehicleCategoryId($cat);
+            if ($vId !== null) {
+                $vehicleIds[] = $vId;
             }
         }
 
@@ -400,11 +372,7 @@ class ShopController {
 
 public function getTowTruckDetails($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(["success" => false, "message" => "Method not allowed."]);
-        return;
-    }
+    RequestValidator::enforceMethod('GET');
 
     $shopId = $payload['user_id'] ?? null;
 
@@ -436,14 +404,7 @@ public function getTowTruckDetails($payload)
 
 public function updateShopTowTruckDetails($payload)
 {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Method not allowed'
-        ]);
-        return;
-    }
+    RequestValidator::enforceMethod('POST');
 
     // Get shop ID from JWT payload
     $shopId = $payload['user_id'] ?? null;
@@ -457,7 +418,7 @@ public function updateShopTowTruckDetails($payload)
         return;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = RequestValidator::getJsonPayload();
 
     foreach (['driverName', 'driverPhone', 'truckBrand', 'truckColor', 'truckPlate'] as $field) {
         if (!isset($input[$field]) || trim($input[$field]) === '') {
@@ -507,6 +468,7 @@ public function updateShopTowTruckDetails($payload)
 }
 
     public function getGalleryImages($payload) {
+        RequestValidator::enforceMethod('GET');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -519,6 +481,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function uploadGalleryImage($payload) {
+        RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -580,6 +543,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function deleteGalleryImage($payload) {
+        RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -587,7 +551,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $imageId = $input['image_id'] ?? null;
         if (!$imageId) {
             http_response_code(400);
@@ -606,6 +570,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function uploadProfileImage($payload) {
+        RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -660,6 +625,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function updateBusinessInfo($payload) {
+        RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -667,7 +633,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
 
         // SERVER-SIDE IMMUTABILITY: Remove email & category if sent in payload
         unset($input['email'], $input['category'], $input['categories']);
@@ -728,6 +694,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function getShopServices($payload) {
+        RequestValidator::enforceMethod('GET');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -740,6 +707,7 @@ public function updateShopTowTruckDetails($payload)
     }
 
     public function updateShopServices($payload) {
+        RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
         if (!$shopId) {
             http_response_code(403);
@@ -747,7 +715,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $services = $input['services'] ?? [];
 
         $shopModel = new Shop($this->db);
@@ -760,30 +728,15 @@ public function updateShopTowTruckDetails($payload)
         }
     }
 
-    private function authorizeShopOwner($payload, $allowedMethod = null) {
-        if ($allowedMethod && $_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return false;
-        }
-        $role = $payload['role'] ?? $payload['userRole'] ?? '';
-        $shopId = $payload['user_id'] ?? $payload['id'] ?? null;
-        if (!$shopId || $role !== 'shop_owner') {
-            http_response_code(403);
-            echo json_encode(["success" => false, "message" => "Shop owner access required."]);
-            return false;
-        }
-        return $shopId;
-    }
+
 
 
     public function updatePassword($payload) {
-        $shopId = $this->authorizeShopOwner($payload, 'POST');
-        if (!$shopId) return;
+        RequestValidator::enforceMethod('POST');
+        $shopId = $payload['user_id'] ?? null;
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput, true);
-        if (!is_array($data) || empty($data)) {
+        $data = RequestValidator::getJsonPayload();
+        if (empty($data)) {
             $data = $_POST;
         }
 

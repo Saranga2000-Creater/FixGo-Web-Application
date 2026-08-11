@@ -812,5 +812,26 @@ public function updateShopTowTruckDetails($shopId, $data) {
         $stmt = $this->conn->prepare("UPDATE users SET password = :password WHERE id = :id");
         return $stmt->execute([':password' => $hashedPassword, ':id' => $shopId]);
     }
+
+    public function getProfileImageURL($shopId) {
+        $stmt = $this->conn->prepare("SELECT profileImageURL FROM shop WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $shopId]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return $row['profileImageURL'];
+        }
+        return null;
+    }
+
+    public function getActiveSparePartsShopCount() {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) FROM shop s
+            JOIN users u ON s.id = u.id
+            JOIN shopCategoryMapping scm ON s.id = scm.shop_id
+            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
+              AND scm.shop_category_id = 3
+        ");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
 }
 ?>

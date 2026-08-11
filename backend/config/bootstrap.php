@@ -81,3 +81,4 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
 // ----------------------------------------------------------
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/AuthMiddleware.php';
+require_once __DIR__ . '/RequestValidator.php';

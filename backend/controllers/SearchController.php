@@ -10,6 +10,7 @@ class SearchController {
     }
 
     public function handleSearchRequest($requestData) {
+        RequestValidator::enforceMethod('GET');
         $lat = isset($requestData['lat']) ? (float) $requestData['lat'] : null;
         $lng = isset($requestData['lng']) ? (float) $requestData['lng'] : null;
         $needs_tow = isset($requestData['needs_tow']) ? $requestData['needs_tow'] : 'false';

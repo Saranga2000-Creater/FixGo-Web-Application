@@ -218,5 +218,11 @@ class User {
         return (bool) $stmt->fetch();
     }
 
+    public function activateUser($userId) {
+        $stmt = $this->conn->prepare("UPDATE users SET isActive = 1 WHERE id = :id");
+        $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
 }
 ?>

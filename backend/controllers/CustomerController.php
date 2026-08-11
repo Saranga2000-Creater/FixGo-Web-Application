@@ -4,6 +4,8 @@ require_once __DIR__ . '/../models/Customer.php';
 require_once __DIR__ . '/../models/userRole.php';
 require_once __DIR__ . '/../config/EmailSender.php';
 require_once __DIR__ . '/../models/CustomerVehicle.php';
+require_once __DIR__ . '/../models/ModerationFlag.php';
+require_once __DIR__ . '/../models/Shop.php';
 
 class CustomerController {
     private $db;
@@ -15,11 +17,7 @@ class CustomerController {
     }
 
     public function getProfile($customerId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $customerModel = new Customer($this->db);
         $customer = $customerModel->getById($customerId);
@@ -52,11 +50,7 @@ class CustomerController {
 
     public function register() {
         // Only handle POST requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         // Check inputs in $_POST
         $requiredFields = ['name', 'email', 'phone', 'address', 'password'];
@@ -186,11 +180,7 @@ class CustomerController {
     }
 
     public function updateProfile($customerId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         $input = $_POST;
         if (empty($input)) {
@@ -300,11 +290,10 @@ class CustomerController {
             }
 
             // Verify current password
-            $userStmt = $this->db->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
-            $userStmt->execute([':id' => $customerId]);
-            $userRow = $userStmt->fetch(PDO::FETCH_ASSOC);
+            require_once __DIR__ . '/../models/userRole.php';
+            $userModel = new User($this->db);
 
-            if (!$userRow || !password_verify($currentPassword, $userRow['password'])) {
+            if (!$userModel->verifyPassword($customerId, $currentPassword)) {
                 http_response_code(400);
                 echo json_encode(["message" => "Current password is incorrect."]);
                 return;
@@ -333,11 +322,7 @@ class CustomerController {
     // ==========================================
 
     public function handleGetVehicles($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $customer_id = $payload['user_id'];
         $vehicleModel = new CustomerVehicle($this->db);
@@ -350,14 +335,10 @@ class CustomerController {
     }
 
     public function handleAddVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        if (!$input) $input = $_POST;
+        $input = RequestValidator::getJsonPayload();
+        if (empty($input)) $input = $_POST;
 
         $required = ['vehicle_category_id', 'brand', 'color'];
         foreach ($required as $field) {
@@ -396,13 +377,9 @@ class CustomerController {
     }
 
     public function handleUpdateVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod(['PUT', 'POST']);
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         
         $required = ['id', 'vehicle_category_id', 'brand', 'color'];
         foreach ($required as $field) {
@@ -431,13 +408,9 @@ class CustomerController {
     }
 
     public function handleDeleteVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod(['DELETE', 'POST']);
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $vehicle_id = $input['id'] ?? null;
         
         if (isset($_GET['id'])) {
@@ -458,6 +431,47 @@ class CustomerController {
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to delete vehicle.']);
+        }
+    }
+
+    public function reportShop($payload) {
+        RequestValidator::enforceMethod('POST');
+
+        $userId = $payload['user_id'] ?? null;
+
+        $input = RequestValidator::getJsonPayload();
+        $shopId = isset($input['shop_id']) ? (int)$input['shop_id'] : 0;
+        $flagType = trim($input['flag_type'] ?? 'PROFILE FLAG');
+        $description = trim($input['description'] ?? '');
+
+        if ($shopId <= 0 || empty($description)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Shop ID and report description are required."]);
+            return;
+        }
+
+        try {
+            $reporterName = $payload['name'] ?? $payload['email'] ?? null;
+            if (!$reporterName) {
+                $customerModel = new Customer($this->db);
+                $customer = $customerModel->getById($userId);
+                $reporterName = $customer ? $customer['name'] : "User #{$userId}";
+            }
+
+            $shopModel = new Shop($this->db);
+            $shop = $shopModel->getById($shopId);
+            $shopName = $shop ? $shop['name'] : "Garage #{$shopId}";
+
+            $moderationModel = new ModerationFlag($this->db);
+            $moderationModel->submitReport($shopId, $flagType, $reporterName, $shopName, $description);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Report submitted successfully. Our admin team will investigate this garage."
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Failed to submit report.", "error" => $e->getMessage()]);
         }
     }
 }

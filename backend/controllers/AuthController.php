@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/../models/userRole.php';
+require_once __DIR__ . '/../models/Shop.php';
+require_once __DIR__ . '/../models/Customer.php';
 require_once __DIR__ . '/../config/JwtHandler.php';
 
 
@@ -16,16 +18,11 @@ class AuthController{
 
     public function login(){
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         
-        if(!is_object($data) || empty($data->email) || empty($data->password)){
+        if(empty($data->email) || empty($data->password)){
             http_response_code(400);
             echo json_encode(["message"=>"Email and password are required."]);
             return;
@@ -85,17 +82,11 @@ class AuthController{
                 // Fetch profile image URL
                 $profileImage = null;
                 if ($user->userRole === 'shop_owner') {
-                    $stmt = $this->db->prepare("SELECT profileImageURL FROM shop WHERE id = :id LIMIT 1");
-                    $stmt->execute([':id' => $user->id]);
-                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $profileImage = $row['profileImageURL'];
-                    }
+                    $shopModel = new Shop($this->db);
+                    $profileImage = $shopModel->getProfileImageURL($user->id);
                 } else if ($user->userRole === 'customer') {
-                    $stmt = $this->db->prepare("SELECT profilePhoto FROM customer WHERE id = :id LIMIT 1");
-                    $stmt->execute([':id' => $user->id]);
-                    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $profileImage = $row['profilePhoto'];
-                    }
+                    $customerModel = new Customer($this->db);
+                    $profileImage = $customerModel->getProfilePhoto($user->id);
                 }
 
                 http_response_code(200);
@@ -208,16 +199,12 @@ class AuthController{
 
     public function verifyEmail() {
         // Only handle POST and GET requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod(['POST', 'GET']);
 
         // Retrieve token
         $token = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
+            $data = RequestValidator::getJsonPayload(false);
             $token = isset($data->token) ? trim($data->token) : null;
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $token = isset($_GET['token']) ? trim($_GET['token']) : null;
@@ -262,14 +249,9 @@ class AuthController{
     }
 
     public function forgotPassword() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $email = isset($data->email) ? trim($data->email) : '';
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -304,14 +286,9 @@ class AuthController{
     }
 
     public function verifyResetOtp() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $otp = isset($data->otp) ? trim($data->otp) : '';
 
         if (empty($otp)) {
@@ -338,14 +315,9 @@ class AuthController{
     }
 
     public function resetPassword() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $otp = isset($data->otp) ? trim($data->otp) : '';
         $newPassword = isset($data->password) ? $data->password : '';
 
