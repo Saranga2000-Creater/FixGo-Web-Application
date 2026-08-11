@@ -1,10 +1,8 @@
 <?php
 class Category {
-    private $conn;
     private $qb;
 
     public function __construct($db, $queryBuilder = null) {
-        $this->conn = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 

@@ -1,11 +1,9 @@
 <?php
 
 class PlatformReview {
-    private $db;
     private $qb;
 
     public function __construct($db, $queryBuilder = null) {
-        $this->db = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 

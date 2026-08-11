@@ -1,11 +1,9 @@
 <?php
 class ServiceRequest {
-    private $conn;
     private $qb;
     private $table_name = 'servicerequest';
 
     public function __construct($db, $queryBuilder = null) {
-        $this->conn = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 

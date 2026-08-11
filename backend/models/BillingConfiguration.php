@@ -1,12 +1,10 @@
 <?php
 
 class BillingConfiguration {
-    private $conn;
     private $qb;
     private $table_name = 'billingConfiguration';
 
     public function __construct($db, $queryBuilder = null) {
-        $this->conn = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 

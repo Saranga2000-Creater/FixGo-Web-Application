@@ -1,73 +1,56 @@
 <?php
 class CustomerVehicle {
-    private $conn;
+    private $qb;
     private $table_name = 'customerVehicle';
 
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($db, $queryBuilder = null) {
+        $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
     public function getByCustomer($customer_id) {
-        $query = "SELECT id, vehicle_category_id, brand, color FROM " . $this->table_name . " WHERE customer_id = :customer_id ORDER BY id DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table($this->table_name)
+            ->select('id', 'vehicle_category_id', 'brand', 'color')
+            ->where('customer_id', $customer_id)
+            ->orderBy('id', 'DESC')
+            ->get();
     }
 
     public function add($data) {
-        $query = "INSERT INTO " . $this->table_name . " (customer_id, vehicle_category_id, brand, color) VALUES (:customer_id, :vehicle_category_id, :brand, :color)";
-        $stmt = $this->conn->prepare($query);
-
-        $customer_id = htmlspecialchars(strip_tags($data['customer_id']));
-        $vehicle_category_id = htmlspecialchars(strip_tags($data['vehicle_category_id']));
-        $brand = htmlspecialchars(strip_tags($data['brand']));
-        $color = htmlspecialchars(strip_tags($data['color']));
-
-        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
-        $stmt->bindParam(':vehicle_category_id', $vehicle_category_id, PDO::PARAM_INT);
-        $stmt->bindParam(':brand', $brand);
-        $stmt->bindParam(':color', $color);
-
-        if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
-        }
-        return false;
+        return $this->qb->table($this->table_name)->insertGetId([
+            'customer_id' => $data['customer_id'],
+            'vehicle_category_id' => $data['vehicle_category_id'],
+            'brand' => $data['brand'],
+            'color' => $data['color']
+        ]);
     }
 
     public function update($id, $customer_id, $data) {
-        $query = "UPDATE " . $this->table_name . " SET vehicle_category_id = :vehicle_category_id, brand = :brand, color = :color WHERE id = :id AND customer_id = :customer_id";
-        $stmt = $this->conn->prepare($query);
-
-        $vehicle_category_id = htmlspecialchars(strip_tags($data['vehicle_category_id']));
-        $brand = htmlspecialchars(strip_tags($data['brand']));
-        $color = htmlspecialchars(strip_tags($data['color']));
-
-        $stmt->bindParam(':vehicle_category_id', $vehicle_category_id, PDO::PARAM_INT);
-        $stmt->bindParam(':brand', $brand);
-        $stmt->bindParam(':color', $color);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
-
-        return $stmt->execute();
+        $this->qb->table($this->table_name)
+            ->where('id', $id)
+            ->where('customer_id', $customer_id)
+            ->update([
+                'vehicle_category_id' => $data['vehicle_category_id'],
+                'brand' => $data['brand'],
+                'color' => $data['color']
+            ]);
+        return true;
     }
 
     public function delete($id, $customer_id) {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id AND customer_id = :customer_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->qb->table($this->table_name)
+            ->where('id', $id)
+            ->where('customer_id', $customer_id)
+            ->delete();
     }
 
     public function exists($customer_id, $brand, $color) {
-        $query = "SELECT id FROM " . $this->table_name . " WHERE customer_id = :customer_id AND LOWER(brand) = LOWER(:brand) AND LOWER(color) = LOWER(:color) LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
-        $stmt->bindParam(':brand', $brand);
-        $stmt->bindParam(':color', $color);
-        $stmt->execute();
-        return $stmt->rowCount() > 0;
+        $result = $this->qb->table($this->table_name)
+            ->select('id')
+            ->where('customer_id', $customer_id)
+            ->whereRaw('LOWER(brand) = LOWER(:brand)', ['brand' => $brand])
+            ->whereRaw('LOWER(color) = LOWER(:color)', ['color' => $color])
+            ->first();
+        return $result !== false && $result !== null;
     }
 }
 ?>

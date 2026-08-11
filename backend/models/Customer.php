@@ -1,11 +1,9 @@
 <?php
 
 class Customer {
-    private $conn;
     private $qb;
 
     public function __construct($db, $queryBuilder = null) {
-        $this->conn = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
@@ -46,7 +44,7 @@ class Customer {
      */
     public function register($userData, $customerData) {
         try {
-            $this->conn->beginTransaction();
+            $this->qb->beginTransaction();
 
             // 1. Insert into users
             $userId = $this->qb->table('users')->insertGetId([
@@ -68,11 +66,11 @@ class Customer {
                 'profilePhoto' => $customerData['profilePhoto']
             ]);
 
-            $this->conn->commit();
+            $this->qb->commit();
             return $userId;
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
             }
             throw $e;
         }

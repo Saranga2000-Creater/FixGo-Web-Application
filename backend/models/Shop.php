@@ -1,11 +1,9 @@
 <?php
 class Shop {
-    private $conn;
     private $qb;
     private $table_name = 'shop'; 
 
     public function __construct($db, $queryBuilder = null) {
-        $this->conn = $db;
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
@@ -263,7 +261,7 @@ class Shop {
 
     public function register($userData, $shopData, $categoryId, $vehicleIds) {
         try {
-            $this->conn->beginTransaction();
+            $this->qb->beginTransaction();
 
             $userId = $this->qb->table('users')->insertGetId([
                 'email' => $userData['email'],
@@ -308,11 +306,11 @@ class Shop {
                 ]);
             }
 
-            $this->conn->commit();
+            $this->qb->commit();
             return $userId;
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
             }
             throw $e;
         }
@@ -370,7 +368,7 @@ class Shop {
 
     public function updateBusinessInfo($shopId, $data, $vehicleCategoryIds) {
         try {
-            $this->conn->beginTransaction();
+            $this->qb->beginTransaction();
 
             $this->qb->table('shop')->where('id', $shopId)->update([
                 'name' => $data['name'],
@@ -395,11 +393,11 @@ class Shop {
                 }
             }
 
-            $this->conn->commit();
+            $this->qb->commit();
             return true;
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
             }
             throw $e;
         }
@@ -414,7 +412,7 @@ class Shop {
 
     public function updateShopServices($shopId, $services) {
         try {
-            $this->conn->beginTransaction();
+            $this->qb->beginTransaction();
 
             $this->qb->table('shopServices')->where('shop_id', $shopId)->delete();
 
@@ -437,11 +435,11 @@ class Shop {
                 }
             }
 
-            $this->conn->commit();
+            $this->qb->commit();
             return true;
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
             }
             throw $e;
         }
