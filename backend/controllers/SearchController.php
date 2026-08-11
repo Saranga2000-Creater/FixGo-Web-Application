@@ -44,7 +44,7 @@ class SearchController {
                 $openStatusText = "Temporarily Closed";
 
                 if ($row['isAvailable'] == 1) {
-                    if ($currentTime >= $row['openTime'] && $currentTime <= $row['closeTime']) {
+                    if ($currentTime >= $row['openTime'] && $currentTime < $row['closeTime']) {
                         $isOpen = true;
                         $openStatusText = "Open Now";
                     } else {

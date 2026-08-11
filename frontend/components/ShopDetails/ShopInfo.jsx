@@ -1,6 +1,20 @@
 import { FaCheckCircle, FaStar, FaWrench, FaShieldAlt, FaSmile, FaClock, FaMapMarkerAlt, FaPhoneAlt, FaTruckPickup, FaFlag } from "react-icons/fa";
 
+const formatTime = (timeStr) => {
+  if (!timeStr) return "N/A";
+  const parts = timeStr.split(":");
+  if (parts.length < 2) return timeStr;
+  const hour = parseInt(parts[0], 10);
+  const min = parts[1];
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${min} ${ampm}`;
+};
+
 export const ShopInfo = ({ info, stats, shopCategories, vehicleCategories, passedDistance, isFullyUnlocked, onReportGarage }) => {
+  const isOpenNow = info.is_open_now !== undefined ? info.is_open_now : (info.isAvailable == 1);
+  const statusText = info.open_status_text || (info.isAvailable ? "Open Now" : "Currently Busy");
+
   return (
     <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm">
       {/* Title & Verified Badge + Report Garage Option */}
@@ -92,13 +106,13 @@ export const ShopInfo = ({ info, stats, shopCategories, vehicleCategories, passe
           </div>
           {/* Col 2: Status */}
           <div className="col-span-1 flex items-center gap-2.5">
-            <div className={`h-2.5 w-2.5 rounded-full ${info.isAvailable ? 'bg-green-600' : 'bg-red-500'}`}></div>
-            <span className={`font-bold text-[15px] ${info.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-              {info.isAvailable ? "Open Now" : "Currently Busy"}
+            <div className={`h-2.5 w-2.5 rounded-full ${isOpenNow ? 'bg-green-600' : 'bg-red-500'}`}></div>
+            <span className={`font-bold text-[15px] ${isOpenNow ? 'text-green-600' : 'text-red-600'}`}>
+              {statusText}
             </span>
-            {info.isAvailable && info.closeTime && (
+            {isOpenNow && info.closeTime && (
               <span className="text-slate-500 text-[14px] font-medium ml-1">
-                Closes at {info.closeTime.substring(0, 5)}
+                Closes at {formatTime(info.closeTime)}
               </span>
             )}
           </div>
@@ -106,7 +120,7 @@ export const ShopInfo = ({ info, stats, shopCategories, vehicleCategories, passe
           <div className="col-span-1 flex items-start gap-3">
             <FaClock className="text-slate-500 mt-0.5 text-[18px] shrink-0" />
             <div className="flex flex-col text-[14px] text-slate-700 font-medium leading-snug">
-              <span>Everyday {info.openTime.substring(0, 5)} - {info.closeTime.substring(0, 5)}</span>
+              <span>Everyday {formatTime(info.openTime)} - {formatTime(info.closeTime)}</span>
             </div>
           </div>
           {/* Col 1 & 2: Address */}
