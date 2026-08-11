@@ -475,6 +475,13 @@ class Shop {
         return $formatted;
     }
 
+    public function updateAvailability($shopId, $isAvailable) {
+        $this->qb->table('shop')
+            ->where('id', $shopId)
+            ->update(['isAvailable' => $isAvailable]);
+        return true;
+    }
+
     public function approveShop(int $shopId): string {
         $stmt = $this->qb->table('users')
             ->where('id', $shopId)

@@ -39,112 +39,35 @@ class ModerationFlag {
             $query->where('f.flag_type', $flagType);
         }
 
-        $rows = $query->orderBy('f.created_at', 'DESC')->get();
-
-        return array_map(function($row) {
-            $created = strtotime($row['created_at']);
-            $diffMins = round((time() - $created) / 60);
-
-            if ($diffMins < 60) {
-                $timeStr = max(1, $diffMins) . " mins ago";
-            } elseif ($diffMins < 1440) {
-                $timeStr = floor($diffMins / 60) . " hours ago";
-            } else {
-                $timeStr = floor($diffMins / 1440) . " days ago";
-            }
-
-            $isShopSuspended = isset($row['shop_is_available']) && (int)$row['shop_is_available'] === 0;
-
-            $actions = [];
-            if ($row['flag_type'] === 'REVIEW REPORT') {
-                $actions = ['Dismiss Review', 'Hide Review', 'Ignore'];
-            } elseif ($row['flag_type'] === 'PROFILE FLAG') {
-                if ($isShopSuspended) {
-                    $actions = ['Investigate', 'Reactivate Shop', 'Ignore'];
-                } else {
-                    $actions = ['Investigate', 'Suspend Shop', 'Ignore'];
-                }
-            } else {
-                if ($isShopSuspended) {
-                    $actions = ['Audit Logs', 'Reactivate Shop', 'Ignore'];
-                } else {
-                    $actions = ['Audit Logs', 'Freeze Ratings', 'Suspend Shop', 'Ignore'];
-                }
-            }
-
-            return [
-                'id' => intval($row['id']),
-                'type' => $row['flag_type'],
-                'severity' => $row['severity'],
-                'time' => $timeStr,
-                'desc' => $row['description'],
-                'user' => $row['reported_by_user'],
-                'shop' => $row['shop_name'],
-                'status' => $row['status'],
-                'isShopSuspended' => $isShopSuspended,
-                'actions' => $actions,
-                'createdAt' => $row['created_at']
-            ];
-        }, $rows);
+        return $query->orderBy('f.created_at', 'DESC')->get();
     }
 
-    public function resolveFlag($flagId, $actionTaken, $adminNotes = '', $adminId = null) {
-        $flag = $this->qb->table($this->table)
-            ->select('entity_type', 'entity_id', 'shop_name')
+    public function getById($flagId) {
+        $row = $this->qb->table($this->table)
+            ->select('id', 'entity_type', 'entity_id', 'shop_name', 'flag_type', 'status')
             ->where('id', $flagId)
             ->first();
+        return $row ?: null;
+    }
 
-        $responseMsg = "Moderation action '{$actionTaken}' executed successfully.";
-
-        $actionLower = strtolower($actionTaken);
-        $newStatus = 'action_taken';
-        if (in_array($actionLower, ['dismiss review', 'dismiss', 'ignore'])) {
-            $newStatus = 'dismissed';
-        } elseif (in_array($actionLower, ['investigate', 'audit logs'])) {
-            $newStatus = 'under_review';
-        }
-
+    public function updateStatus($flagId, $newStatus) {
         $this->qb->table($this->table)
             ->where('id', $flagId)
             ->update([
                 'status' => $newStatus,
                 'updated_at' => QueryBuilder::raw('NOW()')
             ]);
+        return true;
+    }
 
-        if ($flag) {
-            $entityId = (int)($flag['entity_id'] ?? 0);
-            $shopName = !empty($flag['shop_name']) ? $flag['shop_name'] : "Garage #{$entityId}";
-
-            if ($actionLower === 'suspend shop' && $entityId > 0) {
-                try {
-                    $this->qb->table('shop')->where('id', $entityId)->update(['isAvailable' => 0]);
-                    $responseMsg = "Garage '{$shopName}' has been successfully suspended and deactivated.";
-                } catch (Throwable $e) {}
-            }
-
-            if (($actionLower === 'reactivate shop' || $actionLower === 'reactivate') && $entityId > 0) {
-                try {
-                    $this->qb->table('shop')->where('id', $entityId)->update(['isAvailable' => 1]);
-                    $responseMsg = "Garage '{$shopName}' has been successfully reactivated.";
-                } catch (Throwable $e) {}
-            }
-
-            if ($actionLower === 'hide review' && $entityId > 0) {
-                try {
-                    $this->qb->table('review')->where('id', $entityId)->update(['status' => 'hidden']);
-                    $responseMsg = "Review #{$entityId} has been hidden from public view.";
-                } catch (Throwable $e) {}
-            }
-        }
-
+    public function logAction($flagId, $adminId, $actionTaken, $notes) {
         $this->qb->table($this->logsTable)->insert([
             'flag_id' => $flagId,
             'admin_id' => $adminId,
             'action_taken' => $actionTaken,
             'notes' => $adminNotes
         ]);
-
-        return $responseMsg;
+        return true;
     }
 
     public function submitReport($shopId, $flagType, $reporterName, $shopName, $description) {

@@ -81,7 +81,7 @@ class Customer {
      */
     public function updateProfile($customerId, $data, $newPassword = null) {
         try {
-            $this->conn->beginTransaction();
+            $this->qb->beginTransaction();
 
             $updateData = [];
             if (array_key_exists('name', $data)) $updateData['name'] = $data['name'];
@@ -100,11 +100,11 @@ class Customer {
                 ]);
             }
 
-            $this->conn->commit();
+            $this->qb->commit();
             return true;
         } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
             }
             throw $e;
         }

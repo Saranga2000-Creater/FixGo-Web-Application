@@ -96,5 +96,12 @@ class Review {
                 ->update(['isRead' => 1]);
         } catch (Throwable $t) {}
     }
+
+    public function hideReview($reviewId) {
+        $this->qb->table('review')
+            ->where('id', $reviewId)
+            ->update(['status' => 'hidden']);
+        return true;
+    }
 }
 ?>
