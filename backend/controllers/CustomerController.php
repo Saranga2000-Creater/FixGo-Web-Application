@@ -17,11 +17,7 @@ class CustomerController {
     }
 
     public function getProfile($customerId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $customerModel = new Customer($this->db);
         $customer = $customerModel->getById($customerId);
@@ -54,11 +50,7 @@ class CustomerController {
 
     public function register() {
         // Only handle POST requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         // Check inputs in $_POST
         $requiredFields = ['name', 'email', 'phone', 'address', 'password'];
@@ -188,11 +180,7 @@ class CustomerController {
     }
 
     public function updateProfile($customerId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         $input = $_POST;
         if (empty($input)) {
@@ -334,11 +322,7 @@ class CustomerController {
     // ==========================================
 
     public function handleGetVehicles($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         $customer_id = $payload['user_id'];
         $vehicleModel = new CustomerVehicle($this->db);
@@ -351,14 +335,10 @@ class CustomerController {
     }
 
     public function handleAddVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        if (!$input) $input = $_POST;
+        $input = RequestValidator::getJsonPayload();
+        if (empty($input)) $input = $_POST;
 
         $required = ['vehicle_category_id', 'brand', 'color'];
         foreach ($required as $field) {
@@ -397,13 +377,9 @@ class CustomerController {
     }
 
     public function handleUpdateVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod(['PUT', 'POST']);
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         
         $required = ['id', 'vehicle_category_id', 'brand', 'color'];
         foreach ($required as $field) {
@@ -432,13 +408,9 @@ class CustomerController {
     }
 
     public function handleDeleteVehicle($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            return;
-        }
+        RequestValidator::enforceMethod(['DELETE', 'POST']);
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $vehicle_id = $input['id'] ?? null;
         
         if (isset($_GET['id'])) {
@@ -463,15 +435,11 @@ class CustomerController {
     }
 
     public function reportShop($payload) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
         $userId = $payload['user_id'] ?? null;
 
-        $input = json_decode(file_get_contents("php://input"), true);
+        $input = RequestValidator::getJsonPayload();
         $shopId = isset($input['shop_id']) ? (int)$input['shop_id'] : 0;
         $flagType = trim($input['flag_type'] ?? 'PROFILE FLAG');
         $description = trim($input['description'] ?? '');

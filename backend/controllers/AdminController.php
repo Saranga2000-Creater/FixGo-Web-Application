@@ -20,11 +20,7 @@ class AdminController {
      * Follows 'Thin Controller' pattern by delegating SQL to Models.
      */
     public function getDashboardOverview() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         try {
             // Instantiate models
@@ -90,13 +86,9 @@ class AdminController {
      * Reads { shopId } from the JSON request body.
      */
     public function approveShop(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $data   = json_decode(file_get_contents("php://input"));
+        $data   = RequestValidator::getJsonPayload(false);
         $shopId = isset($data->shopId) ? intval($data->shopId) : 0;
 
         if ($shopId <= 0) {
@@ -132,11 +124,7 @@ class AdminController {
      * Admin: Get all shop owner accounts pending approval.
      */
     public function getPendingShops(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["success" => false, "message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('GET');
 
         try {
             $shopModel = new Shop($this->db);
@@ -151,11 +139,11 @@ class AdminController {
 
 
     public function updatePassword($payload) {
+        RequestValidator::enforceMethod('POST');
         $userId = $payload['user_id'] ?? null;
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput, true);
-        if (!is_array($data) || empty($data)) {
+        $data = RequestValidator::getJsonPayload();
+        if (empty($data)) {
             $data = $_POST;
         }
 
@@ -202,6 +190,7 @@ class AdminController {
     // ── Category Management Actions ─────────────────────────────────────────
 
     public function getCategories($payload) {
+        RequestValidator::enforceMethod('GET');
         $adminId = $payload['user_id'] ?? null;
 
         try {
@@ -224,9 +213,10 @@ class AdminController {
     }
 
     public function addCategory($payload) {
+        RequestValidator::enforceMethod('POST');
         $adminId = $payload['user_id'] ?? null;
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $type = trim($input['type'] ?? '');
         $name = trim($input['name'] ?? '');
         $description = trim($input['description'] ?? '');
@@ -265,9 +255,10 @@ class AdminController {
     }
 
     public function updateCategory($payload) {
+        RequestValidator::enforceMethod('POST');
         $adminId = $payload['user_id'] ?? null;
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $type = trim($input['type'] ?? '');
         $id = isset($input['id']) ? (int)$input['id'] : 0;
         $name = trim($input['name'] ?? '');
@@ -307,9 +298,10 @@ class AdminController {
     }
 
     public function deleteCategory($payload) {
+        RequestValidator::enforceMethod('POST');
         $adminId = $payload['user_id'] ?? null;
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $type = trim($input['type'] ?? '');
         $id = isset($input['id']) ? (int)$input['id'] : 0;
 
@@ -338,6 +330,7 @@ class AdminController {
      * Admin Moderation: Get summary counts and list of flags
      */
     public function getModerationFlags($payload) {
+        RequestValidator::enforceMethod('GET');
         $adminId = $payload['user_id'] ?? null;
 
         try {
@@ -365,9 +358,10 @@ class AdminController {
      * Admin Moderation: Resolve / action a moderation flag
      */
     public function resolveModerationFlag($payload) {
+        RequestValidator::enforceMethod('POST');
         $adminId = $payload['user_id'] ?? null;
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = RequestValidator::getJsonPayload();
         $flagId = isset($input['flagId']) ? (int)$input['flagId'] : 0;
         $action = trim($input['action'] ?? '');
         $notes = trim($input['notes'] ?? '');
