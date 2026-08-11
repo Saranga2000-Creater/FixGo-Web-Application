@@ -34,13 +34,13 @@ function SettingsSection({ icon, iconBg, iconColor, title, description, items, o
       </div>
 
       {/* Right list panel */}
-      <div>
+      <div className="flex flex-col h-full">
         {items.map((item, i) => (
           <button
             key={item.label}
             type="button"
             onClick={() => onItemClick?.(item.label)}
-            className={`w-full flex items-center justify-between px-5 py-4 bg-transparent border-0 text-left cursor-pointer hover:bg-gray-50 transition-colors ${
+            className={`w-full flex-1 flex items-center justify-between px-5 py-4 bg-transparent border-0 text-left cursor-pointer hover:bg-gray-50 transition-colors ${
               i !== items.length - 1 ? "border-b border-gray-100" : ""
             }`}
           >

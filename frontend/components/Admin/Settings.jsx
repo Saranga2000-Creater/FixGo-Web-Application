@@ -80,12 +80,12 @@ function Settings() {
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col">
             {sec.rows.map((row, i) => (
               <button
                 key={row.label}
                 onClick={row.onClick || undefined}
-                className={`w-full flex items-center justify-between py-4 px-5 bg-transparent border-none cursor-pointer font-sans hover:bg-gray-50 ${
+                className={`w-full flex-1 flex items-center justify-between py-4 px-5 bg-transparent border-none cursor-pointer font-sans hover:bg-gray-50 ${
                   i < sec.rows.length - 1 ? "border-b border-gray-100" : ""
                 } ${row.onClick ? "hover:bg-green-50/40" : ""}`}
               >
