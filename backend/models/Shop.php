@@ -51,14 +51,13 @@ class Shop {
                 's.id', 's.name', 's.address', 's.openTime', 's.closeTime', 's.isAvailable',
                 's.profileImageURL as thumbnail_url', 'ST_Y(s.location) as latitude', 'ST_X(s.location) as longitude',
                 "ST_Distance_Sphere(s.location, POINT({$safeLng}, {$safeLat})) AS distance",
-                "COALESCE(ROUND(AVG(DISTINCT r.rating), 1), 0) as avg_rating",
-                "COUNT(DISTINCT r.id) as review_count",
+                "(SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM review WHERE shop_id = s.id) as avg_rating",
+                "(SELECT COUNT(*) FROM review WHERE shop_id = s.id) as review_count",
                 "(SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed",
                 "(SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.accepted_at IS NOT NULL) as response_time_minutes",
                 "GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') as shop_tags",
                 "GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') as vehicle_tags"
             ])
-            ->leftJoin('review r', 's.id', '=', 'r.shop_id')
             ->leftJoin('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
             ->leftJoin('shopCategory sc', 'scm.shop_category_id', '=', 'sc.id')
             ->leftJoin('shopVehicleCategories svc_all', 's.id', '=', 'svc_all.shop_id')
