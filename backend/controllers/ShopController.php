@@ -119,7 +119,9 @@ class ShopController {
         // Only handle POST requests
         RequestValidator::enforceMethod('POST');
 
-        // Check inputs in $_POST
+        $input = RequestValidator::getPostPayload();
+
+        // Check inputs in $input
         $requiredFields = [
             'ownerName', 'shopName', 'email', 'phone', 'address',
             'openTime', 'closeTime', 'providesCarriage',
@@ -127,19 +129,19 @@ class ShopController {
         ];
 
         foreach ($requiredFields as $field) {
-            if (!isset($_POST[$field])) {
+            if (!isset($input[$field])) {
                 http_response_code(400);
                 echo json_encode(["message" => "Missing required field: $field"]);
                 return;
             }
-            if (is_array($_POST[$field])) {
-                if (empty($_POST[$field])) {
+            if (is_array($input[$field])) {
+                if (empty($input[$field])) {
                     http_response_code(400);
                     echo json_encode(["message" => "Missing required field: $field"]);
                     return;
                 }
             } else {
-                if (trim($_POST[$field]) === '') {
+                if (trim($input[$field]) === '') {
                     http_response_code(400);
                     echo json_encode(["message" => "Missing required field: $field"]);
                     return;
@@ -147,33 +149,33 @@ class ShopController {
             }
         }
 
-        $ownerName = trim($_POST['ownerName']);
+        $ownerName = trim($input['ownerName']);
         if (mb_strlen($ownerName) < 2 || preg_match('/^\d+$/', $ownerName) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $ownerName)) {
             http_response_code(400);
             echo json_encode(["message" => "Please enter a valid owner name (letters only, at least 2 characters)."]);
             return;
         }
 
-        $shopName = trim($_POST['shopName']);
+        $shopName = trim($input['shopName']);
         if (mb_strlen($shopName) < 2 || preg_match('/^\d+$/', $shopName) || !preg_match('/[\p{L}a-zA-Z]/u', $shopName)) {
             http_response_code(400);
             echo json_encode(["message" => "Please enter a valid shop name (must contain letters and be at least 2 characters)."]);
             return;
         }
 
-        $email = trim($_POST['email']);
-        $phone = trim($_POST['phone']);
-        $address = trim($_POST['address']);
-        $licenseNumber = isset($_POST['licenseNumber']) ? trim($_POST['licenseNumber']) : '';
-        $openTime = trim($_POST['openTime']);
-        $closeTime = trim($_POST['closeTime']);
-        $providesCarriage = (int)$_POST['providesCarriage'];
-        $category = trim($_POST['category']);
-        $vehicleCategory = $_POST['vehicleCategory'];
-        $description = trim($_POST['description']);
-        $latitude = (float)$_POST['latitude'];
-        $longitude = (float)$_POST['longitude'];
-        $password = $_POST['password'];
+        $email = trim($input['email']);
+        $phone = trim($input['phone']);
+        $address = trim($input['address']);
+        $licenseNumber = isset($input['licenseNumber']) ? trim($input['licenseNumber']) : '';
+        $openTime = trim($input['openTime']);
+        $closeTime = trim($input['closeTime']);
+        $providesCarriage = (int)$input['providesCarriage'];
+        $category = trim($input['category']);
+        $vehicleCategory = $input['vehicleCategory'];
+        $description = trim($input['description']);
+        $latitude = (float)$input['latitude'];
+        $longitude = (float)$input['longitude'];
+        $password = $input['password'];
 
         $sanitizedEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
         if (!filter_var($sanitizedEmail, FILTER_VALIDATE_EMAIL)) {
@@ -197,57 +199,32 @@ class ShopController {
         if ($providesCarriage === 1) {
             $towFields = ['defaultDriverName', 'defaultDriverPhone', 'defaultTruckBrand', 'defaultTruckColor', 'towTruckPlate'];
             foreach ($towFields as $tf) {
-                if (!isset($_POST[$tf]) || trim($_POST[$tf]) === '') {
+                if (!isset($input[$tf]) || trim($input[$tf]) === '') {
                     http_response_code(400);
                     echo json_encode(["message" => "Missing required towing field: $tf"]);
                     return;
                 }
             }
-            $defaultDriverName = trim($_POST['defaultDriverName']);
+            $defaultDriverName = trim($input['defaultDriverName']);
             if (mb_strlen($defaultDriverName) < 2 || preg_match('/^\d+$/', $defaultDriverName) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $defaultDriverName)) {
                 http_response_code(400);
                 echo json_encode(["message" => "Please enter a valid driver name (letters only, at least 2 characters)."]);
                 return;
             }
-            $defaultDriverPhone = trim($_POST['defaultDriverPhone']);
+            $defaultDriverPhone = trim($input['defaultDriverPhone']);
             if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $defaultDriverPhone)) {
                 http_response_code(400);
                 echo json_encode(["message" => "Invalid driver phone number format. Valid formats: +94123456789 or 0123456789."]);
                 return;
             }
-            $defaultTruckBrand = trim($_POST['defaultTruckBrand']);
-            $defaultTruckColor = trim($_POST['defaultTruckColor']);
-            $towTruckPlate = trim($_POST['towTruckPlate']);
+            $defaultTruckBrand = trim($input['defaultTruckBrand']);
+            $defaultTruckColor = trim($input['defaultTruckColor']);
+            $towTruckPlate = trim($input['towTruckPlate']);
         }
 
-        // Validate profile photo
-        if (!isset($_FILES['shopImage']) || $_FILES['shopImage']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo json_encode(["message" => "Please upload a workshop photo."]);
-            return;
-        }
-
-        $file = $_FILES['shopImage'];
-        $fileSize = $file['size'];
-        $fileTmp = $file['tmp_name'];
-        $fileName = $file['name'];
-
-        // Check file size (5MB max)
-        if ($fileSize > 5 * 1024 * 1024) {
-            http_response_code(400);
-            echo json_encode(["message" => "Workshop photo must be under 5MB."]);
-            return;
-        }
-
-        // Check file type
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-        if (!in_array($fileExtension, $allowedExtensions)) {
-            http_response_code(400);
-            echo json_encode(["message" => "Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP."]);
-            return;
-        }
+        // Handle shop image upload securely
+        $targetDir = __DIR__ . '/../uploads/shopOwners/';
+        $dbImagePath = RequestValidator::handleFileUpload('shopImage', $targetDir, 'shop_', 'uploads/shopOwners/');
 
         // Check if email already exists
         $userModel = new User($this->db);
@@ -302,23 +279,7 @@ class ShopController {
             return;
         }
 
-        // Create uploads/shopOwners folder if not exists
-        $targetDir = __DIR__ . '/../uploads/shopOwners/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
-        // Generate a unique file name
-        $uniqueFileName = uniqid('shop_', true) . '.' . $fileExtension;
-        $targetFilePath = $targetDir . $uniqueFileName;
-        $dbImagePath = 'uploads/shopOwners/' . $uniqueFileName;
-
-        // Move file
-        if (!move_uploaded_file($fileTmp, $targetFilePath)) {
-            http_response_code(500);
-            echo json_encode(["message" => "Failed to save uploaded photo."]);
-            return;
-        }
+        // (File upload is already handled by RequestValidator)
 
         try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -362,6 +323,7 @@ class ShopController {
 
         } catch (Exception $e) {
             // Delete file if db commit failed
+            $targetFilePath = __DIR__ . '/../' . $dbImagePath;
             if (file_exists($targetFilePath)) {
                 unlink($targetFilePath);
             }
@@ -497,41 +459,8 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Please select a valid image file."]);
-            return;
-        }
-
-        $file = $_FILES['image'];
-        if ($file['size'] > 5 * 1024 * 1024) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Image must be under 5MB."]);
-            return;
-        }
-
-        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!in_array($fileExt, $allowedExts)) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Allowed formats: JPG, JPEG, PNG, WEBP."]);
-            return;
-        }
-
         $targetDir = __DIR__ . '/../uploads/gallery/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
-        $filename = uniqid('gallery_', true) . '.' . $fileExt;
-        $targetPath = $targetDir . $filename;
-        $dbPath = 'uploads/gallery/' . $filename;
-
-        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-            http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Failed to save image."]);
-            return;
-        }
+        $dbPath = RequestValidator::handleFileUpload('image', $targetDir, 'gallery_', 'uploads/gallery/');
 
         $shopModel = new Shop($this->db);
         $imageId = $shopModel->addGalleryImage($shopId, $dbPath);
@@ -578,41 +507,8 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Please select a valid image file."]);
-            return;
-        }
-
-        $file = $_FILES['image'];
-        if ($file['size'] > 5 * 1024 * 1024) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Image must be under 5MB."]);
-            return;
-        }
-
-        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!in_array($fileExt, $allowedExts)) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Allowed formats: JPG, JPEG, PNG, WEBP."]);
-            return;
-        }
-
         $targetDir = __DIR__ . '/../uploads/shopOwners/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
-        $filename = uniqid('profile_', true) . '.' . $fileExt;
-        $targetPath = $targetDir . $filename;
-        $dbPath = 'uploads/shopOwners/' . $filename;
-
-        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-            http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Failed to save profile photo."]);
-            return;
-        }
+        $dbPath = RequestValidator::handleFileUpload('image', $targetDir, 'profile_', 'uploads/shopOwners/');
 
         $shopModel = new Shop($this->db);
         $shopModel->updateProfileImage($shopId, $dbPath);
@@ -735,9 +631,9 @@ public function updateShopTowTruckDetails($payload)
         RequestValidator::enforceMethod('POST');
         $shopId = $payload['user_id'] ?? null;
 
-        $data = RequestValidator::getJsonPayload();
+        $data = RequestValidator::getJsonPayload(true);
         if (empty($data)) {
-            $data = $_POST;
+            $data = RequestValidator::getPostPayload();
         }
 
         $currentPassword = isset($data['currentPassword']) ? $data['currentPassword'] : '';

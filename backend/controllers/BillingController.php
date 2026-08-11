@@ -544,22 +544,16 @@ class BillingController {
     public function submitPaymentSlip(int $shopId): void {
         RequestValidator::enforceMethod('POST');
 
-        if (empty($_POST['invoiceId']) || empty($_POST['paymentReference'])) {
+        $input = RequestValidator::getPostPayload();
+
+        if (empty($input['invoiceId']) || empty($input['paymentReference'])) {
             http_response_code(400);
             echo json_encode(["message" => "Required fields: invoiceId, paymentReference."]);
             return;
         }
 
-        if (!isset($_FILES['paymentSlip']) || $_FILES['paymentSlip']['error'] !== UPLOAD_ERR_OK) {
-            $errCode = $_FILES['paymentSlip']['error'] ?? 'no file';
-            http_response_code(400);
-            echo json_encode(["message" => "Payment slip file is required. Upload error code: $errCode"]);
-            return;
-        }
-
-        $invoiceId        = (int)$_POST['invoiceId'];
-        $paymentReference = trim($_POST['paymentReference']);
-        $file             = $_FILES['paymentSlip'];
+        $invoiceId        = (int)$input['invoiceId'];
+        $paymentReference = trim($input['paymentReference']);
 
         $model   = new ShopInvoice($this->db);
         $invoice = $model->findPayable($invoiceId, $shopId);
@@ -570,39 +564,9 @@ class BillingController {
             return;
         }
 
-        // Validate MIME via finfo (more reliable than client-reported type)
-        $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
-        $finfo        = new finfo(FILEINFO_MIME_TYPE);
-        $detectedMime = $finfo->file($file['tmp_name']);
-
-        if (!in_array($detectedMime, $allowedMimes, true)) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Invalid file type. Allowed: JPEG, PNG, PDF."]);
-            return;
-        }
-
-        if ($file['size'] > 5 * 1024 * 1024) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "File size must not exceed 5MB."]);
-            return;
-        }
-
         $uploadDir = __DIR__ . '/../uploads/paymentSlips/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = 'slip_' . $invoiceId . '_' . uniqid() . '.' . $ext;
-        $destPath = $uploadDir . $filename;
-
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-            http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Failed to save file. Please try again."]);
-            return;
-        }
-
-        $slipUrl = 'uploads/paymentSlips/' . $filename;
+        $prefix = 'slip_' . $invoiceId . '_';
+        $slipUrl = RequestValidator::handleFileUpload('paymentSlip', $uploadDir, $prefix, 'uploads/paymentSlips/', ['jpg', 'jpeg', 'png', 'pdf']);
 
         $this->db->beginTransaction();
         try {
@@ -610,6 +574,7 @@ class BillingController {
             $this->db->commit();
         } catch (Throwable $e) {
             $this->db->rollBack();
+            $destPath = __DIR__ . '/../' . $slipUrl;
             @unlink($destPath);
             throw $e;
         }
