@@ -18,16 +18,11 @@ class AuthController{
 
     public function login(){
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         
-        if(!is_object($data) || empty($data->email) || empty($data->password)){
+        if(empty($data->email) || empty($data->password)){
             http_response_code(400);
             echo json_encode(["message"=>"Email and password are required."]);
             return;
@@ -204,16 +199,12 @@ class AuthController{
 
     public function verifyEmail() {
         // Only handle POST and GET requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod(['POST', 'GET']);
 
         // Retrieve token
         $token = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
+            $data = RequestValidator::getJsonPayload(false);
             $token = isset($data->token) ? trim($data->token) : null;
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $token = isset($_GET['token']) ? trim($_GET['token']) : null;
@@ -258,14 +249,9 @@ class AuthController{
     }
 
     public function forgotPassword() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $email = isset($data->email) ? trim($data->email) : '';
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -300,14 +286,9 @@ class AuthController{
     }
 
     public function verifyResetOtp() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $otp = isset($data->otp) ? trim($data->otp) : '';
 
         if (empty($otp)) {
@@ -334,14 +315,9 @@ class AuthController{
     }
 
     public function resetPassword() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(["message" => "Method not allowed."]);
-            return;
-        }
+        RequestValidator::enforceMethod('POST');
 
-        $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput);
+        $data = RequestValidator::getJsonPayload(false);
         $otp = isset($data->otp) ? trim($data->otp) : '';
         $newPassword = isset($data->password) ? $data->password : '';
 
