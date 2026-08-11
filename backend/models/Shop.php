@@ -1,245 +1,153 @@
 <?php
 class Shop {
     private $conn;
+    private $qb;
     private $table_name = 'shop'; 
 
-    public function __construct($db) {
+    public function __construct($db, $queryBuilder = null) {
         $this->conn = $db;
+        $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
-    // ==========================================
-    // Dashboard Profile Retrieval
-    // ==========================================
-  public function getById($shopId) {
+    public function getById($shopId) {
+        return $this->qb->table('users', 'u')
+            ->select([
+                'u.id', 'u.email', 's.name', 's.owner', 's.address', 's.contactNumber',
+                's.description', 's.openTime', 's.closeTime', 's.isAvailable',
+                's.carriageService', 's.BRN', 's.profileImageURL',
+                'ST_Y(s.location) AS latitude', 'ST_X(s.location) AS longitude',
+                '(SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM review WHERE shop_id = s.id) AS averageRating',
+                '(SELECT COUNT(*) FROM review WHERE shop_id = s.id) AS reviewCount',
+                "GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories",
+                "GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') AS vehicleCategories"
+            ])
+            ->join('shop s', 'u.id', '=', 's.id')
+            ->leftJoin('shopCategoryMapping scm', 'scm.shop_id', '=', 's.id')
+            ->leftJoin('shopCategory sc', 'sc.id', '=', 'scm.shop_category_id')
+            ->leftJoin('shopVehicleCategories svc', 'svc.shop_id', '=', 's.id')
+            ->leftJoin('vehicleCategory vc', 'vc.id', '=', 'svc.vehicle_category_id')
+            ->where('u.id', $shopId)
+            ->groupBy('u.id')
+            ->groupBy('u.email')
+            ->groupBy('s.name')
+            ->groupBy('s.owner')
+            ->groupBy('s.address')
+            ->groupBy('s.contactNumber')
+            ->groupBy('s.description')
+            ->groupBy('s.openTime')
+            ->groupBy('s.closeTime')
+            ->groupBy('s.isAvailable')
+            ->groupBy('s.carriageService')
+            ->groupBy('s.BRN')
+            ->groupBy('s.profileImageURL')
+            ->first();
+    }
 
-  $query = "
-    SELECT
-        u.id,
-        u.email,
-        s.name,
-        s.owner,
-        s.address,
-        s.contactNumber,
-        s.description,
-        s.openTime,
-        s.closeTime,
-        s.isAvailable,
-        s.carriageService,
-        s.BRN,
-        s.profileImageURL,
-        ST_Y(s.location) AS latitude,
-        ST_X(s.location) AS longitude,
-
-        (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM review WHERE shop_id = s.id) AS averageRating,
-        (SELECT COUNT(*) FROM review WHERE shop_id = s.id) AS reviewCount,
-
-        GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') AS categories,
-
-        GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ')
-            AS vehicleCategories
-
-    FROM users u
-
-    INNER JOIN shop s
-        ON u.id = s.id
-
-    LEFT JOIN shopCategoryMapping scm
-        ON scm.shop_id = s.id
-
-    LEFT JOIN shopCategory sc
-        ON sc.id = scm.shop_category_id
-
-    LEFT JOIN shopVehicleCategories svc
-        ON svc.shop_id = s.id
-
-    LEFT JOIN vehicleCategory vc
-        ON vc.id = svc.vehicle_category_id
-
-    WHERE u.id = :id
-
-    GROUP BY
-        u.id,
-        u.email,
-        s.name,
-        s.owner,
-        s.address,
-        s.contactNumber,
-        s.description,
-        s.openTime,
-        s.closeTime,
-        s.isAvailable,
-        s.carriageService,
-        s.BRN,
-        s.profileImageURL
-";
-
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute([':id' => $shopId]);
-
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-    // ==========================================
-    // Find Nearby Shops (Search UI)
-    // ==========================================
     public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false', $quickFilter = 'all', $currentTime = null) {
         $radiusInMeters = $radiusInKm * 1000;
-
-        // CHANGED: Updated has_tow_service to carriageService to match DB changes
-        $query = "SELECT 
-                    s.id, 
-                    s.name, 
-                    s.address, 
-                    s.openTime, 
-                    s.closeTime, 
-                    s.isAvailable,
-                    s.profileImageURL as thumbnail_url,
-                    ST_Y(s.location) as latitude, 
-                    ST_X(s.location) as longitude,
-                    ST_Distance_Sphere(s.location, POINT(:lng, :lat)) AS distance,
-                    COALESCE(ROUND(AVG(DISTINCT r.rating), 1), 0) as avg_rating,
-                    COUNT(DISTINCT r.id) as review_count,
-                    (SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed,
-                    (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
-                     FROM serviceRequest sr 
-                     WHERE sr.shop_id = s.id AND sr.accepted_at IS NOT NULL) as response_time_minutes,
-                    GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') as shop_tags,
-                    GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') as vehicle_tags
-                  FROM " . $this->table_name . " s
-                  LEFT JOIN review r ON s.id = r.shop_id
-                  LEFT JOIN shopCategoryMapping scm ON s.id = scm.shop_id
-                  LEFT JOIN shopCategory sc ON scm.shop_category_id = sc.id
-                  LEFT JOIN shopVehicleCategories svc_all ON s.id = svc_all.shop_id
-                  LEFT JOIN vehicleCategory vc ON svc_all.vehicle_category_id = vc.id";
+        $safeLat = (float)$lat;
+        $safeLng = (float)$lng;
+        
+        $query = $this->qb->table($this->table_name, 's')
+            ->select([
+                's.id', 's.name', 's.address', 's.openTime', 's.closeTime', 's.isAvailable',
+                's.profileImageURL as thumbnail_url', 'ST_Y(s.location) as latitude', 'ST_X(s.location) as longitude',
+                "ST_Distance_Sphere(s.location, POINT({$safeLng}, {$safeLat})) AS distance",
+                "COALESCE(ROUND(AVG(DISTINCT r.rating), 1), 0) as avg_rating",
+                "COUNT(DISTINCT r.id) as review_count",
+                "(SELECT COUNT(*) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.status = 'Completed') as services_completed",
+                "(SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) FROM serviceRequest sr WHERE sr.shop_id = s.id AND sr.accepted_at IS NOT NULL) as response_time_minutes",
+                "GROUP_CONCAT(DISTINCT sc.name SEPARATOR ', ') as shop_tags",
+                "GROUP_CONCAT(DISTINCT vc.name SEPARATOR ', ') as vehicle_tags"
+            ])
+            ->leftJoin('review r', 's.id', '=', 'r.shop_id')
+            ->leftJoin('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
+            ->leftJoin('shopCategory sc', 'scm.shop_category_id', '=', 'sc.id')
+            ->leftJoin('shopVehicleCategories svc_all', 's.id', '=', 'svc_all.shop_id')
+            ->leftJoin('vehicleCategory vc', 'svc_all.vehicle_category_id', '=', 'vc.id');
 
         if ($vehicleCategoryId !== null) {
-            $query .= " INNER JOIN shopVehicleCategories svc_filter ON s.id = svc_filter.shop_id ";
+            $query->join('shopVehicleCategories svc_filter', 's.id', '=', 'svc_filter.shop_id');
         }
 
-        $query .= " WHERE ST_Distance_Sphere(s.location, POINT(:lng, :lat)) <= :radius ";
+        $query->whereRaw("ST_Distance_Sphere(s.location, POINT({$safeLng}, {$safeLat})) <= :radius", ['radius' => $radiusInMeters]);
 
-        // CHANGED: Updated has_tow_service to carriageService
         if ($needs_tow === 'true') {
-            $query .= " AND s.carriageService = 1 ";
+            $query->where('s.carriageService', 1);
         }
 
         if ($vehicleCategoryId !== null) {
-            $query .= " AND svc_filter.vehicle_category_id = :vehicle_category ";
+            $query->where('svc_filter.vehicle_category_id', $vehicleCategoryId);
         }
         if ($shopCategoryId !== null) {
-            $query .= " AND scm.shop_category_id = :shop_category ";
+            $query->where('scm.shop_category_id', $shopCategoryId);
         }
         if ($searchName !== null && $searchName !== '') {
-            $query .= " AND s.name LIKE :searchName ";
+            $query->where('s.name', 'LIKE', '%' . $searchName . '%');
         }
 
-        // CHANGED: Updated has_tow_service to carriageService
         if ($quickFilter === 'open') {
-            $query .= " AND s.isAvailable = 1 AND :currentTime BETWEEN s.openTime AND s.closeTime ";
+            $query->where('s.isAvailable', 1);
+            $query->whereRaw(":currentTime BETWEEN s.openTime AND s.closeTime", ['currentTime' => $currentTime]);
         } elseif ($quickFilter === 'roadside') {
-            $query .= " AND s.carriageService = 1 ";
+            $query->where('s.carriageService', 1);
         }
 
-        $query .= " GROUP BY s.id ";
+        $query->groupBy('s.id');
 
         if ($quickFilter === 'top_rated') {
-            $query .= " HAVING avg_rating >= 4.0 ";
+            $query->having('avg_rating', '>=', 4.0);
         }
 
         if ($quickFilter === 'nearest') {
-            $query .= " ORDER BY distance ASC"; 
+            $query->orderBy('distance', 'ASC');
         } else if ($sortBy === 'rating') {
-            $query .= " ORDER BY avg_rating DESC, distance ASC";
+            $query->orderBy('avg_rating', 'DESC');
+            $query->orderBy('distance', 'ASC');
         } else {
-            $query .= " ORDER BY distance ASC";
+            $query->orderBy('distance', 'ASC');
         }
 
-        $stmt = $this->conn->prepare($query);
-
-        $stmt->bindParam(':lat', $lat, PDO::PARAM_STR);
-        $stmt->bindParam(':lng', $lng, PDO::PARAM_STR);
-        $stmt->bindParam(':radius', $radiusInMeters, PDO::PARAM_STR);
-
-        if ($vehicleCategoryId !== null) {
-            $stmt->bindParam(':vehicle_category', $vehicleCategoryId, PDO::PARAM_INT);
-        }
-        if ($shopCategoryId !== null) {
-            $stmt->bindParam(':shop_category', $shopCategoryId, PDO::PARAM_INT);
-        }
-
-        if ($searchName !== null && $searchName !== '') {
-            $searchTerm = '%' . $searchName . '%';
-            $stmt->bindParam(':searchName', $searchTerm, PDO::PARAM_STR);
-        }
-
-        if ($quickFilter === 'open') {
-            $stmt->bindParam(':currentTime', $currentTime, PDO::PARAM_STR);
-        }
-
-        $stmt->execute();
-        return $stmt;
+        return $query->execute();
     }
 
-    // ==========================================
-    // Shop Description Page 
-    // ==========================================
     public function getShopDetails($shopId, $customerId = null) {
         $details = [];
 
-        // 1. Get Core Info
-        $query = "SELECT id, name, address, contactNumber as phone, description, 
-                         openTime, closeTime, isAvailable, carriageService, profileImageURL,
-                         (SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) 
-                          FROM serviceRequest sr 
-                          WHERE sr.shop_id = shop.id AND sr.accepted_at IS NOT NULL) as response_time_minutes,
-                         ST_Y(shop.location) as lat, ST_X(shop.location) as lng
-                  FROM shop WHERE id = :id LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $shopId);
-        $stmt->execute();
-        $info = $stmt->fetch(PDO::FETCH_ASSOC);
+        $info = $this->qb->table('shop')->select([
+            'id', 'name', 'address', 'contactNumber as phone', 'description', 
+            'openTime', 'closeTime', 'isAvailable', 'carriageService', 'profileImageURL',
+            "(SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE, sr.created_at, sr.accepted_at))), 15) FROM serviceRequest sr WHERE sr.shop_id = shop.id AND sr.accepted_at IS NOT NULL) as response_time_minutes",
+            "ST_Y(shop.location) as lat", "ST_X(shop.location) as lng"
+        ])->where('id', $shopId)->first();
 
         if (!$info) return null;
 
-        // 2. PRIVACY CHECK: Has the 3-Way Handshake been completed?
-        $details['isHandshakeComplete'] = false; // Default to false
+        $details['isHandshakeComplete'] = false;
         if ($customerId) {
-            $checkHandshake = "SELECT id FROM serviceRequest 
-                               WHERE customer_id = :cid AND shop_id = :sid 
-                               AND status IN ('Confirmed', 'In Progress', 'Diagnosis', 'Pending Parts') 
-                               LIMIT 1";
-            $handshakeStmt = $this->conn->prepare($checkHandshake);
-            $handshakeStmt->bindParam(':cid', $customerId);
-            $handshakeStmt->bindParam(':sid', $shopId);
-            $handshakeStmt->execute();
-            if ($handshakeStmt->fetchColumn()) {
+            $handshake = $this->qb->table('serviceRequest')
+                ->select('id')
+                ->where('customer_id', $customerId)
+                ->where('shop_id', $shopId)
+                ->whereIn('status', ['Confirmed', 'In Progress', 'Diagnosis', 'Pending Parts'])
+                ->first();
+            if ($handshake) {
                 $details['isHandshakeComplete'] = true;
             }
         }
 
-        // 3. GET SHOP CATEGORIES EARLY (Moved from bottom to here)
-        $catQuery = "SELECT sc.name 
-                     FROM shopCategoryMapping scm 
-                     JOIN shopCategory sc ON scm.shop_category_id = sc.id 
-                     WHERE scm.shop_id = :id";
-        $catStmt = $this->conn->prepare($catQuery);
-        $catStmt->bindParam(':id', $shopId);
-        $catStmt->execute();
-        $details['shopCategories'] = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+        $details['shopCategories'] = $this->qb->table('shopCategoryMapping', 'scm')
+            ->join('shopCategory sc', 'scm.shop_category_id', '=', 'sc.id')
+            ->where('scm.shop_id', $shopId)
+            ->pluck('sc.name');
 
-        // 4. SECURE DATA ROUTING & COORDINATE FUZZING
-        // A shop is fully unlocked if the handshake is complete OR if it's a retail Spare Parts shop
         $isFullyUnlocked = $details['isHandshakeComplete'] || in_array('Spare Parts', $details['shopCategories']);
 
         if ($isFullyUnlocked) {
-            // UNLOCKED: Give them the exact address, phone, and exact map coordinates
             $info['location'] = $info['address'];
             $info['mapQuery'] = ($info['lat'] && $info['lng']) ? $info['lat'] . ',' . $info['lng'] : $info['address'];
         } else {
-            // LOCKED: Mask the phone number
             $info['phone'] = 'Protected (Available after booking)';
-            
-            // Extract generalized area for text display
             $addressParts = explode(',', $info['address']);
             $generalizedArea = trim(end($addressParts)); 
             if (count($addressParts) > 1) {
@@ -247,7 +155,6 @@ class Shop {
             }
             $info['location'] = $generalizedArea ;
             
-            // THE MAGIC: COORDINATE FUZZING (Jitter)
             if ($info['lat'] && $info['lng']) {
                 $offsetLat = (mt_rand(-50, 50) / 10000);
                 $offsetLng = (mt_rand(-50, 50) / 10000);
@@ -259,12 +166,10 @@ class Shop {
             }
         }
 
-        // Remove the raw exact data so it is never accidentally sent in the JSON payload
         unset($info['address']);
         unset($info['lat']);
         unset($info['lng']);
         
-        // Calculate open status text
         date_default_timezone_set('Asia/Colombo');
         $currentTime = date('H:i:s');
         $isOpen = false;
@@ -280,31 +185,26 @@ class Shop {
         }
         $info['is_open_now'] = $isOpen;
         $info['open_status_text'] = $openStatusText;
-
         $details['info'] = $info;
 
-        // 5. Get Services
-        $svcQuery = "SELECT service_name as name, starting_price as price, duration, category 
-                     FROM shopServices WHERE shop_id = :id";
-        $svcStmt = $this->conn->prepare($svcQuery);
-        $svcStmt->bindParam(':id', $shopId);
-        $svcStmt->execute();
-        $details['services'] = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+        $details['services'] = $this->qb->table('shopServices')
+            ->select('service_name as name', 'starting_price as price', 'duration', 'category')
+            ->where('shop_id', $shopId)
+            ->get();
 
-        // 6. Get Reviews
-        $revQuery = "SELECT r.rating, r.comment as summary, DATE_FORMAT(sr.created_at, '%b %d, %Y') as date, 
-                            c.name as name 
-                     FROM review r
-                     JOIN customer c ON r.customer_id = c.id
-                     JOIN serviceRequest sr ON r.service_request_id = sr.id
-                     WHERE r.shop_id = :id
-                     ORDER BY sr.created_at DESC";
-        $revStmt = $this->conn->prepare($revQuery);
-        $revStmt->bindParam(':id', $shopId);
-        $revStmt->execute();
-        $details['reviews'] = $revStmt->fetchAll(PDO::FETCH_ASSOC);
+        $details['reviews'] = $this->qb->table('review', 'r')
+            ->select([
+                'r.rating', 
+                'r.comment as summary', 
+                "DATE_FORMAT(sr.created_at, '%b %d, %Y') as date", 
+                'c.name as name'
+            ])
+            ->join('customer c', 'r.customer_id', '=', 'c.id')
+            ->join('serviceRequest sr', 'r.service_request_id', '=', 'sr.id')
+            ->where('r.shop_id', $shopId)
+            ->orderBy('sr.created_at', 'DESC')
+            ->get();
 
-        // Calculate Aggregates for Reviews
         $totalReviews = count($details['reviews']);
         $totalStars = 0;
         $recommendCount = 0;
@@ -313,24 +213,20 @@ class Shop {
             if($rev['rating'] >= 4) $recommendCount++;
         }
 
-        // 7. Calculate True Completion Rate
-        $srQuery = "SELECT 
-                        COUNT(id) as total_requests,
-                        SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed_requests
-                    FROM serviceRequest 
-                    WHERE shop_id = :id";
-        $srStmt = $this->conn->prepare($srQuery);
-        $srStmt->bindParam(':id', $shopId);
-        $srStmt->execute();
-        $srData = $srStmt->fetch(PDO::FETCH_ASSOC);
+        $srData = $this->qb->table('serviceRequest')
+            ->select([
+                'COUNT(id) as total_requests',
+                "SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed_requests"
+            ])
+            ->where('shop_id', $shopId)
+            ->first();
         
         $completionRate = 0;
-        if ($srData['total_requests'] > 0) {
+        if ($srData && $srData['total_requests'] > 0) {
             $completionRate = round(($srData['completed_requests'] / $srData['total_requests']) * 100);
         }
 
-        // 8. Handle Real-World Experience Intelligently
-        $experience = "1+"; // Safe default
+        $experience = "1+";
         if (isset($details['info']['established_year']) && !empty($details['info']['established_year'])) {
             $years = date('Y') - intval($details['info']['established_year']);
             $experience = $years > 0 ? $years . "+" : "1st Year";
@@ -345,13 +241,7 @@ class Shop {
             'recommendPercentage' => $totalReviews > 0 ? round(($recommendCount / $totalReviews) * 100) : 0
         ];
 
-        // 9. Get Gallery Images & Profile Image
-        $imgQuery = "SELECT url FROM shopImage WHERE shop_id = :id";
-        $imgStmt = $this->conn->prepare($imgQuery);
-        $imgStmt->bindParam(':id', $shopId);
-        $imgStmt->execute();
-        
-        $galleryImages = $imgStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        $galleryImages = $this->qb->table('shopImage')->where('shop_id', $shopId)->pluck('url') ?: [];
         $details['gallery'] = [];
         
         $profileImg = $details['info']['profileImageURL'] ?? null;
@@ -363,86 +253,58 @@ class Shop {
         }
         unset($details['info']['profileImageURL']);
 
-        // 10. Get Supported Vehicle Categories
-        $vehQuery = "SELECT vc.name 
-                     FROM shopVehicleCategories svc 
-                     JOIN vehicleCategory vc ON svc.vehicle_category_id = vc.id 
-                     WHERE svc.shop_id = :id";
-        $vehStmt = $this->conn->prepare($vehQuery);
-        $vehStmt->bindParam(':id', $shopId);
-        $vehStmt->execute();
-        $details['vehicleCategories'] = $vehStmt->fetchAll(PDO::FETCH_COLUMN);
+        $details['vehicleCategories'] = $this->qb->table('shopVehicleCategories', 'svc')
+            ->join('vehicleCategory vc', 'svc.vehicle_category_id', '=', 'vc.id')
+            ->where('svc.shop_id', $shopId)
+            ->pluck('vc.name');
 
         return $details;
     }
 
-    /**
-     * Registers a new shop owner by inserting into 'users', 'shop', category mapping,
-     * and vehicle categories tables within a database transaction.
-     * 
-     * @param array $userData Contains email, password, verification_token
-     * @param array $shopData Contains shop metadata and location coordinates
-     * @param int $categoryId The category ID mapped
-     * @param array $vehicleIds Array of vehicle category IDs mapped
-     * @return int The newly created user/shop ID
-     * @throws Exception if registration fails
-     */
     public function register($userData, $shopData, $categoryId, $vehicleIds) {
         try {
             $this->conn->beginTransaction();
 
-            // 1. Insert into users
-            $userQuery = "INSERT INTO users (email, userRole, password, isActive, verification_token, is_email_verified, token_expiry) 
-                          VALUES (:email, 'shop_owner', :password, 0, :token, 0, DATE_ADD(NOW(), INTERVAL 1 HOUR))";
-            $userStmt = $this->conn->prepare($userQuery);
-            $userStmt->execute([
-                ':email' => $userData['email'],
-                ':password' => $userData['password'],
-                ':token' => $userData['verification_token']
-            ]);
-            
-            $userId = $this->conn->lastInsertId();
-
-            // 2. Insert into shop
-            $shopQuery = "INSERT INTO shop (id, name, address, contactNumber, owner, location, description, openTime, closeTime, isAvailable, carriageService, BRN, profileImageURL, default_driver_name, default_driver_phone, default_truck_brand, default_truck_color, tow_truck_plate) 
-                          VALUES (:id, :name, :address, :contactNumber, :owner, ST_GeomFromText(:location_point), :description, :openTime, :closeTime, 1, :carriageService, :BRN, :profileImageURL, :driverName, :driverPhone, :truckBrand, :truckColor, :truckPlate)";
-            
-            $shopStmt = $this->conn->prepare($shopQuery);
-            $shopStmt->execute([
-                ':id' => $userId,
-                ':name' => $shopData['name'],
-                ':address' => $shopData['address'],
-                ':contactNumber' => $shopData['contactNumber'],
-                ':owner' => $shopData['owner'],
-                ':location_point' => "POINT(" . $shopData['longitude'] . " " . $shopData['latitude'] . ")",
-                ':description' => $shopData['description'],
-                ':openTime' => $shopData['openTime'],
-                ':closeTime' => $shopData['closeTime'],
-                ':carriageService' => $shopData['carriageService'],
-                ':BRN' => $shopData['BRN'],
-                ':profileImageURL' => $shopData['profileImageURL'],
-                ':driverName' => $shopData['driverName'],
-                ':driverPhone' => $shopData['driverPhone'],
-                ':truckBrand' => $shopData['truckBrand'],
-                ':truckColor' => $shopData['truckColor'],
-                ':truckPlate' => $shopData['truckPlate']
+            $userId = $this->qb->table('users')->insertGetId([
+                'email' => $userData['email'],
+                'userRole' => 'shop_owner',
+                'password' => $userData['password'],
+                'isActive' => 0,
+                'verification_token' => $userData['verification_token'],
+                'is_email_verified' => 0,
+                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 1 HOUR)')
             ]);
 
-            // 3. Insert into shopCategoryMapping
-            $mappingQuery = "INSERT INTO shopCategoryMapping (shop_id, shop_category_id) VALUES (:shop_id, :shop_category_id)";
-            $mappingStmt = $this->conn->prepare($mappingQuery);
-            $mappingStmt->execute([
-                ':shop_id' => $userId,
-                ':shop_category_id' => $categoryId
+            $this->qb->table('shop')->insert([
+                'id' => $userId,
+                'name' => $shopData['name'],
+                'address' => $shopData['address'],
+                'contactNumber' => $shopData['contactNumber'],
+                'owner' => $shopData['owner'],
+                'location' => QueryBuilder::raw("ST_GeomFromText('POINT(" . (float)$shopData['longitude'] . " " . (float)$shopData['latitude'] . ")')"),
+                'description' => $shopData['description'],
+                'openTime' => $shopData['openTime'],
+                'closeTime' => $shopData['closeTime'],
+                'isAvailable' => 1,
+                'carriageService' => $shopData['carriageService'],
+                'BRN' => $shopData['BRN'],
+                'profileImageURL' => $shopData['profileImageURL'],
+                'default_driver_name' => $shopData['driverName'],
+                'default_driver_phone' => $shopData['driverPhone'],
+                'default_truck_brand' => $shopData['truckBrand'],
+                'default_truck_color' => $shopData['truckColor'],
+                'tow_truck_plate' => $shopData['truckPlate']
             ]);
 
-            // 4. Insert into shopVehicleCategories
-            $vehicleQuery = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :vehicle_category_id)";
-            $vehicleStmt = $this->conn->prepare($vehicleQuery);
+            $this->qb->table('shopCategoryMapping')->insert([
+                'shop_id' => $userId,
+                'shop_category_id' => $categoryId
+            ]);
+
             foreach ($vehicleIds as $vId) {
-                $vehicleStmt->execute([
-                    ':shop_id' => $userId,
-                    ':vehicle_category_id' => $vId
+                $this->qb->table('shopVehicleCategories')->insert([
+                    'shop_id' => $userId,
+                    'vehicle_category_id' => $vId
                 ]);
             }
 
@@ -456,148 +318,80 @@ class Shop {
         }
     }
 
-    public function getTowTruckDetails($shopId)
-{
-    $query="
-        SELECT
-            default_driver_name,
-            default_driver_phone,
-            default_truck_brand,
-            default_truck_color,
-            tow_truck_plate
-        FROM shop
-        WHERE id=:id
-    ";
+    public function getTowTruckDetails($shopId) {
+        return $this->qb->table('shop')->select([
+            'default_driver_name', 'default_driver_phone', 'default_truck_brand',
+            'default_truck_color', 'tow_truck_plate'
+        ])->where('id', $shopId)->first();
+    }
 
-    $stmt=$this->conn->prepare($query);
-    $stmt->bindParam(":id",$shopId);
-    $stmt->execute();
+    public function updateShopTowTruckDetails($shopId, $data) {
+        $this->qb->table('shop')->where('id', $shopId)->update([
+            'carriageService' => 1,
+            'default_driver_name' => $data['driverName'],
+            'default_driver_phone' => $data['driverPhone'],
+            'default_truck_brand' => $data['truckBrand'],
+            'default_truck_color' => $data['truckColor'],
+            'tow_truck_plate' => $data['truckPlate']
+        ]);
+        return true;
+    }
 
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-public function updateShopTowTruckDetails($shopId, $data) {
-    $query = "UPDATE shop SET 
-                carriageService = 1,
-                default_driver_name = :driverName,
-                default_driver_phone = :driverPhone,
-                default_truck_brand = :truckBrand,
-                default_truck_color = :truckColor,
-                tow_truck_plate = :truckPlate
-              WHERE id = :id";
-
-    $stmt = $this->conn->prepare($query);
-
-    // Using execute()'s return value, not rowCount() — same fix as the
-    // earlier tow-truck false-failure bug (no-change updates report rowCount 0)
-    return $stmt->execute([
-        ':driverName'  => $data['driverName'],
-        ':driverPhone' => $data['driverPhone'],
-        ':truckBrand'  => $data['truckBrand'],
-        ':truckColor'  => $data['truckColor'],
-        ':truckPlate'  => $data['truckPlate'],
-        ':id'          => $shopId
-    ]);
-}
-
-    // ==========================================
-    // Gallery Management
-    // ==========================================
     public function getGalleryImages($shopId) {
-        $query = "SELECT id, url FROM shopImage WHERE shop_id = :shop_id ORDER BY id DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':shop_id' => $shopId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table('shopImage')->select('id', 'url')->where('shop_id', $shopId)->orderBy('id', 'DESC')->get();
     }
 
     public function getGalleryImageCount($shopId) {
-        $query = "SELECT COUNT(*) FROM shopImage WHERE shop_id = :shop_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':shop_id' => $shopId]);
-        return (int)$stmt->fetchColumn();
+        return $this->qb->table('shopImage')->where('shop_id', $shopId)->count();
     }
 
     public function updateProfileImage($shopId, $imagePath) {
-        $query = "UPDATE shop SET profileImageURL = :url WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        return $stmt->execute([':url' => $imagePath, ':id' => $shopId]);
+        $this->qb->table('shop')->where('id', $shopId)->update(['profileImageURL' => $imagePath]);
+        return true;
     }
 
     public function addGalleryImage($shopId, $url) {
-        $query = "INSERT INTO shopImage (shop_id, url) VALUES (:shop_id, :url)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':shop_id' => $shopId,
-            ':url' => $url
-        ]);
-        return $this->conn->lastInsertId();
+        return $this->qb->table('shopImage')->insertGetId(['shop_id' => $shopId, 'url' => $url]);
     }
 
     public function deleteGalleryImage($shopId, $imageId) {
-        $findQuery = "SELECT url FROM shopImage WHERE id = :id AND shop_id = :shop_id LIMIT 1";
-        $stmt = $this->conn->prepare($findQuery);
-        $stmt->execute([':id' => $imageId, ':shop_id' => $shopId]);
-        $img = $stmt->fetch(PDO::FETCH_ASSOC);
+        $img = $this->qb->table('shopImage')->select('url')->where('id', $imageId)->where('shop_id', $shopId)->first();
+        if (!$img) return false;
 
-        if (!$img) {
-            return false;
-        }
-
-        $delQuery = "DELETE FROM shopImage WHERE id = :id AND shop_id = :shop_id";
-        $delStmt = $this->conn->prepare($delQuery);
-        $success = $delStmt->execute([':id' => $imageId, ':shop_id' => $shopId]);
-
+        $success = $this->qb->table('shopImage')->where('id', $imageId)->where('shop_id', $shopId)->delete();
         if ($success && !empty($img['url'])) {
             $filePath = __DIR__ . '/../' . $img['url'];
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
         }
-        return $success;
+        return (bool)$success;
     }
 
-    // ==========================================
-    // Editable Business Information
-    // ==========================================
     public function updateBusinessInfo($shopId, $data, $vehicleCategoryIds) {
         try {
             $this->conn->beginTransaction();
 
-            $query = "UPDATE shop SET 
-                        name = :name,
-                        owner = :owner,
-                        contactNumber = :phone,
-                        address = :address,
-                        BRN = :brn,
-                        openTime = :openTime,
-                        closeTime = :closeTime,
-                        description = :description,
-                        isAvailable = :isAvailable
-                      WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':name' => $data['name'],
-                ':owner' => $data['owner'],
-                ':phone' => $data['phone'],
-                ':address' => $data['address'],
-                ':brn' => $data['brn'],
-                ':openTime' => $data['openTime'],
-                ':closeTime' => $data['closeTime'],
-                ':description' => $data['description'],
-                ':isAvailable' => $data['isAvailable'] ?? 1,
-                ':id' => $shopId
+            $this->qb->table('shop')->where('id', $shopId)->update([
+                'name' => $data['name'],
+                'owner' => $data['owner'],
+                'contactNumber' => $data['phone'],
+                'address' => $data['address'],
+                'BRN' => $data['brn'],
+                'openTime' => $data['openTime'],
+                'closeTime' => $data['closeTime'],
+                'description' => $data['description'],
+                'isAvailable' => $data['isAvailable'] ?? 1
             ]);
 
-            // Refresh vehicle categories mapping
-            $delVeh = "DELETE FROM shopVehicleCategories WHERE shop_id = :shop_id";
-            $delStmt = $this->conn->prepare($delVeh);
-            $delStmt->execute([':shop_id' => $shopId]);
+            $this->qb->table('shopVehicleCategories')->where('shop_id', $shopId)->delete();
 
             if (!empty($vehicleCategoryIds)) {
-                $insVeh = "INSERT INTO shopVehicleCategories (shop_id, vehicle_category_id) VALUES (:shop_id, :v_id)";
-                $insStmt = $this->conn->prepare($insVeh);
                 foreach ($vehicleCategoryIds as $vId) {
-                    $insStmt->execute([':shop_id' => $shopId, ':v_id' => $vId]);
+                    $this->qb->table('shopVehicleCategories')->insert([
+                        'shop_id' => $shopId,
+                        'vehicle_category_id' => $vId
+                    ]);
                 }
             }
 
@@ -611,28 +405,20 @@ public function updateShopTowTruckDetails($shopId, $data) {
         }
     }
 
-    // ==========================================
-    // Services Offered
-    // ==========================================
     public function getServicesByShopId($shopId) {
-        $query = "SELECT id, category, service_name, starting_price, duration FROM shopServices WHERE shop_id = :shop_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':shop_id' => $shopId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table('shopServices')
+            ->select('id', 'category', 'service_name', 'starting_price', 'duration')
+            ->where('shop_id', $shopId)
+            ->get();
     }
 
     public function updateShopServices($shopId, $services) {
         try {
             $this->conn->beginTransaction();
 
-            $delQuery = "DELETE FROM shopServices WHERE shop_id = :shop_id";
-            $delStmt = $this->conn->prepare($delQuery);
-            $delStmt->execute([':shop_id' => $shopId]);
+            $this->qb->table('shopServices')->where('shop_id', $shopId)->delete();
 
             if (!empty($services)) {
-                $insQuery = "INSERT INTO shopServices (shop_id, category, service_name, starting_price, duration) 
-                             VALUES (:shop_id, :category, :service_name, :starting_price, :duration)";
-                $insStmt = $this->conn->prepare($insQuery);
                 foreach ($services as $svc) {
                     $categoryName = trim($svc['category'] ?? 'General');
                     $serviceName  = trim($svc['service_name'] ?? $svc['name'] ?? '');
@@ -640,12 +426,12 @@ public function updateShopTowTruckDetails($shopId, $data) {
                     $durationVal  = trim($svc['duration'] ?? 'Varies');
 
                     if ($serviceName !== '') {
-                        $insStmt->execute([
-                            ':shop_id'        => $shopId,
-                            ':category'       => $categoryName !== '' ? $categoryName : 'General',
-                            ':service_name'   => $serviceName,
-                            ':starting_price' => $priceVal !== '' ? $priceVal : 'Varies',
-                            ':duration'       => $durationVal !== '' ? $durationVal : 'Varies'
+                        $this->qb->table('shopServices')->insert([
+                            'shop_id'        => $shopId,
+                            'category'       => $categoryName !== '' ? $categoryName : 'General',
+                            'service_name'   => $serviceName,
+                            'starting_price' => $priceVal !== '' ? $priceVal : 'Varies',
+                            'duration'       => $durationVal !== '' ? $durationVal : 'Varies'
                         ]);
                     }
                 }
@@ -661,40 +447,26 @@ public function updateShopTowTruckDetails($shopId, $data) {
         }
     }
 
-    /**
-     * Admin Dashboard: Get total count of active shops
-     */
     public function getActiveCount() {
-        $stmt = $this->conn->prepare("
-            SELECT COUNT(*) 
-            FROM shop s
-            JOIN users u ON s.id = u.id
-            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
-        ");
-        $stmt->execute();
-        return (int)$stmt->fetchColumn();
+        return $this->qb->table('shop', 's')
+            ->join('users u', 's.id', '=', 'u.id')
+            ->where('u.isActive', 1)
+            ->where('u.userRole', 'shop_owner')
+            ->count();
     }
 
-    /**
-     * Admin Dashboard: Get shop distribution by category
-     */
     public function getCategoryDistribution() {
-        $stmt = $this->conn->prepare("
-            SELECT 
-                sc.name as categoryName, 
-                COUNT(s.id) as shopCount
-            FROM shop s
-            JOIN users u ON s.id = u.id
-            LEFT JOIN shopCategoryMapping scm ON s.id = scm.shop_id
-            LEFT JOIN shopCategory sc ON scm.shop_category_id = sc.id
-            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
-            GROUP BY sc.name
-            ORDER BY shopCount DESC
-        ");
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Format for Recharts { name, value }
+        $results = $this->qb->table('shop', 's')
+            ->select('sc.name as categoryName', 'COUNT(s.id) as shopCount')
+            ->join('users u', 's.id', '=', 'u.id')
+            ->leftJoin('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
+            ->leftJoin('shopCategory sc', 'scm.shop_category_id', '=', 'sc.id')
+            ->where('u.isActive', 1)
+            ->where('u.userRole', 'shop_owner')
+            ->groupBy('sc.name')
+            ->orderBy('shopCount', 'DESC')
+            ->get();
+            
         $formatted = [];
         foreach ($results as $row) {
             $formatted[] = [
@@ -705,33 +477,18 @@ public function updateShopTowTruckDetails($shopId, $data) {
         return $formatted;
     }
 
-    /**
-     * Admin: Attempt to activate a pending shop owner account.
-     * Returns a status string to allow the controller to format the response.
-     *
-     * @param  int  $shopId
-     * @return string  'approved' | 'already_active' | 'not_found'
-     */
     public function approveShop(int $shopId): string {
-        $stmt = $this->conn->prepare(
-            "UPDATE users SET isActive = 1
-             WHERE id = :id AND userRole = 'shop_owner' AND is_email_verified = 1"
-        );
-        $stmt->bindParam(':id', $shopId, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->qb->table('users')
+            ->where('id', $shopId)
+            ->where('userRole', 'shop_owner')
+            ->where('is_email_verified', 1)
+            ->update(['isActive' => 1]);
 
         if ($stmt->rowCount() > 0) {
             return 'approved';
         }
 
-        // Check whether the shop simply already exists and is already active
-        $check = $this->conn->prepare(
-            "SELECT isActive FROM users WHERE id = :id AND userRole = 'shop_owner'"
-        );
-        $check->bindParam(':id', $shopId, PDO::PARAM_INT);
-        $check->execute();
-        $row = $check->fetch(PDO::FETCH_ASSOC);
-
+        $row = $this->qb->table('users')->where('id', $shopId)->where('userRole', 'shop_owner')->select('isActive')->first();
         if ($row && $row['isActive'] == 1) {
             return 'already_active';
         }
@@ -739,99 +496,68 @@ public function updateShopTowTruckDetails($shopId, $data) {
         return 'not_found';
     }
 
-    /**
-     * Admin: Fetch all shop owner accounts that have verified their email
-     * but are still awaiting admin approval (isActive = 0).
-     *
-     * @return array
-     */
     public function getPendingApprovals(): array {
-        $stmt = $this->conn->prepare("
-            SELECT
-                u.id,
-                u.email,
-                u.is_email_verified,
-                s.name          AS shopName,
-                s.owner         AS ownerName,
-                s.address,
-                s.contactNumber,
-                s.description,
-                s.openTime,
-                s.closeTime,
-                s.carriageService,
-                s.BRN,
-                s.profileImageURL,
-                GROUP_CONCAT(DISTINCT sc.name  SEPARATOR ', ') AS category,
-                GROUP_CONCAT(DISTINCT vc.name  SEPARATOR ', ') AS vehicleCategories
-            FROM users u
-            INNER JOIN shop s                ON s.id  = u.id
-            LEFT  JOIN shopCategoryMapping scm ON scm.shop_id = s.id
-            LEFT  JOIN shopCategory sc       ON sc.id  = scm.shop_category_id
-            LEFT  JOIN shopVehicleCategories svc ON svc.shop_id = s.id
-            LEFT  JOIN vehicleCategory vc    ON vc.id  = svc.vehicle_category_id
-            WHERE u.userRole = 'shop_owner'
-              AND u.is_email_verified = 1
-              AND u.isActive = 0
-            GROUP BY u.id, s.name, s.owner, s.address, s.contactNumber,
-                     s.description, s.openTime, s.closeTime, s.carriageService,
-                     s.BRN, s.profileImageURL
-            ORDER BY u.id DESC
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table('users', 'u')
+            ->select([
+                'u.id', 'u.email', 'u.is_email_verified', 's.name AS shopName',
+                's.owner AS ownerName', 's.address', 's.contactNumber', 's.description',
+                's.openTime', 's.closeTime', 's.carriageService', 's.BRN', 's.profileImageURL',
+                "GROUP_CONCAT(DISTINCT sc.name  SEPARATOR ', ') AS category",
+                "GROUP_CONCAT(DISTINCT vc.name  SEPARATOR ', ') AS vehicleCategories"
+            ])
+            ->join('shop s', 's.id', '=', 'u.id')
+            ->leftJoin('shopCategoryMapping scm', 'scm.shop_id', '=', 's.id')
+            ->leftJoin('shopCategory sc', 'sc.id', '=', 'scm.shop_category_id')
+            ->leftJoin('shopVehicleCategories svc', 'svc.shop_id', '=', 's.id')
+            ->leftJoin('vehicleCategory vc', 'vc.id', '=', 'svc.vehicle_category_id')
+            ->where('u.userRole', 'shop_owner')
+            ->where('u.is_email_verified', 1)
+            ->where('u.isActive', 0)
+            ->groupBy('u.id')
+            ->groupBy('s.name')
+            ->groupBy('s.owner')
+            ->groupBy('s.address')
+            ->groupBy('s.contactNumber')
+            ->groupBy('s.description')
+            ->groupBy('s.openTime')
+            ->groupBy('s.closeTime')
+            ->groupBy('s.carriageService')
+            ->groupBy('s.BRN')
+            ->groupBy('s.profileImageURL')
+            ->orderBy('u.id', 'DESC')
+            ->get();
     }
 
-    /**
-     * Verifies current password for a shop user ID.
-     */
     public function verifyPassword($shopId, $currentPassword) {
-        $stmt = $this->conn->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
-        $stmt->execute([':id' => $shopId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user) {
-            return false;
-        }
+        $user = $this->qb->table('users')->select('password')->where('id', $shopId)->first();
+        if (!$user) return false;
         return password_verify($currentPassword, $user['password']);
     }
 
-    /**
-     * Checks if an email is registered to another user account.
-     */
     public function isEmailTaken($email, $excludeUserId) {
-        $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = :email AND id != :id LIMIT 1");
-        $stmt->execute([':email' => $email, ':id' => $excludeUserId]);
-        return (bool) $stmt->fetch();
+        return (bool)$this->qb->table('users')->select('id')->where('email', $email)->where('id', '!=', $excludeUserId)->first();
     }
 
-
-    /**
-     * Hashes and updates password in 'users' table.
-     */
     public function updatePassword($shopId, $newPassword) {
-        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        $stmt = $this->conn->prepare("UPDATE users SET password = :password WHERE id = :id");
-        return $stmt->execute([':password' => $hashedPassword, ':id' => $shopId]);
+        $this->qb->table('users')->where('id', $shopId)->update([
+            'password' => password_hash($newPassword, PASSWORD_DEFAULT)
+        ]);
+        return true;
     }
 
     public function getProfileImageURL($shopId) {
-        $stmt = $this->conn->prepare("SELECT profileImageURL FROM shop WHERE id = :id LIMIT 1");
-        $stmt->execute([':id' => $shopId]);
-        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $row['profileImageURL'];
-        }
-        return null;
+        $row = $this->qb->table('shop')->select('profileImageURL')->where('id', $shopId)->first();
+        return $row ? $row['profileImageURL'] : null;
     }
 
     public function getActiveSparePartsShopCount() {
-        $stmt = $this->conn->prepare("
-            SELECT COUNT(*) FROM shop s
-            JOIN users u ON s.id = u.id
-            JOIN shopCategoryMapping scm ON s.id = scm.shop_id
-            WHERE u.isActive = 1 AND u.userRole = 'shop_owner'
-              AND scm.shop_category_id = 3
-        ");
-        $stmt->execute();
-        return (int)$stmt->fetchColumn();
+        return $this->qb->table('shop', 's')
+            ->join('users u', 's.id', '=', 'u.id')
+            ->join('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
+            ->where('u.isActive', 1)
+            ->where('u.userRole', 'shop_owner')
+            ->where('scm.shop_category_id', 3)
+            ->count();
     }
 }
 ?>
