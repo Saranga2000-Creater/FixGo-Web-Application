@@ -166,13 +166,13 @@ class ServiceRequest {
     public function cancelStaleRequests() {
         $this->qb->table($this->table_name)
             ->where('status', 'Pending')
-            ->whereRaw("
+            ->whereRaw("(
                 (urgency_level = 'Urgent' AND created_at <= DATE_SUB(NOW(), INTERVAL 30 MINUTE))
                 OR 
                 (urgency_level = 'Normal' AND preferred_date IS NULL AND created_at <= DATE_SUB(NOW(), INTERVAL 24 HOUR))
                 OR
                 (preferred_date IS NOT NULL AND preferred_date < CURDATE())
-            ")
+            )")
             ->update([
                 'status' => 'Cancelled',
                 'cancelled_by' => 'System',
