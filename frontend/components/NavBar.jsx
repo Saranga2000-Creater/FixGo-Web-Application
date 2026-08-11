@@ -331,7 +331,6 @@ export const NavBar = () => {
                         </div>
                     )}
 
-                    <FontAwesomeIcon icon={faCircleQuestion} className="hover:bg-[#e8e8e8] p-2 rounded-full transition-colors active:scale-95 cursor-pointer text-gray-700 text-lg" />
 
                     {token ? (
                         <>
