@@ -173,7 +173,7 @@ class Shop {
         $openStatusText = "Temporarily Closed";
 
         if ($info['isAvailable'] == 1) {
-            if ($currentTime >= $info['openTime'] && $currentTime <= $info['closeTime']) {
+            if ($currentTime >= $info['openTime'] && $currentTime < $info['closeTime']) {
                 $isOpen = true;
                 $openStatusText = "Open Now";
             } else {

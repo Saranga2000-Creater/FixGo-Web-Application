@@ -77,13 +77,11 @@ function ShopProfile() {
   const [businessError, setBusinessError] = useState("");
   const [businessForm, setBusinessForm] = useState({
     name: "", owner: "", phone: "", address: "", brn: "", description: "",
-    openTime: "08:00", closeTime: "18:00", satCloseTime: "14:00", isAvailable: 1, vehicleCategories: []
+    openTime: "08:00", closeTime: "18:00", isAvailable: 1, vehicleCategories: []
   });
 
   // Operating Hours Edit state
   const [isEditingHours, setIsEditingHours] = useState(false);
-  const [satClosed, setSatClosed] = useState(false);
-  const [sunClosed, setSunClosed] = useState(true);
 
   // Services Offered state
   const [shopServices, setShopServices] = useState([]);
@@ -163,7 +161,6 @@ function ShopProfile() {
         description: shopData.description || "",
         openTime: shopData.openTime || "08:00:00",
         closeTime: shopData.closeTime || "18:00:00",
-        satCloseTime: "14:00:00",
         isAvailable: shopData.isAvailable !== undefined ? Number(shopData.isAvailable) : 1,
         vehicleCategories: vCats
       });
@@ -658,10 +655,6 @@ function ShopProfile() {
             isEditingHours={isEditingHours}
             setIsEditingHours={setIsEditingHours}
             formatTime={formatTime}
-            satClosed={satClosed}
-            setSatClosed={setSatClosed}
-            sunClosed={sunClosed}
-            setSunClosed={setSunClosed}
             businessForm={businessForm}
             setBusinessForm={setBusinessForm}
             handleBusinessFormChange={handleBusinessFormChange}
