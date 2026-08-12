@@ -97,6 +97,18 @@ class CustomerController {
             return;
         }
 
+        if (mb_strlen($address) < 5 || preg_match('/^(n\/?a|none|nil|null|test|no|abc)$/i', $address)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please enter a valid personal address (at least 5 characters; placeholders like N/A are not allowed)."]);
+            return;
+        }
+
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $password)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number."]);
+            return;
+        }
+
         // Handle file upload securely
         $targetDir = __DIR__ . '/../uploads/customers/';
         $dbImagePath = RequestValidator::handleFileUpload('profilePic', $targetDir, 'customer_', 'uploads/customers/');

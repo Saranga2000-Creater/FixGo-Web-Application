@@ -51,20 +51,37 @@ export default function CustomerForm() {
             return;
         }
 
+        const trimEmail = formData.email.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimEmail || !emailRegex.test(trimEmail)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        const trimPhone = formData.phone.trim();
+        const phoneRegex = /^(?:\+94\d{9}|0\d{9})$/;
+        if (!trimPhone || !phoneRegex.test(trimPhone)) {
+            setError("Please enter a valid phone number (e.g. +94771234567 or 0771234567).");
+            return;
+        }
+
+        const trimAddress = formData.address.trim();
+        const invalidAddressRegex = /^(n\/?a|none|nil|null|test|no|abc)$/i;
+        if (!trimAddress || trimAddress.length < 5 || invalidAddressRegex.test(trimAddress)) {
+            setError("Please enter a valid address (at least 5 characters; placeholders like N/A are not allowed).");
+            return;
+        }
+
+        // Validate password strength (at least 8 chars, 1 uppercase, 1 lowercase, 1 digit)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number.");
+            return;
+        }
+
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match.");
-            return;
-        }
-
-        // Validate password length
-        if (formData.password.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
-        }
-
-        if (!formData.address.trim()) {
-            setError("Please enter your address.");
             return;
         }
 
@@ -76,10 +93,10 @@ export default function CustomerForm() {
         setLoading(true);
 
         const payload = new FormData();
-        payload.append("name", formData.name);
-        payload.append("email", formData.email);
-        payload.append("phone", formData.phone);
-        payload.append("address", formData.address);
+        payload.append("name", trimName);
+        payload.append("email", trimEmail);
+        payload.append("phone", trimPhone);
+        payload.append("address", trimAddress);
         payload.append("password", formData.password);
         payload.append("profilePic", profilePic);
 
