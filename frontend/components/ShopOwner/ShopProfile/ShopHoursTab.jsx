@@ -5,10 +5,6 @@ function ShopHoursTab({
   isEditingHours,
   setIsEditingHours,
   formatTime,
-  satClosed,
-  setSatClosed,
-  sunClosed,
-  setSunClosed,
   businessForm,
   setBusinessForm,
   handleBusinessFormChange,
@@ -61,33 +57,17 @@ function ShopHoursTab({
       {!isEditingHours ? (
         <div className="divide-y divide-slate-100 text-sm max-w-2xl">
           <div className="py-3.5 flex justify-between items-center">
-            <span className="font-semibold text-slate-800">Monday - Friday</span>
+            <span className="font-semibold text-slate-800">Everyday</span>
             <span className="font-bold text-slate-900">
-              {formatTime(shopData.openTime)} - {formatTime(shopData.closeTime)}
-            </span>
-          </div>
-
-          <div className="py-3.5 flex justify-between items-center">
-            <span className="font-semibold text-slate-800">Saturday</span>
-            <span className={`font-bold ${satClosed ? "text-red-600" : "text-slate-900"}`}>
-              {satClosed ? "Closed" : `${formatTime(shopData.openTime)} - ${formatTime(businessForm.satCloseTime)}`}
-            </span>
-          </div>
-
-          <div className="py-3.5 flex justify-between items-center">
-            <span className="font-semibold text-slate-800">Sunday</span>
-            <span className={`font-bold ${sunClosed ? "text-red-600" : "text-slate-900"}`}>
-              {sunClosed ? "Closed" : `${formatTime(shopData.openTime)} - 2:00 PM`}
+              {formatTime(shopData?.openTime)} - {formatTime(shopData?.closeTime)}
             </span>
           </div>
         </div>
       ) : (
-        /* Per-day Hours Edit Form */
+        /* Everyday Hours Edit Form */
         <div className="max-w-xl space-y-6">
-          
-          {/* Mon - Fri */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-            <span className="font-bold text-xs text-slate-900 block">Monday - Friday Hours</span>
+            <span className="font-bold text-xs text-slate-900 block">Everyday Operating Hours</span>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
@@ -110,87 +90,6 @@ function ShopHoursTab({
                 />
               </div>
             </div>
-          </div>
-
-          {/* Saturday */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-xs text-slate-900">Saturday Hours</span>
-              <button
-                type="button"
-                onClick={() => setSatClosed(!satClosed)}
-                className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                  satClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
-                }`}
-              >
-                {satClosed ? "Mark Open" : "Mark Closed"}
-              </button>
-            </div>
-            {!satClosed ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
-                  <input
-                    type="time"
-                    value={businessForm.openTime}
-                    onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Close Time</label>
-                  <input
-                    type="time"
-                    name="satCloseTime"
-                    value={businessForm.satCloseTime}
-                    onChange={(e) => setBusinessForm({ ...businessForm, satCloseTime: e.target.value })}
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-red-600 font-medium m-0">Saturday marked as Closed.</p>
-            )}
-          </div>
-
-          {/* Sunday */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-xs text-slate-900">Sunday Hours</span>
-              <button
-                type="button"
-                onClick={() => setSunClosed(!sunClosed)}
-                className={`py-1 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                  sunClosed ? "bg-red-100 text-red-700 border-red-300" : "bg-green-100 text-green-600 border-green-300"
-                }`}
-              >
-                {sunClosed ? "Mark Open" : "Mark Closed"}
-              </button>
-            </div>
-            {!sunClosed ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Open Time</label>
-                  <input
-                    type="time"
-                    value={businessForm.openTime}
-                    onChange={(e) => setBusinessForm({ ...businessForm, openTime: e.target.value })}
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Close Time</label>
-                  <input
-                    type="time"
-                    value="14:00"
-                    readOnly
-                    className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-100 text-slate-500 box-border"
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-red-600 font-medium m-0">Sunday marked as Closed.</p>
-            )}
           </div>
 
           {businessError && <p className="text-red-600 text-xs font-semibold">{businessError}</p>}

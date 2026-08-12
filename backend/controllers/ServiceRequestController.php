@@ -81,27 +81,8 @@ class ServiceRequestController {
         $photoPath = null;
         if (!empty($requestData['problem_image'])) {
             $base64Str = $requestData['problem_image'];
-
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64Str, $type)) {
-                $base64Data    = substr($base64Str, strpos($base64Str, ',') + 1);
-                $fileExtension = strtolower($type[1]);
-
-                if (in_array($fileExtension, ['jpg', 'jpeg', 'png'])) {
-                    $decodedImage = base64_decode($base64Data);
-
-                    if ($decodedImage !== false) {
-                        $fileName  = uniqid('req_') . '.' . $fileExtension;
-                        $uploadDir = __DIR__ . '/../uploads/serviceRequests/';
-                        if (!file_exists($uploadDir)) {
-                            mkdir($uploadDir, 0777, true);
-                        }
-
-                        $absolutePath = $uploadDir . $fileName;
-                        file_put_contents($absolutePath, $decodedImage);
-                        $photoPath = 'uploads/serviceRequests/' . $fileName;
-                    }
-                }
-            }
+            $targetDir = __DIR__ . '/../uploads/serviceRequests/';
+            $photoPath = RequestValidator::handleBase64Upload($base64Str, $targetDir, 'req_', 'uploads/serviceRequests/');
         }
 
         $requestData['photo'] = $photoPath;

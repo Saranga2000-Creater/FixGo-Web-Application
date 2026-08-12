@@ -1,134 +1,132 @@
 <?php
 class Category {
-    private $conn;
+    private $qb;
 
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($db, $queryBuilder = null) {
+        $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
     // Fetch Vehicle Categories
     public function getVehicleCategories() {
-        $query = "SELECT id, name, name as label FROM vehicleCategory ORDER BY id ASC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
+        return $this->qb->table('vehicleCategory')
+            ->select('id', 'name', 'name as label')
+            ->orderBy('id', 'ASC')
+            ->execute();
     }
 
     // Fetch Shop Services
     public function getShopServices() {
-        $query = "SELECT id, name, name as label FROM shopCategory ORDER BY id ASC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
+        return $this->qb->table('shopCategory')
+            ->select('id', 'name', 'name as label')
+            ->orderBy('id', 'ASC')
+            ->execute();
     }
 
     // ── Shop Categories CRUD ──────────────────────────────────────────
 
     public function getAllShopCategories() {
-        $stmt = $this->conn->prepare("SELECT id, name, description FROM shopCategory ORDER BY id ASC");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table('shopCategory')
+            ->select('id', 'name', 'description')
+            ->orderBy('id', 'ASC')
+            ->get();
     }
 
     public function isShopCategoryNameTaken($name, $excludeId = null) {
-        $sql = "SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name)";
-        $params = [':name' => trim($name)];
+        $query = $this->qb->table('shopCategory')
+            ->select('id')
+            ->whereRaw('LOWER(name) = LOWER(:name)', ['name' => trim($name)]);
+            
         if ($excludeId) {
-            $sql .= " AND id != :excludeId";
-            $params[':excludeId'] = $excludeId;
+            $query->where('id', '!=', $excludeId);
         }
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-        return (bool)$stmt->fetch();
+        
+        return (bool)$query->first();
     }
 
     public function addShopCategory($name, $description = '') {
-        $stmt = $this->conn->prepare("INSERT INTO shopCategory (name, description) VALUES (:name, :description)");
-        $stmt->execute([
-            ':name' => trim($name),
-            ':description' => trim($description)
+        return $this->qb->table('shopCategory')->insertGetId([
+            'name' => trim($name),
+            'description' => trim($description)
         ]);
-        return $this->conn->lastInsertId();
     }
 
     public function updateShopCategory($id, $name, $description = '') {
-        $stmt = $this->conn->prepare("UPDATE shopCategory SET name = :name, description = :description WHERE id = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':name' => trim($name),
-            ':description' => trim($description)
+        $this->qb->table('shopCategory')->where('id', $id)->update([
+            'name' => trim($name),
+            'description' => trim($description)
         ]);
+        return true;
     }
 
     public function deleteShopCategory($id) {
-        $stmt = $this->conn->prepare("DELETE FROM shopCategory WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+        $this->qb->table('shopCategory')->where('id', $id)->delete();
+        return true;
     }
 
     // ── Vehicle Categories CRUD ───────────────────────────────────────
 
     public function getAllVehicleCategoriesList() {
-        $stmt = $this->conn->prepare("SELECT id, name, description FROM vehicleCategory ORDER BY id ASC");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->qb->table('vehicleCategory')
+            ->select('id', 'name', 'description')
+            ->orderBy('id', 'ASC')
+            ->get();
     }
 
     public function isVehicleCategoryNameTaken($name, $excludeId = null) {
-        $sql = "SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name)";
-        $params = [':name' => trim($name)];
+        $query = $this->qb->table('vehicleCategory')
+            ->select('id')
+            ->whereRaw('LOWER(name) = LOWER(:name)', ['name' => trim($name)]);
+            
         if ($excludeId) {
-            $sql .= " AND id != :excludeId";
-            $params[':excludeId'] = $excludeId;
+            $query->where('id', '!=', $excludeId);
         }
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-        return (bool)$stmt->fetch();
+        
+        return (bool)$query->first();
     }
 
     public function addVehicleCategory($name, $description = '') {
-        $stmt = $this->conn->prepare("INSERT INTO vehicleCategory (name, description) VALUES (:name, :description)");
-        $stmt->execute([
-            ':name' => trim($name),
-            ':description' => trim($description)
+        return $this->qb->table('vehicleCategory')->insertGetId([
+            'name' => trim($name),
+            'description' => trim($description)
         ]);
-        return $this->conn->lastInsertId();
     }
 
     public function updateVehicleCategory($id, $name, $description = '') {
-        $stmt = $this->conn->prepare("UPDATE vehicleCategory SET name = :name, description = :description WHERE id = :id");
-        return $stmt->execute([
-            ':id' => $id,
-            ':name' => trim($name),
-            ':description' => trim($description)
+        $this->qb->table('vehicleCategory')->where('id', $id)->update([
+            'name' => trim($name),
+            'description' => trim($description)
         ]);
+        return true;
     }
 
     public function deleteVehicleCategory($id) {
-        $stmt = $this->conn->prepare("DELETE FROM vehicleCategory WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+        $this->qb->table('vehicleCategory')->where('id', $id)->delete();
+        return true;
     }
 
     public function resolveShopCategoryId($identifier) {
+        $query = $this->qb->table('shopCategory')->select('id');
+        
         if (is_numeric($identifier)) {
-            $stmt = $this->conn->prepare("SELECT id FROM shopCategory WHERE id = :id LIMIT 1");
-            $stmt->execute([':id' => (int)$identifier]);
+            $query->where('id', (int)$identifier);
         } else {
-            $stmt = $this->conn->prepare("SELECT id FROM shopCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-            $stmt->execute([':name' => trim($identifier)]);
+            $query->whereRaw('LOWER(name) = LOWER(:name)', ['name' => trim($identifier)]);
         }
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $row = $query->first();
         return $row ? (int)$row['id'] : null;
     }
 
     public function resolveVehicleCategoryId($identifier) {
+        $query = $this->qb->table('vehicleCategory')->select('id');
+        
         if (is_numeric($identifier)) {
-            $stmt = $this->conn->prepare("SELECT id FROM vehicleCategory WHERE id = :id LIMIT 1");
-            $stmt->execute([':id' => (int)$identifier]);
+            $query->where('id', (int)$identifier);
         } else {
-            $stmt = $this->conn->prepare("SELECT id FROM vehicleCategory WHERE LOWER(name) = LOWER(:name) LIMIT 1");
-            $stmt->execute([':name' => trim($identifier)]);
+            $query->whereRaw('LOWER(name) = LOWER(:name)', ['name' => trim($identifier)]);
         }
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $row = $query->first();
         return $row ? (int)$row['id'] : null;
     }
 }

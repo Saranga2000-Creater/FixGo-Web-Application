@@ -1,11 +1,11 @@
 <?php
 
 class BillingConfiguration {
-    private $conn;
+    private $qb;
     private $table_name = 'billingConfiguration';
 
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($db, $queryBuilder = null) {
+        $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
     // ============================================================
@@ -13,8 +13,7 @@ class BillingConfiguration {
     // ============================================================
 
     public function get(): ?array {
-        $stmt = $this->conn->query("SELECT * FROM {$this->table_name} LIMIT 1");
-        $row  = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $this->qb->table($this->table_name)->first();
         return $row ?: null;
     }
 
@@ -25,16 +24,10 @@ class BillingConfiguration {
     // ============================================================
 
     public function update(array $fields, int $adminId): bool {
-        $sets   = [];
-        $params = [':adminId' => $adminId];
-
-        foreach ($fields as $col => $val) {
-            $sets[]         = "`{$col}` = :{$col}";
-            $params[":{$col}"] = $val;
-        }
-
-        $sql  = "UPDATE {$this->table_name} SET " . implode(', ', $sets) . ", `updatedByAdminId` = :adminId WHERE id = 1";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute($params);
+        $updateData = $fields;
+        $updateData['updatedByAdminId'] = $adminId;
+        
+        $this->qb->table($this->table_name)->where('id', 1)->update($updateData);
+        return true;
     }
 }

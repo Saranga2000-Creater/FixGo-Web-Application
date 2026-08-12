@@ -23,11 +23,11 @@ import {
 const FONT = "'Segoe UI', system-ui, sans-serif";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=16a34a&color=fff&name=";
 
-function SettingsRow({ icon, label, meta, onClick }) {
+function SettingsRow({ icon, label, meta, onClick, hasBorderTop }) {
     return (
         <button
             onClick={onClick}
-            className="flex w-full items-center justify-between py-4 px-6 bg-transparent border-none cursor-pointer text-left transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)]"
+            className={`flex flex-1 w-full items-center justify-between py-4 px-6 bg-transparent cursor-pointer text-left transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)] ${hasBorderTop ? "border-t border-gray-100" : "border-none"}`}
             style={{ fontFamily: FONT }}
         >
             <div className="flex items-center gap-3">
@@ -46,7 +46,7 @@ function SettingsSection({ iconBg, iconColor, icon, title, description, children
     return (
         <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden flex flex-wrap">
             {/* Left panel */}
-            <div className="flex items-center gap-5 p-6 border-r border-gray-100 w-[260px] flex-shrink-0 box-border">
+            <div className="flex items-center gap-5 p-6 border-b sm:border-b-0 sm:border-r border-gray-100 w-full sm:w-[260px] flex-shrink-0 box-border">
                 <div
                     className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center"
                     style={{ background: iconBg }}
@@ -247,12 +247,8 @@ function Settings({ onNavigate }) {
                 description="Manage your personal information and account details."
             >
                 <SettingsRow icon={faUser} label="Edit Profile" onClick={() => openEditModal("info")} />
-                <div className="border-t border-gray-100">
-                    <SettingsRow icon={faMapPin} label="Addresses" onClick={() => openEditModal("info")} />
-                </div>
-                <div className="border-t border-gray-100">
-                    <SettingsRow icon={faLock} label="Change Password" onClick={() => openEditModal("password")} />
-                </div>
+                <SettingsRow icon={faMapPin} label="Addresses" onClick={() => openEditModal("info")} hasBorderTop />
+                <SettingsRow icon={faLock} label="Change Password" onClick={() => openEditModal("password")} hasBorderTop />
             </SettingsSection>
 
             {/* ── Security ── */}
@@ -275,9 +271,7 @@ function Settings({ onNavigate }) {
                 description="Manage app behavior and data."
             >
                 <SettingsRow icon={faFileLines} label="Terms & Conditions" onClick={() => navigate("/terms-conditions")} />
-                <div className="border-t border-gray-100">
-                    <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" onClick={() => navigate("/support")} />
-                </div>
+                <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" onClick={() => navigate("/support")} hasBorderTop />
             </SettingsSection>
 
             {/* ── Edit Profile Modal ── */}

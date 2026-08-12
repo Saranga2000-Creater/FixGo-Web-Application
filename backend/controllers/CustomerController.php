@@ -52,67 +52,34 @@ class CustomerController {
         // Only handle POST requests
         RequestValidator::enforceMethod('POST');
 
-        // Check inputs in $_POST
+        $input = RequestValidator::getPostPayload();
+
+        // Check inputs in $input
         $requiredFields = ['name', 'email', 'phone', 'address', 'password'];
         foreach ($requiredFields as $field) {
-            if (!isset($_POST[$field]) || trim($_POST[$field]) === '') {
+            if (!isset($input[$field]) || trim($input[$field]) === '') {
                 http_response_code(400);
                 echo json_encode(["message" => "Missing required field: $field"]);
                 return;
             }
         }
 
-        $name = trim($_POST['name']);
+        $name = trim($input['name']);
         if (mb_strlen($name) < 2 || preg_match('/^\d+$/', $name) || !preg_match('/^[a-zA-Z\p{L}\s\.\'-]{2,100}$/u', $name)) {
             http_response_code(400);
             echo json_encode(["message" => "Please enter a valid full name (letters only, at least 2 characters)."]);
             return;
         }
 
-        $email = trim($_POST['email']);
-        $phone = trim($_POST['phone']);
-        $address = trim($_POST['address']);
-        $password = $_POST['password'];
+        $email = trim($input['email']);
+        $phone = trim($input['phone']);
+        $address = trim($input['address']);
+        $password = $input['password'];
 
         $sanitizedEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
         if (!filter_var($sanitizedEmail, FILTER_VALIDATE_EMAIL)) {
             http_response_code(400);
             echo json_encode(["message" => "Invalid email format."]);
-            return;
-        }
-
-        if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
-            http_response_code(400);
-            echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
-            return;
-        }
-
-        // Validate profile picture
-        if (!isset($_FILES['profilePic']) || $_FILES['profilePic']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo json_encode(["message" => "Please upload a profile photo."]);
-            return;
-        }
-
-        $file = $_FILES['profilePic'];
-        $fileSize = $file['size'];
-        $fileTmp = $file['tmp_name'];
-        $fileName = $file['name'];
-
-        // Check file size (5MB max)
-        if ($fileSize > 5 * 1024 * 1024) {
-            http_response_code(400);
-            echo json_encode(["message" => "Profile photo must be under 5MB."]);
-            return;
-        }
-
-        // Check file type
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-        if (!in_array($fileExtension, $allowedExtensions)) {
-            http_response_code(400);
-            echo json_encode(["message" => "Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP."]);
             return;
         }
 
@@ -124,23 +91,15 @@ class CustomerController {
             return;
         }
 
-        // Create uploads/customers folder if not exists
-        $targetDir = __DIR__ . '/../uploads/customers/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
-        // Generate a unique file name
-        $uniqueFileName = uniqid('customer_', true) . '.' . $fileExtension;
-        $targetFilePath = $targetDir . $uniqueFileName;
-        $dbImagePath = 'uploads/customers/' . $uniqueFileName;
-
-        // Move file
-        if (!move_uploaded_file($fileTmp, $targetFilePath)) {
-            http_response_code(500);
-            echo json_encode(["message" => "Failed to save uploaded photo."]);
+        if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
             return;
         }
+
+        // Handle file upload securely
+        $targetDir = __DIR__ . '/../uploads/customers/';
+        $dbImagePath = RequestValidator::handleFileUpload('profilePic', $targetDir, 'customer_', 'uploads/customers/');
 
         try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -171,6 +130,7 @@ class CustomerController {
 
         } catch (Exception $e) {
             // Delete file if db commit failed
+            $targetFilePath = __DIR__ . '/../' . $dbImagePath;
             if (file_exists($targetFilePath)) {
                 unlink($targetFilePath);
             }
@@ -181,14 +141,7 @@ class CustomerController {
 
     public function updateProfile($customerId) {
         RequestValidator::enforceMethod('POST');
-
-        $input = $_POST;
-        if (empty($input)) {
-            $jsonInput = json_decode(file_get_contents('php://input'), true);
-            if (is_array($jsonInput)) {
-                $input = $jsonInput;
-            }
-        }
+        $input = RequestValidator::getPostPayload();
 
         $customerModel = new Customer($this->db);
         $existingCustomer = $customerModel->getById($customerId);
@@ -241,42 +194,8 @@ class CustomerController {
         // Handle Profile Photo Upload
         $fileKey = isset($_FILES['profilePic']) ? 'profilePic' : (isset($_FILES['profilePhoto']) ? 'profilePhoto' : null);
         if ($fileKey && isset($_FILES[$fileKey]) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
-            $file = $_FILES[$fileKey];
-            $fileSize = $file['size'];
-            $fileTmp = $file['tmp_name'];
-            $fileName = $file['name'];
-
-            if ($fileSize > 5 * 1024 * 1024) {
-                http_response_code(400);
-                echo json_encode(["message" => "Profile photo must be under 5MB."]);
-                return;
-            }
-
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-            if (!in_array($fileExtension, $allowedExtensions)) {
-                http_response_code(400);
-                echo json_encode(["message" => "Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP."]);
-                return;
-            }
-
             $targetDir = __DIR__ . '/../uploads/customers/';
-            if (!file_exists($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
-
-            $uniqueFileName = uniqid('customer_', true) . '.' . $fileExtension;
-            $targetFilePath = $targetDir . $uniqueFileName;
-            $dbImagePath = 'uploads/customers/' . $uniqueFileName;
-
-            if (!move_uploaded_file($fileTmp, $targetFilePath)) {
-                http_response_code(500);
-                echo json_encode(["message" => "Failed to save uploaded photo."]);
-                return;
-            }
-
-            $updateData['profilePhoto'] = $dbImagePath;
+            $updateData['profilePhoto'] = RequestValidator::handleFileUpload($fileKey, $targetDir, 'customer_', 'uploads/customers/');
         }
 
         // Handle Password Change
@@ -337,8 +256,7 @@ class CustomerController {
     public function handleAddVehicle($payload) {
         RequestValidator::enforceMethod('POST');
 
-        $input = RequestValidator::getJsonPayload();
-        if (empty($input)) $input = $_POST;
+        $input = RequestValidator::getPostPayload();
 
         $required = ['vehicle_category_id', 'brand', 'color'];
         foreach ($required as $field) {

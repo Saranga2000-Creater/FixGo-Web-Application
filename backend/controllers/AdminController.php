@@ -326,9 +326,6 @@ class AdminController {
         }
     }
 
-    /**
-     * Admin Moderation: Get summary counts and list of flags
-     */
     public function getModerationFlags($payload) {
         RequestValidator::enforceMethod('GET');
         $adminId = $payload['user_id'] ?? null;
@@ -339,7 +336,53 @@ class AdminController {
 
             $model = new ModerationFlag($this->db);
             $summary = $model->getSummaryCounts();
-            $alerts = $model->getAllFlags($status, $type);
+            $rows = $model->getAllFlags($status, $type);
+
+            $alerts = array_map(function($row) {
+                $created = strtotime($row['created_at']);
+                $diffMins = round((time() - $created) / 60);
+
+                if ($diffMins < 60) {
+                    $timeStr = max(1, $diffMins) . " mins ago";
+                } elseif ($diffMins < 1440) {
+                    $timeStr = floor($diffMins / 60) . " hours ago";
+                } else {
+                    $timeStr = floor($diffMins / 1440) . " days ago";
+                }
+
+                $isShopSuspended = isset($row['shop_is_available']) && (int)$row['shop_is_available'] === 0;
+
+                $actions = [];
+                if ($row['flag_type'] === 'REVIEW REPORT') {
+                    $actions = ['Dismiss Review', 'Hide Review', 'Ignore'];
+                } elseif ($row['flag_type'] === 'PROFILE FLAG') {
+                    if ($isShopSuspended) {
+                        $actions = ['Investigate', 'Reactivate Shop', 'Ignore'];
+                    } else {
+                        $actions = ['Investigate', 'Suspend Shop', 'Ignore'];
+                    }
+                } else {
+                    if ($isShopSuspended) {
+                        $actions = ['Audit Logs', 'Reactivate Shop', 'Ignore'];
+                    } else {
+                        $actions = ['Audit Logs', 'Freeze Ratings', 'Suspend Shop', 'Ignore'];
+                    }
+                }
+
+                return [
+                    'id' => intval($row['id']),
+                    'type' => $row['flag_type'],
+                    'severity' => $row['severity'],
+                    'time' => $timeStr,
+                    'desc' => $row['description'],
+                    'user' => $row['reported_by_user'],
+                    'shop' => $row['shop_name'],
+                    'status' => $row['status'],
+                    'isShopSuspended' => $isShopSuspended,
+                    'actions' => $actions,
+                    'createdAt' => $row['created_at']
+                ];
+            }, $rows);
 
             echo json_encode([
                 "success" => true,
@@ -354,9 +397,6 @@ class AdminController {
         }
     }
 
-    /**
-     * Admin Moderation: Resolve / action a moderation flag
-     */
     public function resolveModerationFlag($payload) {
         RequestValidator::enforceMethod('POST');
         $adminId = $payload['user_id'] ?? null;
@@ -374,11 +414,52 @@ class AdminController {
 
         try {
             $model = new ModerationFlag($this->db);
-            $msg = $model->resolveFlag($flagId, $action, $notes, $adminId);
+            $flag = $model->getById($flagId);
+
+            if (!$flag) {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Flag not found."]);
+                return;
+            }
+
+            $responseMsg = "Moderation action '{$action}' executed successfully.";
+
+            $actionLower = strtolower($action);
+            $newStatus = 'action_taken';
+            if (in_array($actionLower, ['dismiss review', 'dismiss', 'ignore'])) {
+                $newStatus = 'dismissed';
+            } elseif (in_array($actionLower, ['investigate', 'audit logs'])) {
+                $newStatus = 'under_review';
+            }
+
+            $entityId = (int)($flag['entity_id'] ?? 0);
+            $shopName = !empty($flag['shop_name']) ? $flag['shop_name'] : "Garage #{$entityId}";
+
+            if ($actionLower === 'suspend shop' && $entityId > 0) {
+                $shopModel = new Shop($this->db);
+                $shopModel->updateAvailability($entityId, 0);
+                $responseMsg = "Garage '{$shopName}' has been successfully suspended and deactivated.";
+            }
+
+            if (($actionLower === 'reactivate shop' || $actionLower === 'reactivate') && $entityId > 0) {
+                $shopModel = new Shop($this->db);
+                $shopModel->updateAvailability($entityId, 1);
+                $responseMsg = "Garage '{$shopName}' has been successfully reactivated.";
+            }
+
+            if ($actionLower === 'hide review' && $entityId > 0) {
+                require_once __DIR__ . '/../models/Review.php';
+                $reviewModel = new Review($this->db);
+                $reviewModel->hideReview($entityId);
+                $responseMsg = "Review #{$entityId} has been hidden from public view.";
+            }
+
+            $model->updateStatus($flagId, $newStatus);
+            $model->logAction($flagId, $adminId, $action, $notes);
 
             echo json_encode([
                 "success" => true,
-                "message" => is_string($msg) ? $msg : "Moderation action '{$action}' executed successfully."
+                "message" => $responseMsg
             ]);
         } catch (Throwable $e) {
             http_response_code(500);
