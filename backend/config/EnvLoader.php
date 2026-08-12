@@ -24,10 +24,12 @@ class EnvLoader {
             // Strip optional wrapping quotes from values
             $value = trim($value, '"\'');
 
-            // Set the environment variables globally
-            putenv(sprintf('%s=%s', $name, $value));
-            $_ENV[$name] = $value;
-            $_SERVER[$name] = $value;
+            // Set the environment variables globally, ONLY if they are not already set by the system (like Docker!)
+            if (getenv($name) === false) {
+                putenv(sprintf('%s=%s', $name, $value));
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
         }
     }
 }
