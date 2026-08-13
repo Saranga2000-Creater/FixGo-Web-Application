@@ -4,6 +4,7 @@
 backend/vendor/
 backend/uploads/
 backend/.env
+backend/.phpunit.cache
 
 # --------------------
 # General & Node
