@@ -1,0 +1,61 @@
+name: FixGo Automated Tests (CI)
+
+# 1. THE TRIGGER
+# Wake up whenever code is pushed to the main branch
+on:
+  push:
+    branches: [ "main", "master", "dockerCI/CD" ]
+  pull_request:
+    branches: [ "main", "master", "dockerCI/CD" ]
+
+# 2. THE JOBS
+jobs:
+  build-and-test:
+    name: Build, Run, and Test
+    runs-on: ubuntu-latest # The temporary GitHub server
+    
+    steps:
+      # Step A: Download your repository code into the runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step B: Copy environment files (so Docker has the variables it needs)
+      - name: Setup Environment Variables
+        run: |
+          cp frontend/.env.example frontend/.env
+          cp backend/.env.example backend/.env
+
+      # Step C: Spin up the FixGo environment using Docker!
+      - name: Start Docker Containers
+        run: docker compose up -d
+
+      # Step D: Wait a few seconds to ensure MySQL is fully ready to accept connections
+      - name: Wait for Environment
+        run: sleep 15
+
+      # NEW STEP: Install Composer packages inside the backend container
+      - name: Install Backend Dependencies (Composer)
+        run: docker compose exec -T backend composer install
+
+      # Step E: Run PHPUnit Tests INSIDE the running backend container
+      # We use 'docker compose exec' to send a command into the container
+      - name: Run Backend Unit Tests (PHPUnit)
+        run: docker compose exec -T backend ./vendor/bin/phpunit --configuration phpunit.xml
+
+      # Step F: Setup Node.js on the runner for Playwright
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step G: Install Playwright and its virtual browsers
+      - name: Install Frontend Dependencies & Playwright
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      # Step H: Run Playwright Tests against the running Docker containers
+      - name: Run Frontend E2E Tests (Playwright)
+        working-directory: ./frontend
+        run: npx playwright test
