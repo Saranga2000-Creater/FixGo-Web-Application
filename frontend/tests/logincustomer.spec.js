@@ -10,7 +10,13 @@ test('test', async ({ page }) => {
   await page.getByRole('textbox', { name: 'you@example.com' }).fill('kamal.perera@gmail.com');
   await page.getByRole('textbox', { name: 'Enter your password' }).click();
   await page.getByRole('textbox', { name: 'Enter your password' }).fill('password');
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  const [response] = await Promise.all([
+    page.waitForResponse(res => res.url().includes('auth/login.php')),
+    page.getByRole('button', { name: 'Sign in' }).click()
+  ]);
+  console.log('Login Response Status:', response.status());
+  console.log('Login Response Body:', await response.text());
+
   // Explicitly wait for the login to succeed and navigate to the dashboard
   await page.waitForURL('**/services', { timeout: 15000 });
   await page.getByRole('button', { name: 'My Profile' }).click();
