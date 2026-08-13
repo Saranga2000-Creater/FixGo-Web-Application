@@ -7,7 +7,7 @@ test('test', async ({ page }) => {
   await page.locator('svg').click();
   await page.getByRole('banner').getByRole('button', { name: 'Log In' }).click();
   await page.getByRole('textbox', { name: 'you@example.com' }).click();
-  await page.getByRole('textbox', { name: 'you@example.com' }).fill('sahankavinda213@gmail.com');
+  await page.getByRole('textbox', { name: 'you@example.com' }).fill('kamal.perera@gmail.com');
   await page.getByRole('textbox', { name: 'Enter your password' }).click();
   await page.getByRole('textbox', { name: 'Enter your password' }).fill('password');
   await page.getByRole('button', { name: 'Sign in' }).click();
