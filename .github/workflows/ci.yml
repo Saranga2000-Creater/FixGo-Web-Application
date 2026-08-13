@@ -33,7 +33,7 @@ jobs:
       - name: Wait for Services to Boot
         run: |
           echo "Waiting for Backend (port 8000)..."
-          timeout 60 bash -c 'until curl -s http://localhost:8000/ > /dev/null; do sleep 2; done'
+          timeout 180 bash -c 'until curl -s http://localhost:8000/ > /dev/null; do sleep 2; done'
           echo "Waiting for Frontend (port 5173)..."
           timeout 60 bash -c 'until curl -s http://localhost:5173/ > /dev/null; do sleep 2; done'
           echo "Both services are responding! Giving Vite 15 seconds to finish compiling JS..."

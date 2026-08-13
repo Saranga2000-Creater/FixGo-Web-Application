@@ -37,47 +37,24 @@ try {
         if (!in_array($fileName, $executedSeeds)) {
             echo "⚙️  Seeding: $fileName...\n";
             
-            $host = getenv('DB_HOST');
-            $user = getenv('DB_USER');
-            $pass = getenv('DB_PASS');
-            $dbName = getenv('DB_NAME');
+            // Execute the SQL file reliably by splitting on semicolons
+            $sql = file_get_contents($file);
+            $queries = explode(';', $sql);
             
-            // Check if mysql CLI is available in the system PATH
-            $hasMysqlCli = false;
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                $hasMysqlCli = !empty(shell_exec("where mysql 2>nul"));
-            } else {
-                $hasMysqlCli = !empty(shell_exec("which mysql 2>/dev/null"));
-            }
-
-            if ($hasMysqlCli) {
-                // Check client version to determine correct SSL disable flag (MariaDB vs MySQL)
-                $mysqlVersion = shell_exec("mysql --version");
-                $sslFlag = (stripos($mysqlVersion, 'MariaDB') !== false) ? "--skip-ssl" : "--ssl-mode=DISABLED";
-
-                // CI/CD and Linux environments: Execute using the highly-reliable native MySQL client
-                $command = "mysql $sslFlag -h " . escapeshellarg($host) . 
-                           " -u " . escapeshellarg($user) . 
-                           " -p" . escapeshellarg($pass) . 
-                           " " . escapeshellarg($dbName) . 
-                           " < " . escapeshellarg($file) . " 2>&1";
-                           
-                $output = shell_exec($command);
+            try {
+                $db->exec("SET FOREIGN_KEY_CHECKS=0;");
                 
-                if (strpos($output, 'ERROR') !== false) {
-                    throw new PDOException("MySQL CLI Error executing $fileName: " . $output);
+                foreach ($queries as $query) {
+                    $query = trim($query);
+                    if (empty($query)) continue;
+                    $db->exec($query);
                 }
-            } else {
-                // FALLBACK: For teammates on Windows (XAMPP) who do not have mysql in their PATH.
-                $sql = file_get_contents($file);
-                try {
-                    $db->exec("SET FOREIGN_KEY_CHECKS=0;");
-                    $db->exec($sql);
-                    $db->exec("SET FOREIGN_KEY_CHECKS=1;");
-                } catch (PDOException $innerE) {
-                    $db->exec("SET FOREIGN_KEY_CHECKS=1;");
-                    throw $innerE;
-                }
+                
+                $db->exec("SET FOREIGN_KEY_CHECKS=1;");
+            } catch (PDOException $innerE) {
+                $db->exec("SET FOREIGN_KEY_CHECKS=1;");
+                echo "❌ Error in query: " . substr($query, 0, 100) . "...\n";
+                throw $innerE;
             }
             
             // Record that we ran it so we never run it again

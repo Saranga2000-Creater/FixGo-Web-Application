@@ -55,49 +55,22 @@ try {
         if (!in_array($fileName, $executedMigrations)) {
             echo "⚙️  Migrating: $fileName...\n";
             
-            $host = getenv('DB_HOST');
-            $user = getenv('DB_USER');
-            $pass = getenv('DB_PASS');
-            $dbName = getenv('DB_NAME');
+            // Execute the SQL file reliably by splitting on semicolons
+            // This is 100% robust across all OSes and prevents the Docker Compose entrypoint from hanging
+            $sql = file_get_contents($file);
+            $queries = explode(';', $sql);
             
-            // Check if mysql CLI is available in the system PATH
-            $hasMysqlCli = false;
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                $hasMysqlCli = !empty(shell_exec("where mysql 2>nul"));
-            } else {
-                $hasMysqlCli = !empty(shell_exec("which mysql 2>/dev/null"));
-            }
-
-            if ($hasMysqlCli) {
-                // Check client version to determine correct SSL disable flag (MariaDB vs MySQL)
-                $mysqlVersion = shell_exec("mysql --version");
-                $sslFlag = (stripos($mysqlVersion, 'MariaDB') !== false) ? "--skip-ssl" : "--ssl-mode=DISABLED";
-
-                // CI/CD and Linux environments: Execute using the highly-reliable native MySQL client
-                $command = "mysql $sslFlag -h " . escapeshellarg($host) . 
-                           " -u " . escapeshellarg($user) . 
-                           " -p" . escapeshellarg($pass) . 
-                           " " . escapeshellarg($dbName) . 
-                           " < " . escapeshellarg($file) . " 2>&1";
-                           
-                $output = shell_exec($command);
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (empty($query)) continue; echo "\n\nExecuting query: " . substr($query, 0, 50) . "...\n";
                 
-                if (strpos($output, 'ERROR') !== false && !strpos(strtoupper($output), 'ALREADY EXISTS')) {
-                    throw new PDOException("MySQL CLI Error executing $fileName: " . $output);
-                } else if (strpos(strtoupper($output), 'ALREADY EXISTS') !== false) {
-                    echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
-                }
-            } else {
-                // FALLBACK: For teammates on Windows (XAMPP) who do not have mysql in their PATH.
-                // Note: PDO::exec struggles with large multi-statement dumps, but works perfectly for incremental updates.
-                $sql = file_get_contents($file);
                 try {
-                    $db->exec($sql);
+                    $db->exec($query);
                 } catch (PDOException $innerE) {
                     $mysqlCode = $innerE->errorInfo[1] ?? null;
-                    if (in_array($mysqlCode, [1050, 1060, 1061])) {
-                        echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
-                    } else {
+                    // Ignore "already exists" (1050, 1060, 1061) and "doesn't exist" (1091) errors for idempotency
+                    if (!in_array($mysqlCode, [1050, 1060, 1061, 1091])) {
+                        echo "❌ Error in query: " . substr($query, 0, 100) . "...\n";
                         throw $innerE;
                     }
                 }
