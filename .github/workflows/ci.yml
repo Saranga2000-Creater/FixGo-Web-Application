@@ -39,6 +39,14 @@ jobs:
           echo "Both services are responding! Giving Vite 15 seconds to finish compiling JS..."
           sleep 15
 
+      - name: Debug Database State
+        if: always()
+        run: docker compose exec -T database mysql -u root -proot fixgo_db -e "SHOW TABLES;" || echo "Failed to show tables"
+
+      - name: Dump Docker Logs
+        if: always()
+        run: docker compose logs backend
+
       # NEW STEP: Fix permissions for files created by Docker (like node_modules)
       # Docker runs as 'root', so files it creates are owned by 'root'.
       # The GitHub Runner needs ownership back so it can run 'npm ci' later.
