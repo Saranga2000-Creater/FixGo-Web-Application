@@ -37,21 +37,43 @@ try {
         if (!in_array($fileName, $executedSeeds)) {
             echo "⚙️  Seeding: $fileName...\n";
             
-            // Read the SQL file
-            $sql = file_get_contents($file);
+            $host = getenv('DB_HOST');
+            $user = getenv('DB_USER');
+            $pass = getenv('DB_PASS');
+            $dbName = getenv('DB_NAME');
             
-            try {
-                // We need to disable foreign key checks temporarily because 
-                // bulk inserting complex dumps might have circular dependencies or unordered references
-                $db->exec("SET FOREIGN_KEY_CHECKS=0;");
+            // Check if mysql CLI is available in the system PATH
+            $hasMysqlCli = false;
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $hasMysqlCli = !empty(shell_exec("where mysql 2>nul"));
+            } else {
+                $hasMysqlCli = !empty(shell_exec("which mysql 2>/dev/null"));
+            }
+
+            if ($hasMysqlCli) {
+                // CI/CD and Linux environments: Execute using the highly-reliable native MySQL client
+                $command = "mysql -h " . escapeshellarg($host) . 
+                           " -u " . escapeshellarg($user) . 
+                           " -p" . escapeshellarg($pass) . 
+                           " " . escapeshellarg($dbName) . 
+                           " < " . escapeshellarg($file) . " 2>&1";
+                           
+                $output = shell_exec($command);
                 
-                // Execute the SQL
-                $db->exec($sql);
-                
-                $db->exec("SET FOREIGN_KEY_CHECKS=1;");
-            } catch (PDOException $innerE) {
-                $db->exec("SET FOREIGN_KEY_CHECKS=1;");
-                throw $innerE; // It's a real error, abort!
+                if (strpos($output, 'ERROR') !== false) {
+                    throw new PDOException("MySQL CLI Error executing $fileName: " . $output);
+                }
+            } else {
+                // FALLBACK: For teammates on Windows (XAMPP) who do not have mysql in their PATH.
+                $sql = file_get_contents($file);
+                try {
+                    $db->exec("SET FOREIGN_KEY_CHECKS=0;");
+                    $db->exec($sql);
+                    $db->exec("SET FOREIGN_KEY_CHECKS=1;");
+                } catch (PDOException $innerE) {
+                    $db->exec("SET FOREIGN_KEY_CHECKS=1;");
+                    throw $innerE;
+                }
             }
             
             // Record that we ran it so we never run it again

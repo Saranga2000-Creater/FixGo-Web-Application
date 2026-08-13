@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Install PHP Extensions

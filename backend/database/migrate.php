@@ -55,19 +55,47 @@ try {
         if (!in_array($fileName, $executedMigrations)) {
             echo "⚙️  Migrating: $fileName...\n";
             
-            // Read the SQL file
-            $sql = file_get_contents($file);
+            $host = getenv('DB_HOST');
+            $user = getenv('DB_USER');
+            $pass = getenv('DB_PASS');
+            $dbName = getenv('DB_NAME');
             
-            try {
-                // Execute the SQL
-                $db->exec($sql);
-            } catch (PDOException $innerE) {
-                // MySQL Errors: 1050 (Table exists), 1060 (Column exists), 1061 (Key exists)
-                $mysqlCode = $innerE->errorInfo[1] ?? null;
-                if (in_array($mysqlCode, [1050, 1060, 1061])) {
+            // Check if mysql CLI is available in the system PATH
+            $hasMysqlCli = false;
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $hasMysqlCli = !empty(shell_exec("where mysql 2>nul"));
+            } else {
+                $hasMysqlCli = !empty(shell_exec("which mysql 2>/dev/null"));
+            }
+
+            if ($hasMysqlCli) {
+                // CI/CD and Linux environments: Execute using the highly-reliable native MySQL client
+                $command = "mysql -h " . escapeshellarg($host) . 
+                           " -u " . escapeshellarg($user) . 
+                           " -p" . escapeshellarg($pass) . 
+                           " " . escapeshellarg($dbName) . 
+                           " < " . escapeshellarg($file) . " 2>&1";
+                           
+                $output = shell_exec($command);
+                
+                if (strpos($output, 'ERROR') !== false && !strpos(strtoupper($output), 'ALREADY EXISTS')) {
+                    throw new PDOException("MySQL CLI Error executing $fileName: " . $output);
+                } else if (strpos(strtoupper($output), 'ALREADY EXISTS') !== false) {
                     echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
-                } else {
-                    throw $innerE; // It's a real error, abort!
+                }
+            } else {
+                // FALLBACK: For teammates on Windows (XAMPP) who do not have mysql in their PATH.
+                // Note: PDO::exec struggles with large multi-statement dumps, but works perfectly for incremental updates.
+                $sql = file_get_contents($file);
+                try {
+                    $db->exec($sql);
+                } catch (PDOException $innerE) {
+                    $mysqlCode = $innerE->errorInfo[1] ?? null;
+                    if (in_array($mysqlCode, [1050, 1060, 1061])) {
+                        echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
+                    } else {
+                        throw $innerE;
+                    }
                 }
             }
             
