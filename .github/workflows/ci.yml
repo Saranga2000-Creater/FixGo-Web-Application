@@ -29,9 +29,15 @@ jobs:
       - name: Start Docker Containers
         run: docker compose up -d
 
-      # Step D: Wait a few seconds to ensure MySQL is fully ready to accept connections
-      - name: Wait for Environment
-        run: sleep 15
+      # Step D: Wait for Docker services to fully boot (Backend Composer & Frontend Vite take time)
+      - name: Wait for Services to Boot
+        run: |
+          echo "Waiting for Backend (port 8000)..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/ > /dev/null; do sleep 2; done'
+          echo "Waiting for Frontend (port 5173)..."
+          timeout 60 bash -c 'until curl -s http://localhost:5173/ > /dev/null; do sleep 2; done'
+          echo "Both services are responding! Giving Vite 15 seconds to finish compiling JS..."
+          sleep 15
 
       # NEW STEP: Fix permissions for files created by Docker (like node_modules)
       # Docker runs as 'root', so files it creates are owned by 'root'.
