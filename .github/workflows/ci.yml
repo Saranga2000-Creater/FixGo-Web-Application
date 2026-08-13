@@ -33,6 +33,12 @@ jobs:
       - name: Wait for Environment
         run: sleep 15
 
+      # NEW STEP: Fix permissions for files created by Docker (like node_modules)
+      # Docker runs as 'root', so files it creates are owned by 'root'.
+      # The GitHub Runner needs ownership back so it can run 'npm ci' later.
+      - name: Fix File Permissions
+        run: sudo chown -R $USER:$USER .
+
       # NEW STEP: Install Composer packages inside the backend container
       - name: Install Backend Dependencies (Composer)
         run: docker compose exec -T backend composer install
