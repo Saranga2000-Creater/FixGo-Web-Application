@@ -11,6 +11,8 @@ test('test', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Enter your password' }).click();
   await page.getByRole('textbox', { name: 'Enter your password' }).fill('password');
   await page.getByRole('button', { name: 'Sign in' }).click();
+  // Explicitly wait for the login to succeed and navigate to the dashboard
+  await page.waitForURL('**/services', { timeout: 15000 });
   await page.getByRole('button', { name: 'My Profile' }).click();
   await page.getByRole('button', { name: 'Repair Status' }).click();
   await page.getByRole('button', { name: 'Service History' }).click();
