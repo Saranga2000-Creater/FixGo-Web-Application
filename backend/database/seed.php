@@ -38,7 +38,16 @@ try {
             echo "⚙️  Seeding: $fileName...\n";
             
             // Execute the SQL file reliably by splitting on semicolons
+            $expectedSize = filesize($file);
             $sql = file_get_contents($file);
+            
+            // Verification check: ensure the file was completely read (protects against Docker volume sync lag in CI)
+            if ($sql === false || strlen($sql) !== $expectedSize) {
+                echo "❌ CRITICAL: Failed to read the entire seed file: $fileName\n";
+                echo "Expected $expectedSize bytes, but read " . strlen((string)$sql) . " bytes.\n";
+                exit(1);
+            }
+
             $queries = explode(';', $sql);
             
             try {

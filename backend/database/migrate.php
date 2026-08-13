@@ -57,12 +57,21 @@ try {
             
             // Execute the SQL file reliably by splitting on semicolons
             // This is 100% robust across all OSes and prevents the Docker Compose entrypoint from hanging
+            $expectedSize = filesize($file);
             $sql = file_get_contents($file);
+            
+            // Verification check: ensure the file was completely read (protects against Docker volume sync lag in CI)
+            if ($sql === false || strlen($sql) !== $expectedSize) {
+                echo "❌ CRITICAL: Failed to read the entire migration file: $fileName\n";
+                echo "Expected $expectedSize bytes, but read " . strlen((string)$sql) . " bytes.\n";
+                exit(1);
+            }
+
             $queries = explode(';', $sql);
             
             foreach ($queries as $query) {
                 $query = trim($query);
-                if (empty($query)) continue; echo "\n\nExecuting query: " . substr($query, 0, 50) . "...\n";
+                if (empty($query)) continue;
                 
                 try {
                     $db->exec($query);
