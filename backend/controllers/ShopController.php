@@ -190,6 +190,24 @@ class ShopController {
             return;
         }
 
+        if (mb_strlen($address) < 5 || preg_match('/^(n\/?a|none|nil|null|test|no|abc)$/i', $address)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Please enter a valid shop physical address (at least 5 characters; placeholders like N/A are not allowed)."]);
+            return;
+        }
+
+        if (!empty($licenseNumber) && !preg_match('/^[a-zA-Z0-9\-\/]{3,30}$/', $licenseNumber)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid Business License / BRN format (3-30 characters, alphanumeric, hyphens, or slashes)."]);
+            return;
+        }
+
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $password)) {
+            http_response_code(400);
+            echo json_encode(["message" => "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number."]);
+            return;
+        }
+
         $defaultDriverName = '';
         $defaultDriverPhone = '';
         $defaultTruckBrand = '';
@@ -218,8 +236,24 @@ class ShopController {
                 return;
             }
             $defaultTruckBrand = trim($input['defaultTruckBrand']);
+            if (mb_strlen($defaultTruckBrand) < 2 || preg_match('/^(n\/?a|none|nil|null|test|no|abc)$/i', $defaultTruckBrand) || !preg_match('/^[a-zA-Z0-9\s\.\'-]{2,50}$/', $defaultTruckBrand)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Please enter a valid truck brand name (e.g. Isuzu, Toyota)."]);
+                return;
+            }
             $defaultTruckColor = trim($input['defaultTruckColor']);
+            if (mb_strlen($defaultTruckColor) < 3 || preg_match('/^(n\/?a|none|nil|null|test|no|abc)$/i', $defaultTruckColor) || !preg_match('/^[a-zA-Z\s\-]{3,30}$/', $defaultTruckColor)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Please enter a valid truck color (e.g. White, Blue)."]);
+                return;
+            }
             $towTruckPlate = trim($input['towTruckPlate']);
+            $plateRegex = '/^(?:(?:WP|CP|SP|NP|EP|NW|NC|UP|SG)[\s\-]?)?(?:[a-zA-Z]{1,3}|\d{1,3})[\s\-]?\d{4}$/i';
+            if (!preg_match($plateRegex, $towTruckPlate)) {
+                http_response_code(400);
+                echo json_encode(["message" => "Please enter a valid vehicle plate number in standard format (e.g. WP GA-1234, GA-1234, or CAB-1234)."]);
+                return;
+            }
         }
 
         // Handle shop image upload securely
