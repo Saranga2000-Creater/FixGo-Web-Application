@@ -51,8 +51,12 @@ try {
             }
 
             if ($hasMysqlCli) {
+                // Check client version to determine correct SSL disable flag (MariaDB vs MySQL)
+                $mysqlVersion = shell_exec("mysql --version");
+                $sslFlag = (stripos($mysqlVersion, 'MariaDB') !== false) ? "--skip-ssl" : "--ssl-mode=DISABLED";
+
                 // CI/CD and Linux environments: Execute using the highly-reliable native MySQL client
-                $command = "mysql -h " . escapeshellarg($host) . 
+                $command = "mysql $sslFlag -h " . escapeshellarg($host) . 
                            " -u " . escapeshellarg($user) . 
                            " -p" . escapeshellarg($pass) . 
                            " " . escapeshellarg($dbName) . 
