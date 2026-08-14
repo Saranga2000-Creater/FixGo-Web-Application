@@ -97,10 +97,11 @@ services:
     ports:
       - "5173:5173"
       
-    # 3. Volumes (The Two-Way Mirror)
     # Map your real frontend folder into the container so hot-reloading works when you edit React files!
     volumes:
       - ./frontend:/app
+      - /app/node_modules
+
       
     # 4. Environment Variables
     environment:
