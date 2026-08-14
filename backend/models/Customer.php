@@ -77,6 +77,50 @@ class Customer {
     }
 
     /**
+     * Re-registers an unverified customer, updating their user and customer details with a fresh 5-minute OTP.
+     */
+    public function reRegister($userId, $userData, $customerData) {
+        try {
+            $this->qb->beginTransaction();
+
+            $this->qb->table('users')->where('id', $userId)->update([
+                'userRole' => 'customer',
+                'password' => $userData['password'],
+                'isActive' => 0,
+                'verification_token' => $userData['verification_token'],
+                'is_email_verified' => 0,
+                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+            ]);
+
+            $existing = $this->qb->table('customer')->where('id', $userId)->first();
+            $customerPayload = [
+                'name' => $customerData['name'],
+                'contactNumber' => $customerData['contactNumber'],
+                'address' => $customerData['address']
+            ];
+            if (!empty($customerData['profilePhoto'])) {
+                $customerPayload['profilePhoto'] = $customerData['profilePhoto'];
+            }
+
+            if ($existing) {
+                $this->qb->table('customer')->where('id', $userId)->update($customerPayload);
+            } else {
+                $customerPayload['id'] = $userId;
+                $this->qb->table('customer')->insert($customerPayload);
+            }
+
+            $this->qb->commit();
+            return $userId;
+        } catch (Exception $e) {
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+
+    /**
      * Updates customer profile details and optionally user password.
      */
     public function updateProfile($customerId, $data, $newPassword = null) {
