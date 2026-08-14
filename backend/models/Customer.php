@@ -54,7 +54,7 @@ class Customer {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 1 HOUR)')
+                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
             ]);
 
             // 2. Insert into customer

@@ -264,7 +264,7 @@ export default function ShopForm() {
             await api.postPublic('auth/registerShop.php', payload);
             setSuccess(true);
             setTimeout(() => {
-                navigate("/verify-email");
+                navigate("/verify-email", { state: { email: trimEmail } });
             }, 4000);
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
