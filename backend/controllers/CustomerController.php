@@ -16,8 +16,10 @@ class CustomerController {
         $this->baseUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8000', '/');
     }
 
-    public function getProfile($customerId) {
-        RequestValidator::enforceMethod('GET');
+    public function getProfile($customerId, $isInternal = false) {
+        if (!$isInternal) {
+            RequestValidator::enforceMethod('GET');
+        }
 
         $customerModel = new Customer($this->db);
         $customer = $customerModel->getById($customerId);
@@ -241,7 +243,7 @@ class CustomerController {
 
         try {
             $customerModel->updateProfile($customerId, $updateData, $newPassword);
-            $this->getProfile($customerId);
+            $this->getProfile($customerId, true);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["message" => "Failed to update profile: " . $e->getMessage()]);
