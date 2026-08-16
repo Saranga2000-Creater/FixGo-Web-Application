@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../src/services/api";
 
@@ -8,6 +8,7 @@ export default function VerifyEmail() {
     const [otp, setOtp] = useState("");
     const [status, setStatus] = useState("idle"); // idle, loading, success, error
     const [message, setMessage] = useState("");
+    const [countdown, setCountdown] = useState(5);
 
     const verifyToken = async (e) => {
         if (e) e.preventDefault();
@@ -28,6 +29,24 @@ export default function VerifyEmail() {
             setMessage(err.message || "Failed to verify email. The OTP may be invalid or expired.");
         }
     };
+
+    // Auto-redirect to homepage after 5 seconds when pending admin approval
+    useEffect(() => {
+        if (status === "success" && message.includes("pending admin approval")) {
+            setCountdown(5);
+            const interval = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        navigate("/");
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [status, message, navigate]);
 
 
     return (
@@ -62,7 +81,27 @@ export default function VerifyEmail() {
                         </h2>
                         <p className="mt-3 text-sm text-gray-500 px-2 leading-relaxed">{message}</p>
                         
-                        {!message.includes("pending admin approval") && (
+                        {message.includes("pending admin approval") ? (
+                            <div className="mt-8 space-y-4">
+                                {/* Countdown progress bar */}
+                                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                    <div
+                                        className="h-1.5 bg-gradient-to-r from-green-500 to-teal-500 rounded-full transition-all duration-1000 ease-linear"
+                                        style={{ width: `${(countdown / 5) * 100}%` }}
+                                    />
+                                </div>
+                                <p className="text-sm text-gray-400 text-center">
+                                    Redirecting to homepage in{" "}
+                                    <span className="font-semibold text-green-600">{countdown}</span> second{countdown !== 1 ? "s" : ""}…
+                                </p>
+                                <button
+                                    onClick={() => navigate("/")}
+                                    className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
+                                >
+                                    Go to Homepage Now
+                                </button>
+                            </div>
+                        ) : (
                             <div className="mt-8">
                                 <button
                                     onClick={() => navigate("/login")}

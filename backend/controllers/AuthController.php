@@ -327,9 +327,9 @@ class AuthController{
             return;
         }
 
-        if (strlen($newPassword) < 6) {
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $newPassword)) {
             http_response_code(400);
-            echo json_encode(["message" => "Password must be at least 6 characters long."]);
+            echo json_encode(["message" => "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number."]);
             return;
         }
 
