@@ -4,9 +4,9 @@ name: FixGo Automated Tests (CI)
 # Wake up whenever code is pushed to the main branch
 on:
   push:
-    branches: [ "main", "master", "dockerCI/CD" ]
+    branches: [ "main", "development", "dockerCI/CD" ]
   pull_request:
-    branches: [ "main", "master", "dockerCI/CD" ]
+    branches: [ "main", "development", "dockerCI/CD" ]
 
 # 2. THE JOBS
 jobs:

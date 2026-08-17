@@ -2,7 +2,8 @@
 # Backend
 # --------------------
 backend/vendor/
-backend/uploads/
+backend/uploads/*
+!backend/uploads/shopOwners/
 backend/.env
 backend/.phpunit.cache
 
