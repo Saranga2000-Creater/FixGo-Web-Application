@@ -20,7 +20,15 @@ class Database {
         
         for ($i = 0; $i < $maxRetries; $i++) {
             try {
-                $this->conn = new PDO('mysql:host=' . $this->host . ';dbname=' . $this->db_name, $this->username, $this->password);
+                $options = [];
+                // The "Toggle Trap": Only enforce SSL if this variable is injected.
+                // This completely protects your local Docker environment.
+                if (getenv('ENFORCE_SSL') === 'true') {
+                    // Use __DIR__ to construct an unbreakable absolute file path to the certificate.
+                    $options[PDO::MYSQL_ATTR_SSL_CA] = __DIR__ . '/DigiCertGlobalRootG2.crt.pem';
+                }
+
+                $this->conn = new PDO('mysql:host=' . $this->host . ';dbname=' . $this->db_name, $this->username, $this->password, $options);
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 return $this->conn;
             } catch(PDOException $e) {

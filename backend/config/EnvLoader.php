@@ -3,7 +3,14 @@
 class EnvLoader {
     public static function load($path) {
         if (!file_exists($path)) {
-            throw new Exception(".env file not found at: " . $path);
+            // We check for 'APP_ENV' (which we will configure in Azure) or 'ENFORCE_SSL'.
+            // If neither exist, we are likely on a local machine where a developer forgot to create the .env file.
+            if (getenv('APP_ENV') === false && getenv('ENFORCE_SSL') === false) {
+                throw new Exception("CRITICAL ERROR: .env file not found at " . $path . ". If you are a new developer setting this up locally, please copy .env.example to .env and fill in your database credentials.");
+            }
+            // In cloud environments like Azure, the .env file won't exist.
+            // We return silently to allow the app to use injected OS variables.
+            return;
         }
 
         // Read file line by line
