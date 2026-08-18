@@ -13,6 +13,7 @@ jobs:
   build-and-test:
     name: Build, Run, and Test
     runs-on: ubuntu-latest # The temporary GitHub server
+    if: github.repository == 'Saranga2000-Creater/FixGo-Web-Application'
     
     steps:
       # Step A: Download your repository code into the runner
