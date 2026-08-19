@@ -62,10 +62,10 @@ class ModerationFlag {
 
     public function logAction($flagId, $adminId, $actionTaken, $notes) {
         $this->qb->table($this->logsTable)->insert([
-            'flag_id' => $flagId,
-            'admin_id' => $adminId,
+            'flag_id'      => $flagId,
+            'admin_id'     => $adminId,
             'action_taken' => $actionTaken,
-            'notes' => $adminNotes
+            'notes'        => $notes
         ]);
         return true;
     }

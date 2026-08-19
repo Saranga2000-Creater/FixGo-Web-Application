@@ -23,6 +23,7 @@ class ShopInvoice {
             ->join('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
             ->where('u.userRole', 'shop_owner')
             ->groupBy('s.id')
+            ->groupBy('scm.shop_category_id')
             ->get();
     }
 
