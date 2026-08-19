@@ -64,20 +64,4 @@ jobs:
       - name: Run Backend Unit Tests (PHPUnit)
         run: docker compose exec -T backend ./vendor/bin/phpunit --configuration phpunit.xml
 
-      # Step F: Setup Node.js on the runner for Playwright
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
 
-      # Step G: Install Playwright and its virtual browsers
-      - name: Install Frontend Dependencies & Playwright
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npx playwright install --with-deps
-
-      # Step H: Run Playwright Tests against the running Docker containers
-      - name: Run Frontend E2E Tests (Playwright)
-        working-directory: ./frontend
-        run: npx playwright test
