@@ -9,6 +9,7 @@ class ShopRegistrationTest extends TestCase {
     private $qb;
     private $testEmail = 'shop_reg_test@fixgo.com';
     private $wrapperPath;
+    private $initialFiles = [];
 
     protected function setUp(): void {
         putenv('JWT_SECRET=supersecret1234567890abcdef');
@@ -29,6 +30,9 @@ class ShopRegistrationTest extends TestCase {
             $this->qb->table('shop')->where('id', $user['id'])->delete();
             $this->qb->table('users')->where('id', $user['id'])->delete();
         }
+
+        // Snapshot files before tests run
+        $this->initialFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/shopOwners/*');
 
         $this->wrapperPath = __DIR__ . '/shop_reg_wrapper.php';
         file_put_contents($this->wrapperPath, "<?php
@@ -54,6 +58,15 @@ class ShopRegistrationTest extends TestCase {
             }
             $this->qb->table('shop')->where('id', $user['id'])->delete();
             $this->qb->table('users')->where('id', $user['id'])->delete();
+        }
+        
+        // Clean up orphaned files
+        $currentFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/shopOwners/*');
+        $newFiles = array_diff($currentFiles, $this->initialFiles);
+        foreach ($newFiles as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
         }
         if (file_exists($this->wrapperPath)) {
             @unlink($this->wrapperPath);

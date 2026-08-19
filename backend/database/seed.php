@@ -7,6 +7,27 @@ require_once __DIR__ . '/../config/Database.php';
 
 echo "🌱 Starting Database Seeding...\n";
 
+// --- Asset Seeding ---
+$sourceDir = __DIR__ . '/seedData/shopOwners/';
+$destDir = __DIR__ . '/../uploads/shopOwners/';
+
+if (file_exists($sourceDir)) {
+    if (!file_exists($destDir)) {
+        mkdir($destDir, 0777, true);
+    }
+    $files = glob($sourceDir . '*');
+    $copiedCount = 0;
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            copy($file, $destDir . basename($file));
+            $copiedCount++;
+        }
+    }
+    if ($copiedCount > 0) {
+        echo "🖼️  Copied $copiedCount seed images to uploads folder.\n";
+    }
+}
+
 try {
     $db = (new Database())->connect();
 

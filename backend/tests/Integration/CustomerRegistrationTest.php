@@ -9,6 +9,7 @@ class CustomerRegistrationTest extends TestCase {
     private $qb;
     private $testEmail = 'customer_reg_test@fixgo.com';
     private $wrapperPath;
+    private $initialFiles = [];
 
     protected function setUp(): void {
         putenv('JWT_SECRET=supersecret1234567890abcdef');
@@ -17,12 +18,14 @@ class CustomerRegistrationTest extends TestCase {
         $this->db = $database->connect();
         $this->qb = new QueryBuilder($this->db);
         
-        // Clean up test DB before start
         $user = $this->qb->table('users')->where('email', $this->testEmail)->first();
         if ($user) {
             $this->qb->table('customer')->where('id', $user['id'])->delete();
             $this->qb->table('users')->where('id', $user['id'])->delete();
         }
+
+        // Snapshot files before tests run
+        $this->initialFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/customers/*');
 
         $this->wrapperPath = __DIR__ . '/customer_reg_wrapper.php';
         file_put_contents($this->wrapperPath, "<?php
@@ -41,6 +44,15 @@ class CustomerRegistrationTest extends TestCase {
         if ($user) {
             $this->qb->table('customer')->where('id', $user['id'])->delete();
             $this->qb->table('users')->where('id', $user['id'])->delete();
+        }
+        
+        // Clean up orphaned files
+        $currentFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/customers/*');
+        $newFiles = array_diff($currentFiles, $this->initialFiles);
+        foreach ($newFiles as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
         }
         if (file_exists($this->wrapperPath)) {
             @unlink($this->wrapperPath);
