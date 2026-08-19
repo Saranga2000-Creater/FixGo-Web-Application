@@ -134,7 +134,7 @@ class ServiceRequestController {
         $currentRequest = $this->serviceRequestModel->getById($request_id);
         if (!$currentRequest) {
             http_response_code(404);
-            return json_encode(["message" => "Service request not found."]);
+            echo json_encode(["message" => "Service request not found."]); return;
         }
 
         $current_status = $currentRequest['status'];
@@ -142,11 +142,11 @@ class ServiceRequestController {
 
         if ($actor_role === 'customer' && $currentRequest['customer_id'] != $actor_id) {
             http_response_code(403);
-            return json_encode(["message" => "Forbidden: You do not own this request."]);
+            echo json_encode(["message" => "Forbidden: You do not own this request."]); return;
         }
         if ($actor_role === 'shop_owner' && $currentRequest['shop_id'] != $actor_id) {
             http_response_code(403);
-            return json_encode(["message" => "Forbidden: This request does not belong to your shop."]);
+            echo json_encode(["message" => "Forbidden: This request does not belong to your shop."]); return;
         }
 
         // --- CUSTOMER RULES ---
@@ -155,7 +155,7 @@ class ServiceRequestController {
             if ($new_status === 'Confirmed') {
                 if ($current_status !== 'Accepted') {
                     http_response_code(400);
-                    return json_encode(["message" => "Illegal Move: You can only confirm an 'Accepted' request."]);
+                    echo json_encode(["message" => "Illegal Move: You can only confirm an 'Accepted' request."]); return;
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
@@ -184,7 +184,7 @@ class ServiceRequestController {
              
 
                 http_response_code(200);
-                return json_encode(["message" => "Handshake Confirmed! Shop details unlocked."]);
+                echo json_encode(["message" => "Handshake Confirmed! Shop details unlocked."]); return;
             }
 
             elseif ($new_status === 'Cancelled') {
@@ -209,12 +209,12 @@ class ServiceRequestController {
                     "Customer cancelled booking"
                 );
                 http_response_code(200);
-                return json_encode(["message" => "Request cancelled." . $penaltyMsg]);
+                echo json_encode(["message" => "Request cancelled." . $penaltyMsg]); return;
             }
 
             else {
                 http_response_code(403);
-                return json_encode(["message" => "Customers cannot manually set status to '$new_status'."]);
+                echo json_encode(["message" => "Customers cannot manually set status to '$new_status'."]); return;
             }
         }
 
@@ -223,18 +223,18 @@ class ServiceRequestController {
 
             if ($new_status === 'Confirmed') {
                 http_response_code(403);
-                return json_encode(["message" => "Shops cannot force a confirmation. Only customers can confirm."]);
+                echo json_encode(["message" => "Shops cannot force a confirmation. Only customers can confirm."]); return;
             }
 
             if ($new_status === 'Accepted') {
                 if ($current_status === 'Cancelled') {
                     http_response_code(400);
-                    return json_encode(["message" => "This request is no longer available as the customer confirmed a different shop."]);
+                    echo json_encode(["message" => "This request is no longer available as the customer confirmed a different shop."]); return;
                 }
                 
                 if ($current_status !== 'Pending') {
                     http_response_code(400);
-                    return json_encode(["message" => "You can only accept 'Pending' requests."]);
+                    echo json_encode(["message" => "You can only accept 'Pending' requests."]); return;
                 }
 
 
@@ -243,7 +243,7 @@ class ServiceRequestController {
                 $this->notifyCustomer($customer_id, $request_id, 'Accepted', 'Request accepted');
 
                 http_response_code(200);
-                return json_encode(["message" => "Request Accepted. Waiting for customer confirmation."]);
+                echo json_encode(["message" => "Request Accepted. Waiting for customer confirmation."]); return;
             }
 
           elseif ($new_status === 'Declined') {
@@ -253,7 +253,7 @@ class ServiceRequestController {
                 $this->notifyCustomer($customer_id, $request_id, 'Declined', 'Request declined');
 
                 http_response_code(200);
-                return json_encode(["message" => "Request successfully declined."]);
+                echo json_encode(["message" => "Request successfully declined."]); return;
             }
 
             elseif ($new_status === 'Cancelled') {
@@ -264,14 +264,14 @@ class ServiceRequestController {
                 $this->notifyCustomer($customer_id, $request_id, 'Cancelled', 'Booking cancelled by shop');
 
                 http_response_code(200);
-                return json_encode(["message" => "Request successfully cancelled."]);
+                echo json_encode(["message" => "Request successfully cancelled."]); return;
             } 
 
             elseif (in_array($new_status, ['Diagnosis', 'Pending Parts', 'In Progress', 'Completed'])) {
 
                 if (in_array($current_status, ['Pending', 'Accepted', 'Cancelled'])) {
                     http_response_code(400);
-                    return json_encode(["message" => "Cannot update repair milestones until the customer Confirms the request."]);
+                    echo json_encode(["message" => "Cannot update repair milestones until the customer Confirms the request."]); return;
                 }
 
                 $this->serviceRequestModel->updateStatus($request_id, $new_status);
@@ -279,17 +279,17 @@ class ServiceRequestController {
                 $this->notifyCustomer($customer_id, $request_id, $new_status, "Repair status: $new_status");
 
                 http_response_code(200);
-                return json_encode(["message" => "Repair milestone updated to: $new_status."]);
+                echo json_encode(["message" => "Repair milestone updated to: $new_status."]); return;
             }
 
             else {
                 http_response_code(400);
-                return json_encode(["message" => "Invalid status update requested."]);
+                echo json_encode(["message" => "Invalid status update requested."]); return;
             }
         }
 
         http_response_code(400);
-        return json_encode(["message" => "Invalid user role."]);
+        echo json_encode(["message" => "Invalid user role."]); return;
     }
 
     // ==========================================
@@ -311,7 +311,7 @@ public function handleGetCustomerRequests($payload)
         }
 
         http_response_code(200);
-        return json_encode(["success" => true, "data" => $requests]);
+        echo json_encode(["success" => true, "data" => $requests]); return;
     }
 
  public function handleGetShopRequests($payload)
@@ -330,7 +330,7 @@ public function handleGetCustomerRequests($payload)
         }
 
         http_response_code(200);
-        return json_encode(["success" => true, "data" => $requests]);
+        echo json_encode(["success" => true, "data" => $requests]); return;
     }
 
     public function handleGetDeclinedRequests($payload)
@@ -341,10 +341,10 @@ public function handleGetCustomerRequests($payload)
         $requests = $this->serviceRequestModel->getDeclinedRequestsByShop($shop_id);
 
         http_response_code(200);
-        return json_encode([
+        echo json_encode([
             "success" => true,
             "data"    => $requests
-        ]);
+        ]); return;
     }
 
     public function handleGetMissedRequests($payload)
@@ -370,10 +370,10 @@ public function handleGetCustomerRequests($payload)
         $requests = $this->serviceRequestModel->getConfirmedRequestsByShop($shop_id);
 
         http_response_code(200);
-        return json_encode([
+        echo json_encode([
             "success" => true,
             "data"    => $requests
-        ]);
+        ]); return;
     }
 
     public function handleGetActiveRepairs($payload)
@@ -385,10 +385,10 @@ public function handleGetCustomerRequests($payload)
 
     http_response_code(200);
 
-    return json_encode([
+    echo json_encode([
         "success" => true,
         "data" => $repairs
-    ]);
+    ]); return;
 }
 
     public function handleGetServiceHistory($payload)
@@ -399,10 +399,10 @@ public function handleGetCustomerRequests($payload)
         $history = $this->serviceRequestModel->getServiceHistoryByShop($shop_id);
 
         http_response_code(200);
-        return json_encode([
+        echo json_encode([
             "success" => true,
             "data"    => $history
-        ]);
+        ]); return;
     }
 public function updateTowTruckDetails($payload)
 {
