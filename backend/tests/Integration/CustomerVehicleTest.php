@@ -220,4 +220,36 @@ class CustomerVehicleTest extends TestCase {
         $deleted = $this->qb->table('customervehicle')->where('id', $vehicle['id'])->first();
         $this->assertEmpty($deleted);
     }
+    public function testCannotDeleteOtherCustomersVehicle() {
+        // Create another customer and their vehicle
+        $this->qb->table('users')->insert([
+            'email' => 'other_user@fixgo.com',
+            'password' => password_hash('Pass123', PASSWORD_BCRYPT),
+            'userRole' => 'customer',
+            'isActive' => 1
+        ]);
+        $otherUser = $this->qb->table('users')->where('email', 'other_user@fixgo.com')->first();
+        $this->qb->table('customer')->insert(['id' => $otherUser['id'], 'name' => 'Other', 'contactNumber' => '077']);
+        
+        $this->qb->table('customervehicle')->insert([
+            'customer_id' => $otherUser['id'],
+            'vehicle_category_id' => 2,
+            'brand' => 'Other Brand',
+            'color' => 'Other Color'
+        ]);
+        $otherVehicle = $this->qb->table('customervehicle')->where('customer_id', $otherUser['id'])->first();
+        
+        // Try to delete the other customer's vehicle with the test user's credentials
+        $response = $this->runVehicleRequest('DELETE', ['id' => $otherVehicle['id']]);
+        
+        // Depending on implementation, it might return 404 or just 200 with no rows affected.
+        // The key is that the vehicle should still exist.
+        $stillExists = $this->qb->table('customervehicle')->where('id', $otherVehicle['id'])->first();
+        $this->assertNotEmpty($stillExists);
+        
+        // Clean up
+        $this->qb->table('customervehicle')->where('id', $otherVehicle['id'])->delete();
+        $this->qb->table('customer')->where('id', $otherUser['id'])->delete();
+        $this->qb->table('users')->where('id', $otherUser['id'])->delete();
+    }
 }

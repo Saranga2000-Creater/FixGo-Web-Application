@@ -40,6 +40,9 @@ class RequestValidator {
      */
     public static function getJsonPayload($asArray = true) {
         $raw = file_get_contents("php://input");
+        if (empty(trim($raw))) {
+            return $asArray ? [] : new stdClass();
+        }
         $data = json_decode($raw, $asArray);
         
         // Check for JSON decoding errors

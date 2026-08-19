@@ -77,4 +77,37 @@ class RequestValidatorUnitTest extends TestCase {
         
         $this->assertStringContainsString('Invalid file format', $output);
     }
+    public function testGetJsonPayloadDecodesValidJson() {
+        $wrapper = __DIR__ . '/req_val_wrapper_1.php';
+        $bootstrapPath = realpath(__DIR__ . '/../../config/RequestValidator.php');
+        file_put_contents($wrapper, "<?php require_once '{$bootstrapPath}'; echo json_encode(RequestValidator::getJsonPayload(true));");
+        
+        $payload = '{"key":"value"}';
+        $len = strlen($payload);
+        $cmd = "echo " . escapeshellarg($payload) . " | CONTENT_TYPE=application/json CONTENT_LENGTH={$len} REQUEST_METHOD=POST REDIRECT_STATUS=1 SCRIPT_FILENAME=" . escapeshellarg($wrapper) . " php-cgi 2>/dev/null";
+        
+        $output = shell_exec($cmd);
+        @unlink($wrapper);
+        
+        $parts = explode("\r\n\r\n", $output, 2);
+        $body = count($parts) === 2 ? $parts[1] : (explode("\n\n", $output, 2)[1] ?? '');
+        
+        $this->assertEquals('{"key":"value"}', trim($body));
+    }
+
+    public function testGetJsonPayloadReturnsEmptyArrayForEmptyBody() {
+        $wrapper = __DIR__ . '/req_val_wrapper_2.php';
+        $bootstrapPath = realpath(__DIR__ . '/../../config/RequestValidator.php');
+        file_put_contents($wrapper, "<?php require_once '{$bootstrapPath}'; echo json_encode(RequestValidator::getJsonPayload(true));");
+        
+        $cmd = "echo '' | CONTENT_TYPE=application/json CONTENT_LENGTH=0 REQUEST_METHOD=POST REDIRECT_STATUS=1 SCRIPT_FILENAME=" . escapeshellarg($wrapper) . " php-cgi 2>/dev/null";
+        
+        $output = shell_exec($cmd);
+        @unlink($wrapper);
+        
+        $parts = explode("\r\n\r\n", $output, 2);
+        $body = count($parts) === 2 ? $parts[1] : (explode("\n\n", $output, 2)[1] ?? '');
+        
+        $this->assertEquals('[]', trim($body));
+    }
 }

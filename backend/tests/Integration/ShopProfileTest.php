@@ -291,4 +291,77 @@ class ShopProfileTest extends TestCase {
         $user = $this->qb->table('users')->where('id', $this->testUserId)->first();
         $this->assertTrue(password_verify('NewStrongPass123', $user['password']));
     }
+    public function testUpdateBusinessInfoBlocksEmailChange() {
+        $payload = [
+            'name' => 'Updated Shop Name',
+            'email' => 'hacked@fixgo.com', // malicious email change attempt
+            'owner' => 'Updated Owner',
+            'phone' => '0779999999',
+            'address' => 'Updated Address',
+            'openTime' => '09:00:00',
+            'closeTime' => '17:00:00',
+            'vehicleCategories' => [2]
+        ];
+        
+        $response = $this->runShopRequest('updateBusinessInfo', 'POST', $payload);
+        
+        $this->assertEquals(200, $response['status']);
+        $this->assertTrue($response['body']['success']);
+        
+        $user = $this->qb->table('users')->where('id', $this->testUserId)->first();
+        $this->assertEquals($this->testEmail, $user['email']); // unchanged
+    }
+
+    public function testUpdateBusinessInfoBlocksCategoryChange() {
+        $payload = [
+            'name' => 'Updated Shop Name',
+            'shop_category_id' => 3, // malicious category change attempt
+            'owner' => 'Updated Owner',
+            'phone' => '0779999999',
+            'address' => 'Updated Address',
+            'openTime' => '09:00:00',
+            'closeTime' => '17:00:00',
+            'vehicleCategories' => [2]
+        ];
+        
+        $response = $this->runShopRequest('updateBusinessInfo', 'POST', $payload);
+        
+        $this->assertEquals(200, $response['status']);
+        $this->assertTrue($response['body']['success']);
+        
+        $mapping = $this->qb->table('shopcategorymapping')->where('shop_id', $this->testShopId)->first();
+        $this->assertEquals(1, (int)$mapping['shop_category_id']); // unchanged
+    }
+
+    public function testGalleryMaxFourImages() {
+        // Insert 4 images directly
+        for ($i = 0; $i < 4; $i++) {
+            $this->qb->table('shopimage')->insert([
+                'shop_id' => $this->testShopId,
+                'url' => "dummy_image_{$i}.jpg"
+            ]);
+        }
+        
+        $payload = [
+            'image' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        ];
+        
+        $response = $this->runShopRequest('uploadGalleryImage', 'POST', $payload);
+        
+        $this->assertEquals(400, $response['status']);
+        $this->assertStringContainsString('maximum of 4', strtolower($response['body']['message'] ?? ''));
+    }
+
+    public function testUpdatePasswordMismatchRejected() {
+        $payload = [
+            'currentPassword' => $this->testPassword,
+            'newPassword' => 'NewStrongPass123',
+            'confirmPassword' => 'MismatchedPass123'
+        ];
+        
+        $response = $this->runShopRequest('updatePassword', 'POST', $payload);
+        
+        $this->assertEquals(400, $response['status']);
+        $this->assertStringContainsString('match', strtolower($response['body']['message'] ?? ''));
+    }
 }

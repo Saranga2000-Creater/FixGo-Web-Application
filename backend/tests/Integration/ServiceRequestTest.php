@@ -354,4 +354,66 @@ class ServiceRequestTest extends TestCase {
         $customer = $this->qb->table('customer')->where('id', $this->customerUserId)->first();
         $this->assertEquals(1, $customer['cancellation_strikes']);
     }
+    public function testShopCanDeclineRequest() {
+        $this->qb->table('servicerequest')->insert([
+            'customer_id' => $this->customerUserId,
+            'shop_id' => $this->shopUserId,
+            'status' => 'Pending'
+        ]);
+        $req = $this->qb->table('servicerequest')->where('customer_id', $this->customerUserId)->first();
+        
+        $res = $this->runReqRequest('updateStatus', $this->shopUserId, 'shop_owner', [
+            'request_id' => $req['id'],
+            'new_status' => 'Declined'
+        ]);
+        
+        $this->assertEquals(200, $res['status']);
+        $updated = $this->qb->table('servicerequest')->where('id', $req['id'])->first();
+        $this->assertEquals('Declined', $updated['status']);
+    }
+
+    public function testGetCustomerRequestsReturnsList() {
+        $this->qb->table('servicerequest')->insert([
+            'customer_id' => $this->customerUserId,
+            'shop_id' => $this->shopUserId,
+            'status' => 'Pending'
+        ]);
+        
+        $res = $this->runReqRequest('getCustomerRequests', $this->customerUserId, 'customer');
+        
+        $this->assertEquals(200, $res['status']);
+        $this->assertTrue($res['body']['success']);
+        $this->assertIsArray($res['body']['data']);
+        $this->assertCount(1, $res['body']['data']);
+    }
+
+    public function testGetShopRequestsReturnsList() {
+        $this->qb->table('servicerequest')->insert([
+            'customer_id' => $this->customerUserId,
+            'shop_id' => $this->shopUserId,
+            'status' => 'Pending'
+        ]);
+        
+        $res = $this->runReqRequest('getShopRequests', $this->shopUserId, 'shop_owner');
+        
+        $this->assertEquals(200, $res['status']);
+        $this->assertTrue($res['body']['success']);
+        $this->assertIsArray($res['body']['data']);
+        $this->assertCount(1, $res['body']['data']);
+    }
+
+    public function testPhoneLockedBeforeConfirm() {
+        $this->qb->table('servicerequest')->insert([
+            'customer_id' => $this->customerUserId,
+            'shop_id' => $this->shopUserId,
+            'status' => 'Accepted' // Not confirmed
+        ]);
+        
+        $res = $this->runReqRequest('getCustomerRequests', $this->customerUserId, 'customer');
+        
+        $this->assertEquals(200, $res['status']);
+        $reqs = $res['body']['data'];
+        $this->assertNotEmpty($reqs);
+        $this->assertEquals('Locked until Confirmed', $reqs[0]['shop_phone']);
+    }
 }

@@ -87,4 +87,59 @@ class AuthMiddlewareTest extends TestCase {
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('Forbidden. You do not have the required permissions', $result['output']);
     }
+    public function testCustomerTokenCannotAccessAdminRoute() {
+        $jwtHandler = new JwtHandler();
+        $token = $jwtHandler->generate([
+            'user_id' => 1,
+            'email' => 'customer@test.com',
+            'role' => 'customer' 
+        ]);
+        
+        $result = $this->runIsolatedAuth($token, 'admin');
+        
+        $this->assertEquals(403, $result['status']);
+        $this->assertFalse($result['success']);
+    }
+
+    public function testShopOwnerTokenCannotAccessAdminRoute() {
+        $jwtHandler = new JwtHandler();
+        $token = $jwtHandler->generate([
+            'user_id' => 2,
+            'email' => 'shop@test.com',
+            'role' => 'shop_owner' 
+        ]);
+        
+        $result = $this->runIsolatedAuth($token, 'admin');
+        
+        $this->assertEquals(403, $result['status']);
+        $this->assertFalse($result['success']);
+    }
+
+    public function testAdminTokenCanAccessAdminRoute() {
+        $jwtHandler = new JwtHandler();
+        $token = $jwtHandler->generate([
+            'user_id' => 3,
+            'email' => 'admin@test.com',
+            'role' => 'admin' 
+        ]);
+        
+        $result = $this->runIsolatedAuth($token, 'admin');
+        
+        $this->assertEquals(200, $result['status']);
+        $this->assertTrue($result['success']);
+    }
+
+    public function testCustomerTokenAllowedOnCustomerRoute() {
+        $jwtHandler = new JwtHandler();
+        $token = $jwtHandler->generate([
+            'user_id' => 1,
+            'email' => 'customer@test.com',
+            'role' => 'customer' 
+        ]);
+        
+        $result = $this->runIsolatedAuth($token, 'customer');
+        
+        $this->assertEquals(200, $result['status']);
+        $this->assertTrue($result['success']);
+    }
 }

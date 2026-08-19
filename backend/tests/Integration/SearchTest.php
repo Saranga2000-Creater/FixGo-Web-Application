@@ -210,4 +210,62 @@ class SearchTest extends TestCase {
             $this->assertEquals(404, $res2['status']);
         }
     }
+    public function testSearchFiltersByName() {
+        // Search by name "Colombo"
+        $res = $this->runSearchRequest("lat=6.9271&lng=79.8612&radius=15&name=Colombo");
+        $this->assertEquals(200, $res['status']);
+        
+        $found = false;
+        foreach ($res['body']['data'] as $shop) {
+            if ($shop['id'] === $this->shopUserId) $found = true;
+            $this->assertStringContainsStringIgnoringCase('Colombo', $shop['name']);
+        }
+        $this->assertTrue($found, "Shop with 'Colombo' in name should be found.");
+
+        // Search by non-existent name
+        $res2 = $this->runSearchRequest("lat=6.9271&lng=79.8612&radius=15&name=AutoFix");
+        if ($res2['status'] === 200) {
+            $found2 = false;
+            foreach ($res2['body']['data'] as $shop) {
+                if ($shop['id'] === $this->shopUserId) $found2 = true;
+            }
+            $this->assertFalse($found2, "Shop should NOT appear when name does not match.");
+        } else {
+            $this->assertEquals(404, $res2['status']);
+        }
+    }
+
+    public function testSearchReturnsDistanceInKm() {
+        $res = $this->runSearchRequest("lat=6.9271&lng=79.8612&radius=15");
+        $this->assertEquals(200, $res['status']);
+        $this->assertArrayHasKey('data', $res['body']);
+        
+        foreach ($res['body']['data'] as $shop) {
+            if ($shop['id'] === $this->shopUserId) {
+                $this->assertArrayHasKey('distance_km', $shop);
+                $this->assertIsNumeric($shop['distance_km']);
+            }
+        }
+    }
+
+    public function testSearchExcludesInactiveShops() {
+        // Set shop to inactive
+        $this->qb->table('shop')->where('id', $this->shopUserId)->update(['isAvailable' => 0]);
+        
+        $res = $this->runSearchRequest("lat=6.9271&lng=79.8612&radius=15");
+        
+        $this->assertEquals(200, $res['status']);
+        $found = false;
+        foreach ($res['body']['data'] as $shop) {
+            if ($shop['id'] === $this->shopUserId) {
+                $found = true;
+                $this->assertFalse($shop['is_open_now']);
+                $this->assertEquals('Temporarily Closed', $shop['open_status_text']);
+            }
+        }
+        $this->assertTrue($found, "Inactive shop SHOULD appear in search results, but marked as Temporarily Closed.");
+        
+        // Restore for cleanup/other tests
+        $this->qb->table('shop')->where('id', $this->shopUserId)->update(['isAvailable' => 1]);
+    }
 }
