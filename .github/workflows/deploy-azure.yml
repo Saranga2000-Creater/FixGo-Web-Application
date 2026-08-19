@@ -9,7 +9,8 @@ on:
 jobs:
   deploy-to-azure:
     name: Build & Deploy Backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
     
     # Phase 1 constraint: Safety Lock 1
     # Ensures this action NEVER tries to execute on your colleague's original repository.

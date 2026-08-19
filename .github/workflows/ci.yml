@@ -12,7 +12,8 @@ on:
 jobs:
   build-and-test:
     name: Build, Run, and Test
-    runs-on: ubuntu-latest # The temporary GitHub server
+    runs-on: ubuntu-22.04 # The temporary GitHub server
+    timeout-minutes: 10 # Automatically cancel if the job runs longer than 10 minutes
     if: github.repository == 'Saranga2000-Creater/FixGo-Web-Application'
     
     steps:
