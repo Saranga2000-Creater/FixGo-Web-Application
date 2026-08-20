@@ -53,3 +53,11 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./backend
+
+      # Step 6: Automatically Trigger Database Migrations via WebHook
+      - name: Run Database Migrations
+        if: success() # Only run if the deployment succeeded
+        run: |
+          echo "Triggering migrations..."
+          curl -sS -X GET "https://${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/system/triggerMigrations.php" \
+          -H "X-Migration-Key: ${{ secrets.MIGRATION_API_KEY }}"
