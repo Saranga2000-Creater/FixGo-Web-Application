@@ -77,8 +77,8 @@ try {
                     $db->exec($query);
                 } catch (PDOException $innerE) {
                     $mysqlCode = $innerE->errorInfo[1] ?? null;
-                    // Ignore "already exists" (1050, 1060, 1061) and "doesn't exist" (1091) errors for idempotency
-                    if (!in_array($mysqlCode, [1050, 1060, 1061, 1091])) {
+                    // Ignore "already exists" (1050, 1060, 1061, 1068) and "doesn't exist" (1091) errors for idempotency
+                    if (!in_array($mysqlCode, [1050, 1060, 1061, 1068, 1091])) {
                         echo "❌ Error in query: " . substr($query, 0, 100) . "...\n";
                         throw $innerE;
                     }
