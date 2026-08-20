@@ -62,5 +62,5 @@ jobs:
         if: success() # Only run if the deployment succeeded
         run: |
           echo "Triggering migrations..."
-          curl -sS -X GET "https://${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/system/triggerMigrations.php" \
+          curl -sS -f -X GET "${{ secrets.AZURE_WEBAPP_URL }}/api/system/triggerMigrations.php" \
           -H "X-Migration-Key: ${{ secrets.MIGRATION_API_KEY }}"
