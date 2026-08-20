@@ -35,7 +35,7 @@ class CustomerController {
 
         $photoUrl = null;
         if (!empty($customer['profilePhoto'])) {
-            $photoUrl = $this->baseUrl . '/' . $customer['profilePhoto'];
+            $photoUrl = $customer['profilePhoto'];
         }
 
         echo json_encode([
