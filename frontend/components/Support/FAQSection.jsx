@@ -64,8 +64,11 @@ const FAQSection = () => {
 
   return (
     <section className="max-w-6xl mx-auto px-4 py-14">
-      <div className="mb-7">
+      <div className="flex items-center justify-between mb-7">
         <h2 className="text-2xl font-bold text-gray-900">Frequently Asked Questions</h2>
+        <a id="view-all-articles-link" href="#" className="text-[#16a34a] text-sm font-semibold hover:underline flex items-center gap-1">
+          View all articles <FaArrowRight className="text-xs" />
+        </a>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
