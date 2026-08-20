@@ -4,6 +4,9 @@ name: Deploy Backend to Azure App Service
 # Currently restricted to manual execution. 
 # Once Azure is active, we will change this back to `on: push` for the dockerCI/CD branch.
 on:
+  push:
+    branches:
+      - dockerCI/CD
   workflow_dispatch:
 
 jobs:
