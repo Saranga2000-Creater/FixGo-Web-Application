@@ -26,7 +26,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Update this if your Azure App Service uses a different PHP version
+          php-version: '8.3' # Updated to match Azure App Service runtime
 
       # Step 3: Install PHP dependencies (production mode)
       - name: Install Composer Dependencies

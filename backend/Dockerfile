@@ -1,6 +1,6 @@
 # 1. The Base Image
-# We start with the official PHP 8.2 image designed for command-line (CLI) tools
-FROM php:8.2-cli
+# We start with the official PHP 8.3 image designed for command-line (CLI) tools
+FROM php:8.3-cli
 
 # 2. Install System Dependencies
 # We need basic Linux tools like zip and git so Composer can download packages
