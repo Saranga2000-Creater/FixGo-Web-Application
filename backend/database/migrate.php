@@ -10,6 +10,16 @@ echo "🚀 Starting Database Migrations...\n";
 try {
     $db = (new Database())->connect();
 
+    // --- AZURE FIX: Disable Automatic Invisible Primary Keys ---
+    // Azure MySQL 8.0 Flexible Server automatically adds invisible primary keys to tables 
+    // that don't have them defined in the CREATE TABLE statement. This breaks phpMyAdmin dumps.
+    try {
+        $db->exec("SET SESSION sql_generate_invisible_primary_key = OFF;");
+    } catch (PDOException $e) {
+        // Ignore if running on MariaDB or older MySQL versions that don't support this variable
+    }
+    // -----------------------------------------------------------
+
     // 1. Create the 'migrations' tracking table if it doesn't exist
     $db->exec("
         CREATE TABLE IF NOT EXISTS migrations_tracker (
