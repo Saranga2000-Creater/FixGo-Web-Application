@@ -34,7 +34,18 @@ jobs:
         # --no-dev ensures we don't install testing tools like PHPUnit on the live server
         run: composer install --no-dev --optimize-autoloader
 
-      # Step 4: Deploy the packaged backend folder to Azure
+      # Step 4: Clean up development and test files before deployment
+      - name: Clean Deployment Package
+        working-directory: ./backend
+        run: |
+          rm -rf tests
+          rm -f .env.example
+          rm -f phpunit.xml
+          rm -f Dockerfile
+          rm -f all_tests.txt
+          rm -rf .phpunit.cache
+
+      # Step 5: Deploy the packaged backend folder to Azure
       # Note: We will add these secrets to your GitHub repository once the Azure account is active
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
