@@ -439,4 +439,34 @@ class CustomerController {
             echo json_encode(["success" => false, "message" => "Failed to submit report.", "error" => $e->getMessage()]);
         }
     }
+
+    public function deleteAccount($payload) {
+        RequestValidator::enforceMethod('POST');
+        
+        $userId = $payload['user_id'] ?? null;
+        $email = $payload['email'] ?? null;
+
+        if (!$userId || !$email) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        try {
+            $userModel = new User($this->db);
+            $userModel->deleteAccount($userId, $email);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Account deleted successfully."
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Failed to delete account.",
+                "error" => $e->getMessage()
+            ]);
+        }
+    }
 }
