@@ -87,15 +87,27 @@ function generateWhatsAppLink(repair) {
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
-function ActiveRepairs() {
+function ActiveRepairs({ fetchActiveRepairCount }) {
   const [activeRepairs, setActiveRepairs] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     api.get("shop/getActiveRepairs.php")
       .then((data) => {
-        if (data.success) {
-          setActiveRepairs(data.data);
+        if (data.success && Array.isArray(data.data)) {
+          const filteredActive = data.data.filter(
+            (repair) =>
+              repair.status === "Confirmed" ||
+              repair.status === "In Progress"
+          );
+          setActiveRepairs(filteredActive);
+          const viewedIds = JSON.parse(localStorage.getItem("fixgo_viewed_repairs") || "[]");
+          const newIds = filteredActive.map((r) => String(r.id));
+          const updatedViewed = Array.from(new Set([...viewedIds, ...newIds]));
+          localStorage.setItem("fixgo_viewed_repairs", JSON.stringify(updatedViewed));
+          if (fetchActiveRepairCount) {
+            fetchActiveRepairCount();
+          }
         }
       })
       .catch(console.error);
@@ -122,6 +134,9 @@ function ActiveRepairs() {
         );
       }
       window.dispatchEvent(new Event("fixgo_unread_changed"));
+      if (fetchActiveRepairCount) {
+        fetchActiveRepairCount();
+      }
     } catch (err) {
       console.error(err);
       alert("Something went wrong while updating the status.");

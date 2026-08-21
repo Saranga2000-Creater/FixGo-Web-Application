@@ -276,6 +276,7 @@ function renderPage(
   reviewCount,
   setActiveNav,
   fetchRequestCount,
+  fetchActiveRepairCount,
   selectedNotifId,
   onClearSelection
 ) {
@@ -300,7 +301,7 @@ function renderPage(
   }}
   fetchRequestCount={fetchRequestCount}
 />;
-    case "repairs":       return <ActiveRepairs />;
+    case "repairs":       return <ActiveRepairs fetchActiveRepairCount={fetchActiveRepairCount} />;
     case "history":       return <ServiceHistory />;
     case "reviews":       return <ReviewsRatings />;
     case "profile":       return <ShopProfile />;
@@ -339,11 +340,37 @@ function ShopOwnerDashboard() {
   const [shopData, setShopData] = useState(null);
   const [requestCount, setRequestCount] = useState(0);
   const [activeRepairCount, setActiveRepairCount] = useState(0);
+  const [unviewedActiveRepairCount, setUnviewedActiveRepairCount] = useState(0);
   const [completedJobCount, setCompletedJobCount] = useState(0); 
   const [notificationCount, setNotificationCount] = useState(0);
   const [billingCount, setBillingCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
+
+  const fetchActiveRepairCount = () => {
+    api.get("shop/getActiveRepairs.php")
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          const activeRepairs = data.data.filter(
+            (repair) =>
+              repair.status === "Confirmed" ||
+              repair.status === "In Progress"
+          );
+          setActiveRepairCount(activeRepairs.length);
+
+          const viewedIds = JSON.parse(localStorage.getItem("fixgo_viewed_repairs") || "[]");
+          const unviewedCount = activeRepairs.filter(
+            (r) => !viewedIds.includes(String(r.id))
+          ).length;
+          setUnviewedActiveRepairCount(unviewedCount);
+        }
+      })
+      .catch((err) => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchActiveRepairCount();
+  }, []);
 
   useEffect(() => {
     if (location.state?.targetPage) {
@@ -490,6 +517,7 @@ useEffect(() => {
         shopData={shopData}
         requestCount={requestCount}
         activeRepairCount={activeRepairCount}
+        activeRepairBadgeCount={unviewedActiveRepairCount}
         notificationCount={notificationCount}
         reviewCount={reviewCount}
         billingCount={billingCount}
@@ -523,6 +551,7 @@ useEffect(() => {
             reviewCount,
             setActiveNav,
             fetchRequestCount,
+            fetchActiveRepairCount,
             selectedNotifId,
             () => setSelectedNotifId(null)
           )}
