@@ -85,14 +85,6 @@ class CustomerController {
             return;
         }
 
-        // Check if email already exists
-        $userModel = new User($this->db);
-        if ($userModel->findByEmail($sanitizedEmail)) {
-            http_response_code(400);
-            echo json_encode(["message" => "Email is already registered."]);
-            return;
-        }
-
         if (!preg_match('/^(?:\+94\d{9}|0\d{9})$/', $phone)) {
             http_response_code(400);
             echo json_encode(["message" => "Invalid phone number format. Valid formats: +94123456789 or 0123456789."]);
@@ -115,11 +107,52 @@ class CustomerController {
         $targetDir = __DIR__ . '/../uploads/customers/';
         $dbImagePath = RequestValidator::handleFileUpload('profilePic', $targetDir, 'customer_', 'uploads/customers/');
 
+        $userModel = new User($this->db);
+        $customerModel = new Customer($this->db);
+
+        // Check if email already exists
+        if ($userModel->findByEmail($sanitizedEmail)) {
+            // If the account exists but is NOT yet verified, allow re-registration
+            // by overwriting it with fresh data and a new 5-minute OTP.
+            if (!$userModel->is_email_verified) {
+                try {
+                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                    $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+                    $userData = [
+                        'password' => $passwordHash,
+                        'verification_token' => $verificationToken
+                    ];
+
+                    $customerData = [
+                        'name' => $name,
+                        'contactNumber' => $phone,
+                        'address' => $address,
+                        'profilePhoto' => $dbImagePath
+                    ];
+
+                    $customerModel->reRegister($userModel->id, $userData, $customerData);
+
+                    EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
+
+                    http_response_code(200);
+                    echo json_encode(["message" => "A new OTP has been sent to your email. Please verify within 5 minutes."]);
+                } catch (Exception $e) {
+                    http_response_code(500);
+                    echo json_encode(["message" => "Re-registration failed: " . $e->getMessage()]);
+                }
+                return;
+            }
+
+            // Email exists AND is verified — genuine duplicate
+            http_response_code(400);
+            echo json_encode(["message" => "Email is already registered."]);
+            return;
+        }
+
         try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-            $customerModel = new Customer($this->db);
 
             $userData = [
                 'email' => $sanitizedEmail,

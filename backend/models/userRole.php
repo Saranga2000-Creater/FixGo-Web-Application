@@ -160,6 +160,25 @@ class User {
         return (bool)$row;
     }
 
+    /**
+     * Refreshes the verification token and expiry for an unverified user.
+     * Used by the Resend OTP feature.
+     *
+     * @param string $email The user's email
+     * @param string $otp   New 6-digit OTP
+     * @return bool
+     */
+    public function refreshVerificationToken($email, $otp) {
+        $expiry = date('Y-m-d H:i:s', time() + (5 * 60)); // 5 minutes from now
+        $this->qb->table($this->table_name)
+            ->where('email', $email)
+            ->update([
+                'verification_token' => $otp,
+                'token_expiry'       => $expiry
+            ]);
+        return true;
+    }
+
     public function activateUser($userId) {
         $this->qb->table($this->table_name)
             ->where('id', $userId)

@@ -356,4 +356,40 @@ class AuthController{
         }
     }
 
+    public function resendOtp() {
+        RequestValidator::enforceMethod('POST');
+
+        $data = RequestValidator::getJsonPayload(false);
+        $email = isset($data->email) ? trim($data->email) : '';
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(["message" => "A valid email address is required."]);
+            return;
+        }
+
+        $user = new User($this->db);
+        if (!$user->findByEmail($email)) {
+            // Don't reveal whether the email exists — generic message
+            http_response_code(200);
+            echo json_encode(["message" => "If that email is registered and unverified, a new OTP has been sent."]);
+            return;
+        }
+
+        if ($user->is_email_verified) {
+            http_response_code(400);
+            echo json_encode(["message" => "This account is already verified. Please log in."]);
+            return;
+        }
+
+        $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user->refreshVerificationToken($email, $otp);
+
+        require_once __DIR__ . '/../config/EmailSender.php';
+        EmailSender::sendVerificationEmail($email, $otp);
+
+        http_response_code(200);
+        echo json_encode(["message" => "A new OTP has been sent to your email. It expires in 5 minutes."]);
+    }
+
 }

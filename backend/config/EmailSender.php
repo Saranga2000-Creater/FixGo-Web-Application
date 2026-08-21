@@ -19,7 +19,7 @@ class EmailSender {
         $message = "Hello,<br><br>";
         $message .= "Thank you for registering with FixGo! Please verify your email address to activate your account. Your One-Time Password (OTP) is:<br><br>";
         $message .= "<strong style='font-size: 24px; letter-spacing: 2px; color: #059669;'>" . htmlspecialchars($token) . "</strong><br><br>";
-        $message .= "This OTP is valid for 1 hour. Please enter it on the verification page.<br><br>";
+        $message .= "This OTP is valid for 5 minutes. Please enter it on the verification page.<br><br>";
         $message .= "If you did not create an account, no further action is required.<br><br>";
         $message .= "Best regards,<br>";
         $message .= "The FixGo Team";

@@ -110,22 +110,6 @@ CREATE TABLE `notification` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `reportedContent`
---
-
-CREATE TABLE `reportedContent` (
-  `id` int(11) NOT NULL,
-  `reporter_user_id` int(11) DEFAULT NULL,
-  `admin_id` int(11) DEFAULT NULL,
-  `reportedEntityType` varchar(255) DEFAULT NULL,
-  `reported_entity_id` int(11) DEFAULT NULL,
-  `reason` varchar(255) DEFAULT NULL,
-  `status` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `review`
 --
 
@@ -347,14 +331,6 @@ ALTER TABLE `notification`
   ADD KEY `service_request_id` (`service_request_id`);
 
 --
--- Indexes for table `reportedContent`
---
-ALTER TABLE `reportedContent`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `reporter_user_id` (`reporter_user_id`),
-  ADD KEY `admin_id` (`admin_id`);
-
---
 -- Indexes for table `review`
 --
 ALTER TABLE `review`
@@ -458,12 +434,6 @@ ALTER TABLE `monthlyBill`
 -- AUTO_INCREMENT for table `notification`
 --
 ALTER TABLE `notification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `reportedContent`
---
-ALTER TABLE `reportedContent`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -575,13 +545,6 @@ ALTER TABLE `monthlyBill`
 ALTER TABLE `notification`
   ADD CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `notification_ibfk_2` FOREIGN KEY (`service_request_id`) REFERENCES `serviceRequest` (`id`);
-
---
--- Constraints for table `reportedContent`
---
-ALTER TABLE `reportedContent`
-  ADD CONSTRAINT `reportedContent_ibfk_1` FOREIGN KEY (`reporter_user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `reportedContent_ibfk_2` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`);
 
 --
 -- Constraints for table `review`

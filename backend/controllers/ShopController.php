@@ -260,14 +260,6 @@ class ShopController {
         $targetDir = __DIR__ . '/../uploads/shopOwners/';
         $dbImagePath = RequestValidator::handleFileUpload('shopImage', $targetDir, 'shop_', 'uploads/shopOwners/');
 
-        // Check if email already exists
-        $userModel = new User($this->db);
-        if ($userModel->findByEmail($email)) {
-            http_response_code(400);
-            echo json_encode(["message" => "Email is already registered."]);
-            return;
-        }
-
         // Map Shop Category dynamically from database
         $categoryModel = new Category($this->db);
         $categoryId = $categoryModel->resolveShopCategoryId($category);
@@ -313,16 +305,69 @@ class ShopController {
             return;
         }
 
-        // (File upload is already handled by RequestValidator)
+        $userModel = new User($this->db);
+        $shopModel = new Shop($this->db);
+
+        // Check if email already exists
+        if ($userModel->findByEmail($sanitizedEmail)) {
+            // If the account exists but is NOT yet verified, allow re-registration
+            // by overwriting it with fresh data and a new 5-minute OTP.
+            if (!$userModel->is_email_verified) {
+                try {
+                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                    $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+                    $userData = [
+                        'password' => $passwordHash,
+                        'verification_token' => $verificationToken
+                    ];
+
+                    $shopData = [
+                        'name' => $shopName,
+                        'address' => $address,
+                        'contactNumber' => $phone,
+                        'owner' => $ownerName,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'description' => $description,
+                        'openTime' => $openTime,
+                        'closeTime' => $closeTime,
+                        'carriageService' => $providesCarriage,
+                        'BRN' => $licenseNumber,
+                        'profileImageURL' => $dbImagePath,
+                        'driverName' => $defaultDriverName,
+                        'driverPhone' => $defaultDriverPhone,
+                        'truckBrand' => $defaultTruckBrand,
+                        'truckColor' => $defaultTruckColor,
+                        'truckPlate' => $towTruckPlate
+                    ];
+
+                    $shopModel->reRegister($userModel->id, $userData, $shopData, $categoryId, $vehicleIds);
+
+                    // Send verification email
+                    EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
+
+                    http_response_code(200);
+                    echo json_encode(["message" => "A new OTP has been sent to your email. Please verify within 5 minutes."]);
+                } catch (Exception $e) {
+                    http_response_code(500);
+                    echo json_encode(["message" => "Re-registration failed: " . $e->getMessage()]);
+                }
+                return;
+            }
+
+            // Email exists AND is verified — genuine duplicate
+            http_response_code(400);
+            echo json_encode(["message" => "Email is already registered."]);
+            return;
+        }
 
         try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            $shopModel = new Shop($this->db);
-
             $userData = [
-                'email' => $email,
+                'email' => $sanitizedEmail,
                 'password' => $passwordHash,
                 'verification_token' => $verificationToken
             ];
@@ -350,7 +395,7 @@ class ShopController {
             $shopModel->register($userData, $shopData, $categoryId, $vehicleIds);
 
             // Send verification email
-            EmailSender::sendVerificationEmail($email, $verificationToken);
+            EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
 
             http_response_code(201);
             echo json_encode(["message" => "Shop owner registered successfully. Please check your email to verify your account."]);

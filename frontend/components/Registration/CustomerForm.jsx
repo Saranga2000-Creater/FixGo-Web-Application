@@ -104,8 +104,8 @@ export default function CustomerForm() {
             await api.postPublic('auth/registerCustomer.php', payload);
             setSuccess(true);
             setTimeout(() => {
-                navigate("/verify-email");
-            }, 4000);
+                navigate("/verify-email", { state: { email: trimEmail } });
+            }, 5000);
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
         } finally {
@@ -123,7 +123,7 @@ export default function CustomerForm() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Verification Email Sent!</h3>
                 <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                    Thank you for registering! We've sent a 6-digit OTP to <strong className="text-gray-800">{formData.email}</strong>. 
+                    Thank you for registering! We've sent a 6-digit OTP to <strong className="text-gray-800">{formData.email}</strong>.
                     Please check your inbox and enter the OTP to activate your account.
                 </p>
                 <button
@@ -178,7 +178,7 @@ export default function CustomerForm() {
                         <span className="block text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP up to 5MB</span>
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Full Name</label>
@@ -239,7 +239,7 @@ export default function CustomerForm() {
                 <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">
                     Security
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Password</label>

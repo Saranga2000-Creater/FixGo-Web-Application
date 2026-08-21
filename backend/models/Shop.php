@@ -269,7 +269,7 @@ class Shop {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 1 HOUR)')
+                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
             ]);
 
             $this->qb->table('shop')->insert([
@@ -314,6 +314,78 @@ class Shop {
             throw $e;
         }
     }
+
+    /**
+     * Re-registers an unverified user as a shop owner, overwriting their details and resetting the OTP.
+     */
+    public function reRegister($userId, $userData, $shopData, $categoryId, $vehicleIds) {
+        try {
+            $this->qb->beginTransaction();
+
+            $this->qb->table('users')->where('id', $userId)->update([
+                'userRole' => 'shop_owner',
+                'password' => $userData['password'],
+                'isActive' => 0,
+                'verification_token' => $userData['verification_token'],
+                'is_email_verified' => 0,
+                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+            ]);
+
+            $existingShop = $this->qb->table('shop')->where('id', $userId)->first();
+            $shopPayload = [
+                'name' => $shopData['name'],
+                'address' => $shopData['address'],
+                'contactNumber' => $shopData['contactNumber'],
+                'owner' => $shopData['owner'],
+                'location' => QueryBuilder::raw("ST_GeomFromText('POINT(" . (float)$shopData['longitude'] . " " . (float)$shopData['latitude'] . ")')"),
+                'description' => $shopData['description'],
+                'openTime' => $shopData['openTime'],
+                'closeTime' => $shopData['closeTime'],
+                'isAvailable' => 1,
+                'carriageService' => $shopData['carriageService'],
+                'BRN' => $shopData['BRN'],
+                'default_driver_name' => $shopData['driverName'],
+                'default_driver_phone' => $shopData['driverPhone'],
+                'default_truck_brand' => $shopData['truckBrand'],
+                'default_truck_color' => $shopData['truckColor'],
+                'tow_truck_plate' => $shopData['truckPlate']
+            ];
+
+            if (!empty($shopData['profileImageURL'])) {
+                $shopPayload['profileImageURL'] = $shopData['profileImageURL'];
+            }
+
+            if ($existingShop) {
+                $this->qb->table('shop')->where('id', $userId)->update($shopPayload);
+            } else {
+                $shopPayload['id'] = $userId;
+                $this->qb->table('shop')->insert($shopPayload);
+            }
+
+            $this->qb->table('shopCategoryMapping')->where('shop_id', $userId)->delete();
+            $this->qb->table('shopCategoryMapping')->insert([
+                'shop_id' => $userId,
+                'shop_category_id' => $categoryId
+            ]);
+
+            $this->qb->table('shopVehicleCategories')->where('shop_id', $userId)->delete();
+            foreach ($vehicleIds as $vId) {
+                $this->qb->table('shopVehicleCategories')->insert([
+                    'shop_id' => $userId,
+                    'vehicle_category_id' => $vId
+                ]);
+            }
+
+            $this->qb->commit();
+            return $userId;
+        } catch (Exception $e) {
+            if ($this->qb->inTransaction()) {
+                $this->qb->rollBack();
+            }
+            throw $e;
+        }
+    }
+
 
     public function getTowTruckDetails($shopId) {
         return $this->qb->table('shop')->select([
