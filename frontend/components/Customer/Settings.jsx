@@ -16,14 +16,16 @@ import {
     faXmark,
     faSave,
     faSpinner,
-    faCheckCircle,
     faExclamationCircle,
+    faUserSlash,
+    faTrash,
+    faTriangleExclamation
 } from "@fortawesome/free-solid-svg-icons";
 
 const FONT = "'Segoe UI', system-ui, sans-serif";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=16a34a&color=fff&name=";
 
-function SettingsRow({ icon, label, meta, onClick, hasBorderTop }) {
+function SettingsRow({ icon, label, meta, onClick, hasBorderTop, textColor, iconColor }) {
     return (
         <button
             onClick={onClick}
@@ -31,8 +33,8 @@ function SettingsRow({ icon, label, meta, onClick, hasBorderTop }) {
             style={{ fontFamily: FONT }}
         >
             <div className="flex items-center gap-3">
-                <FontAwesomeIcon icon={icon} className="w-4" style={{ color: "#16A34A80" }} />
-                <span className="text-[13px] font-semibold text-gray-700">{label}</span>
+                <FontAwesomeIcon icon={icon} className="w-4" style={{ color: iconColor || "#16A34A80" }} />
+                <span className={`text-[13px] font-semibold ${textColor || "text-gray-700"}`}>{label}</span>
             </div>
             <div className="flex items-center gap-2.5">
                 {meta && <span className="text-[13px] text-gray-400">{meta}</span>}
@@ -85,6 +87,10 @@ function Settings({ onNavigate }) {
     const [saving, setSaving] = useState(false);
     const [modalError, setModalError] = useState("");
     const [modalSuccess, setModalSuccess] = useState("");
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
 
     const fetchProfile = () => {
         api.get("customer/getCustomerProfile.php")
@@ -209,6 +215,25 @@ function Settings({ onNavigate }) {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        setDeleteLoading(true);
+        setDeleteError("");
+        try {
+            const res = await api.post("customer/deleteAccount.php", {});
+            if (res.success) {
+                localStorage.removeItem("jwt_token");
+                localStorage.removeItem("user_data");
+                navigate("/login");
+            } else {
+                setDeleteError(res.message || "Failed to delete account.");
+            }
+        } catch (err) {
+            setDeleteError(err.message || "Failed to delete account. Please try again.");
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
     let avatarSrc = DEFAULT_AVATAR + encodeURIComponent(customer?.name || "Customer");
     if (customer && customer.profilePhoto) {
         const cleanProfilePhoto = customer.profilePhoto.replace(/['"]/g, '');
@@ -244,22 +269,12 @@ function Settings({ onNavigate }) {
                 iconBg="rgba(22,163,74,0.08)"
                 iconColor="#16A34A"
                 title="Account Settings"
-                description="Manage your personal information and account details."
+                description="Manage your personal information, addresses, and account security."
             >
                 <SettingsRow icon={faUser} label="Edit Profile" onClick={() => openEditModal("info")} />
                 <SettingsRow icon={faMapPin} label="Addresses" onClick={() => openEditModal("info")} hasBorderTop />
                 <SettingsRow icon={faLock} label="Change Password" onClick={() => openEditModal("password")} hasBorderTop />
-            </SettingsSection>
-
-            {/* ── Security ── */}
-            <SettingsSection
-                icon={faShieldHalved}
-                iconBg="rgba(37,99,235,0.10)"
-                iconColor="#2563EB"
-                title="Security"
-                description="Manage your account security and login settings."
-            >
-                <SettingsRow icon={faLock} label="Password Update" onClick={() => openEditModal("password")} />
+                <SettingsRow icon={faUserSlash} label="Delete Account" textColor="text-gray-500" iconColor="#9CA3AF" onClick={() => setIsDeleteModalOpen(true)} hasBorderTop />
             </SettingsSection>
 
             {/* ── App Settings ── */}
@@ -461,6 +476,52 @@ function Settings({ onNavigate }) {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Delete Account Confirmation Modal ── */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-[20px] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col my-8 animate-in fade-in zoom-in-95 duration-150 p-6 relative text-center">
+                        <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 text-2xl">
+                            <FontAwesomeIcon icon={faTriangleExclamation} />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 m-0 mb-2">Delete Account?</h3>
+                        <p className="text-sm text-gray-500 m-0 mb-6 leading-relaxed">
+                            Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will instantly lose access.
+                        </p>
+
+                        {deleteError && (
+                            <div className="mb-4 text-xs bg-red-50 text-red-700 p-3 rounded-xl border border-red-200">
+                                {deleteError}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={deleteLoading}
+                                className="flex-1 px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl border-none cursor-pointer transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={deleteLoading}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl border-none cursor-pointer shadow-sm disabled:opacity-50 transition-colors"
+                            >
+                                {deleteLoading ? (
+                                    <>
+                                        <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Deleting...
+                                    </>
+                                ) : (
+                                    "Yes, Delete"
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
