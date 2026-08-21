@@ -148,6 +148,9 @@ class CustomerRegistrationTest extends TestCase {
         ];
         $this->runRegistrationRequest($payload); // First works
         
+        // Mark user as verified to trigger duplicate email rejection
+        $this->qb->table('users')->where('email', $this->testEmail)->update(['is_email_verified' => 1]);
+        
         $response = $this->runRegistrationRequest($payload); // Second fails
         $this->assertEquals(400, $response['status']);
         $this->assertStringContainsString('already registered', $response['body']['message'] ?? '');
