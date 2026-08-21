@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTriangleExclamation, faSpinner, faCheckCircle, faXmark, faFileInvoiceDollar, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, faCheckCircle, faXmark, faFileInvoiceDollar, faLock, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../../src/services/api";
 import toast from "react-hot-toast";
 import { PageCard } from "./RevenueShared";
 import { MONTH_NAMES } from "./RevenueConstants";
 
-function ConfirmModal({ count, onCancel, onConfirm, loading }) {
+function ConfirmModal({ 
+  title, 
+  icon,
+  iconColor,
+  iconBg,
+  children,
+  confirmText,
+  confirmColorClass,
+  confirmIcon,
+  onCancel, 
+  onConfirm, 
+  loading 
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500" />
+          <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center shrink-0`}>
+            <FontAwesomeIcon icon={icon} className={iconColor} />
           </div>
-          <h3 className="text-[17px] font-bold text-gray-900 m-0">Confirm Dispatch</h3>
+          <h3 className="text-[17px] font-bold text-gray-900 m-0">{title}</h3>
         </div>
-        <p className="text-sm text-gray-600 leading-relaxed mb-6">
-          You are about to dispatch <span className="font-bold text-gray-900">{count}</span> invoice(s).
-          Shop owners will receive email notifications and due dates will be locked in.
-          <span className="block mt-1 text-red-500 font-semibold">This cannot be undone.</span>
-        </p>
+        <div className="text-sm text-gray-600 leading-relaxed mb-6">
+          {children}
+        </div>
         <div className="flex gap-3 justify-end">
           <button onClick={onCancel} className="py-2 px-5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-none cursor-pointer hover:bg-gray-200">Cancel</button>
           <button onClick={onConfirm} disabled={loading}
-            className="py-2 px-5 rounded-xl bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
-            {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faCheckCircle} />}
-            Confirm Dispatch
+            className={`py-2 px-5 rounded-xl text-white text-sm font-bold border-none cursor-pointer disabled:opacity-50 flex items-center gap-2 ${confirmColorClass}`}>
+            {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={confirmIcon} />}
+            {confirmText}
           </button>
         </div>
       </div>
@@ -34,7 +44,7 @@ function ConfirmModal({ count, onCancel, onConfirm, loading }) {
   );
 }
 
-function DraftReviewModal({ drafts, onClose, onDispatch }) {
+function DraftReviewModal({ drafts, onClose, onDispatch, onClear }) {
   const total = drafts.reduce((s, d) => s + Number(d.totalAmount || 0), 0);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -64,6 +74,9 @@ function DraftReviewModal({ drafts, onClose, onDispatch }) {
           ))}
         </div>
         <div className="flex gap-3 justify-end px-6 py-4 border-t border-gray-100">
+          <button onClick={onClear} className="py-2 px-5 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border-none cursor-pointer hover:bg-red-100 mr-auto flex items-center gap-2 transition-colors">
+            <FontAwesomeIcon icon={faTrash} /> Clear Drafts
+          </button>
           <button onClick={onClose} className="py-2 px-5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-none cursor-pointer hover:bg-gray-200">Close</button>
           <button onClick={onDispatch} className="py-2 px-5 rounded-xl bg-green-600 text-white text-sm font-bold border-none cursor-pointer hover:bg-green-700 flex items-center gap-2">
             <FontAwesomeIcon icon={faCheckCircle} /> Dispatch All
@@ -81,6 +94,7 @@ function BillingActions({ analytics, onRefresh }) {
   const [drafts, setDrafts]   = useState([]);
   const [showReview,  setShowReview]  = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const loadDrafts = async () => {
     try {
@@ -108,6 +122,19 @@ function BillingActions({ analytics, onRefresh }) {
       const res = await api.post("admin/dispatchInvoices.php", { year, month });
       toast.success(`${res.dispatched} invoice(s) dispatched. ${res.emailsSent} email(s) sent.`);
       setShowConfirm(false); setShowReview(false);
+      loadDrafts();
+      if (onRefresh) onRefresh();
+    } catch (err) { toast.error(err.message || "Action failed."); }
+    finally { setLoading(""); }
+  };
+
+  const doClearDrafts = async () => {
+    setLoading("clear");
+    try {
+      const res = await api.post("admin/clearDrafts.php", { year, month });
+      toast.success(res.message || "Draft invoices cleared.");
+      setShowClearConfirm(false);
+      setShowReview(false);
       loadDrafts();
       if (onRefresh) onRefresh();
     } catch (err) { toast.error(err.message || "Action failed."); }
@@ -142,12 +169,30 @@ function BillingActions({ analytics, onRefresh }) {
   return (
     <>
       {showConfirm && (
-        <ConfirmModal count={draftList.length} loading={loading === "dispatch"}
-          onCancel={() => setShowConfirm(false)} onConfirm={doDispatch} />
+        <ConfirmModal loading={loading === "dispatch"} onCancel={() => setShowConfirm(false)} onConfirm={doDispatch}
+          title="Confirm Dispatch" icon={faTriangleExclamation} iconColor="text-amber-500" iconBg="bg-amber-100"
+          confirmText="Confirm Dispatch" confirmColorClass="bg-green-600 hover:bg-green-700" confirmIcon={faCheckCircle}>
+          <p className="m-0">
+            You are about to dispatch <span className="font-bold text-gray-900">{draftList.length}</span> invoice(s).
+            Shop owners will receive email notifications and due dates will be locked in.
+            <span className="block mt-1 text-red-500 font-semibold">This cannot be undone.</span>
+          </p>
+        </ConfirmModal>
+      )}
+      {showClearConfirm && (
+        <ConfirmModal loading={loading === "clear"} onCancel={() => { setShowClearConfirm(false); setShowReview(true); }} onConfirm={doClearDrafts}
+          title="Clear Drafts" icon={faTrash} iconColor="text-red-500" iconBg="bg-red-100"
+          confirmText="Clear Drafts" confirmColorClass="bg-red-600 hover:bg-red-700" confirmIcon={faTrash}>
+          <p className="m-0">
+            You are about to securely delete <span className="font-bold text-gray-900">{draftList.length}</span> draft invoice(s). 
+            No emails have been sent, and you can freely regenerate these drafts later.
+          </p>
+        </ConfirmModal>
       )}
       {showReview && (
         <DraftReviewModal drafts={draftList} onClose={() => setShowReview(false)}
-          onDispatch={() => { setShowReview(false); setShowConfirm(true); }} />
+          onDispatch={() => { setShowReview(false); setShowConfirm(true); }}
+          onClear={() => { setShowReview(false); setShowClearConfirm(true); }} />
       )}
       <PageCard title="Billing Cycle Actions">
         {/* Stepper */}
