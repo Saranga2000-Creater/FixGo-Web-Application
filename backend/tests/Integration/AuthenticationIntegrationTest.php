@@ -40,6 +40,7 @@ class AuthenticationIntegrationTest extends TestCase {
             elseif (\$method === 'forgotPassword') \$controller->forgotPassword();
             elseif (\$method === 'verifyResetOtp') \$controller->verifyResetOtp();
             elseif (\$method === 'resetPassword') \$controller->resetPassword();
+            elseif (\$method === 'resendOtp') \$controller->resendOtp();
         ");
     }
 
@@ -193,5 +194,42 @@ class AuthenticationIntegrationTest extends TestCase {
         $res = $this->runAuthRequest('resetPassword', ['otp' => $otp, 'password' => 'NewStrongPass123']);
         $this->assertEquals(400, $res['status']);
         $this->assertStringContainsString('OTP has expired', $res['body']['message'] ?? '');
+    }
+
+    public function testResendOtpUpdatesDatabase() {
+        // 1. Create an unverified user
+        $this->createTestUser(1, 0, 'customer');
+
+        // 2. Fetch the old verification token and expiry to compare later
+        $oldUser = $this->qb->table('users')->where('email', $this->testEmail)->first();
+        $oldToken = $oldUser['verification_token'];
+        $oldExpiry = $oldUser['token_expiry'];
+
+        // Sleep briefly to ensure timestamps would differ if we relied purely on timestamp precision
+        usleep(1000000); // 1 second
+
+        // 3. Hit the resendOtp endpoint
+        $response = $this->runAuthRequest('resendOtp', ['email' => $this->testEmail]);
+        
+        // 4. Assert success response (Email failure is swallowed by try/catch in EmailSender)
+        $this->assertEquals(200, $response['status']);
+        $this->assertStringContainsString('A new OTP has been sent', $response['body']['message'] ?? '');
+
+        // 5. Query the database to verify the token actually changed
+        $newUser = $this->qb->table('users')->where('email', $this->testEmail)->first();
+        
+        $this->assertNotEquals($oldToken, $newUser['verification_token'], "The OTP token should be regenerated.");
+        $this->assertNotNull($newUser['token_expiry'], "Token expiry should be set.");
+        $this->assertNotEquals($oldExpiry, $newUser['token_expiry'], "Token expiry timestamp should be updated.");
+    }
+
+    public function testResendOtpRejectsVerifiedUser() {
+        // Create a verified user
+        $this->createTestUser(1, 1, 'customer');
+
+        $response = $this->runAuthRequest('resendOtp', ['email' => $this->testEmail]);
+        
+        $this->assertEquals(400, $response['status']);
+        $this->assertStringContainsString('already verified', $response['body']['message'] ?? '');
     }
 }

@@ -269,7 +269,7 @@ class Shop {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+                'token_expiry' => date('Y-m-d H:i:s', time() + (5 * 60))
             ]);
 
             $this->qb->table('shop')->insert([
@@ -328,7 +328,7 @@ class Shop {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+                'token_expiry' => date('Y-m-d H:i:s', time() + (5 * 60))
             ]);
 
             $existingShop = $this->qb->table('shop')->where('id', $userId)->first();
