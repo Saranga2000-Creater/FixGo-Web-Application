@@ -7,6 +7,27 @@ require_once __DIR__ . '/../config/Database.php';
 
 echo "🌱 Starting Database Seeding...\n";
 
+// --- Asset Seeding ---
+$sourceDir = __DIR__ . '/seedData/shopOwners/';
+$destDir = __DIR__ . '/../uploads/shopOwners/';
+
+if (file_exists($sourceDir)) {
+    if (!file_exists($destDir)) {
+        mkdir($destDir, 0777, true);
+    }
+    $files = glob($sourceDir . '*');
+    $copiedCount = 0;
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            copy($file, $destDir . basename($file));
+            $copiedCount++;
+        }
+    }
+    if ($copiedCount > 0) {
+        echo "🖼️  Copied $copiedCount seed images to uploads folder.\n";
+    }
+}
+
 try {
     $db = (new Database())->connect();
 
@@ -37,21 +58,33 @@ try {
         if (!in_array($fileName, $executedSeeds)) {
             echo "⚙️  Seeding: $fileName...\n";
             
-            // Read the SQL file
+            // Execute the SQL file reliably by splitting on semicolons
+            $expectedSize = filesize($file);
             $sql = file_get_contents($file);
             
+            // Verification check: ensure the file was completely read (protects against Docker volume sync lag in CI)
+            if ($sql === false || strlen($sql) !== $expectedSize) {
+                echo "❌ CRITICAL: Failed to read the entire seed file: $fileName\n";
+                echo "Expected $expectedSize bytes, but read " . strlen((string)$sql) . " bytes.\n";
+                exit(1);
+            }
+
+            $queries = explode(';', $sql);
+            
             try {
-                // We need to disable foreign key checks temporarily because 
-                // bulk inserting complex dumps might have circular dependencies or unordered references
                 $db->exec("SET FOREIGN_KEY_CHECKS=0;");
                 
-                // Execute the SQL
-                $db->exec($sql);
+                foreach ($queries as $query) {
+                    $query = trim($query);
+                    if (empty($query)) continue;
+                    $db->exec($query);
+                }
                 
                 $db->exec("SET FOREIGN_KEY_CHECKS=1;");
             } catch (PDOException $innerE) {
                 $db->exec("SET FOREIGN_KEY_CHECKS=1;");
-                throw $innerE; // It's a real error, abort!
+                echo "❌ Error in query: " . substr($query, 0, 100) . "...\n";
+                throw $innerE;
             }
             
             // Record that we ran it so we never run it again

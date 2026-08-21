@@ -54,7 +54,7 @@ class Customer {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+                'token_expiry' => date('Y-m-d H:i:s', time() + (5 * 60))
             ]);
 
             // 2. Insert into customer
@@ -89,7 +89,7 @@ class Customer {
                 'isActive' => 0,
                 'verification_token' => $userData['verification_token'],
                 'is_email_verified' => 0,
-                'token_expiry' => QueryBuilder::raw('DATE_ADD(NOW(), INTERVAL 5 MINUTE)')
+                'token_expiry' => date('Y-m-d H:i:s', time() + (5 * 60))
             ]);
 
             $existing = $this->qb->table('customer')->where('id', $userId)->first();

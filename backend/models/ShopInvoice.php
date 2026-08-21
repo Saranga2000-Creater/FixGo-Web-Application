@@ -23,6 +23,7 @@ class ShopInvoice {
             ->join('shopCategoryMapping scm', 's.id', '=', 'scm.shop_id')
             ->where('u.userRole', 'shop_owner')
             ->groupBy('s.id')
+            ->groupBy('scm.shop_category_id')
             ->get();
     }
 
@@ -47,6 +48,15 @@ class ShopInvoice {
             'invoiceReference' => $data['invoiceReference'],
             'invoiceStatus' => 'Draft'
         ]);
+        return true;
+    }
+
+    public function clearDrafts(int $year, int $month): bool {
+        $this->qb->table($this->table_name)
+            ->where('billingPeriodYear', $year)
+            ->where('billingPeriodMonth', $month)
+            ->where('invoiceStatus', 'Draft')
+            ->delete();
         return true;
     }
 

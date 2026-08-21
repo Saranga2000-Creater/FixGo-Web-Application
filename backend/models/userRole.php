@@ -185,5 +185,27 @@ class User {
             ->update(['isActive' => 1]);
         return true;
     }
+
+    /**
+     * Soft deletes a user account by setting isActive = 0 and anonymizing their email
+     * to free it up for future registrations.
+     */
+    public function deleteAccount($userId, $currentEmail) {
+        $timestamp = time();
+        $anonymizedEmail = 'deleted_' . $timestamp . '_' . $currentEmail;
+        
+        $this->qb->table($this->table_name)
+            ->where('id', $userId)
+            ->update([
+                'isActive' => 0,
+                'email' => $anonymizedEmail,
+                'password' => '',
+                'verification_token' => null,
+                'reset_token' => null,
+                'token_expiry' => null,
+                'reset_token_expiry' => null
+            ]);
+        return true;
+    }
 }
 ?>

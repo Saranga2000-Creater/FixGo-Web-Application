@@ -8,60 +8,62 @@ import {
   faFileLines,
   faCircleInfo,
   faChevronRight,
-  faXmark
+  faXmark,
+  faStore,
+  faUserSlash,
+  faTrash,
+  faTriangleExclamation,
+  faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../../src/services/api";
 
-const SECURITY_ITEMS = [
-  { icon: faLock, label: "Password Update" },
-];
+const FONT = "'Segoe UI', system-ui, sans-serif";
 
-const APP_SETTINGS_ITEMS = [
-  { icon: faFileLines, label: "Terms & Conditions" },
-  { icon: faCircleInfo, label: "About FixGo", trailing: "Version 1.0.0" },
-];
-
-function SettingsSection({ icon, iconBg, iconColor, title, description, items, onItemClick }) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden grid grid-cols-1 md:[grid-template-columns:280px_1fr] items-stretch">
-      {/* Left info panel */}
-      <div className="p-5 border-b md:border-b-0 md:border-r border-gray-100">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>
-          <FontAwesomeIcon icon={icon} className={`text-lg ${iconColor}`} />
-        </div>
-        <h3 className="font-bold text-base text-gray-900 mb-1.5">{title}</h3>
-        <p className="text-sm text-gray-500 leading-snug m-0">{description}</p>
-      </div>
-
-      {/* Right list panel */}
-      <div className="flex flex-col h-full">
-        {items.map((item, i) => (
-          <button
-            key={item.label}
-            type="button"
-            onClick={() => onItemClick?.(item.label)}
-            className={`w-full flex-1 flex items-center justify-between px-5 py-4 bg-transparent border-0 text-left cursor-pointer hover:bg-gray-50 transition-colors ${
-              i !== items.length - 1 ? "border-b border-gray-100" : ""
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <FontAwesomeIcon icon={item.icon} className="w-[18px] h-[18px] text-green-600" />
-              <span className="text-sm font-semibold text-gray-900">{item.label}</span>
-            </span>
-            <span className="flex items-center gap-2">
-              {item.trailing && (
-                <span className="text-xs text-gray-400">{item.trailing}</span>
-              )}
-              <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4 text-gray-300" />
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+function SettingsRow({ icon, label, meta, onClick, hasBorderTop, textColor, iconColor }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`flex flex-1 w-full items-center justify-between py-4 px-6 bg-transparent cursor-pointer text-left transition-colors duration-150 hover:bg-[rgba(22,163,74,0.08)] ${hasBorderTop ? "border-t border-gray-100" : "border-none"}`}
+            style={{ fontFamily: FONT }}
+        >
+            <div className="flex items-center gap-3">
+                <FontAwesomeIcon icon={icon} className="w-4" style={{ color: iconColor || "#16A34A80" }} />
+                <span className={`text-[13px] font-semibold ${textColor || "text-gray-700"}`}>{label}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+                {meta && <span className="text-[13px] text-gray-400">{meta}</span>}
+                <FontAwesomeIcon icon={faChevronRight} className="text-[11px]" style={{ color: "#16A34A66" }} />
+            </div>
+        </button>
+    );
 }
 
-function Settings() {
+function SettingsSection({ iconBg, iconColor, icon, title, description, children }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden flex flex-wrap">
+            {/* Left panel */}
+            <div className="flex items-center gap-5 p-6 border-b sm:border-b-0 sm:border-r border-gray-100 w-full sm:w-[260px] flex-shrink-0 box-border">
+                <div
+                    className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center"
+                    style={{ background: iconBg }}
+                >
+                    <FontAwesomeIcon icon={icon} className="text-[22px]" style={{ color: iconColor }} />
+                </div>
+                <div>
+                    <p className="text-sm font-bold text-gray-900 m-0">{title}</p>
+                    <p className="text-xs text-gray-500 mt-1 mb-0 leading-relaxed">{description}</p>
+                </div>
+            </div>
+
+            {/* Right rows */}
+            <div className="flex-1 min-w-[200px] flex flex-col">
+                {children}
+            </div>
+        </div>
+    );
+}
+
+function Settings({ setActiveNav }) {
   const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState(null); // 'password' | null
 
@@ -69,6 +71,10 @@ function Settings() {
   const [pwdForm, setPwdForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdMsg, setPwdMsg] = useState({ type: "", text: "" });
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const handleItemClick = (label) => {
     if (label === "Password Update") {
@@ -131,38 +137,62 @@ function Settings() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+      setDeleteLoading(true);
+      setDeleteError("");
+      try {
+          const res = await api.post("shop/deleteAccount.php", {});
+          if (res.success) {
+              localStorage.removeItem("jwt_token");
+              localStorage.removeItem("user_data");
+              navigate("/login");
+          } else {
+              setDeleteError(res.message || "Failed to delete account.");
+          }
+      } catch (err) {
+          setDeleteError(err.message || "Failed to delete account. Please try again.");
+      } finally {
+          setDeleteLoading(false);
+      }
+  };
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 m-0">Settings</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Manage your account security, shop preferences and system settings.
+    <div className="flex flex-col gap-5" style={{ fontFamily: FONT }}>
+      {/* ── Page heading ── */}
+      <div
+          className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+          style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+      >
+          <h1 className="text-[28px] font-bold text-gray-900 m-0">Settings</h1>
+          <p className="text-gray-500 mt-1.5 mb-0 text-sm">
+              Manage your account security, shop preferences and system settings.
           </p>
-        </div>
       </div>
 
-      <div className="flex flex-col gap-5">
-        <SettingsSection
-          icon={faShieldHalved}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-          title="Security"
-          description="Manage your account security and login settings."
-          items={SECURITY_ITEMS}
-          onItemClick={handleItemClick}
-        />
-        <SettingsSection
+      {/* ── Account Settings ── */}
+      <SettingsSection
+          icon={faLock}
+          iconBg="rgba(22,163,74,0.08)"
+          iconColor="#16A34A"
+          title="Account Settings"
+          description="Manage your account security, profile, and login settings."
+      >
+          <SettingsRow icon={faStore} label="Shop Profile" onClick={() => setActiveNav("profile")} />
+          <SettingsRow icon={faLock} label="Password Update" onClick={() => handleItemClick("Password Update")} hasBorderTop />
+          <SettingsRow icon={faUserSlash} label="Delete Account" textColor="text-gray-500" iconColor="#9CA3AF" onClick={() => setIsDeleteModalOpen(true)} hasBorderTop />
+      </SettingsSection>
+
+      {/* ── App Settings ── */}
+      <SettingsSection
           icon={faGear}
-          iconBg="bg-orange-50"
-          iconColor="text-orange-500"
+          iconBg="rgba(217,119,6,0.10)"
+          iconColor="#D97706"
           title="App Settings"
           description="Manage app behavior and system info."
-          items={APP_SETTINGS_ITEMS}
-          onItemClick={handleItemClick}
-        />
-      </div>
+      >
+          <SettingsRow icon={faFileLines} label="Terms & Conditions" onClick={() => handleItemClick("Terms & Conditions")} />
+          <SettingsRow icon={faCircleInfo} label="About FixGo" meta="Version 1.0.0" onClick={() => handleItemClick("About FixGo")} hasBorderTop />
+      </SettingsSection>
 
 
       {/* Password Update Modal */}
@@ -262,6 +292,53 @@ function Settings() {
           </div>
         </div>
       )}
+
+      {/* ── Delete Account Confirmation Modal ── */}
+      {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+              <div className="bg-white rounded-[20px] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col my-8 animate-in fade-in zoom-in-95 duration-150 p-6 relative text-center">
+                  <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 text-2xl">
+                      <FontAwesomeIcon icon={faTriangleExclamation} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 m-0 mb-2">Delete Account?</h3>
+                  <p className="text-sm text-gray-500 m-0 mb-6 leading-relaxed">
+                      Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will instantly lose access.
+                  </p>
+
+                  {deleteError && (
+                      <div className="mb-4 text-xs bg-red-50 text-red-700 p-3 rounded-xl border border-red-200">
+                          {deleteError}
+                      </div>
+                  )}
+
+                  <div className="flex gap-3">
+                      <button
+                          type="button"
+                          onClick={() => setIsDeleteModalOpen(false)}
+                          disabled={deleteLoading}
+                          className="flex-1 px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl border-none cursor-pointer transition-colors"
+                      >
+                          Cancel
+                      </button>
+                      <button
+                          type="button"
+                          onClick={handleDeleteAccount}
+                          disabled={deleteLoading}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl border-none cursor-pointer shadow-sm disabled:opacity-50 transition-colors"
+                      >
+                          {deleteLoading ? (
+                              <>
+                                  <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Deleting...
+                              </>
+                          ) : (
+                              "Yes, Delete"
+                          )}
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 }

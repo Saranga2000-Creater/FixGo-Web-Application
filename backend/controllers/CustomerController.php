@@ -16,8 +16,10 @@ class CustomerController {
         $this->baseUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8000', '/');
     }
 
-    public function getProfile($customerId) {
-        RequestValidator::enforceMethod('GET');
+    public function getProfile($customerId, $isInternal = false) {
+        if (!$isInternal) {
+            RequestValidator::enforceMethod('GET');
+        }
 
         $customerModel = new Customer($this->db);
         $customer = $customerModel->getById($customerId);
@@ -33,7 +35,7 @@ class CustomerController {
 
         $photoUrl = null;
         if (!empty($customer['profilePhoto'])) {
-            $photoUrl = $this->baseUrl . '/' . $customer['profilePhoto'];
+            $photoUrl = $customer['profilePhoto'];
         }
 
         echo json_encode([
@@ -274,7 +276,7 @@ class CustomerController {
 
         try {
             $customerModel->updateProfile($customerId, $updateData, $newPassword);
-            $this->getProfile($customerId);
+            $this->getProfile($customerId, true);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["message" => "Failed to update profile: " . $e->getMessage()]);
@@ -435,6 +437,36 @@ class CustomerController {
         } catch (Throwable $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "Failed to submit report.", "error" => $e->getMessage()]);
+        }
+    }
+
+    public function deleteAccount($payload) {
+        RequestValidator::enforceMethod('POST');
+        
+        $userId = $payload['user_id'] ?? null;
+        $email = $payload['email'] ?? null;
+
+        if (!$userId || !$email) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Unauthorized."]);
+            return;
+        }
+
+        try {
+            $userModel = new User($this->db);
+            $userModel->deleteAccount($userId, $email);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Account deleted successfully."
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Failed to delete account.",
+                "error" => $e->getMessage()
+            ]);
         }
     }
 }

@@ -312,7 +312,7 @@ function renderPage(
             onClearSelection={onClearSelection}
         />
     );
-    case "settings":      return <Settings />;
+    case "settings":      return <Settings setActiveNav={setActiveNav} />;
     case "billing":       return <Billing />;
     default:              return (
       <DashboardView

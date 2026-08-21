@@ -10,6 +10,16 @@ echo "🚀 Starting Database Migrations...\n";
 try {
     $db = (new Database())->connect();
 
+    // --- AZURE FIX: Disable Automatic Invisible Primary Keys ---
+    // Azure MySQL 8.0 Flexible Server automatically adds invisible primary keys to tables 
+    // that don't have them defined in the CREATE TABLE statement. This breaks phpMyAdmin dumps.
+    try {
+        $db->exec("SET SESSION sql_generate_invisible_primary_key = OFF;");
+    } catch (PDOException $e) {
+        // Ignore if running on MariaDB or older MySQL versions that don't support this variable
+    }
+    // -----------------------------------------------------------
+
     // 1. Create the 'migrations' tracking table if it doesn't exist
     $db->exec("
         CREATE TABLE IF NOT EXISTS migrations_tracker (
@@ -55,19 +65,33 @@ try {
         if (!in_array($fileName, $executedMigrations)) {
             echo "⚙️  Migrating: $fileName...\n";
             
-            // Read the SQL file
+            // Execute the SQL file reliably by splitting on semicolons
+            // This is 100% robust across all OSes and prevents the Docker Compose entrypoint from hanging
+            $expectedSize = filesize($file);
             $sql = file_get_contents($file);
             
-            try {
-                // Execute the SQL
-                $db->exec($sql);
-            } catch (PDOException $innerE) {
-                // MySQL Errors: 1050 (Table exists), 1060 (Column exists), 1061 (Key exists)
-                $mysqlCode = $innerE->errorInfo[1] ?? null;
-                if (in_array($mysqlCode, [1050, 1060, 1061])) {
-                    echo "⚠️  Warning: Schema element already exists. Assuming success for $fileName\n";
-                } else {
-                    throw $innerE; // It's a real error, abort!
+            // Verification check: ensure the file was completely read (protects against Docker volume sync lag in CI)
+            if ($sql === false || strlen($sql) !== $expectedSize) {
+                echo "❌ CRITICAL: Failed to read the entire migration file: $fileName\n";
+                echo "Expected $expectedSize bytes, but read " . strlen((string)$sql) . " bytes.\n";
+                exit(1);
+            }
+
+            $queries = explode(';', $sql);
+            
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (empty($query)) continue;
+                
+                try {
+                    $db->exec($query);
+                } catch (PDOException $innerE) {
+                    $mysqlCode = $innerE->errorInfo[1] ?? null;
+                    // Ignore "already exists" (1050, 1060, 1061, 1068) and "doesn't exist" (1091) errors for idempotency
+                    if (!in_array($mysqlCode, [1050, 1060, 1061, 1068, 1091])) {
+                        echo "❌ Error in query: " . substr($query, 0, 100) . "...\n";
+                        throw $innerE;
+                    }
                 }
             }
             

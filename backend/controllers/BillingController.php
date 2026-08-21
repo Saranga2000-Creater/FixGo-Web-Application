@@ -204,6 +204,39 @@ class BillingController {
     }
 
     // ============================================================
+    // ADMIN: CLEAR all draft invoices for a specific period
+    // ============================================================
+
+    public function clearDrafts(): void {
+        RequestValidator::enforceMethod('POST');
+
+        $data = RequestValidator::getJsonPayload();
+        if (!isset($data['year'], $data['month'])) {
+            http_response_code(400);
+            echo json_encode(["message" => "Required fields: year, month."]);
+            return;
+        }
+
+        $year  = (int)$data['year'];
+        $month = (int)$data['month'];
+
+        if ($year < 2024 || $month < 1 || $month > 12) {
+            http_response_code(400);
+            echo json_encode(["message" => "Invalid year or month value."]);
+            return;
+        }
+
+        $invoiceModel = new ShopInvoice($this->db);
+        $invoiceModel->clearDrafts($year, $month);
+
+        http_response_code(200);
+        echo json_encode([
+            "success" => true, 
+            "message" => "Draft invoices cleared successfully."
+        ]);
+    }
+
+    // ============================================================
     // ADMIN: DISPATCH all drafts for a period
     // ============================================================
 
