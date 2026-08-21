@@ -51,6 +51,15 @@ class ShopInvoice {
         return true;
     }
 
+    public function clearDrafts(int $year, int $month): bool {
+        $this->qb->table($this->table_name)
+            ->where('billingPeriodYear', $year)
+            ->where('billingPeriodMonth', $month)
+            ->where('invoiceStatus', 'Draft')
+            ->delete();
+        return true;
+    }
+
     public function getDrafts(?int $year, ?int $month): array {
         $query = $this->qb->table($this->table_name, 'si')
             ->select('si.*', 's.name AS shopName', 'sc.name AS categoryName')

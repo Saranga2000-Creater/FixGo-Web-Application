@@ -64,6 +64,9 @@ class BillingControllerTest extends TestCase {
             } elseif (\$method === 'generateDrafts') {
                 \$_SERVER['REQUEST_METHOD'] = 'POST';
                 \$ctrl->generateDrafts();
+            } elseif (\$method === 'clearDrafts') {
+                \$_SERVER['REQUEST_METHOD'] = 'POST';
+                \$ctrl->clearDrafts();
             } elseif (\$method === 'dispatchInvoices') {
                 \$_SERVER['REQUEST_METHOD'] = 'POST';
                 \$ctrl->dispatchInvoices();
@@ -287,6 +290,31 @@ class BillingControllerTest extends TestCase {
             ->first();
         $this->assertNotEmpty($inv);
         $this->assertEquals('Draft', $inv['invoiceStatus']);
+    }
+
+    /**
+     * Plan: testAdminCanClearDrafts
+     * Admin can clear drafts before they are dispatched
+     */
+    public function testAdminCanClearDrafts(): void {
+        $this->seedDraftInvoice(500.0);
+
+        $res = $this->call('clearDrafts', $this->adminUserId, 'admin', [
+            'year'  => $this->testBillingYear,
+            'month' => $this->testBillingMonth,
+        ]);
+
+        $this->assertEquals(200, $res['status']);
+        $this->assertTrue($res['body']['success'] ?? false);
+
+        // Verify DB is empty for drafts
+        $inv = $this->qb->table('shopinvoice')
+            ->where('shopId', $this->shopUserId)
+            ->where('billingPeriodYear', $this->testBillingYear)
+            ->where('billingPeriodMonth', $this->testBillingMonth)
+            ->where('invoiceStatus', 'Draft')
+            ->first();
+        $this->assertEmpty($inv);
     }
 
     /**
