@@ -145,7 +145,7 @@ function DashboardView({
     {
       label: "Completed Jobs",
       value: completedJobCount,
-      sub: "+6 this week",
+      sub: "View history",
       subColor: "text-green-600",
       icon: faCircleCheck,
       target: "history",
@@ -154,7 +154,7 @@ function DashboardView({
       label: "Average Rating",
       value: reviewCount > 0 ? Number(averageRating).toFixed(1) : "0.0",
       sub: `(${reviewCount} ${reviewCount === 1 ? "review" : "reviews"})`,
-      subColor: "text-gray-500",
+      subColor: "text-green-600",
       icon: faStar,
       target: "reviews",
     },
