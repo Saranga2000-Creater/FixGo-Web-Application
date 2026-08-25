@@ -49,10 +49,14 @@ function Sign({ setShowSignIn }) {
     }
 
     const handleRegister = () => {
-        handleClose(); // CHANGED: Replaced setShowSignIn(false)
-        document.getElementById("register")?.scrollIntoView({
-            behavior: "smooth"
-        });
+        if (typeof setShowSignIn === 'function') {
+            setShowSignIn(false);
+            document.getElementById("register")?.scrollIntoView({
+                behavior: "smooth"
+            });
+        } else {
+            navigate('/', { state: { scrollToRegister: true } });
+        }
     }
 
     const handleForgotPassword = () => {
