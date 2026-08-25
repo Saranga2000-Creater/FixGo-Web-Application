@@ -17,8 +17,12 @@ class AuthMiddleware
      */
     public static function authenticate(array $allowedRoles = [])
     {
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? '';
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $authHeader = $headers['Authorization'] 
+                   ?? $headers['authorization'] 
+                   ?? $_SERVER['HTTP_AUTHORIZATION'] 
+                   ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] 
+                   ?? '';
 
         if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             http_response_code(401);
