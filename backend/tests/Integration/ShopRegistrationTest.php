@@ -10,6 +10,7 @@ class ShopRegistrationTest extends TestCase {
     private $testEmail = 'shop_reg_test@fixgo.com';
     private $wrapperPath;
     private $initialFiles = [];
+    private $initialDocFiles = [];
 
     protected function setUp(): void {
         putenv('JWT_SECRET=supersecret1234567890abcdef');
@@ -33,6 +34,7 @@ class ShopRegistrationTest extends TestCase {
 
         // Snapshot files before tests run
         $this->initialFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/shopOwners/*');
+        $this->initialDocFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/verificationDocs/*') ?: [];
 
         $this->wrapperPath = __DIR__ . '/shop_reg_wrapper.php';
         file_put_contents($this->wrapperPath, "<?php
@@ -68,6 +70,13 @@ class ShopRegistrationTest extends TestCase {
                 @unlink($file);
             }
         }
+        $currentDocFiles = glob(realpath(__DIR__ . '/../../') . '/uploads/verificationDocs/*') ?: [];
+        $newDocFiles = array_diff($currentDocFiles, $this->initialDocFiles);
+        foreach ($newDocFiles as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
         if (file_exists($this->wrapperPath)) {
             @unlink($this->wrapperPath);
         }
@@ -99,17 +108,55 @@ class ShopRegistrationTest extends TestCase {
         $body .= "Content-Disposition: form-data; name=\"shopImage\"; filename=\"test_shop.jpg\"\r\n";
         $body .= "Content-Type: image/jpeg\r\n\r\n";
         $body .= "{$jpegBinary}\r\n";
+
+        // Add verification doc file (dummy PDF)
+        $body .= "--{$boundary}\r\n";
+        $body .= "Content-Disposition: form-data; name=\"verificationDoc\"; filename=\"test_verify.pdf\"\r\n";
+        $body .= "Content-Type: application/pdf\r\n\r\n";
+        $body .= "%PDF-1.4 test pdf content\r\n";
+        
         $body .= "--{$boundary}--\r\n";
 
         $contentLength = strlen($body);
         
-        $tmpBodyFile = sys_get_temp_dir() . '/upload_body_shop_' . uniqid() . '.tmp';
-        file_put_contents($tmpBodyFile, $body);
+        $descriptorspec = [
+            0 => ["pipe", "r"], // stdin is a pipe that the child will read from
+            1 => ["pipe", "w"], // stdout is a pipe that the child will write to
+            2 => ["pipe", "w"]  // stderr
+        ];
         
-        $cmd = "cat " . escapeshellarg($tmpBodyFile) . " | SCRIPT_FILENAME=" . escapeshellarg($this->wrapperPath) . " REDIRECT_STATUS=1 REQUEST_METHOD=POST CONTENT_TYPE=\"multipart/form-data; boundary={$boundary}\" CONTENT_LENGTH={$contentLength} php-cgi 2>/dev/null";
+        $env = [
+            'SCRIPT_FILENAME' => $this->wrapperPath,
+            'REDIRECT_STATUS' => '1',
+            'REQUEST_METHOD' => 'POST',
+            'CONTENT_TYPE' => "multipart/form-data; boundary={$boundary}",
+            'CONTENT_LENGTH' => (string)$contentLength,
+            'JWT_SECRET' => 'supersecret1234567890abcdef'
+        ];
         
-        $output = shell_exec($cmd);
-        @unlink($tmpBodyFile);
+        if (getenv('SystemRoot')) $env['SystemRoot'] = getenv('SystemRoot');
+        if (getenv('PATH')) $env['PATH'] = getenv('PATH');
+        
+        foreach ($_ENV as $k => $v) {
+            if (is_string($v)) $env[$k] = $v;
+        }
+        foreach ($_SERVER as $k => $v) {
+            if (is_string($v) && !isset($env[$k])) $env[$k] = $v;
+        }
+
+        $process = proc_open('php-cgi', $descriptorspec, $pipes, null, $env);
+        
+        $output = '';
+        if (is_resource($process)) {
+            fwrite($pipes[0], $body);
+            fclose($pipes[0]);
+            
+            $output = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            
+            proc_close($process);
+        }
         
         if (preg_match('/Status: (\d+)/i', $output, $matches)) {
             $status = (int)$matches[1];

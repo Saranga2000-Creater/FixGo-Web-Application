@@ -223,6 +223,10 @@ class ShopController {
         $targetDir = __DIR__ . '/../uploads/shopOwners/';
         $dbImagePath = RequestValidator::handleFileUpload('shopImage', $targetDir, 'shop_', 'uploads/shopOwners/');
 
+        // Handle shop verification document upload securely
+        $docTargetDir = __DIR__ . '/../uploads/verificationDocs/';
+        $dbDocPath = RequestValidator::handleFileUpload('verificationDoc', $docTargetDir, 'verify_', 'uploads/verificationDocs/', ['pdf', 'jpg', 'jpeg', 'png']);
+
         // Map Shop Category dynamically from database
         $categoryModel = new Category($this->db);
         $categoryId = $categoryModel->resolveShopCategoryId($category);
@@ -298,6 +302,7 @@ class ShopController {
                         'carriageService' => $providesCarriage,
                         'BRN' => $licenseNumber,
                         'profileImageURL' => $dbImagePath,
+                        'verificationDocURL' => $dbDocPath,
                         'driverName' => $defaultDriverName,
                         'driverPhone' => $defaultDriverPhone,
                         'truckBrand' => $defaultTruckBrand,
@@ -348,6 +353,7 @@ class ShopController {
                 'carriageService' => $providesCarriage,
                 'BRN' => $licenseNumber,
                 'profileImageURL' => $dbImagePath,
+                'verificationDocURL' => $dbDocPath,
                 'driverName' => $defaultDriverName,
                 'driverPhone' => $defaultDriverPhone,
                 'truckBrand' => $defaultTruckBrand,
@@ -368,6 +374,12 @@ class ShopController {
             $targetFilePath = __DIR__ . '/../' . $dbImagePath;
             if (file_exists($targetFilePath)) {
                 unlink($targetFilePath);
+            }
+            if (!empty($dbDocPath)) {
+                $targetDocPath = __DIR__ . '/../' . $dbDocPath;
+                if (file_exists($targetDocPath)) {
+                    unlink($targetDocPath);
+                }
             }
             http_response_code(500);
             echo json_encode(["message" => "Database registration failed: " . $e->getMessage()]);

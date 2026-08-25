@@ -35,6 +35,8 @@ export default function ShopForm() {
     });
     const [shopImage, setShopImage] = useState(null);
     const [shopImagePreview, setShopImagePreview] = useState("");
+    const [verificationDoc, setVerificationDoc] = useState(null);
+    const [verificationDocName, setVerificationDocName] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [availableCategories, setAvailableCategories] = useState([]);
@@ -109,6 +111,14 @@ export default function ShopForm() {
                 setShopImagePreview(reader.result);
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleVerificationDocChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setVerificationDoc(file);
+            setVerificationDocName(file.name);
         }
     };
 
@@ -235,6 +245,11 @@ export default function ShopForm() {
             return;
         }
 
+        if (!verificationDoc) {
+            setError("Please upload a verification document (PDF, JPG, JPEG, or PNG).");
+            return;
+        }
+
         setLoading(true);
 
         const payload = new FormData();
@@ -254,6 +269,7 @@ export default function ShopForm() {
         payload.append("longitude", formData.longitude);
         payload.append("password", formData.password);
         payload.append("shopImage", shopImage);
+        payload.append("verificationDoc", verificationDoc);
         payload.append("defaultDriverName", trimDriverName);
         payload.append("defaultDriverPhone", trimDriverPhone);
         payload.append("defaultTruckBrand", trimTruckBrand);
@@ -380,6 +396,27 @@ export default function ShopForm() {
                             placeholder="e.g. BR-12345-X"
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase">Verification Document <span className="text-red-500">*</span></label>
+                        <div className="mt-1 flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-gray-300 text-sm">
+                            <input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={handleVerificationDocChange}
+                                className="hidden"
+                                id="verification-doc-upload"
+                            />
+                            <label
+                                htmlFor="verification-doc-upload"
+                                className="inline-block px-3 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-all shadow-sm shrink-0"
+                            >
+                                {verificationDoc ? "Change File" : "Choose File"}
+                            </label>
+                            <span className="text-xs text-gray-500 truncate">
+                                {verificationDocName || "No file chosen (PDF, JPG, PNG)"}
+                            </span>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Shop Category</label>
