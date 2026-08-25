@@ -51,9 +51,11 @@ function Sign({ setShowSignIn }) {
     const handleRegister = () => {
         if (typeof setShowSignIn === 'function') {
             setShowSignIn(false);
-            document.getElementById("register")?.scrollIntoView({
-                behavior: "smooth"
-            });
+        }
+
+        const registerSection = document.getElementById("register");
+        if (registerSection) {
+            registerSection.scrollIntoView({ behavior: "smooth" });
         } else {
             navigate('/', { state: { scrollToRegister: true } });
         }
