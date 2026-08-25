@@ -174,8 +174,9 @@ function Settings({ onNavigate }) {
                 setModalError("Current password is required to set a new password.");
                 return;
             }
-            if (formData.newPassword.length < 6) {
-                setModalError("New password must be at least 6 characters long.");
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(formData.newPassword)) {
+                setModalError("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number.");
                 return;
             }
             if (formData.newPassword !== formData.confirmPassword) {
@@ -448,7 +449,7 @@ function Settings({ onNavigate }) {
                                                 value={formData.newPassword}
                                                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                                                 className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 pr-10"
-                                                placeholder="Minimum 6 characters"
+                                                placeholder="Enter new password"
                                             />
                                             <button
                                                 type="button"

@@ -109,8 +109,9 @@ function Settings({ setActiveNav }) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setPwdMsg({ type: "error", text: "New password must be at least 6 characters long." });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setPwdMsg({ type: "error", text: "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number." });
       return;
     }
 
@@ -259,7 +260,7 @@ function Settings({ setActiveNav }) {
                       setPwdForm({ ...pwdForm, newPassword: e.target.value });
                       if (pwdMsg.text) setPwdMsg({ type: "", text: "" });
                     }}
-                    placeholder="At least 6 characters"
+                    placeholder="Enter new password"
                     className="w-full py-2 px-3 rounded-xl border border-slate-300 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 box-border pr-10"
                   />
                   <button
