@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faCar, faWarehouse, faLocationDot, faLocationCrosshairs, faTruckPickup, faLock } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
+
 
 export const QuickSearchHub = ({ onRequireAuth }) => {
     const navigate = useNavigate();
@@ -19,15 +21,9 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/getCategories.php');
-                const json = await response.json();
-                
-                if (response.ok) {
-                    setVehicleOptions(json.vehicles);
-                    setServiceOptions(json.services);
-                } else {
-                    throw new Error("Failed to fetch");
-                }
+                const json = await api.getPublic('search/getCategories.php');
+                setVehicleOptions(json.vehicles);
+                setServiceOptions(json.services);
             } catch (error) {
                 console.warn("Backend categories not ready. Using fallbacks.", error);
                 setVehicleOptions([
@@ -44,6 +40,7 @@ export const QuickSearchHub = ({ onRequireAuth }) => {
         };
         fetchCategories();
     }, []);
+
 
     // 2. Custom Autocomplete State
     const [predictions, setPredictions] = useState([]);

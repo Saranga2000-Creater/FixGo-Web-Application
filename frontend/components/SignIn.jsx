@@ -1,7 +1,8 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { api } from "../src/services/api";
 
 
 function Sign({ setShowSignIn }) {
@@ -18,6 +19,7 @@ function Sign({ setShowSignIn }) {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
 
     const handleUserLogin = async (event) => {
@@ -25,46 +27,44 @@ function Sign({ setShowSignIn }) {
         setError("");
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/login.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+            const data = await api.postPublic('auth/login.php', { email, password });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                if (typeof setShowSignIn === 'function') {
-                    setShowSignIn(false);
-                }
-                localStorage.setItem("jwt_token", data.token);
-                localStorage.setItem("email", email);
-                localStorage.setItem("role", data.role);
-                localStorage.setItem("shopId", data.id);
-
-                if (data.profileImage) {
-                    localStorage.setItem("profileImage", data.profileImage);
-                }
-                navigate("/services");
-            } else {
-                setError(data.message || "Login failed. Please try again.");
+            if (typeof setShowSignIn === 'function') {
+                setShowSignIn(false);
             }
+            localStorage.setItem("jwt_token", data.token);
+            localStorage.setItem("email", email);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("shopId", data.id);
 
-        } catch (error) {
-            console.error("Login error:", error);
-            setError("An error occurred. Please try again.");
+            if (data.profileImage) {
+                localStorage.setItem("profileImage", data.profileImage);
+            }
+            navigate("/services");
+
+        } catch (err) {
+            console.error("Login error:", err);
+            setError(err.message || "Login failed. Please try again.");
         }
 
     }
 
     const handleRegister = () => {
-        handleClose(); // CHANGED: Replaced setShowSignIn(false)
-        document.getElementById("register")?.scrollIntoView({
-            behavior: "smooth"
-        });
+        if (typeof setShowSignIn === 'function') {
+            setShowSignIn(false);
+        }
+
+        const registerSection = document.getElementById("register");
+        if (registerSection) {
+            registerSection.scrollIntoView({ behavior: "smooth" });
+        } else {
+            navigate('/', { state: { scrollToRegister: true } });
+        }
+    }
+
+    const handleForgotPassword = () => {
+        handleClose();
+        navigate('/forgot-password');
     }
 
     return (
@@ -72,7 +72,7 @@ function Sign({ setShowSignIn }) {
             {/* 1st Update: The Background Overlay */}
             <div
                 className="absolute inset-0 bg-black/50"
-                onClick={handleClose} 
+                onClick={handleClose}
                 aria-hidden="true"
             />
 
@@ -85,7 +85,7 @@ function Sign({ setShowSignIn }) {
                 <FontAwesomeIcon
                     icon={faXmark}
                     className="absolute top-4 right-4 cursor-pointer text-xl text-gray-600 hover:text-gray-900 transition-colors"
-                    onClick={handleClose} 
+                    onClick={handleClose}
                 />
 
                 <h2 className="text-2xl font-semibold mb-2">Sign in to FixGo</h2>
@@ -94,8 +94,8 @@ function Sign({ setShowSignIn }) {
                 {error && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md flex items-center justify-between">
                         <span>{error}</span>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             className="text-red-400 hover:text-red-600 transition-colors ml-2 font-bold text-lg leading-none"
                             onClick={() => setError("")}
                             aria-label="Dismiss error"
@@ -127,18 +127,27 @@ function Sign({ setShowSignIn }) {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            required
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                            placeholder="Enter your password"
-                            name="password"
-                            value={password}
-                            onChange={(e) => {
-                                setPassword(e.target.value);
-                                if (error) setError("");
-                            }}
-                        />
+                        <div className="relative mt-1">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                className="block w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none pr-10"
+                                placeholder="Enter your password"
+                                name="password"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (error) setError("");
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none flex items-center"
+                            >
+                                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                            </button>
+                        </div>
                     </div>
 
                     <button
@@ -151,9 +160,9 @@ function Sign({ setShowSignIn }) {
                 </form>
 
                 <div className="mt-4 text-center text-sm text-gray-600">
-                    <button className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
+                    <button type="button" className="text-green-600 hover:underline" onClick={handleRegister}>Create an account</button>
                     <span className="mx-2">·</span>
-                    <button className="text-green-600 hover:underline">Forgot password?</button>
+                    <button type="button" className="text-green-600 hover:underline" onClick={handleForgotPassword}>Forgot password?</button>
                 </div>
             </div>
         </div>

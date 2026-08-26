@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar, faComments } from "@fortawesome/free-solid-svg-icons";
+import { api } from "../../src/services/api";
 
-const API_BASE = "http://localhost:8000/api";
 
 const AVATAR_COLORS = ["#7C3AED", "#059669", "#2563EB", "#D97706", "#F59E0B", "#DB2777", "#0891B2"];
 
@@ -86,13 +88,12 @@ function Stars({ count, max = 5, size = 14 }) {
   return (
     <span className="inline-flex gap-0.5">
       {Array.from({ length: max }).map((_, i) => (
-        <span
+        <FontAwesomeIcon
           key={i}
+          icon={faStar}
           className={i < count ? "text-amber-500" : "text-gray-300"}
           style={{ fontSize: size }}
-        >
-          ★
-        </span>
+        />
       ))}
     </span>
   );
@@ -106,9 +107,33 @@ function ReviewsRatings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [highlightedReqId, setHighlightedReqId] = useState(null);
+
+  useEffect(() => {
+    const handleHighlight = (e) => {
+      if (e.detail) {
+        setHighlightedReqId(e.detail);
+        setActiveTab("All");
+        
+        setTimeout(() => {
+          const el = document.getElementById(`review-card-${e.detail}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+
+        setTimeout(() => {
+          setHighlightedReqId(null);
+        }, 3000);
+      }
+    };
+    
+    window.addEventListener("fixgo_highlight_review", handleHighlight);
+    return () => window.removeEventListener("fixgo_highlight_review", handleHighlight);
+  }, []);
+
   useEffect(() => {
     const shopId = getShopIdFromToken();
-    const token = localStorage.getItem("jwt_token");
 
     if (!shopId) {
       setError("Could not determine shop id.");
@@ -116,16 +141,12 @@ function ReviewsRatings() {
       return;
     }
 
-    fetch(`${API_BASE}/getShopReviews.php?shop_id=${shopId}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((res) => res.json())
+    api.get(`shop/getShopReviews.php?shop_id=${shopId}`)
       .then((data) => {
         if (!data || !data.success) {
           setError(data?.message || "Failed to load reviews.");
           return;
         }
-
         setReviews(data.data || []);
         setAverageRating(data.average_rating || 0);
         setTotalReviews(data.total_reviews || 0);
@@ -133,6 +154,7 @@ function ReviewsRatings() {
       .catch(() => setError("Failed to load reviews."))
       .finally(() => setLoading(false));
   }, []);
+
 
   const starCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -153,19 +175,24 @@ function ReviewsRatings() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 m-0">
-          Reviews & Ratings
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          See what your customers are saying about your service.
-        </p>
+      <div
+        className="rounded-[18px] p-6 border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.04)] flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6"
+        style={{ background: "linear-gradient(180deg, #EEF7F0, #FFFFFF)" }}
+      >
+        <div>
+          <h1 className="text-[28px] font-bold text-gray-900 m-0">
+            Reviews & Ratings
+          </h1>
+          <p className="text-gray-500 mt-1.5 mb-0 text-sm">
+            See what your customers are saying about your service.
+          </p>
+        </div>
       </div>
 
       {/* Summary Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)] flex flex-wrap items-center gap-8">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 mb-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
         <div className="flex flex-col items-center min-w-[140px]">
-          <p className="text-[56px] font-bold text-gray-900 m-0 leading-none">
+          <p className="text-[48px] sm:text-[56px] font-bold text-gray-900 m-0 leading-none">
             {totalReviews > 0 ? Number(averageRating).toFixed(1) : "0.0"}
           </p>
           <div className="mt-2">
@@ -176,7 +203,7 @@ function ReviewsRatings() {
           </p>
         </div>
 
-        <div className="flex-1 min-w-[200px] flex flex-col gap-2.5">
+        <div className="w-full sm:flex-1 min-w-0 flex flex-col gap-2.5">
           {starCounts.map((row) => {
             const pct = totalReviews > 0 ? Math.round((row.count / totalReviews) * 100) : 0;
             return (
@@ -202,8 +229,8 @@ function ReviewsRatings() {
         </div>
 
         <div className="flex flex-col items-center gap-2 min-w-[120px]">
-          <div className="w-[60px] h-[60px] rounded-full bg-[#F5EDFF] flex items-center justify-center">
-            <span className="text-xl">💬</span>
+          <div className="w-[60px] h-[60px] rounded-full bg-[#F5EDFF] flex items-center justify-center text-purple-600">
+            <FontAwesomeIcon icon={faComments} className="text-xl" />
           </div>
           <p className="text-4xl font-bold text-gray-900 m-0 leading-none">
             {totalReviews}
@@ -215,12 +242,12 @@ function ReviewsRatings() {
       {/* Reviews List */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
         {/* Tabs */}
-        <div className="px-5 py-3.5 border-b border-gray-100 flex gap-1.5 flex-wrap">
+        <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex flex-wrap items-center gap-1.5 w-full">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`py-1.5 px-3.5 rounded-full border-none text-[13px] cursor-pointer ${
+              className={`py-1.5 px-3 sm:px-3.5 rounded-full border-none text-xs sm:text-[13px] cursor-pointer ${
                 activeTab === tab.value
                   ? "bg-orange-50 text-green-600 font-bold border-b-2 border-green-600"
                   : "bg-transparent text-gray-500 font-normal"
@@ -248,13 +275,15 @@ function ReviewsRatings() {
           filteredReviews.map((r, i) => {
             const initials = getInitials(r.customer_name);
             const color = getColorForName(r.customer_name);
+            const isHighlighted = highlightedReqId && String(highlightedReqId) === String(r.service_request_id);
 
             return (
               <div
                 key={r.id}
-                className={`py-4.5 px-5 ${
+                id={`review-card-${r.service_request_id}`}
+                className={`py-4.5 px-5 transition-all duration-500 ${
                   i < filteredReviews.length - 1 ? "border-b border-gray-50" : ""
-                }`}
+                } ${isHighlighted ? "bg-green-50" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <Avatar initials={initials} color={color} />

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { api } from "../../src/services/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 export default function CustomerForm() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -19,6 +21,8 @@ export default function CustomerForm() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -44,20 +48,44 @@ export default function CustomerForm() {
         e.preventDefault();
         setError("");
 
+        const trimName = formData.name.trim();
+        const nameRegex = /^[a-zA-Z\s\.\'-]{2,100}$/;
+        if (!trimName || trimName.length < 2 || /^\d+$/.test(trimName) || !nameRegex.test(trimName)) {
+            setError("Please enter a valid full name (letters only, at least 2 characters).");
+            return;
+        }
+
+        const trimEmail = formData.email.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimEmail || !emailRegex.test(trimEmail)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        const trimPhone = formData.phone.trim();
+        const phoneRegex = /^(?:\+94\d{9}|0\d{9})$/;
+        if (!trimPhone || !phoneRegex.test(trimPhone)) {
+            setError("Please enter a valid phone number (e.g. +94771234567 or 0771234567).");
+            return;
+        }
+
+        const trimAddress = formData.address.trim();
+        const invalidAddressRegex = /^(n\/?a|none|nil|null|test|no|abc)$/i;
+        if (!trimAddress || trimAddress.length < 5 || invalidAddressRegex.test(trimAddress)) {
+            setError("Please enter a valid address (at least 5 characters; placeholders like N/A are not allowed).");
+            return;
+        }
+
+        // Validate password strength (at least 8 chars, 1 uppercase, 1 lowercase, 1 digit)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number.");
+            return;
+        }
+
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match.");
-            return;
-        }
-
-        // Validate password length
-        if (formData.password.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
-        }
-
-        if (!formData.address.trim()) {
-            setError("Please enter your address.");
             return;
         }
 
@@ -69,32 +97,21 @@ export default function CustomerForm() {
         setLoading(true);
 
         const payload = new FormData();
-        payload.append("name", formData.name);
-        payload.append("email", formData.email);
-        payload.append("phone", formData.phone);
-        payload.append("address", formData.address);
+        payload.append("name", trimName);
+        payload.append("email", trimEmail);
+        payload.append("phone", trimPhone);
+        payload.append("address", trimAddress);
         payload.append("password", formData.password);
         payload.append("profilePic", profilePic);
 
         try {
-            const host = window.location.hostname;
-            const response = await fetch(`http://${host}:8000/api/registerCustomer.php`, {
-                method: "POST",
-                body: payload,
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate("/verify-email");
-                }, 4000);
-            } else {
-                setError(data.message || "Something went wrong. Please try again.");
-            }
+            await api.postPublic('auth/registerCustomer.php', payload);
+            setSuccess(true);
+            setTimeout(() => {
+                navigate("/verify-email", { state: { email: trimEmail } });
+            }, 5000);
         } catch (err) {
-            setError("Network error. Please try again later.");
+            setError(err.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -110,7 +127,7 @@ export default function CustomerForm() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Verification Email Sent!</h3>
                 <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                    Thank you for registering! We've sent a 6-digit OTP to <strong className="text-gray-800">{formData.email}</strong>. 
+                    Thank you for registering! We've sent a 6-digit OTP to <strong className="text-gray-800">{formData.email}</strong>.
                     Please check your inbox and enter the OTP to activate your account.
                 </p>
                 <button
@@ -165,7 +182,7 @@ export default function CustomerForm() {
                         <span className="block text-[10px] text-gray-400 mt-1">PNG, JPG, or WEBP up to 5MB</span>
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Full Name</label>
@@ -226,32 +243,50 @@ export default function CustomerForm() {
                 <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">
                     Security
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="••••••••"
-                            className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                required
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="••••••••"
+                                className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                            >
+                                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Confirm Password</label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="••••••••"
-                            className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                required
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="••••••••"
+                                className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                            >
+                                <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
