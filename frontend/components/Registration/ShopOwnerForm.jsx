@@ -35,6 +35,8 @@ export default function ShopForm() {
     });
     const [shopImage, setShopImage] = useState(null);
     const [shopImagePreview, setShopImagePreview] = useState("");
+    const [verificationDoc, setVerificationDoc] = useState(null);
+    const [verificationDocName, setVerificationDocName] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [availableCategories, setAvailableCategories] = useState([]);
@@ -110,6 +112,29 @@ export default function ShopForm() {
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleVerificationDocChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                setError("Business Verification Document size must be less than 5MB.");
+                return;
+            }
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                setError("Only PDF, PNG, JPG, or WEBP documents are allowed.");
+                return;
+            }
+            setVerificationDoc(file);
+            setVerificationDocName(file.name);
+            setError("");
+        }
+    };
+
+    const handleRemoveVerificationDoc = () => {
+        setVerificationDoc(null);
+        setVerificationDocName("");
     };
 
     const handleMapClick = (e) => {
@@ -259,6 +284,9 @@ export default function ShopForm() {
         payload.append("defaultTruckBrand", trimTruckBrand);
         payload.append("defaultTruckColor", trimTruckColor);
         payload.append("towTruckPlate", trimTowPlate);
+        if (verificationDoc) {
+            payload.append("verificationDocument", verificationDoc);
+        }
 
         try {
             await api.postPublic('auth/registerShop.php', payload);
@@ -380,6 +408,50 @@ export default function ShopForm() {
                             placeholder="e.g. BR-12345-X"
                             className="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
                         />
+                    </div>
+                    <div className="md:col-span-2 bg-emerald-50/50 border border-emerald-200/80 rounded-xl p-4 transition-all">
+                        <div className="flex items-start justify-between gap-2">
+                            <div>
+                                <label className="block text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                                    Business Verification Document <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                                </label>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Upload official registration, tax certificate, or business proof (PDF, PNG, JPG up to 5MB). Verified shops receive an official <span className="text-emerald-600 font-semibold">Verified Badge</span> upon admin approval.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="mt-3">
+                            {!verificationDocName ? (
+                                <label className="flex items-center justify-center gap-2 border-2 border-dashed border-emerald-300/80 hover:border-emerald-500 bg-white/80 rounded-lg p-3 cursor-pointer transition-all hover:bg-emerald-50/30">
+                                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    <span className="text-xs font-medium text-emerald-800">Choose Verification Document</span>
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                                        onChange={handleVerificationDocChange}
+                                        className="hidden"
+                                    />
+                                </label>
+                            ) : (
+                                <div className="flex items-center justify-between bg-white border border-emerald-300 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 text-xs font-medium text-emerald-900 truncate">
+                                        <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span className="truncate">{verificationDocName}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveVerificationDoc}
+                                        className="text-xs text-red-500 hover:text-red-700 font-semibold ml-3 shrink-0"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase">Shop Category</label>
