@@ -48,8 +48,7 @@ class ShopController {
 
         // Resolve optional customer identity from Bearer token (if present)
         $customerId = null;
-        $headers = function_exists('getallheaders') ? getallheaders() : [];
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        $authHeader = getallheaders()['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (preg_match('/Bearer\s(\S+)/', $authHeader, $m)) {
             $decoded = (new JwtHandler())->decode($m[1]);
             if ($decoded !== false && ($decoded['role'] ?? $decoded['userRole'] ?? '') === 'customer') {
