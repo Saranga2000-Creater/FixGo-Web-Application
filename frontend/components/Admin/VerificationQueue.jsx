@@ -107,22 +107,6 @@ function ReviewModal({ shop, onClose, onApprove, approving }) {
                     <DetailRow icon={faCar}      label="Vehicle Types"   value={shop.vehicleCategories} />
                     <DetailRow icon={faClock}    label="Operating Hours" value={`${shop.openTime} – ${shop.closeTime}`} />
                     {shop.BRN && <DetailRow icon={faTag} label="Business Reg. No." value={shop.BRN} />}
-                    {shop.verificationDocURL && (
-                        <DetailRow 
-                            icon={faFileInvoiceDollar} 
-                            label="Verification Document" 
-                            value={
-                                <a
-                                    href={`${UPLOADS_URL}/${shop.verificationDocURL}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-green-600 font-bold hover:underline"
-                                >
-                                    View Document
-                                </a>
-                            } 
-                        />
-                    )}
 
                     {shop.description && (
                         <div>
