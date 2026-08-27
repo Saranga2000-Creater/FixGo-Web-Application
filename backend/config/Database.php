@@ -7,16 +7,10 @@ class Database {
     private $conn;
 
     public function __construct() {
-        if (!getenv('DB_HOST') && file_exists(__DIR__ . '/../config/EnvLoader.php')) {
-            require_once __DIR__ . '/../config/EnvLoader.php';
-            if (file_exists(__DIR__ . '/../.env')) {
-                EnvLoader::load(__DIR__ . '/../.env');
-            }
-        }
-        $this->host = getenv('DB_HOST') ?: '127.0.0.1';
-        $this->db_name = getenv('DB_NAME') ?: 'fixgo_web';
-        $this->username = getenv('DB_USER') ?: 'root';
-        $this->password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
+        $this->host     = getenv('DB_HOST');
+        $this->db_name  = getenv('DB_NAME');
+        $this->username = getenv('DB_USER');
+        $this->password = getenv('DB_PASS') ?: '';
     }
 
     public function connect() {

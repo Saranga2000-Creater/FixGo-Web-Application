@@ -611,6 +611,7 @@ class Shop {
             ->where('u.userRole', 'shop_owner')
             ->where('u.is_email_verified', 1)
             ->where('u.isActive', 0)
+            ->where('u.email', 'NOT LIKE', 'deleted_%')
             ->groupBy('u.id')
             ->groupBy('s.name')
             ->groupBy('s.owner')
