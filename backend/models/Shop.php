@@ -286,7 +286,6 @@ class Shop {
                 'carriageService' => $shopData['carriageService'],
                 'BRN' => $shopData['BRN'],
                 'profileImageURL' => $shopData['profileImageURL'],
-                'verificationDocURL' => $shopData['verificationDocURL'],
                 'default_driver_name' => $shopData['driverName'],
                 'default_driver_phone' => $shopData['driverPhone'],
                 'default_truck_brand' => $shopData['truckBrand'],
@@ -354,10 +353,6 @@ class Shop {
 
             if (!empty($shopData['profileImageURL'])) {
                 $shopPayload['profileImageURL'] = $shopData['profileImageURL'];
-            }
-
-            if (!empty($shopData['verificationDocURL'])) {
-                $shopPayload['verificationDocURL'] = $shopData['verificationDocURL'];
             }
 
             if ($existingShop) {
@@ -582,7 +577,7 @@ class Shop {
             ->select([
                 'u.id', 'u.email', 'u.is_email_verified', 's.name AS shopName',
                 's.owner AS ownerName', 's.address', 's.contactNumber', 's.description',
-                's.openTime', 's.closeTime', 's.carriageService', 's.BRN', 's.profileImageURL', 's.verificationDocURL',
+                's.openTime', 's.closeTime', 's.carriageService', 's.BRN', 's.profileImageURL',
                 "GROUP_CONCAT(DISTINCT sc.name  SEPARATOR ', ') AS category",
                 "GROUP_CONCAT(DISTINCT vc.name  SEPARATOR ', ') AS vehicleCategories"
             ])
@@ -605,7 +600,6 @@ class Shop {
             ->groupBy('s.carriageService')
             ->groupBy('s.BRN')
             ->groupBy('s.profileImageURL')
-            ->groupBy('s.verificationDocURL')
             ->orderBy('u.id', 'DESC')
             ->get();
     }
