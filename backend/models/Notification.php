@@ -1,11 +1,17 @@
 <?php
+require_once __DIR__ . '/BaseModel.php';
 
-class Notification {
-    private $qb;
+class Notification extends BaseModel {
+    protected $table_name = 'notification';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+    protected ?int $id = null;
+    protected ?int $user_id = null;
+    protected ?int $service_request_id = null;
+    protected ?string $type = null;
+    protected ?string $title = null;
+    protected ?string $message = null;
+    protected ?int $isRead = null;
+    protected ?string $created_at = null;
 
     public function getByUser($userId) {
         return $this->qb->table('notification', 'n')

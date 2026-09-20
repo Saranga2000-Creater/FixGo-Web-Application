@@ -1,12 +1,16 @@
 <?php
 
-class BillingConfiguration {
-    private $qb;
-    private $table_name = 'billingConfiguration';
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class BillingConfiguration extends BaseModel {
+    protected $table_name = 'billingConfiguration';
+
+    protected ?int $id = null;
+    protected ?float $basePlatformFee = null;
+    protected ?float $perRequestFee = null;
+    protected ?int $gracePeriodDays = null;
+    protected ?int $updatedByAdminId = null;
+    protected ?string $updatedAt = null;
 
     // ============================================================
     // Retrieve the single configuration row

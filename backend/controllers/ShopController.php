@@ -7,15 +7,17 @@ require_once __DIR__ . '/../config/EmailSender.php';
 
 class ShopController {
     private $db;
+    private $shopModel;
 
     public function __construct($db) {
         $this->db = $db;
+        $this->shopModel = new Shop($this->db);
     }
 
     public function getProfile($shopId) {
         RequestValidator::enforceMethod('GET');
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $shopProfile = $shopModel->getById($shopId);
 
         if (!$shopProfile) {
@@ -60,7 +62,7 @@ class ShopController {
         }
 
         $shopId   = intval($_GET['id']);
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $shopData  = $shopModel->getShopDetails($shopId, $customerId);
 
         if ($shopData) {
@@ -283,13 +285,14 @@ class ShopController {
         }
 
         $userModel = new User($this->db);
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
 
         // Check if email already exists
-        if ($userModel->findByEmail($sanitizedEmail)) {
+        $existingUser = $userModel->findByEmail($sanitizedEmail);
+        if ($existingUser) {
             // If the account exists but is NOT yet verified, allow re-registration
             // by overwriting it with fresh data and a new 5-minute OTP.
-            if (!$userModel->is_email_verified) {
+            if (!$existingUser->getIsEmailVerified()) {
                 try {
                     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                     $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -320,7 +323,7 @@ class ShopController {
                         'truckPlate' => $towTruckPlate
                     ];
 
-                    $shopModel->reRegister($userModel->id, $userData, $shopData, $categoryId, $vehicleIds);
+                    $shopModel->reRegister($existingUser->getId(), $userData, $shopData, $categoryId, $vehicleIds);
 
                     // Send verification email
                     EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
@@ -411,7 +414,7 @@ public function getTowTruckDetails($payload)
         return;
     }
 
-    $shopModel = new Shop($this->db);
+    $shopModel = clone $this->shopModel;
 
     $details = $shopModel->getTowTruckDetails($shopId);
 
@@ -466,7 +469,7 @@ public function updateShopTowTruckDetails($payload)
         return;
     }
 
-    $shopModel = new Shop($this->db);
+    $shopModel = clone $this->shopModel;
 
     try {
         $success = $shopModel->updateShopTowTruckDetails($shopId, $input);
@@ -501,7 +504,7 @@ public function updateShopTowTruckDetails($payload)
             echo json_encode(["success" => false, "message" => "Unauthorized."]);
             return;
         }
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $images = $shopModel->getGalleryImages($shopId);
         echo json_encode(["success" => true, "data" => $images]);
     }
@@ -515,7 +518,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $imageCount = $shopModel->getGalleryImageCount($shopId);
         if ($imageCount >= 4) {
             http_response_code(400);
@@ -526,7 +529,7 @@ public function updateShopTowTruckDetails($payload)
         $targetDir = __DIR__ . '/../uploads/gallery/';
         $dbPath = RequestValidator::handleFileUpload('image', $targetDir, 'gallery_', 'uploads/gallery/');
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $imageId = $shopModel->addGalleryImage($shopId, $dbPath);
         echo json_encode([
             "success" => true,
@@ -552,7 +555,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $success = $shopModel->deleteGalleryImage($shopId, $imageId);
         if ($success) {
             echo json_encode(["success" => true, "message" => "Gallery image deleted successfully."]);
@@ -574,7 +577,7 @@ public function updateShopTowTruckDetails($payload)
         $targetDir = __DIR__ . '/../uploads/shopOwners/';
         $dbPath = RequestValidator::handleFileUpload('image', $targetDir, 'profile_', 'uploads/shopOwners/');
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $shopModel->updateProfileImage($shopId, $dbPath);
 
         echo json_encode([
@@ -643,7 +646,7 @@ public function updateShopTowTruckDetails($payload)
             'isAvailable' => $isAvailable
         ];
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         try {
             $shopModel->updateBusinessInfo($shopId, $data, array_unique($vIds));
             echo json_encode(["success" => true, "message" => "Business information updated successfully."]);
@@ -661,7 +664,7 @@ public function updateShopTowTruckDetails($payload)
             echo json_encode(["success" => false, "message" => "Unauthorized."]);
             return;
         }
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         $services = $shopModel->getServicesByShopId($shopId);
         echo json_encode(["success" => true, "data" => $services]);
     }
@@ -678,7 +681,7 @@ public function updateShopTowTruckDetails($payload)
         $input = RequestValidator::getJsonPayload();
         $services = $input['services'] ?? [];
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
         try {
             $shopModel->updateShopServices($shopId, $services);
             echo json_encode(["success" => true, "message" => "Services updated successfully."]);
@@ -722,7 +725,7 @@ public function updateShopTowTruckDetails($payload)
             return;
         }
 
-        $shopModel = new Shop($this->db);
+        $shopModel = clone $this->shopModel;
 
         if (!$shopModel->verifyPassword($shopId, $currentPassword)) {
             http_response_code(400);

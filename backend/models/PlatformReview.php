@@ -1,11 +1,14 @@
 <?php
+require_once __DIR__ . '/BaseModel.php';
 
-class PlatformReview {
-    private $qb;
+class PlatformReview extends BaseModel {
+    protected $table_name = 'platform_reviews';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+    protected ?int $id = null;
+    protected ?int $user_id = null;
+    protected ?int $rating = null;
+    protected ?string $comment = null;
+    protected ?string $created_at = null;
 
     public function submitReview($userId, $rating, $comment) {
         $this->qb->table('platform_reviews')->insert([

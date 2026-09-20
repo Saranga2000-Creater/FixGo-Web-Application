@@ -1,14 +1,23 @@
 <?php
+require_once __DIR__ . '/BaseModel.php';
 
-class Customer {
-    private $qb;
+class Customer extends BaseModel {
+    protected $table_name = 'customer';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+    protected ?int $id = null;
+    protected ?string $name = null;
+    protected ?string $contactNumber = null;
+    protected ?string $address = null;
+    protected ?string $profilePhoto = null;
+    protected ?int $cancellation_strikes = null;
+    protected ?int $loyalty_points = null;
+    protected ?string $createdAt = null;
+    
+    // Virtual column from users table
+    protected ?string $email = null;
 
     public function getById($customerId) {
-        return $this->qb->table('customer', 'c')
+        $result = $this->qb->table('customer', 'c')
             ->select([
                 'c.id',
                 'c.name',
@@ -20,7 +29,8 @@ class Customer {
             ])
             ->join('users u', 'c.id', '=', 'u.id')
             ->where('c.id', $customerId)
-            ->first();
+            ->firstAsObject(self::class);
+        return $result ? $result->jsonSerialize() : null;
     }
 
     // Adds a penalty strike if a customer cancels a Confirmed handshake

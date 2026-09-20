@@ -1,14 +1,44 @@
 <?php
-class Shop {
-    private $qb;
-    private $table_name = 'shop'; 
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class Shop extends BaseModel {
+    protected $table_name = 'shop'; 
+
+    protected ?int $id = null;
+    protected ?string $email = null;
+    protected ?string $name = null;
+    protected ?string $owner = null;
+    protected ?string $address = null;
+    protected ?string $contactNumber = null;
+    protected ?string $description = null;
+    protected ?string $openTime = null;
+    protected ?string $closeTime = null;
+    protected ?int $isAvailable = null;
+    protected ?int $carriageService = null;
+    protected ?string $BRN = null;
+    protected ?string $verification_document = null;
+    protected ?int $is_verified = null;
+    protected ?string $profileImageURL = null;
+    
+    // Towing fields from class diagram
+    protected ?string $default_driver_name = null;
+    protected ?string $default_driver_phone = null;
+    protected ?string $default_truck_brand = null;
+    protected ?string $default_truck_color = null;
+    protected ?string $tow_truck_plate = null;
+
+    // Virtual Columns
+    protected ?float $latitude = null;
+    protected ?float $longitude = null;
+    protected ?float $averageRating = null;
+    protected ?int $reviewCount = null;
+    protected ?string $categories = null;
+    protected ?string $vehicleCategories = null;
+
+    // constructor and jsonSerialize inherited from BaseModel
 
     public function getById($shopId) {
-        return $this->qb->table('users', 'u')
+        $result = $this->qb->table('users', 'u')
             ->select([
                 'u.id', 'u.email', 's.name', 's.owner', 's.address', 's.contactNumber',
                 's.description', 's.openTime', 's.closeTime', 's.isAvailable',
@@ -40,7 +70,8 @@ class Shop {
             ->groupBy('s.verification_document')
             ->groupBy('s.is_verified')
             ->groupBy('s.profileImageURL')
-            ->first();
+            ->firstAsObject(self::class);
+        return $result ? $result->jsonSerialize() : null;
     }
 
     public function findNearby($lat, $lng, $radiusInKm, $vehicleCategoryId = null, $shopCategoryId = null, $sortBy = 'distance', $searchName = null, $needs_tow = 'false', $quickFilter = 'all', $currentTime = null) {
