@@ -10,7 +10,7 @@ echo "🚀 Starting Database Migrations...\n";
 try {
     $db = (new Database())->connect();
 
-    // --- AZURE FIX: Disable Automatic Invisible Primary Keys ---
+    //  AZURE FIX: Disable Automatic Invisible Primary Keys 
     // Azure MySQL 8.0 Flexible Server automatically adds invisible primary keys to tables 
     // that don't have them defined in the CREATE TABLE statement. This breaks phpMyAdmin dumps.
     try {
@@ -18,9 +18,9 @@ try {
     } catch (PDOException $e) {
         // Ignore if running on MariaDB or older MySQL versions that don't support this variable
     }
-    // -----------------------------------------------------------
+   
 
-    // 1. Create the 'migrations' tracking table if it doesn't exist
+    // Create the 'migrations' tracking table if it doesn't exist
     $db->exec("
         CREATE TABLE IF NOT EXISTS migrations_tracker (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,15 +29,15 @@ try {
         )
     ");
 
-    // 2. Get all already-executed migrations from the database
+    //  Get all already-executed migrations from the database
     $stmt = $db->query("SELECT migration_file FROM migrations_tracker");
     $executedMigrations = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    // 3. Scan the migrations folder for .sql files
+    //  Scan the migrations folder for .sql files
     $migrationFiles = glob(__DIR__ . '/migrations/*.sql');
     sort($migrationFiles); // Ensure they run in alphabetical/numerical order
 
-    // --- NEW PRE-FLIGHT CHECK: Prevent prefix collisions ---
+    //  NEW PRE-FLIGHT CHECK: Prevent prefix collisions 
     $prefixes = [];
     foreach ($migrationFiles as $file) {
         $basename = basename($file);
@@ -53,11 +53,11 @@ try {
             $prefixes[$prefix] = $basename;
         }
     }
-    // -------------------------------------------------------
+    
 
     $newMigrationsRun = 0;
 
-    // 4. Loop through the files
+    // Loop through the files
     foreach ($migrationFiles as $file) {
         $fileName = basename($file);
 
@@ -117,12 +117,3 @@ try {
 }
 
 
-// ### Step 4: How Your Team Uses It
-// Now, let's look at the workflow. Imagine your teammate wants to add a new column for "Customer Loyalty Points".
-
-// 1. **They write the script:** They create `backend/database/migrations/002_add_loyalty_points.sql`.
-// 2. **They push to Git:** They commit their code and push it to GitHub.
-// 3. **You pull the code:** You pull their branch down to your localhost.
-// 4. **You run the migrator:** You open your terminal, navigate to the backend folder, and run this simple command:
-
-//    php database/migrate.php

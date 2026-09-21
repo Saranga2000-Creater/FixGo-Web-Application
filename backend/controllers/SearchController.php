@@ -20,7 +20,7 @@ class SearchController {
         $shopCategory = isset($requestData['shop_category']) ? (int) $requestData['shop_category'] : null;
         $sort = isset($requestData['sort']) ? $requestData['sort'] : 'distance';
 
-        // 1. ADDED: Extract the new 'name' parameter from the GET request
+        //  Extract the new 'name' parameter from the GET request
         $searchName = isset($requestData['name']) ? trim($requestData['name']) : null;
         $quickFilter = isset($requestData['quick_filter']) ? $requestData['quick_filter'] : 'all';
 
@@ -30,7 +30,7 @@ class SearchController {
         }
         $currentTime = date('H:i:s'); // Needed for the 'open_now' SQL calculation
 
-        // 2. CHANGED: Pass $searchName as the 7th argument to the Model
+        //   Pass $searchName as the 7th argument to the Model
         $stmt = $this->shopModel->findNearby($lat, $lng, $radius, $vehicleCategory, $shopCategory, $sort, $searchName, $needs_tow, $quickFilter, $currentTime);
         $num = $stmt->rowCount();
         
@@ -52,7 +52,7 @@ class SearchController {
                     }
                 }
 
-                // CHANGED: Merge the shop tags and vehicle tags into one seamless array for the UI
+                //  Merge the shop tags and vehicle tags into one seamless array for the UI
                 $rawShopTags = $row['shop_tags'] ? explode(', ', $row['shop_tags']) : [];
                 $rawVehicleTags = $row['vehicle_tags'] ? explode(', ', $row['vehicle_tags']) : [];
                 
@@ -75,7 +75,7 @@ class SearchController {
                     "tags" => array_values($combinedTags),
                     "is_verified" => (int)($row['is_verified'] ?? 0) === 1,
                     
-                    // ADDED: Pass the coordinates from the SQL row into the JSON output
+                    // Pass the coordinates from the SQL row into the JSON output
                     "latitude" => (float) $row['latitude'],
                     "longitude" => (float) $row['longitude']
                 );

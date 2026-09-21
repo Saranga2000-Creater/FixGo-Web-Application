@@ -1,12 +1,11 @@
 <?php
 
-// ============================================================
 // cron/enforceSuspensions.php — Nightly billing sweep
-// Schedule: 1 0 * * * php /path/to/backend/cron/enforceSuspensions.php
+// Schedule: 1 0 *  php /path/to/backend/cron/enforceSuspensions.php
 //
 // CLI only. No HTTP context — bootstrap.php intentionally excluded.
 // Loads EnvLoader, Database, and ShopInvoice model directly.
-// ============================================================
+
 
 define('CRON_START', microtime(true));
 

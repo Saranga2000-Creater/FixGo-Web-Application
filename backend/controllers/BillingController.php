@@ -19,9 +19,8 @@ class BillingController {
         $this->db = $db;
     }
 
-    // ============================================================
     // PRIVATE HELPERS
-    // ============================================================
+    
 
     private function generateInvoiceReference(int $year, int $month, int $shopId): string {
         $rand = strtoupper(bin2hex(random_bytes(2)));
@@ -47,9 +46,8 @@ class BillingController {
         return $shopModel->getActiveSparePartsShopCount();
     }
 
-    // ============================================================
     // ADMIN: GET billing configuration
-    // ============================================================
+   
 
     public function getRates(): void {
         RequestValidator::enforceMethod('GET');
@@ -60,9 +58,9 @@ class BillingController {
         echo json_encode(["success" => true, "data" => $config]);
     }
 
-    // ============================================================
+ 
     // ADMIN: UPDATE billing configuration
-    // ============================================================
+    
 
     public function updateRates(int $adminId): void {
         RequestValidator::enforceMethod('POST');
@@ -99,9 +97,9 @@ class BillingController {
         echo json_encode(["success" => true, "message" => "Billing rates updated successfully."]);
     }
 
-    // ============================================================
+
     // ADMIN: GENERATE draft invoices for a billing period
-    // ============================================================
+   
 
     public function generateDrafts(): void {
         RequestValidator::enforceMethod('POST');
@@ -186,9 +184,9 @@ class BillingController {
         }
     }
 
-    // ============================================================
+   
     // ADMIN: GET draft invoices for the review panel
-    // ============================================================
+   
 
     public function getDrafts(array $queryParams): void {
         RequestValidator::enforceMethod('GET');
@@ -203,9 +201,9 @@ class BillingController {
         echo json_encode(["success" => true, "data" => $drafts]);
     }
 
-    // ============================================================
+   
     // ADMIN: CLEAR all draft invoices for a specific period
-    // ============================================================
+   
 
     public function clearDrafts(): void {
         RequestValidator::enforceMethod('POST');
@@ -236,9 +234,9 @@ class BillingController {
         ]);
     }
 
-    // ============================================================
+    
     // ADMIN: DISPATCH all drafts for a period
-    // ============================================================
+    
 
     public function dispatchInvoices(): void {
         RequestValidator::enforceMethod('POST');
@@ -317,9 +315,9 @@ class BillingController {
         ]);
     }
 
-    // ============================================================
+  
     // ADMIN: GET full invoice ledger for a specific shop
-    // ============================================================
+    
 
     public function getShopLedger(array $queryParams): void {
         RequestValidator::enforceMethod('GET');
@@ -338,10 +336,10 @@ class BillingController {
         echo json_encode(["success" => true, "data" => $ledger]);
     }
 
-    // ============================================================
+
     // ADMIN: GET all invoices across all shops (global ledger)
     // Optional GET params: shopId, status, year, month
-    // ============================================================
+   
 
     public function getAllInvoices(array $queryParams): void {
         RequestValidator::enforceMethod('GET');
@@ -360,9 +358,9 @@ class BillingController {
     }
 
 
-    // ============================================================
+   
     // ADMIN: GET pending verification queue
-    // ============================================================
+  
 
     public function getPendingVerifications(): void {
         RequestValidator::enforceMethod('GET');
@@ -373,9 +371,9 @@ class BillingController {
         echo json_encode(["success" => true, "data" => $pending]);
     }
 
-    // ============================================================
+
     // ADMIN: PROCESS a payment verification (approve / reject)
-    // ============================================================
+   
 
     public function processVerification(int $adminId): void {
         RequestValidator::enforceMethod('POST');
@@ -444,9 +442,9 @@ class BillingController {
         ]);
     }
 
-    // ============================================================
+
     // ADMIN: GET analytics (KPIs + revenue chart + collection health)
-    // ============================================================
+   
 
     public function getAnalytics(): void {
         RequestValidator::enforceMethod('GET');
@@ -550,9 +548,9 @@ class BillingController {
         ]);
     }
 
-    // ============================================================
+   
     // SHOP OWNER: GET own invoices (Draft excluded)
-    // ============================================================
+    
 
     public function getOwnerInvoices(int $shopId): void {
         RequestValidator::enforceMethod('GET');
@@ -570,9 +568,9 @@ class BillingController {
         echo json_encode(["success" => true, "data" => $invoices, "bankDetails" => $bankDetails]);
     }
 
-    // ============================================================
+  
     // SHOP OWNER: SUBMIT payment slip
-    // ============================================================
+ 
 
     public function submitPaymentSlip(int $shopId): void {
         RequestValidator::enforceMethod('POST');
