@@ -1,11 +1,38 @@
 <?php
-class ServiceRequest {
-    private $qb;
-    private $table_name = 'servicerequest';
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class ServiceRequest extends BaseModel {
+    protected $table_name = 'servicerequest';
+
+    protected ?int $id = null;
+    protected ?int $customer_id = null;
+    protected ?int $shop_id = null;
+    protected ?int $vehicle_category_id = null;
+    protected ?string $description = null;
+    protected ?string $status = null;
+    protected ?string $urgency_level = null;
+    protected ?string $pickup_landmark = null;
+    protected ?string $photo = null;
+    protected ?string $issue_category = null;
+    protected ?string $location = null; // Fix dynamic property deprecation
+    protected ?int $requires_tow = null;
+    protected ?string $preferred_date = null;
+    protected ?string $preferred_time = null;
+    protected ?string $vehicle_brand = null;
+    protected ?string $vehicle_color = null;
+    protected ?string $created_at = null;
+    protected ?string $accepted_at = null;
+    protected ?string $confirmed_at = null;
+    protected ?string $completed_at = null;
+    protected ?string $cancelled_at = null;
+    protected ?string $cancelled_by = null;
+    protected ?string $cancellation_reason = null;
+    protected ?string $dispatched_driver_name = null;
+    protected ?string $dispatched_driver_phone = null;
+    protected ?string $dispatched_truck_brand = null;
+    protected ?string $dispatched_truck_color = null;
+    protected ?string $dispatched_truck_plate = null;
+    protected ?int $promised_eta = null;
 
     public function hasPendingRequest($customerId, $shopId) {
         return (bool) $this->qb->table($this->table_name)
@@ -42,7 +69,8 @@ class ServiceRequest {
     }
 
     public function getById($request_id) {
-        return $this->qb->table($this->table_name)->where('id', $request_id)->first();
+        $result = $this->qb->table($this->table_name)->where('id', $request_id)->firstAsObject(self::class);
+        return $result ? $result->jsonSerialize() : null;
     }
 
     public function hasAPendingRequest($customer_id, $shop_id) {

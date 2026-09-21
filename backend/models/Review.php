@@ -1,11 +1,17 @@
 <?php
+require_once __DIR__ . '/BaseModel.php';
 
-class Review {
-    private $qb;
+class Review extends BaseModel {
+    protected $table_name = 'review';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+    protected ?int $id = null;
+    protected ?int $customer_id = null;
+    protected ?int $shop_id = null;
+    protected ?int $service_request_id = null;
+    protected ?int $rating = null;
+    protected ?string $comment = null;
+    protected ?string $status = null;
+    protected ?string $created_at = null;
 
     public function getServiceRequest($serviceRequestId) {
         $row = $this->qb->table('servicerequest')
