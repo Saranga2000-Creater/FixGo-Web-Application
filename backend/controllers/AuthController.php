@@ -229,7 +229,7 @@ class AuthController{
                 return;
             }
 
-            $this->userModel->verifyEmail($user->getId());
+            $user->verifyEmail($user->getId());
 
             http_response_code(200);
             if ($user->getUserRole() === 'shop_owner') {

@@ -35,11 +35,17 @@ class User extends BaseModel {
         return $this->qb->table($this->table_name)->where('verification_token', $token)->firstAsObject(self::class);
     }
 
-    public function verifyEmail($userId) {
+    public function verifyEmail($userId, ?string $role = null) {
         try {
             $this->qb->beginTransaction();
             
-            if ($this->userRole === 'shop_owner') {
+            $userRole = $role ?? $this->userRole;
+            if ($userRole === null) {
+                $user = $this->qb->table($this->table_name)->where('id', $userId)->select(['userRole'])->first();
+                $userRole = $user['userRole'] ?? null;
+            }
+
+            if ($userRole === 'shop_owner') {
                 $this->qb->table($this->table_name)
                     ->where('id', $userId)
                     ->update([
