@@ -140,6 +140,7 @@ class User {
             ->where('userRole', 'shop_owner')
             ->where('is_email_verified', 1)
             ->where('isActive', 0)
+            ->where('email', 'NOT LIKE', 'deleted_%')
             ->count();
     }
 

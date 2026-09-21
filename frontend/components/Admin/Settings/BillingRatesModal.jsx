@@ -4,6 +4,41 @@ import { faMoneyBillWave, faSave, faSpinner } from "@fortawesome/free-solid-svg-
 import { api } from "../../../src/services/api";
 import toast from "react-hot-toast";
 
+const Field = ({ label, fieldKey, desc, form, setForm }) => (
+  <div>
+    <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
+    {desc && <p className="text-[11px] text-gray-400 mb-1.5">{desc}</p>}
+    <div className="flex items-center border border-gray-200 rounded-[10px] overflow-hidden focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-50 transition-all">
+      <span className="px-3 py-2.5 text-xs font-bold text-gray-500 bg-gray-50 border-r border-gray-200">LKR</span>
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        value={form[fieldKey] ?? ""}
+        onChange={e => setForm(prev => ({ ...prev, [fieldKey]: e.target.value }))}
+        className="flex-1 py-2.5 px-3 text-sm outline-none bg-white"
+      />
+    </div>
+  </div>
+);
+
+const DaysField = ({ label, fieldKey, form, setForm }) => (
+  <div>
+    <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
+    <div className="flex items-center border border-gray-200 rounded-[10px] overflow-hidden focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-50 transition-all">
+      <input
+        type="number"
+        min="1"
+        max="60"
+        value={form[fieldKey] ?? ""}
+        onChange={e => setForm(prev => ({ ...prev, [fieldKey]: e.target.value }))}
+        className="flex-1 py-2.5 px-3 text-sm outline-none bg-white"
+      />
+      <span className="px-3 py-2.5 text-xs font-bold text-gray-500 bg-gray-50 border-l border-gray-200">days</span>
+    </div>
+  </div>
+);
+
 export function BillingRatesModal({ onClose }) {
   const [rates, setRates]     = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,41 +72,6 @@ export function BillingRatesModal({ onClose }) {
     }
   };
 
-  const Field = ({ label, fieldKey, desc }) => (
-    <div>
-      <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
-      {desc && <p className="text-[11px] text-gray-400 mb-1.5">{desc}</p>}
-      <div className="flex items-center border border-gray-200 rounded-[10px] overflow-hidden focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-50 transition-all">
-        <span className="px-3 py-2.5 text-xs font-bold text-gray-500 bg-gray-50 border-r border-gray-200">LKR</span>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={form[fieldKey] ?? ""}
-          onChange={e => setForm(prev => ({ ...prev, [fieldKey]: e.target.value }))}
-          className="flex-1 py-2.5 px-3 text-sm outline-none bg-white"
-        />
-      </div>
-    </div>
-  );
-
-  const DaysField = ({ label, fieldKey }) => (
-    <div>
-      <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
-      <div className="flex items-center border border-gray-200 rounded-[10px] overflow-hidden focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-50 transition-all">
-        <input
-          type="number"
-          min="1"
-          max="60"
-          value={form[fieldKey] ?? ""}
-          onChange={e => setForm(prev => ({ ...prev, [fieldKey]: e.target.value }))}
-          className="flex-1 py-2.5 px-3 text-sm outline-none bg-white"
-        />
-        <span className="px-3 py-2.5 text-xs font-bold text-gray-500 bg-gray-50 border-l border-gray-200">days</span>
-      </div>
-    </div>
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]" onClick={onClose}>
       <div className="bg-white rounded-[18px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -96,24 +96,24 @@ export function BillingRatesModal({ onClose }) {
             <div>
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Per-Request Fees</p>
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Garage Fee" fieldKey="garagePerRequestFee" desc="Per completed service request" />
-                <Field label="Service Center Fee" fieldKey="serviceCenterPerRequestFee" desc="Per completed service request" />
+                <Field label="Garage Fee" fieldKey="garagePerRequestFee" desc="Per completed service request" form={form} setForm={setForm} />
+                <Field label="Service Center Fee" fieldKey="serviceCenterPerRequestFee" desc="Per completed service request" form={form} setForm={setForm} />
               </div>
             </div>
 
             {/* Monthly flat fee */}
             <div>
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Monthly Flat Fee</p>
-              <Field label="Spare Parts Shop Monthly Fee" fieldKey="sparePartsMonthlyFee" desc="Fixed monthly subscription regardless of requests" />
+              <Field label="Spare Parts Shop Monthly Fee" fieldKey="sparePartsMonthlyFee" desc="Fixed monthly subscription regardless of requests" form={form} setForm={setForm} />
             </div>
 
             {/* Grace periods */}
             <div>
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Grace Periods (days before Overdue)</p>
               <div className="grid grid-cols-3 gap-4">
-                <DaysField label="Garages" fieldKey="garageGracePeriodDays" />
-                <DaysField label="Service Centers" fieldKey="serviceCenterGracePeriodDays" />
-                <DaysField label="Spare Parts" fieldKey="sparePartsGracePeriodDays" />
+                <DaysField label="Garages" fieldKey="garageGracePeriodDays" form={form} setForm={setForm} />
+                <DaysField label="Service Centers" fieldKey="serviceCenterGracePeriodDays" form={form} setForm={setForm} />
+                <DaysField label="Spare Parts" fieldKey="sparePartsGracePeriodDays" form={form} setForm={setForm} />
               </div>
             </div>
 
