@@ -281,8 +281,10 @@ class ShopInvoice {
     }
 
     public function getPendingInvoiceCount(): int {
-        return $this->qb->table($this->table_name)
-            ->where('invoiceStatus', 'Verification Pending')
+        return $this->qb->table($this->table_name, 'si')
+            ->join('users u', 'si.shopId', '=', 'u.id')
+            ->where('si.invoiceStatus', 'Verification Pending')
+            ->where('u.email', 'NOT LIKE', 'deleted_%')
             ->count();
     }
 
