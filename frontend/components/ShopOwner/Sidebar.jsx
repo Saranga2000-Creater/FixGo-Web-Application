@@ -36,8 +36,21 @@ function Badge({ count }) {
   );
 }
 
-function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, activeRepairBadgeCount, notificationCount, reviewCount, billingCount, isOpen = false, onClose }) {
+function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepairCount, activeRepairBadgeCount, notificationCount, reviewCount, billingCount, isOpen = false, onClose, isSparePartsShop }) {
   const navigate = useNavigate();
+
+  const isSpareParts = isSparePartsShop ?? (
+    Array.isArray(shopData?.categories)
+      ? shopData.categories.includes("Spare Parts")
+      : typeof shopData?.categories === "string"
+      ? shopData.categories.includes("Spare Parts")
+      : false
+  );
+
+  const hiddenServiceNavIds = ["requests", "repairs", "history"];
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !(isSpareParts && hiddenServiceNavIds.includes(item.id))
+  );
 
   const handleNav = (id) => {
     setActiveNav(id);
@@ -112,7 +125,7 @@ function Sidebar({ activeNav, setActiveNav, shopData, requestCount, activeRepair
 
           {/* Nav Items */}
           <nav className="flex-1 py-3 px-2 overflow-y-auto">
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = activeNav === item.id;
               return (
                 <button

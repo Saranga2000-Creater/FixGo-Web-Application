@@ -74,10 +74,19 @@ function DashboardView({
   averageRating,
   reviewCount,
   setActiveNav,
+  isSparePartsShop,
 }) {
   const [timelineFilter, setTimelineFilter] = useState("30days");
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
+
+  const isSpareParts = isSparePartsShop ?? (
+    Array.isArray(shopData?.categories)
+      ? shopData.categories.includes("Spare Parts")
+      : typeof shopData?.categories === "string"
+      ? shopData.categories.includes("Spare Parts")
+      : false
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -125,7 +134,7 @@ function DashboardView({
     }
   };
 
-  const stats = [
+  const allStats = [
     {
       label: "New Requests",
       value: requestCount,
@@ -160,6 +169,8 @@ function DashboardView({
     },
   ];
 
+  const stats = isSpareParts ? [] : allStats;
+
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -187,83 +198,87 @@ function DashboardView({
       </div>
 
       {/* Stat Cards Layout - Responsive grid for mobile, tablet & desktop */}
-      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 md:mb-8 w-full">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            role="button"
-            tabIndex={0}
-            onClick={() => setActiveNav && setActiveNav(s.target)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                if (setActiveNav) setActiveNav(s.target);
-              }
-            }}
-            className="bg-white rounded-[18px] border border-[#E7EFE8] py-4 px-5 sm:py-5 sm:px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
-          >
-            <div className="text-2xl mb-2 text-green-600">
-              <FontAwesomeIcon icon={s.icon} />
+      {stats.length > 0 && (
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 md:mb-8 w-full">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveNav && setActiveNav(s.target)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (setActiveNav) setActiveNav(s.target);
+                }
+              }}
+              className="bg-white rounded-[18px] border border-[#E7EFE8] py-4 px-5 sm:py-5 sm:px-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+            >
+              <div className="text-2xl mb-2 text-green-600">
+                <FontAwesomeIcon icon={s.icon} />
+              </div>
+              <div className="text-gray-500 text-[13px] mb-1">{s.label}</div>
+              <div className="text-[28px] sm:text-[32px] font-bold text-gray-900 leading-none">{s.value}</div>
+              <div className={`text-[13px] mt-1.5 ${s.subColor}`}>{s.sub}</div>
             </div>
-            <div className="text-gray-500 text-[13px] mb-1">{s.label}</div>
-            <div className="text-[28px] sm:text-[32px] font-bold text-gray-900 leading-none">{s.value}</div>
-            <div className={`text-[13px] mt-1.5 ${s.subColor}`}>{s.sub}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Service Request Volume Line Chart */}
-      <div className="bg-white rounded-[18px] border border-[#E7EFE8] p-4 sm:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] w-full flex flex-col min-h-[350px]">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-          <div>
-            <h3 className="text-base font-bold text-gray-900 m-0">Service Request Volume</h3>
-            <p className="text-xs text-gray-500 font-medium mt-1 tracking-wide">
-              {getTimelineDateRange()}
-            </p>
+      {!isSpareParts && (
+        <div className="bg-white rounded-[18px] border border-[#E7EFE8] p-4 sm:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] w-full flex flex-col min-h-[350px]">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+            <div>
+              <h3 className="text-base font-bold text-gray-900 m-0">Service Request Volume</h3>
+              <p className="text-xs text-gray-500 font-medium mt-1 tracking-wide">
+                {getTimelineDateRange()}
+              </p>
+            </div>
+            <select
+              value={timelineFilter}
+              onChange={(e) => setTimelineFilter(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2 outline-none cursor-pointer self-end sm:self-auto"
+            >
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="12months">Last 12 Months</option>
+            </select>
           </div>
-          <select
-            value={timelineFilter}
-            onChange={(e) => setTimelineFilter(e.target.value)}
-            className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2 outline-none cursor-pointer self-end sm:self-auto"
-          >
-            <option value="7days">Last 7 Days</option>
-            <option value="30days">Last 30 Days</option>
-            <option value="12months">Last 12 Months</option>
-          </select>
-        </div>
 
-        <div className="flex-1 w-full min-h-[250px] relative">
-          {chartLoading ? (
-            <div className="flex justify-center items-center h-full min-h-[220px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className="flex justify-center items-center h-full min-h-[220px] text-gray-400 text-sm font-medium">
-              No service requests during this period.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
-              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} dy={10} minTickGap={20} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
-                <RechartsTooltip
-                  content={<CustomTimelineTooltip />}
-                  cursor={{ stroke: "#e5e7eb", strokeWidth: 2, strokeDasharray: "5 5" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="requests"
-                  stroke="#10b981"
-                  strokeWidth={4}
-                  dot={false}
-                  activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2, fill: "#10b981" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+          <div className="flex-1 w-full min-h-[250px] relative">
+            {chartLoading ? (
+              <div className="flex justify-center items-center h-full min-h-[220px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div className="flex justify-center items-center h-full min-h-[220px] text-gray-400 text-sm font-medium">
+                No service requests during this period.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} dy={10} minTickGap={20} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
+                  <RechartsTooltip
+                    content={<CustomTimelineTooltip />}
+                    cursor={{ stroke: "#e5e7eb", strokeWidth: 2, strokeDasharray: "5 5" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="requests"
+                    stroke="#10b981"
+                    strokeWidth={4}
+                    dot={false}
+                    activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2, fill: "#10b981" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -280,8 +295,24 @@ function renderPage(
   fetchRequestCount,
   fetchActiveRepairCount,
   selectedNotifId,
-  onClearSelection
+  onClearSelection,
+  isSparePartsShop
 ) {
+  if (isSparePartsShop && ["requests", "repairs", "history"].includes(activeNav)) {
+    return (
+      <DashboardView
+        shopData={shopData}
+        requestCount={requestCount}
+        activeRepairCount={activeRepairCount}
+        completedJobCount={completedJobCount}
+        averageRating={averageRating}
+        reviewCount={reviewCount}
+        setActiveNav={setActiveNav}
+        isSparePartsShop={isSparePartsShop}
+      />
+    );
+  }
+
   switch (activeNav) {
     case "dashboard":
   return (
@@ -293,6 +324,7 @@ function renderPage(
       averageRating={averageRating}
       reviewCount={reviewCount}
       setActiveNav={setActiveNav}
+      isSparePartsShop={isSparePartsShop}
     />
   );
     case "requests":      return <ServiceRequests
@@ -326,6 +358,7 @@ function renderPage(
         averageRating={averageRating}
         reviewCount={reviewCount}
         setActiveNav={setActiveNav}
+        isSparePartsShop={isSparePartsShop}
       />
     );
   }
@@ -348,6 +381,12 @@ function ShopOwnerDashboard() {
   const [billingCount, setBillingCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
+
+  const isSparePartsShop = Array.isArray(shopData?.categories)
+    ? shopData.categories.includes("Spare Parts")
+    : typeof shopData?.categories === "string"
+    ? shopData.categories.includes("Spare Parts")
+    : false;
 
   const fetchActiveRepairCount = () => {
     api.get("shop/getActiveRepairs.php")
@@ -517,6 +556,7 @@ useEffect(() => {
           setSidebarOpen(false);
         }}
         shopData={shopData}
+        isSparePartsShop={isSparePartsShop}
         requestCount={requestCount}
         activeRepairCount={activeRepairCount}
         activeRepairBadgeCount={unviewedActiveRepairCount}
@@ -555,7 +595,8 @@ useEffect(() => {
             fetchRequestCount,
             fetchActiveRepairCount,
             selectedNotifId,
-            () => setSelectedNotifId(null)
+            () => setSelectedNotifId(null),
+            isSparePartsShop
           )}
         </div>
       </main>
