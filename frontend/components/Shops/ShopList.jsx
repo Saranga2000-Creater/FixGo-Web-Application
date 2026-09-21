@@ -2,11 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { UPLOADS_URL } from "../../src/services/api";
 
-import { 
-    faStar, 
-    faLocationDot, 
-    faRoute, 
-    faHeart, 
+import {
+    faStar,
+    faLocationDot,
+    faRoute,
     faShieldHalved,
     faWrench,
     faCarSide,
@@ -19,12 +18,12 @@ import {
 
 const formatResponseTime = (minutes) => {
     // 1. Handle missing data (your default fallback)
-    if (!minutes) return "15 mins"; 
+    if (!minutes) return "15 mins";
 
     const mins = parseInt(minutes, 10);
-    
+
     // 2. Handle cases where the backend might accidentally send a string
-    if (isNaN(mins)) return minutes; 
+    if (isNaN(mins)) return minutes;
 
     // 3. The UX Formatting Logic
     if (mins < 60) {
@@ -50,12 +49,12 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
         if (lowerTag.includes('bike') || lowerTag.includes('3 wheeler')) return faMotorcycle;
         if (lowerTag.includes('car') || lowerTag.includes('4 wheeler')) return faCarSide;
         if (lowerTag.includes('commercial')) return faTruck;
-        return faWrench; 
+        return faWrench;
     };
 
     return (
         <div className="flex flex-col gap-4">
-            
+
             {/* ADDED: The Header Block displaying results count and location */}
             <div className="mb-2">
                 <h2 className="font-sans text-lg font-bold text-gray-900">
@@ -69,15 +68,15 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
             {/* The List Container */}
             {shopsList.map((shop) => (
                 <article key={shop.id} className="flex flex-col sm:flex-row overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md sm:h-[200px]">
-                    
+
                     {/* IMAGE BLOCK */}
                     <div className="relative h-48 sm:h-full sm:w-[220px] shrink-0 bg-[#14532d]">
                         {shop.thumbnail_url && (
-                            <img 
-                                src={`${UPLOADS_URL}/${shop.thumbnail_url}`} 
-                                alt={shop.name} 
+                            <img
+                                src={`${UPLOADS_URL}/${shop.thumbnail_url}`}
+                                alt={shop.name}
                                 className="absolute inset-0 w-full h-full object-cover text-transparent"
-                                onError={(e) => { e.target.style.display = 'none'; }} 
+                                onError={(e) => { e.target.style.display = 'none'; }}
                             />
                         )}
 
@@ -87,20 +86,20 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                             {shop.open_status_text}
                         </span>
                     </div>
-                    
+
                     {/* DATA BLOCK */}
                     <div className="flex flex-col p-4 w-full h-full">
-                        
+
                         {/* TOP SECTION: Normal Flow Stack */}
                         <div className="flex flex-col w-full">
-                            
+
                             {/* Row 1: Title & Heart */}
                             <div className="flex items-start justify-between gap-4">
                                 <div className="min-w-0 flex-1">
                                     <h3 className="font-sans text-lg font-bold text-gray-900 leading-tight truncate">
                                         {shop.name}
                                     </h3>
-                                    
+
                                     {/* Ratings & Services Completed */}
                                     <div className="flex items-center gap-2 mt-1 text-xs">
                                         {shop.review_count > 0 ? (
@@ -118,10 +117,6 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                                         <span className="text-gray-500 truncate">{shop.services_completed || "500+"} Services</span>
                                     </div>
                                 </div>
-                                
-                                <button className="text-gray-400 hover:text-red-500 transition-colors shrink-0 pt-1">
-                                    <FontAwesomeIcon icon={faHeart} className="text-lg" />
-                                </button>
                             </div>
 
                             {/* Row 2: Address */}
@@ -167,10 +162,10 @@ export function ShopList({ shopsList, isLoading, error, locationName }) {
                                     </div>
                                 )}
                             </div>
-                            
-                            <button 
-                                onClick={() => navigate(`/shop/${shop.id}`, { state: { distance: shop.distance_km } })} 
-                                type="button" 
+
+                            <button
+                                onClick={() => navigate(`/shop/${shop.id}`, { state: { distance: shop.distance_km } })}
+                                type="button"
                                 className="shrink-0 rounded-lg bg-[#16a34a] px-4 py-1.5 text-xs font-bold text-white transition hover:bg-[#14532d] active:scale-95 flex items-center gap-2 ml-auto"
                             >
                                 View Shop &rarr;
