@@ -1,11 +1,14 @@
 <?php
-class CustomerVehicle {
-    private $qb;
-    private $table_name = 'customerVehicle';
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class CustomerVehicle extends BaseModel {
+    protected $table_name = 'customerVehicle';
+
+    protected ?int $id = null;
+    protected ?int $customer_id = null;
+    protected ?int $vehicle_category_id = null;
+    protected ?string $brand = null;
+    protected ?string $color = null;
 
     public function getByCustomer($customer_id) {
         return $this->qb->table($this->table_name)

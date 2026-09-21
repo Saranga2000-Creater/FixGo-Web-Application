@@ -1,12 +1,28 @@
 <?php
 
-class ShopInvoice {
-    private $qb;
-    private $table_name = 'shopInvoice';
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class ShopInvoice extends BaseModel {
+    protected $table_name = 'shopInvoice';
+
+    protected ?int $id = null;
+    protected ?int $shopId = null;
+    protected ?int $billingPeriodYear = null;
+    protected ?int $billingPeriodMonth = null;
+    protected ?int $shopCategoryId = null;
+    protected ?float $rateSnapshot = null;
+    protected ?int $completedRequests = null;
+    protected ?float $totalAmount = null;
+    protected ?string $invoiceReference = null;
+    protected ?string $invoiceStatus = null;
+    protected ?string $dispatchedAt = null;
+    protected ?string $dueDate = null;
+    protected ?string $paymentSlipUrl = null;
+    protected ?string $paymentReference = null;
+    protected ?string $slipSubmittedAt = null;
+    protected ?string $verifiedAt = null;
+    protected ?int $verifiedByAdminId = null;
+    protected ?string $rejectionReason = null;
 
     public function existsForPeriod(int $year, int $month): bool {
         $count = $this->qb->table($this->table_name)
