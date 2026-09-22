@@ -29,6 +29,7 @@ import {
 const FONT = "'Segoe UI', system-ui, sans-serif";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=16a34a&color=fff&name=";
 
+// Displays a statistics card in the account overview
 function StatsCard({ icon, title, value, iconBg, iconColor }) {
     return (
         <div className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-xl p-3 sm:p-3.5 w-full min-w-0 max-w-full">
@@ -43,6 +44,7 @@ function StatsCard({ icon, title, value, iconBg, iconColor }) {
     );
 }
 
+// Renders a generic row for displaying key-value pairs (e.g. personal info)
 function InfoRow({ label, value }) {
     return (
         <div className="flex justify-between items-center pb-3.5 border-b border-gray-100">
@@ -52,6 +54,7 @@ function InfoRow({ label, value }) {
     );
 }
 
+// Renders a row with security information and an optional action button
 function SecurityRow({ label, value, actionLabel, onAction }) {
     return (
         <div className="flex justify-between items-center bg-gray-50 rounded-[10px] py-3 px-4 border border-gray-100">
@@ -71,6 +74,7 @@ function SecurityRow({ label, value, actionLabel, onAction }) {
     );
 }
 
+// Main Profile component managing customer data, vehicles, and settings
 function Profile({ initialModalOpen = false, initialTab = "info" }) {
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -78,10 +82,10 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
 
     // Account Overview stats
     const [stats, setStats] = useState({
-        totalRepairs:  0,
-        completed:     0,
-        appointments:  0,
-        reviewsGiven:  0,
+        totalRepairs: 0,
+        completed: 0,
+        appointments: 0,
+        reviewsGiven: 0,
     });
 
     // Edit modal states
@@ -115,6 +119,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         }
     }, [initialModalOpen, initialTab]);
 
+    // Fetches the customer profile details from the server
     const fetchProfile = () => {
         api.get("customer/getCustomerProfile.php")
             .then((data) => {
@@ -148,7 +153,8 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
             if (res.vehicles) setVehicleCategories(res.vehicles);
         });
     }, []);
-    
+
+    // Fetches the customer's registered vehicles from the server
     const fetchVehicles = () => {
         api.get("customer/getVehicles.php").then(res => {
             if (res.success) setVehicles(res.vehicles || []);
@@ -166,10 +172,10 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
 
                 const all = (requestsData?.data || []);
                 setStats({
-                    totalRepairs:  all.length,
-                    completed:     all.filter(r => r.status === "Completed").length,
-                    appointments:  all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
-                    reviewsGiven:  (reviewsData?.data || reviewsData?.reviews || []).length,
+                    totalRepairs: all.length,
+                    completed: all.filter(r => r.status === "Completed").length,
+                    appointments: all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
+                    reviewsGiven: (reviewsData?.data || reviewsData?.reviews || []).length,
                 });
             } catch {
                 // silently fail — stats remain 0
@@ -178,6 +184,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         fetchStats();
     }, []);
 
+    // Opens the modal to edit profile details or security settings
     const openEditModal = (tab = "info") => {
         if (customer) {
             setFormData({
@@ -197,6 +204,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         setIsModalOpen(true);
     };
 
+    // Handles profile photo selection and generates a preview URL
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -210,6 +218,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         }
     };
 
+    // Handles adding a new vehicle or updating an existing one
     const handleSaveVehicle = async (e) => {
         e.preventDefault();
         setModalError(""); setModalSuccess(""); setSaving(true);
@@ -229,7 +238,8 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
             setSaving(false);
         }
     };
-    
+
+    // Handles deleting a vehicle based on its ID
     const handleDeleteVehicle = async (id) => {
         try {
             const res = await api.post("customer/deleteVehicle.php", { id });
@@ -246,6 +256,7 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
         }
     };
 
+    // Handles updating the customer's profile details and password
     const handleSave = async (e) => {
         e.preventDefault();
         setModalError("");
@@ -277,8 +288,9 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
                 setModalError("Current password is required to set a new password.");
                 return;
             }
-            if (formData.newPassword.length < 6) {
-                setModalError("New password must be at least 6 characters long.");
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(formData.newPassword)) {
+                setModalError("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and a number.");
                 return;
             }
             if (formData.newPassword !== formData.confirmPassword) {
@@ -502,110 +514,110 @@ function Profile({ initialModalOpen = false, initialTab = "info" }) {
             {/* ── Lower Section (Security & Vehicles) ── */}
             <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
                 {/* My Vehicles */}
-            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
-                <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faCarSide} className="text-gray-400" />
-                        <h3 className="text-[15px] font-bold text-gray-900 m-0">My Vehicles</h3>
-                    </div>
-                    <button
-                        onClick={() => {
-                            setIsEditingVehicle(false);
-                            setVehicleFormData({ id: null, brand: "", color: "", vehicle_category_id: "" });
-                            openEditModal("vehicles");
-                        }}
-                        className="flex items-center gap-[5px] text-xs font-bold text-green-600 bg-transparent border-none cursor-pointer"
-                        style={{ fontFamily: FONT }}
-                    >
-                        <FontAwesomeIcon icon={faPlus} className="text-[10px]" /> Add Vehicle
-                    </button>
-                </div>
-
-                {vehicles.length > 0 ? (
-                    <div className="flex flex-col gap-3">
-                        {vehicles.map(v => {
-                            const cat = vehicleCategories.find(c => c.id == v.vehicle_category_id);
-                            return (
-                                <div key={v.id} className="flex justify-between items-center p-3.5 bg-gray-50 border border-gray-200 rounded-[10px]">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-[rgba(22,163,74,0.08)] flex items-center justify-center">
-                                            <FontAwesomeIcon icon={faCarSide} className="text-green-600 text-[15px]" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[14px] font-bold text-gray-900 m-0">{v.brand}</p>
-                                            <p className="text-[12px] text-gray-500 m-0">{v.color} • {cat ? cat.name : "Vehicle"}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => {
-                                                setVehicleFormData({ id: v.id, brand: v.brand, color: v.color, vehicle_category_id: v.vehicle_category_id });
-                                                setIsEditingVehicle(true);
-                                                openEditModal("vehicles");
-                                            }}
-                                            className="text-[11px] font-bold text-green-600 bg-transparent border-none cursor-pointer hover:underline"
-                                        >
-                                            Edit
-                                        </button>
-                                        {deleteConfirmId === v.id ? (
-                                            <button 
-                                                onClick={() => handleDeleteVehicle(v.id)} 
-                                                className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 cursor-pointer"
-                                            >
-                                                Confirm?
-                                            </button>
-                                        ) : (
-                                            <button 
-                                                onClick={() => setDeleteConfirmId(v.id)} 
-                                                className="text-[11px] font-bold text-gray-400 hover:text-red-600 bg-transparent border-none cursor-pointer"
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3 border border-gray-100">
-                            <FontAwesomeIcon icon={faCarSide} className="text-gray-300 text-lg" />
+                <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                    <div className="flex items-center justify-between mb-5">
+                        <div className="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faCarSide} className="text-gray-400" />
+                            <h3 className="text-[15px] font-bold text-gray-900 m-0">My Vehicles</h3>
                         </div>
-                        <p className="text-[13px] font-semibold text-gray-700 m-0">Your garage is empty</p>
-                        <p className="text-[12px] text-gray-500 mt-1 mb-4">Add your vehicles for faster service requests.</p>
                         <button
                             onClick={() => {
                                 setIsEditingVehicle(false);
                                 setVehicleFormData({ id: null, brand: "", color: "", vehicle_category_id: "" });
                                 openEditModal("vehicles");
                             }}
-                            className="px-4 py-2 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                            className="flex items-center gap-[5px] text-xs font-bold text-green-600 bg-transparent border-none cursor-pointer"
+                            style={{ fontFamily: FONT }}
                         >
-                            Add Your First Vehicle
+                            <FontAwesomeIcon icon={faPlus} className="text-[10px]" /> Add Vehicle
                         </button>
                     </div>
-                )}
-            </div>
 
-            {/* Security */}
-            <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
-                <div className="flex items-center gap-2 mb-5">
-                    <FontAwesomeIcon icon={faLock} className="text-gray-400" />
-                    <h3 className="text-[15px] font-bold text-gray-900 m-0">Security</h3>
+                    {vehicles.length > 0 ? (
+                        <div className="flex flex-col gap-3">
+                            {vehicles.map(v => {
+                                const cat = vehicleCategories.find(c => c.id == v.vehicle_category_id);
+                                return (
+                                    <div key={v.id} className="flex justify-between items-center p-3.5 bg-gray-50 border border-gray-200 rounded-[10px]">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-[rgba(22,163,74,0.08)] flex items-center justify-center">
+                                                <FontAwesomeIcon icon={faCarSide} className="text-green-600 text-[15px]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[14px] font-bold text-gray-900 m-0">{v.brand}</p>
+                                                <p className="text-[12px] text-gray-500 m-0">{v.color} • {cat ? cat.name : "Vehicle"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    setVehicleFormData({ id: v.id, brand: v.brand, color: v.color, vehicle_category_id: v.vehicle_category_id });
+                                                    setIsEditingVehicle(true);
+                                                    openEditModal("vehicles");
+                                                }}
+                                                className="text-[11px] font-bold text-green-600 bg-transparent border-none cursor-pointer hover:underline"
+                                            >
+                                                Edit
+                                            </button>
+                                            {deleteConfirmId === v.id ? (
+                                                <button
+                                                    onClick={() => handleDeleteVehicle(v.id)}
+                                                    className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 cursor-pointer"
+                                                >
+                                                    Confirm?
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setDeleteConfirmId(v.id)}
+                                                    className="text-[11px] font-bold text-gray-400 hover:text-red-600 bg-transparent border-none cursor-pointer"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3 border border-gray-100">
+                                <FontAwesomeIcon icon={faCarSide} className="text-gray-300 text-lg" />
+                            </div>
+                            <p className="text-[13px] font-semibold text-gray-700 m-0">Your garage is empty</p>
+                            <p className="text-[12px] text-gray-500 mt-1 mb-4">Add your vehicles for faster service requests.</p>
+                            <button
+                                onClick={() => {
+                                    setIsEditingVehicle(false);
+                                    setVehicleFormData({ id: null, brand: "", color: "", vehicle_category_id: "" });
+                                    openEditModal("vehicles");
+                                }}
+                                className="px-4 py-2 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                            >
+                                Add Your First Vehicle
+                            </button>
+                        </div>
+                    )}
                 </div>
-                <div className="flex flex-col gap-2.5">
-                    <SecurityRow
-                        label="Password"
-                        value="••••••••••"
-                        actionLabel="Change Password"
-                        onAction={() => openEditModal("password")}
-                    />
-                    <SecurityRow label="Member Since" value={customer.memberSince} />
-                </div>
-            </div>
 
-            
+                {/* Security */}
+                <div className="bg-white border border-gray-200 rounded-[18px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6">
+                    <div className="flex items-center gap-2 mb-5">
+                        <FontAwesomeIcon icon={faLock} className="text-gray-400" />
+                        <h3 className="text-[15px] font-bold text-gray-900 m-0">Security</h3>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                        <SecurityRow
+                            label="Password"
+                            value="••••••••••"
+                            actionLabel="Change Password"
+                            onAction={() => openEditModal("password")}
+                        />
+                        <SecurityRow label="Member Since" value={customer.memberSince} />
+                    </div>
+                </div>
+
+
             </div>
 
             {/* ── Edit Profile Modal ── */}

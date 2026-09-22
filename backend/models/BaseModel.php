@@ -8,10 +8,10 @@ abstract class BaseModel implements JsonSerializable {
         $this->qb = $queryBuilder ?: new QueryBuilder($db);
     }
 
-    /**
-     * Serializes all non-null protected/public properties of the child class.
-     * Uses Reflection to ensure properties defined in the child class are visible.
-     */
+    
+     //Serializes all non-null protected/public properties of the child class.
+     //Uses Reflection to ensure properties defined in the child class are visible.
+    
     public function jsonSerialize(): array {
         $output = [];
         $reflection = new ReflectionClass($this);

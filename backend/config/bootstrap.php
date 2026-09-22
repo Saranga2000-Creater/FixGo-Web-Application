@@ -1,20 +1,19 @@
 <?php
 
-// ============================================================
+
 // bootstrap.php — Centralized Middleware Pipeline
 // Every API endpoint requires this file first.
 // Handles: Environment, CORS, Preflight, Content-Type, Auth.
-// ============================================================
 
-// ----------------------------------------------------------
+
+
 // 1. Load Environment Variables
-// ----------------------------------------------------------
+
 require_once __DIR__ . '/EnvLoader.php';
 EnvLoader::load(__DIR__ . '/../.env');
 
-// ----------------------------------------------------------
 // 2. Error Reporting (off in production, on in development)
-// ----------------------------------------------------------
+
 $appEnv = getenv('APP_ENV') ?: 'production';
 if ($appEnv === 'development') {
     ini_set('display_errors', 1);
@@ -24,12 +23,12 @@ if ($appEnv === 'development') {
     error_reporting(0);
 }
 
-// ----------------------------------------------------------
+
 // 3. CORS Headers
 // Reads FRONTEND_URL from .env so a single env change
 // switches the allowed origin between local dev and hosted.
 // Supports both localhost (any port) and the hosted URL.
-// ----------------------------------------------------------
+
 $allowedOrigins = [];
 
 // Always permit any localhost port for local development
@@ -68,17 +67,17 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 header("Access-Control-Max-Age: 3600");
 header("Content-Type: application/json; charset=UTF-8");
 
-// ----------------------------------------------------------
+
 // 4. OPTIONS Preflight — answer and exit immediately
-// ----------------------------------------------------------
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// ----------------------------------------------------------
+
 // 5. Core Dependencies (always needed by every endpoint)
-// ----------------------------------------------------------
+
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/../database/QueryBuilder.php';
 require_once __DIR__ . '/AuthMiddleware.php';

@@ -13,16 +13,9 @@ class ServiceRequestController {
         $this->shopModel           = new Shop($db);
     }
 
-    // ==========================================
+   
     // NOTIFICATION HELPER
-    // ==========================================
-    // Inserts a row into `notification`. Message is left NULL on purpose —
-    // Notification.jsx derives the live message text from the joined
-    // servicerequest/shop data (shop name, tow details, etc.) so it never
-    // goes stale. `type` already stores the status value at creation time
-    // (e.g. 'Accepted', 'In Progress', 'Completed'), so getNotifications.php
-    // selects it as `status` — no separate status column needed.
-    // Failure here should never break the main status-update flow.
+  
     private function notifyCustomer($userId, $requestId, $type, $title) {
         try {
             require_once __DIR__ . '/../models/Notification.php';
@@ -154,12 +147,13 @@ class ServiceRequestController {
                     http_response_code(400);
                     echo json_encode(["message" => "Illegal Move: You can only confirm an 'Accepted' request."]); return;
                 }
-
+                //Mark this chosen request as Confirmed
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
                 
                 // Get the list of competing requests BEFORE cancelling them
                 $losing_requests = $this->serviceRequestModel->getCompetingRequests($actor_id, $request_id);
                 
+                // Auto-cancel the other requests in DB
                 $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
                 
                 // Notify all losing shops
@@ -195,7 +189,6 @@ class ServiceRequestController {
                 } else {
                     $penaltyMsg = "";
                 }
-
                 $this->serviceRequestModel->cancelRequest($request_id, 'Customer', $reason);
             
 
@@ -289,9 +282,8 @@ class ServiceRequestController {
         echo json_encode(["message" => "Invalid user role."]); return;
     }
 
-    // ==========================================
     // DASHBOARD RETRIEVAL & PRIVACY MASKING
-    // ==========================================
+   
 public function handleGetCustomerRequests($payload)
 {
     RequestValidator::enforceMethod('GET');

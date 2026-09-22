@@ -284,9 +284,9 @@ class CustomerController {
         }
     }
 
-    // ==========================================
+    
     // "My Garage" Vehicle Management
-    // ==========================================
+   
 
     public function handleGetVehicles($payload) {
         RequestValidator::enforceMethod('GET');

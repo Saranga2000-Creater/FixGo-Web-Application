@@ -51,9 +51,8 @@ class AuthMiddleware
             exit();
         }
 
-        // ----------------------------------------------------------
         // Role Enforcement (only runs when $allowedRoles is provided)
-        // ----------------------------------------------------------
+
         if (!empty($allowedRoles)) {
             $userRole = $payload['role'] ?? '';
             if (!in_array($userRole, $allowedRoles, true)) {
