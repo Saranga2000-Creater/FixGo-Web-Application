@@ -152,6 +152,7 @@ class ServiceRequest extends BaseModel {
             ->where('id', $winning_request_id)
             ->first();
     }
+//Finds other requests made for the same incident (same vehicle brand, issue, and within a 30-minute window)
 
     public function getCompetingRequests($customer_id, $winning_request_id) {
         $winningData = $this->getWinningRequestData($winning_request_id);
@@ -168,7 +169,7 @@ class ServiceRequest extends BaseModel {
             ->whereRaw('created_at <= DATE_ADD(:created_at2, INTERVAL 30 MINUTE)', ['created_at2' => $winningData['created_at']])
             ->get();
     }
-
+//Automatically updates all other competing requests to 'Cancelled'
     public function cancelCompetingRequests($customer_id, $winning_request_id) {
         $winningData = $this->getWinningRequestData($winning_request_id);
         if (!$winningData) return false;

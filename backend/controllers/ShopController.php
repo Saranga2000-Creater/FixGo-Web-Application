@@ -35,10 +35,7 @@ class ShopController {
         ]);
     }
 
-    // Public shop details page — no AuthMiddleware gate.
-    // Optionally identifies the calling customer from a Bearer token so the
-    // model can attach personalised state (e.g. wishlist). Non-customers and
-    // unauthenticated visitors receive $customerId = null with no error.
+    // Public shop details page 
     public function getDetails() {
         RequestValidator::enforceMethod('GET');
 
