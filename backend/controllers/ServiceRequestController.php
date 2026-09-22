@@ -147,12 +147,13 @@ class ServiceRequestController {
                     http_response_code(400);
                     echo json_encode(["message" => "Illegal Move: You can only confirm an 'Accepted' request."]); return;
                 }
-
+                //Mark this chosen request as Confirmed
                 $this->serviceRequestModel->updateStatus($request_id, 'Confirmed');
                 
                 // Get the list of competing requests BEFORE cancelling them
                 $losing_requests = $this->serviceRequestModel->getCompetingRequests($actor_id, $request_id);
                 
+                // Auto-cancel the other requests in DB
                 $this->serviceRequestModel->cancelCompetingRequests($actor_id, $request_id);
                 
                 // Notify all losing shops
@@ -188,7 +189,6 @@ class ServiceRequestController {
                 } else {
                     $penaltyMsg = "";
                 }
-
                 $this->serviceRequestModel->cancelRequest($request_id, 'Customer', $reason);
             
 

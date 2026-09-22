@@ -12,20 +12,20 @@ class BillingConfiguration extends BaseModel {
     protected ?int $updatedByAdminId = null;
     protected ?string $updatedAt = null;
 
-    // ============================================================
+    
     // Retrieve the single configuration row
-    // ============================================================
+    
 
     public function get(): ?array {
         $row = $this->qb->table($this->table_name)->first();
         return $row ?: null;
     }
 
-    // ============================================================
+    
     // Update one or more rate/grace-period constants
     // Caller is responsible for whitelisting field names.
     // $fields = ['fieldName' => value, ...]
-    // ============================================================
+    
 
     public function update(array $fields, int $adminId): bool {
         $updateData = $fields;
