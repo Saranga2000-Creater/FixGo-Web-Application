@@ -19,7 +19,7 @@ Our infrastructure is strictly decoupled to ensure scalability, security, and se
 
 ```mermaid
 graph TD
-    Client[Web Browser - React App] -->|Downloads Static Assets| Vercel(Vercel: Global CDN)
+    Client[Web Browser - React App] -->|Requests Static Assets| Vercel(Vercel: Global CDN)
     Client -->|HTTP/REST with JSON + JWT| API_Gateway[Azure App Service: PHP 8+]
     
     subgraph Azure Backend Architecture
