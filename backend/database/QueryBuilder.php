@@ -299,12 +299,25 @@ class QueryBuilder {
         $stmt = $this->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getAsObject($className) {
+        $this->action = 'select';
+        $stmt = $this->execute();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, $className, [$this->conn]);
+    }
     
     public function first() {
         $this->limit(1);
         $this->action = 'select';
         $stmt = $this->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function firstAsObject($className) {
+        $this->limit(1);
+        $this->action = 'select';
+        $stmt = $this->execute();
+        return $stmt->fetchObject($className, [$this->conn]) ?: false;
     }
 
     public function count() {

@@ -1,27 +1,31 @@
 <?php
 
-class BillingConfiguration {
-    private $qb;
-    private $table_name = 'billingConfiguration';
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class BillingConfiguration extends BaseModel {
+    protected $table_name = 'billingConfiguration';
 
-    // ============================================================
+    protected ?int $id = null;
+    protected ?float $basePlatformFee = null;
+    protected ?float $perRequestFee = null;
+    protected ?int $gracePeriodDays = null;
+    protected ?int $updatedByAdminId = null;
+    protected ?string $updatedAt = null;
+
+    
     // Retrieve the single configuration row
-    // ============================================================
+    
 
     public function get(): ?array {
         $row = $this->qb->table($this->table_name)->first();
         return $row ?: null;
     }
 
-    // ============================================================
+    
     // Update one or more rate/grace-period constants
     // Caller is responsible for whitelisting field names.
     // $fields = ['fieldName' => value, ...]
-    // ============================================================
+    
 
     public function update(array $fields, int $adminId): bool {
         $updateData = $fields;

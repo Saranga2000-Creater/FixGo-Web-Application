@@ -10,10 +10,12 @@ class AuthController{
 
     private $db;
     private $rateLimitFile;
+    private $userModel;
 
     public function __construct($dbconnection){
         $this->db = $dbconnection;
         $this->rateLimitFile = __DIR__ . '/../uploads/login_attempts.json';
+        $this->userModel = new User($this->db);
     }
 
     public function login(){
@@ -37,20 +39,18 @@ class AuthController{
             return;
         }
 
-        $user = new User($this->db);
-        
-        if($user->findByEmail($email)){
+        if($user = $this->userModel->findByEmail($email)){
             
-            if(!$user->is_email_verified){
+            if(!$user->getIsEmailVerified()){
                 http_response_code(403);
                 echo json_encode(["message"=>"Please verify your email address before logging in."]);
                 return;
             }
             
-            if(!$user->isActive){
+            if(!$user->getIsActive()){
 
                 http_response_code(403);
-                if ($user->userRole === 'shop_owner') {
+                if ($user->getUserRole() === 'shop_owner') {
                     echo json_encode(["message"=>"Your account is pending admin approval."]);
                 } else {
                     echo json_encode(["message"=>"Account is inactive. Please contact support."]);
@@ -58,7 +58,7 @@ class AuthController{
                 return;
             }
 
-            $isPasswordValid = password_verify($password, $user->password);
+            $isPasswordValid = password_verify($password, $user->getPassword());
 
             if($isPasswordValid){
                 $this->clearRateLimit($email);
@@ -72,21 +72,21 @@ class AuthController{
                 }
                 
                 $tokenPayload = [
-                    "user_id" => $user->id,
-                    "email" => $user->email,
-                    "role" => $user->userRole
+                    "user_id" => $user->getId(),
+                    "email" => $user->getEmail(),
+                    "role" => $user->getUserRole()
                 ];
 
                 $jwt = $jwtHandler->generate($tokenPayload);
 
                 // Fetch profile image URL
                 $profileImage = null;
-                if ($user->userRole === 'shop_owner') {
+                if ($user->getUserRole() === 'shop_owner') {
                     $shopModel = new Shop($this->db);
-                    $profileImage = $shopModel->getProfileImageURL($user->id);
-                } else if ($user->userRole === 'customer') {
+                    $profileImage = $shopModel->getProfileImageURL($user->getId());
+                } else if ($user->getUserRole() === 'customer') {
                     $customerModel = new Customer($this->db);
-                    $profileImage = $customerModel->getProfilePhoto($user->id);
+                    $profileImage = $customerModel->getProfilePhoto($user->getId());
                 }
 
                 http_response_code(200);
@@ -94,8 +94,8 @@ class AuthController{
                 echo json_encode([
                     "message" => "Login successful.",
                     "token" => $jwt,
-                    "role" => $user->userRole,
-                    "id" => $user->id,
+                    "role" => $user->getUserRole(),
+                    "id" => $user->getId(),
                     "profileImage" => $profileImage
                 ]);
 
@@ -217,24 +217,22 @@ class AuthController{
         }
 
         try {
-            $user = new User($this->db);
-
-            if (!$user->findByVerificationToken($token)) {
+            if (!($user = $this->userModel->findByVerificationToken($token))) {
                 http_response_code(400);
                 echo json_encode(["message" => "Invalid OTP. Please check the code sent to your email."]);
                 return;
             }
 
-            if($user->token_expiry && strtotime($user->token_expiry)<time()){
+            if($user->getTokenExpiry() && strtotime($user->getTokenExpiry())<time()){
                 http_response_code(400);
                 echo json_encode(["message" => "Verification OTP has expired. Please try again later." ]);
                 return;
             }
 
-            $user->verifyEmail($user->id);
+            $user->verifyEmail($user->getId());
 
             http_response_code(200);
-            if ($user->userRole === 'shop_owner') {
+            if ($user->getUserRole() === 'shop_owner') {
                 echo json_encode(["message" => "Email verified successfully. Your account is pending admin approval."]);
             } else {
                 echo json_encode(["message" => "Email verified successfully. You can now log in to your account."]);
@@ -260,8 +258,7 @@ class AuthController{
             return;
         }
 
-        $user = new User($this->db);
-        if (!$user->findByEmail($email)) {
+        if (!$this->userModel->findByEmail($email)) {
             http_response_code(404);
             echo json_encode(["message" => "No account found with that email address."]);
             return;
@@ -269,7 +266,7 @@ class AuthController{
 
         $otp = sprintf("%06d", random_int(0, 999999));
 
-        if (!$user->setResetOtp($email, $otp, 15)) {
+        if (!$this->userModel->setResetOtp($email, $otp, 15)) {
             http_response_code(500);
             echo json_encode(["message" => "Failed to process request. Please try again."]);
             return;
@@ -297,14 +294,13 @@ class AuthController{
             return;
         }
 
-        $user = new User($this->db);
-        if (!$user->findByResetOtp($otp)) {
+        if (!($user = $this->userModel->findByResetOtp($otp))) {
             http_response_code(400);
             echo json_encode(["message" => "Invalid OTP code."]);
             return;
         }
 
-        if ($user->reset_token_expiry && strtotime($user->reset_token_expiry) < time()) {
+        if ($user->getResetTokenExpiry() && strtotime($user->getResetTokenExpiry()) < time()) {
             http_response_code(400);
             echo json_encode(["message" => "OTP has expired. Please request a new one."]);
             return;
@@ -333,21 +329,20 @@ class AuthController{
             return;
         }
 
-        $user = new User($this->db);
-        if (!$user->findByResetOtp($otp)) {
+        if (!($user = $this->userModel->findByResetOtp($otp))) {
             http_response_code(400);
             echo json_encode(["message" => "Invalid OTP code."]);
             return;
         }
 
-        if ($user->reset_token_expiry && strtotime($user->reset_token_expiry) < time()) {
+        if ($user->getResetTokenExpiry() && strtotime($user->getResetTokenExpiry()) < time()) {
             http_response_code(400);
             echo json_encode(["message" => "OTP has expired. Please request a new password reset."]);
             return;
         }
 
         $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-        if ($user->updatePassword($user->id, $hashedPassword)) {
+        if ($this->userModel->updatePassword($user->getId(), $hashedPassword)) {
             http_response_code(200);
             echo json_encode(["message" => "Password updated successfully! You can now log in."]);
         } else {
@@ -368,22 +363,21 @@ class AuthController{
             return;
         }
 
-        $user = new User($this->db);
-        if (!$user->findByEmail($email)) {
+        if (!($user = $this->userModel->findByEmail($email))) {
             // Don't reveal whether the email exists — generic message
             http_response_code(200);
             echo json_encode(["message" => "If that email is registered and unverified, a new OTP has been sent."]);
             return;
         }
 
-        if ($user->is_email_verified) {
+        if ($user->getIsEmailVerified()) {
             http_response_code(400);
             echo json_encode(["message" => "This account is already verified. Please log in."]);
             return;
         }
 
         $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $user->refreshVerificationToken($email, $otp);
+        $this->userModel->refreshVerificationToken($email, $otp);
 
         require_once __DIR__ . '/../config/EmailSender.php';
         EmailSender::sendVerificationEmail($email, $otp);

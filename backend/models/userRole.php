@@ -1,59 +1,51 @@
 <?php
 
-class User {
-    private $qb;
-    private $table_name = "users";
+require_once __DIR__ . '/BaseModel.php';
 
-    public $id;
-    public $email;
-    public $userRole;
-    public $password;
-    public $isActive;
-    public $is_email_verified;
-    public $verification_token;
-    public $token_expiry;
-    public $reset_token;
-    public $reset_token_expiry;
+class User extends BaseModel {
+    protected $table_name = "users";
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+    protected ?int $id = null;
+    protected ?string $email = null;
+    protected ?string $userRole = null;
+    protected ?string $password = null;
+    protected ?int $isActive = null;
+    protected ?int $is_email_verified = null;
+    protected ?string $verification_token = null;
+    protected ?string $token_expiry = null;
+    protected ?string $reset_token = null;
+    protected ?string $reset_token_expiry = null;
 
-    private function mapRowToProperties($row) {
-        $this->id = $row['id'];
-        $this->email = $row['email'];
-        $this->userRole = $row['userRole'];
-        $this->password = $row['password'];
-        $this->isActive = $row['isActive'];
-        $this->is_email_verified = $row['is_email_verified'] ?? 0;
-        $this->verification_token = $row['verification_token'] ?? null;
-        $this->token_expiry = $row['token_expiry'] ?? null;
-        $this->reset_token = $row['reset_token'] ?? null;
-        $this->reset_token_expiry = $row['reset_token_expiry'] ?? null;
-        return true;
-    }
+    // jsonSerialize and constructor are inherited from BaseModel
+
+    public function getId() { return $this->id; }
+    public function getEmail() { return $this->email; }
+    public function getUserRole() { return $this->userRole; }
+    public function getPassword() { return $this->password; }
+    public function getIsActive() { return $this->isActive; }
+    public function getIsEmailVerified() { return $this->is_email_verified; }
+    public function getTokenExpiry() { return $this->token_expiry; }
+    public function getResetTokenExpiry() { return $this->reset_token_expiry; }
 
     public function findByEmail($email){
-        $row = $this->qb->table($this->table_name)->where('email', $email)->first();
-        if ($row) {
-            return $this->mapRowToProperties($row);
-        }
-        return false;
+        return $this->qb->table($this->table_name)->where('email', $email)->firstAsObject(self::class);
     }
 
     public function findByVerificationToken($token) {
-        $row = $this->qb->table($this->table_name)->where('verification_token', $token)->first();
-        if ($row) {
-            return $this->mapRowToProperties($row);
-        }
-        return false;
+        return $this->qb->table($this->table_name)->where('verification_token', $token)->firstAsObject(self::class);
     }
 
-    public function verifyEmail($userId) {
+    public function verifyEmail($userId, ?string $role = null) {
         try {
             $this->qb->beginTransaction();
             
-            if ($this->userRole === 'shop_owner') {
+            $userRole = $role ?? $this->userRole;
+            if ($userRole === null) {
+                $user = $this->qb->table($this->table_name)->where('id', $userId)->select(['userRole'])->first();
+                $userRole = $user['userRole'] ?? null;
+            }
+
+            if ($userRole === 'shop_owner') {
                 $this->qb->table($this->table_name)
                     ->where('id', $userId)
                     ->update([
@@ -92,11 +84,7 @@ class User {
     }
 
     public function findByResetOtp($otp) {
-        $row = $this->qb->table($this->table_name)->where('reset_token', $otp)->first();
-        if ($row) {
-            return $this->mapRowToProperties($row);
-        }
-        return false;
+        return $this->qb->table($this->table_name)->where('reset_token', $otp)->firstAsObject(self::class);
     }
 
     public function updatePassword($userId, $newPasswordHash) {

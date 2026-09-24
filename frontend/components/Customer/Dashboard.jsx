@@ -13,9 +13,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const ACCENT = {
-    green:  { iconBg: "bg-[#EDF9F0]",  iconColor: "text-green-600",  linkColor: "text-green-600",  metaColor: "text-green-600"  },
+    green: { iconBg: "bg-[#EDF9F0]", iconColor: "text-green-600", linkColor: "text-green-600", metaColor: "text-green-600" },
     orange: { iconBg: "bg-[#FFF4EE]", iconColor: "text-[#FF6B1A]", linkColor: "text-[#FF6B1A]", metaColor: "text-[#FF6B1A]" },
-    blue:   { iconBg: "bg-[#EDF3FF]",   iconColor: "text-blue-600",   linkColor: "text-blue-600",   metaColor: "text-blue-600"   },
+    blue: { iconBg: "bg-[#EDF3FF]", iconColor: "text-blue-600", linkColor: "text-blue-600", metaColor: "text-blue-600" },
     violet: { iconBg: "bg-[#F5EDFF]", iconColor: "text-purple-500", linkColor: "text-purple-500", metaColor: "text-purple-500" },
 };
 
@@ -63,15 +63,15 @@ function getGreeting() {
     return "Good evening";
 }
 
-const ONGOING_STATUSES   = ["Pending", "Accepted", "Confirmed", "In Progress"];
-const NOTIF_WORTHY       = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
+const ONGOING_STATUSES = ["Pending", "Accepted", "Confirmed", "In Progress"];
+const NOTIF_WORTHY = ["Accepted", "Confirmed", "Diagnosis", "In Progress", "Pending Parts", "Completed", "Cancelled"];
 
 function Dashboard({ onNavigate }) {
     const [firstName, setFirstName] = useState("");
-    const [counts, setCounts]       = useState({
-        active:        0,
-        completed:     0,
-        appointments:  0,
+    const [counts, setCounts] = useState({
+        active: 0,
+        completed: 0,
+        appointments: 0,
         notifications: 0,
     });
 
@@ -79,7 +79,7 @@ function Dashboard({ onNavigate }) {
     useEffect(() => {
         api.get("customer/getCustomerProfile.php")
             .then(data => { if (data.success) setFirstName(data.name.split(" ")[0]); })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
 
@@ -108,9 +108,9 @@ function Dashboard({ onNavigate }) {
                 }
 
                 setCounts({
-                    active:        all.filter(r => ONGOING_STATUSES.includes(r.status)).length,
-                    completed:     all.filter(r => r.status === "Completed").length,
-                    appointments:  all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
+                    active: all.filter(r => ONGOING_STATUSES.includes(r.status)).length,
+                    completed: all.filter(r => r.status === "Completed").length,
+                    appointments: all.filter(r => ["Confirmed", "Accepted"].includes(r.status)).length,
                     notifications: unreadCount,
                 });
             } catch { /* ignore */ }

@@ -91,7 +91,7 @@ class AdminShopManagementTest extends TestCase {
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Helpers ─
 
     private function cleanUp(): void {
         $admin   = $this->qb->table('users')->where('email', $this->adminEmail)->first();
@@ -175,7 +175,7 @@ class AdminShopManagementTest extends TestCase {
         return ['status' => $status, 'body' => json_decode($body, true) ?: $body];
     }
 
-    // ── Tests ────────────────────────────────────────────────────────────────
+    //  Tests
 
     /**
      * Plan: testGetPendingShopsReturnsList

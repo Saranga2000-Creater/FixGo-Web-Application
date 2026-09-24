@@ -11,9 +11,9 @@ class PlatformReviewController {
         $this->platformReviewModel = new PlatformReview($db);
     }
 
-    /**
-     * Submit a platform review (logged-in users only)
-     */
+    
+     //Submit a platform review (logged-in users only)
+     
     public function submitReview($payload) {
         RequestValidator::enforceMethod('POST');
         $userId = $payload['user_id'] ?? null;
@@ -49,9 +49,9 @@ class PlatformReviewController {
         }
     }
 
-    /**
-     * Extract hometown from address (last word/segment after last comma)
-     */
+    
+     //Extract hometown from address (last word/segment after last comma)
+     
     private function extractHometown($address) {
         if (empty($address)) {
             return "Sri Lanka";
@@ -61,9 +61,9 @@ class PlatformReviewController {
         return !empty($lastPart) ? $lastPart : "Sri Lanka";
     }
 
-    /**
-     * Retrieve top & recent platform reviews for homepage/support page carousel
-     */
+    
+     //Retrieve top & recent platform reviews for homepage/support page carousel
+     
     public function getReviews() {
         RequestValidator::enforceMethod('GET');
 

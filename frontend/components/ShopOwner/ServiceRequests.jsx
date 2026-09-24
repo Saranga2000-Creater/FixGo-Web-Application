@@ -153,6 +153,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
         if (isAccepting && shopCoordinates?.lat && requestData.customer_lat && requestData.customer_lng) {
           setIsCalculatingEta(true);
           try {
+            // Calls Google API using Shop GPS (origin) & Customer GPS (destination)
             const googleRes = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
               method: "POST",
               headers: {
@@ -168,8 +169,10 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             });
             const googleData = await googleRes.json();
             if (googleData.routes && googleData.routes.length > 0) {
+              // Converts seconds into minutes
               const seconds = parseInt(googleData.routes[0].duration.replace("s", ""));
               const calculatedMinutes = Math.ceil(seconds / 60);
+              // Auto-fills the ETA box 
               setTowTruck((prev) => ({ ...prev, promised_eta: calculatedMinutes }));
               setMinEta(calculatedMinutes);
             }
@@ -214,6 +217,7 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
   };
 
   const confirmTowAndAccept = async () => {
+    // Blocks the shop if they try to enter less than Google's calculated time
     if (parseInt(towTruck.promised_eta) < minEta) {
       setEtaError(`ETA cannot be less than the calculated drive time (${minEta} mins).`);
       return;
@@ -272,11 +276,10 @@ function ServiceRequests({ shopCategory, shopCoordinates, fetchRequestCount }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`py-2 px-3 sm:py-2.5 sm:px-5 rounded-[10px] border-[1.5px] font-semibold text-xs sm:text-[14.5px] cursor-pointer transition-all duration-150 ease-in-out ${
-                isActive
+              className={`py-2 px-3 sm:py-2.5 sm:px-5 rounded-[10px] border-[1.5px] font-semibold text-xs sm:text-[14.5px] cursor-pointer transition-all duration-150 ease-in-out ${isActive
                   ? "border-green-700 bg-[#ECFDF3] text-green-700"
                   : "border-[#E5E9F0] bg-white text-slate-500"
-              }`}
+                }`}
             >
               {tab.label}
             </button>

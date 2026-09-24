@@ -111,10 +111,11 @@ class CustomerController {
         $customerModel = new Customer($this->db);
 
         // Check if email already exists
-        if ($userModel->findByEmail($sanitizedEmail)) {
+        $existingUser = $userModel->findByEmail($sanitizedEmail);
+        if ($existingUser) {
             // If the account exists but is NOT yet verified, allow re-registration
             // by overwriting it with fresh data and a new 5-minute OTP.
-            if (!$userModel->is_email_verified) {
+            if (!$existingUser->getIsEmailVerified()) {
                 try {
                     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                     $verificationToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -131,7 +132,7 @@ class CustomerController {
                         'profilePhoto' => $dbImagePath
                     ];
 
-                    $customerModel->reRegister($userModel->id, $userData, $customerData);
+                    $customerModel->reRegister($existingUser->getId(), $userData, $customerData);
 
                     EmailSender::sendVerificationEmail($sanitizedEmail, $verificationToken);
 
@@ -283,9 +284,9 @@ class CustomerController {
         }
     }
 
-    // ==========================================
+    
     // "My Garage" Vehicle Management
-    // ==========================================
+   
 
     public function handleGetVehicles($payload) {
         RequestValidator::enforceMethod('GET');

@@ -1,10 +1,10 @@
 <?php
-class Category {
-    private $qb;
+require_once __DIR__ . '/BaseModel.php';
 
-    public function __construct($db, $queryBuilder = null) {
-        $this->qb = $queryBuilder ?: new QueryBuilder($db);
-    }
+class Category extends BaseModel {
+    protected ?int $id = null;
+    protected ?string $name = null;
+    protected ?string $description = null;
 
     // Fetch Vehicle Categories
     public function getVehicleCategories() {
